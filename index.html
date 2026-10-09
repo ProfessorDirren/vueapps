@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore the VUEAPPS ecosystem: ANIVUE, MOTOVUE, HOMEVUE, PLANTVUE, ARMVUE, FOODVUE and ANYVUE.">
+  <meta name="description" content="The Portal to Knowledge. Explore the VUEAPPS ecosystem: ANIVUE, MOTOVUE, HOMEVUE, PLANTVUE, ARMVUE, FOODVUE and ANYVUE.">
   <meta name="theme-color" content="#0b1720">
-  <title>VUEAPPS | A New Perspective</title>
+  <title>VUEAPPS | The Portal to Knowledge</title>
   <style>
     :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; }
     * { box-sizing: border-box; }
@@ -15,6 +15,13 @@
     main { max-width: 1200px; margin: auto; padding: 90px 7% 110px; }
     .eyebrow { color: #70d6bb; letter-spacing: 3px; font-size: 13px; font-weight: bold; }
     h1 { font-size: clamp(42px, 7vw, 76px); letter-spacing: -2px; margin: 20px 0; }
+    .hero { text-align: center; padding: 48px 16px 60px; border: 1px solid #29404a; border-radius: 24px; background: radial-gradient(ellipse at 50% 0%, #1b3c43 0%, #10242e 48%, #0b1720 100%); }
+    .hero-mark { color: #70d6bb; font-size: clamp(42px, 8vw, 86px); font-weight: 900; letter-spacing: .11em; margin: 0 0 18px; }
+    .hero-title { font-size: clamp(23px, 4.5vw, 48px); letter-spacing: .09em; line-height: 1.18; margin: 0 0 24px; }
+    .hero-swedish { font-size: clamp(17px, 3vw, 27px); color: #70d6bb; font-weight: 800; margin: 0 0 15px; }
+    .hero-tagline { color: #d3e2e5; font-size: clamp(15px, 2vw, 20px); margin: 0; }
+    .hero-link { display: inline-block; margin-top: 32px; padding: 13px 22px; border-radius: 10px; background: #70d6bb; color: #0b1720; text-decoration: none; font-weight: 800; }
+    .hero-link:hover,.hero-link:focus-visible { background: #9be7d4; }
     .intro { max-width: 680px; color: #b9c8cf; font-size: 19px; line-height: 1.7; }
     .section-heading { margin: 72px 0 12px; font-size: 25px; }
     .section-intro { color: #b9c8cf; line-height: 1.65; margin: 0; }
@@ -37,9 +44,14 @@
 <body>
   <header><div class="logo">VUEAPPS</div></header>
   <main>
-    <div class="eyebrow">THE VUE ECOSYSTEM</div>
-    <h1>A New Perspective.</h1>
-    <p class="intro">Intelligent applications designed to help you understand the world around you. One ecosystem. Endless possibilities.</p>
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="hero-mark">VUEAPPS</p>
+      <h1 class="hero-title" id="hero-title">THE PORTAL TO KNOWLEDGE</h1>
+      <p class="hero-swedish" lang="sv">INGET JÄVLA KLICKA RUNT LÄNGRE!</p>
+      <p class="hero-tagline">Stop Clicking Around. VUE Does It for You.</p>
+      <a class="hero-link" href="./anyvue.html">Explore ANYVUE &rarr;</a>
+    </section>
+    <p class="intro">A New Perspective. Intelligent applications designed to help you understand the world around you. One ecosystem. Endless possibilities.</p>
 
     <section aria-labelledby="ecosystem-title">
       <h2 class="section-heading" id="ecosystem-title">Explore the ecosystem</h2>
@@ -60,7 +72,7 @@
         <article class="app">
           <h3>ANYVUE</h3>
           <p>Ask anything, compare perspectives from multiple AI models, and explore a future VUE synthesis.</p>
-          <span class="status">Interactive preview · Manual comparison</span><br>
+          <span class="status">Interactive preview · Automated AI pending activation</span><br>
           <a href="./anyvue.html">Explore ANYVUE preview &rarr;</a>
         </article>
         <article class="app">
