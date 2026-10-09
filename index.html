@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VUEAPPS – intelligent applications for everyday life.">
+  <title>VUEAPPS | A New Perspective</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0b1720;
+      color: #f4f7f8;
+    }
+    header {
+      padding: 28px 7%;
+      border-bottom: 1px solid #263943;
+    }
+    .logo {
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: 4px;
+    }
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 100px 7%;
+    }
+    .eyebrow {
+      color: #70d6bb;
+      letter-spacing: 3px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    h1 {
+      font-size: clamp(42px, 7vw, 76px);
+      letter-spacing: -2px;
+      margin: 20px 0;
+    }
+    .intro {
+      max-width: 650px;
+      color: #b9c8cf;
+      font-size: 19px;
+      line-height: 1.7;
+    }
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 65px;
+    }
+    .app {
+      padding: 32px;
+      background: #142630;
+      border: 1px solid #29404a;
+      border-radius: 18px;
+    }
+    .app h2 { margin-top: 0; }
+    .app p {
+      color: #b9c8cf;
+      line-height: 1.6;
+    }
+    .app a {
+      display: inline-block;
+      margin-top: 14px;
+      color: #70d6bb;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .app a:hover { text-decoration: underline; }
+    .status {
+      color: #90a3ac;
+      font-size: 13px;
+    }
+    footer {
+      padding: 35px 7%;
+      color: #90a3ac;
+      border-top: 1px solid #263943;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">VUEAPPS</div>
+  </header>
+
+  <main>
+    <div class="eyebrow">THE VUE ECOSYSTEM</div>
+    <h1>A New Perspective.</h1>
+    <p class="intro">
+      Intelligent applications designed to help you
+      understand the world around you.
+      One ecosystem. Endless possibilities.
+    </p>
+
+    <section class="apps" aria-label="Our applications">
+      <article class="app">
+        <h2>ANIVUE</h2>
+        <p>
+          AI-assisted animal health observations
+          and guidance for pet owners.
+        </p>
+        <a href="https://www.anivueapp.se">
+          Explore ANIVUE &rarr;
+        </a>
+      </article>
+
+      <article class="app">
+        <h2>MOTOVUE</h2>
+        <p>
+          A new perspective on vehicle care,
+          maintenance and diagnostics.
+        </p>
+        <span class="status">In development</span>
+      </article>
+
+      <article class="app">
+        <h2>MORE TO COME</h2>
+        <p>
+          HOMEVUE, PLANTVUE and future applications
+          built around the VUE vision.
+        </p>
+        <span class="status">Future concepts</span>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2026 VUEAPPS. All rights reserved.
+  </footer>
+</body>
+</html>
