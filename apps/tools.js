@@ -1,4 +1,4 @@
-import { UI, DOMAINS, localizeLanguagePicker } from './content.js';
+import { UI, DOMAINS, localizeLanguagePicker } from './content.js?v=languages-2';
 import { validateMedia, LANGUAGES } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
