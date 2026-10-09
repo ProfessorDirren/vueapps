@@ -16,11 +16,11 @@ h1{font-size:clamp(42px,7vw,70px);letter-spacing:-2px;margin:18px 0}
 .lead{color:#b9c8cf;line-height:1.65;font-size:19px;max-width:700px}
 .card{background:#142630;border:1px solid #29404a;border-radius:18px;padding:28px;margin-top:32px}
 label{display:block;font-weight:700;margin:18px 0 8px}
-select,textarea{display:block;width:100%;border:1px solid #527078;border-radius:10px;padding:13px;background:#0d2029;color:#f4f7f8;font:inherit}
+select,textarea,input[type=file]{display:block;width:100%;border:1px solid #527078;border-radius:10px;padding:13px;background:#0d2029;color:#f4f7f8;font:inherit}
 textarea{min-height:100px;resize:vertical}
 button{background:#70d6bb;color:#09231e;font:inherit;font-weight:800;padding:14px 22px;border:0;border-radius:10px;margin-top:22px;cursor:pointer}
 button:hover{background:#94ebd5}button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #f1cf80;outline-offset:3px}
-#result{margin-top:26px;padding:24px;border-radius:12px;border:1px solid #46666e;background:#0c212b}
+#photoPreview img,#videoPreview video{max-width:100%;max-height:260px;border-radius:10px;margin-top:12px}#result{margin-top:26px;padding:24px;border-radius:12px;border:1px solid #46666e;background:#0c212b}
 #result[hidden]{display:none}.level{font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:800}
 .urgent{color:#ffb0a8}.caution{color:#f1cf80}.routine{color:#70d6bb}
 #result h3{margin:10px 0}#result p,#result li{color:#d5e1e4;line-height:1.65}
@@ -34,11 +34,11 @@ footer{padding:28px 7%;border-top:1px solid #263943;color:#90a3ac;font-size:13px
 <main>
 <div class="eyebrow">EARLY INTERACTIVE PROTOTYPE</div>
 <h1>Know your vehicle.</h1>
-<p class="lead">Choose a vehicle and a symptom to explore safe first checks. This prototype uses transparent, predefined guidance—not AI diagnosis.</p>
+<p class="lead">Like ANIVUE, start with a photo or video and describe what you observe. Media is previewed locally only; AI analysis is not implemented yet.</p>
 <section class="card" aria-labelledby="tool-title">
 <h2 id="tool-title">Vehicle symptom guide</h2>
 <form id="guide">
-<label for="vehicle">Vehicle type</label>
+<label for="photo">Photo (optional)</label><input id="photo" type="file" accept="image/*"><small>Local preview only. No AI image analysis yet.</small><div id="photoPreview" hidden></div><label for="video">Video (optional)</label><input id="video" type="file" accept="video/*"><small>Local preview only. No AI video analysis yet.</small><div id="videoPreview" hidden></div><label for="vehicle">Vehicle type</label>
 <select id="vehicle" required><option value="">Select a vehicle</option><option value="motorcycle">Motorcycle</option><option value="car">Car</option></select>
 <label for="symptom">What is happening?</label>
 <select id="symptom" required><option value="">Select a symptom</option><option value="no-start">Engine will not start</option><option value="overheat">Overheating or temperature warning</option><option value="brakes">Braking problem</option><option value="tire">Flat or damaged tire</option><option value="noise">Unusual engine noise</option><option value="other">Something else</option></select>
@@ -61,6 +61,23 @@ const cases={
 "other":{level:"routine",tag:"More information needed",title:"Describe the symptom",intro:"This early prototype does not yet cover every possible vehicle issue.",steps:["Check the owner's manual and any dashboard warning messages.","If the vehicle seems unsafe to control, stop safely and seek assistance.","For persistent or unclear faults, arrange a qualified inspection."]}
 };
 const form=document.getElementById("guide"),result=document.getElementById("result");
+const objectUrls={};
+function preview(inputId,outputId,tag){
+ const input=document.getElementById(inputId),output=document.getElementById(outputId);
+ input.addEventListener("change",()=>{
+  if(objectUrls[inputId]){URL.revokeObjectURL(objectUrls[inputId]);delete objectUrls[inputId]}
+  output.replaceChildren();output.hidden=true;
+  const file=input.files&&input.files[0];if(!file)return;
+  if(!file.type.startsWith(tag==="img"?"image/":"video/")){input.value="";return}
+  if(file.size>50*1024*1024){alert("Maximum file size is 50 MB.");input.value="";return}
+  objectUrls[inputId]=URL.createObjectURL(file);
+  const media=document.createElement(tag);media.src=objectUrls[inputId];
+  if(tag==="img")media.alt="Selected vehicle photo";else{media.controls=true;media.preload="metadata"}
+  output.append(media);output.hidden=false;
+ });
+}
+preview("photo","photoPreview","img");
+preview("video","videoPreview","video");
 form.addEventListener("submit",event=>{
 event.preventDefault();
 if(!form.reportValidity())return;
@@ -73,7 +90,7 @@ const level=document.createElement("div");level.className="level "+item.level;le
 const heading=document.createElement("h3");heading.textContent=item.title;result.append(heading);
 const intro=document.createElement("p");intro.textContent=item.intro+extra;result.append(intro);
 const list=document.createElement("ol");item.steps.forEach(step=>{const li=document.createElement("li");li.textContent=step;list.append(li)});result.append(list);
-const foot=document.createElement("small");foot.textContent="General guidance only. Not a diagnosis or a substitute for a qualified mechanic.";result.append(foot);
+const foot=document.createElement("small");foot.textContent="General guidance only. Uploaded media is not analyzed. Not a diagnosis or a substitute for a qualified mechanic.";result.append(foot);
 result.hidden=false;result.scrollIntoView({behavior:"smooth",block:"nearest"});
 });
 </script>
