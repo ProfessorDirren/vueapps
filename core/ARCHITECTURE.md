@@ -6,10 +6,7 @@ VUE CORE defines reusable **contracts and orchestration**, not a universal diagn
 VueDomain (base class)
   ├── MotoVueDomain (implemented)
   ├── AniVueDomain (planned adapter for existing ANIVUE)
-  ├── HomeVueDomain (planned)
-  ├── PlantVueDomain (planned)
-  ├── ArmVueDomain (planned)
-  └── FoodVueDomain (planned)
+  └── Planning tools → shared calendar, record and recipe functions
 
 VueFlow → emergencyCheck() first → assess() → normalized assessment
 VueAnalysisAdapter → VueHttpAnalysisAdapter → same-origin /api/... serverless backend
@@ -21,7 +18,11 @@ VueAnalysisAdapter → VueHttpAnalysisAdapter → same-origin /api/... serverles
 - ANIVUE continues using its existing production OpenAI image adapter; it is not migrated.
 - Server-side AI must validate file signatures/size, authenticate/limit abuse, enforce domain-specific structured outputs and keep API keys secret.
 - AI outputs never override deterministic emergency rules.
-- A shared UI and versioned cross-repository package are future work.
+- HOMEVUE, PLANTVUE, ARMVUE and FOODVUE now share a localized planning UI in `apps/`, backed by `core/planning.js`. These are working planning/calculation tools, not AI assessment adapters.
+- The four tools accept local image/video references using CORE validation. Files are previewed only and released when the page closes; they are not persisted or analyzed.
+- Plans and recipes persist locally. JSON export/restore, printable plans, and recipe shopping lists are supported. No cloud account or background reminders are provided.
+- English is the initial default. Each app preserves an explicit language choice separately; all seven languages and Arabic RTL are supported.
+- A versioned cross-repository package and AI adapters for the four new tools remain future work.
 
 ## ANIVUE reference inventory
 - `src/multimodal.ts`: browser image upload → `/api/analyze-animal`, video placeholder, media limits.
