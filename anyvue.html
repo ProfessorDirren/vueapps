@@ -24,8 +24,9 @@ button:disabled{opacity:.5;cursor:wait}.cards{display:grid;grid-template-columns
 <h1>ANYVUE</h1>
 <p>One question. Multiple AI perspectives. A clearer view.</p>
 <label for="question"><strong>What would you like to explore?</strong></label>
-<textarea id="question" maxlength="6000" placeholder="Ask anything..."></textarea>
-<p><button id="prepare">Ask ANYVUE</button></p>
+<textarea id="question" maxlength="3000" placeholder="Ask anything..."></textarea>
+<p id="service-status" class="muted" role="status">Checking live AI availability…</p>
+<p><button id="prepare" disabled>Ask ANYVUE</button></p>
 <section id="workspace" hidden aria-live="polite">
 <div class="panel"><h2>VUE Analysis</h2><div id="result"></div></div>
 <details id="details" hidden><summary>View individual AI perspectives</summary><div id="perspectives" class="cards"></div></details>
@@ -44,6 +45,17 @@ class AnyVueDomain extends VueDomain {
  }
 }
 const domain=new AnyVueDomain(),question=document.getElementById("question"),button=document.getElementById("prepare"),workspace=document.getElementById("workspace"),result=document.getElementById("result"),details=document.getElementById("details"),perspectives=document.getElementById("perspectives");
+const serviceStatus=document.getElementById("service-status");
+async function checkReadiness(){
+ try{
+  const response=await fetch("/api/anyvue",{cache:"no-store"});
+  if(!response.ok)throw Error("unavailable");
+  const state=await response.json();
+  if(state.automated===true){button.disabled=false;serviceStatus.textContent="AI analysis configured. Responses may still be limited by daily budget or provider availability."}
+  else{button.disabled=true;serviceStatus.textContent="Automated AI is not yet available. This preview does not generate model responses."}
+ }catch{button.disabled=true;serviceStatus.textContent="Unable to verify AI service availability. Please try again later."}
+}
+await checkReadiness();
 button.addEventListener("click",async()=>{
  const prompt=question.value.trim();if(prompt.length<3){question.focus();return}
  button.disabled=true;button.textContent="Consulting AI perspectives…";workspace.hidden=false;result.textContent="Analyzing your question…";details.hidden=true;
@@ -58,6 +70,6 @@ button.addEventListener("click",async()=>{
   }
   details.hidden=false;
  }catch(error){result.textContent=error.message+"\n\nAutomated analysis is not live yet; no model answers have been fabricated."}
- finally{button.disabled=false;button.textContent="Ask ANYVUE"}
+ finally{button.textContent="Ask ANYVUE";await checkReadiness()}
 });
 </script></body></html>
