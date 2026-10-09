@@ -4,7 +4,7 @@ import { POST } from "../api/anyvue.js";
 const previous={ANYVUE_ENABLED:process.env.ANYVUE_ENABLED,ANYVUE_RATE_LIMIT_READY:process.env.ANYVUE_RATE_LIMIT_READY};
 const request=(body)=>new Request("https://localhost/api/anyvue",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
 test("disabled by default, no provider calls",async()=>{delete process.env.ANYVUE_ENABLED;const r=await POST(request({question:"hello"}));assert.equal(r.status,503)});
-test("requires rate limit gateway",async()=>{process.env.ANYVUE_ENABLED="true";delete process.env.ANYVUE_RATE_LIMIT_READY;const r=await POST(request({question:"hello"}));assert.equal(r.status,503)});
+test("requires provider configuration before spending",async()=>{process.env.ANYVUE_ENABLED="true";delete process.env.OPENAI_API_KEY;const r=await POST(request({question:"hello"}));assert.equal(r.status,503)});
 test("rejects invalid prompt before provider calls",async()=>{process.env.ANYVUE_ENABLED="true";process.env.ANYVUE_RATE_LIMIT_READY="true";const r=await POST(request({question:"x"}));assert.equal(r.status,400)});
 test("rejects oversized JSON payload",async()=>{const r=await POST(request({question:"x".repeat(10000)}));assert.equal(r.status,413)});
 test.after(()=>{for(const [k,v] of Object.entries(previous))if(v===undefined)delete process.env[k];else process.env[k]=v});
