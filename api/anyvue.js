@@ -24,7 +24,7 @@ export async function POST(request){
  const length=Number(request.headers.get("content-length")||0);
  if(length>9000)return json(413,{error:"Request too large."});
  let body;try{body=await request.json()}catch{return json(400,{error:"Invalid JSON."})}
- const question=clean(body?.question);
+ if(JSON.stringify(body).length>9000)return json(413,{error:"Request too large."});\n const question=clean(body?.question);
  if(question.length<3||question.length>3000)return json(400,{error:"Question must be 3–3000 characters."});
  const providers=[
   process.env.OPENAI_API_KEY&&{name:"OpenAI",run:()=>openai(question,process.env.OPENAI_API_KEY)},
