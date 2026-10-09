@@ -4,6 +4,25 @@
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}});
 const clean=t=>typeof t==="string"?t.trim():"";
 const timeout=ms=>AbortSignal.timeout(ms);
+async function budgetGate(request){
+ const url=process.env.UPSTASH_REDIS_REST_URL,token=process.env.UPSTASH_REDIS_REST_TOKEN;
+ if(!url||!token||!/^https:\/\//.test(url))return false;
+ // Atomic daily global budget: each request reserves up to four paid model calls.
+ // No caller-supplied IP headers or client-side secrets are trusted.
+ const day=new Date().toISOString().slice(0,10);
+ const key="anyvue:global:"+day;
+ const script="local n=redis.call('INCRBY',KEYS[1],ARGV[1]); if n==tonumber(ARGV[1]) then redis.call('EXPIRE',KEYS[1],172800) end; return n";
+ const limit=Number(process.env.ANYVUE_DAILY_MODEL_CALL_LIMIT||40);
+ if(!Number.isSafeInteger(limit)||limit<4||limit>10000)return false;
+ try{
+  const response=await fetch(url.replace(/\/$/,"")+"/eval/"+encodeURIComponent(script)+"/1/"+encodeURIComponent(key)+"/4",{
+   headers:{Authorization:"Bearer "+token},signal:timeout(3500)
+  });
+  if(!response.ok)return false;
+  const result=await response.json();
+  return typeof result.result==="number"&&result.result<=limit;
+ }catch{return false}
+}
 async function openai(prompt,key,model="gpt-4o-mini"){
  const r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"user",content:prompt}],max_tokens:700}),signal:timeout(18000)});
  if(!r.ok)throw Error("OpenAI provider unavailable");const d=await r.json();return clean(d.choices?.[0]?.message?.content);
@@ -18,8 +37,7 @@ async function gemini(prompt,key){
 }
 export async function POST(request){
  if(process.env.ANYVUE_ENABLED!=="true")return json(503,{error:"Automated ANYVUE is not enabled yet."});
- // Production rate limiting MUST be enforced by the deployment gateway before enabling.
- if(process.env.ANYVUE_RATE_LIMIT_READY!=="true")return json(503,{error:"Rate-limit protection must be configured before launch."});
+
  if(!request.headers.get("content-type")?.startsWith("application/json"))return json(415,{error:"JSON required."});
  const length=Number(request.headers.get("content-length")||0);
  if(length>9000)return json(413,{error:"Request too large."});
@@ -33,6 +51,7 @@ export async function POST(request){
   process.env.GEMINI_API_KEY&&{name:"Gemini",run:()=>gemini(question,process.env.GEMINI_API_KEY)}
  ].filter(Boolean).slice(0,3);
  if(providers.length<2||!process.env.OPENAI_API_KEY)return json(503,{error:"At least two AI providers, including OpenAI for synthesis, must be configured."});
+ if(!await budgetGate(request))return json(429,{error:"ANYVUE daily AI budget reached or cost protection unavailable."});
  const outcomes=await Promise.allSettled(providers.map(p=>p.run()));
  const perspectives=outcomes.flatMap((o,i)=>o.status==="fulfilled"&&o.value?[{model:providers[i].name,answer:o.value}]:[]);
  if(perspectives.length<2)return json(502,{error:"Not enough AI providers responded. Please retry later."});
