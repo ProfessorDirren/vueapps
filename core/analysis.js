@@ -18,7 +18,9 @@ export class VueAnalysisAdapter {
  */
 export class VueHttpAnalysisAdapter extends VueAnalysisAdapter {
   constructor({ endpoint, supportsImage = true, supportsVideo = false, timeoutMs = 30000, fetchImpl = globalThis.fetch } = {}) {
-    super({ supportsImage, supportsVideo });
+    super({ supportsImage, supportsVideo: false });
+    if (supportsVideo) throw new VueCoreError("video_not_supported", "Video AI analysis is not implemented.");
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new VueCoreError("invalid_timeout", "Timeout must be positive.");
     if (typeof endpoint !== "string" || !/^\/api\/[a-z0-9/-]+$/i.test(endpoint))
       throw new VueCoreError("invalid_endpoint", "Use a same-origin /api/ endpoint.");
     if (typeof fetchImpl !== "function") throw new VueCoreError("missing_fetch", "Fetch is unavailable.");
@@ -40,7 +42,7 @@ export class VueHttpAnalysisAdapter extends VueAnalysisAdapter {
       });
       if (!response.ok) throw new VueCoreError("http_" + response.status, "Analysis endpoint returned " + response.status);
       const data = await response.json();
-      if (!data || typeof data !== "object") throw new VueCoreError("invalid_response", "Invalid analysis response.");
+      if (!data || typeof data !== "object" || Array.isArray(data)) throw new VueCoreError("invalid_response", "Invalid analysis response.");
       return data;
     } catch (error) {
       if (error?.name === "AbortError") throw new VueCoreError("timeout", "Analysis timed out.");
