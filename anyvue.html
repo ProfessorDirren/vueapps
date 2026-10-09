@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1720">
+<title>ANYVUE | A New Perspective on Everything</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;background:#0b1720;color:#f4f7f8}main{max-width:920px;margin:auto;padding:48px 22px 80px}
+a{color:#70d6bb}h1{font-size:clamp(42px,8vw,72px);margin:12px 0}p{line-height:1.6;color:#b9c8cf}
+small{color:#b9c8cf}.tag{color:#70d6bb;letter-spacing:2px;font-weight:700}
+textarea{width:100%;min-height:130px;background:#142630;border:1px solid #38525d;border-radius:12px;padding:15px;color:white;font:inherit;resize:vertical}
+button{border:0;border-radius:9px;padding:12px 18px;background:#70d6bb;color:#0b1720;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px;margin:20px 0}
+.card{background:#142630;border:1px solid #29404a;border-radius:14px;padding:16px}
+.card textarea{min-height:160px;margin-top:12px;font-size:14px}
+.card a{display:inline-block;margin-top:12px;font-weight:700}.panel{margin-top:25px;padding:20px;border:1px solid #29404a;border-radius:14px;background:#142630}
+#result{white-space:pre-wrap;line-height:1.7}.muted{font-size:13px}h2{margin-top:38px}
+</style>
+</head>
+<body><main>
+<a href="./index.html">← VUEAPPS</a>
+<div class="tag" style="margin-top:35px">A NEW PERSPECTIVE ON EVERYTHING</div>
+<h1>ANYVUE</h1>
+<p>One question. Multiple AI perspectives. A clearer view.</p>
+<label for="question"><strong>What would you like to explore?</strong></label>
+<textarea id="question" maxlength="6000" placeholder="Ask anything..."></textarea>
+<p><button id="prepare">Prepare perspectives</button></p>
+<section id="workspace" hidden>
+<h2>Compare AI perspectives</h2>
+<p>Open each model, paste your question, then copy its answer back here. ANYVUE does not send your question automatically to external models in this preview.</p>
+<div class="cards">
+<div class="card"><strong>ChatGPT</strong><br><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a><textarea aria-label="ChatGPT answer" id="openai" placeholder="Paste ChatGPT's answer"></textarea></div>
+<div class="card"><strong>Claude</strong><br><a href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Open Claude ↗</a><textarea aria-label="Claude answer" id="claude" placeholder="Paste Claude's answer"></textarea></div>
+<div class="card"><strong>Gemini</strong><br><a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer">Open Gemini ↗</a><textarea aria-label="Gemini answer" id="gemini" placeholder="Paste Gemini's answer"></textarea></div>
+</div>
+<button id="compare">Build comparison</button>
+<div class="panel" id="report" hidden><h2>VUE comparison</h2><div id="result"></div></div>
+</section>
+<p class="muted">Early preview. Model answers are user-provided; comparisons are local, not AI-generated. Automated multi-model analysis, subscriptions and a one-year free offer are planned, not active. Never paste secrets or sensitive personal data.</p>
+</main>
+<script type="module">
+import { VueDomain } from "./core/index.js";
+class AnyVueDomain extends VueDomain {
+ constructor(){super({id:"anyvue",name:"ANYVUE",capabilities:{imageAnalysis:false,videoAnalysis:false}})}
+ compare(answers){
+  const entries=Object.entries(answers).filter(([,value])=>value.trim());
+  if(!entries.length) return "Add at least one model response to compare.";
+  const lines=["QUESTION: "+document.getElementById("question").value.trim(),"","PERSPECTIVES PROVIDED: "+entries.map(([name])=>name).join(", "),"","MODEL RESPONSES:"];
+  for(const [name,value] of entries) lines.push("","— "+name.toUpperCase()+" —",value.trim());
+  lines.push("","VUE ANALYSIS STATUS: Automated synthesis is not yet available. Differences, agreement and factual claims have NOT been independently verified.");
+  return lines.join("\n");
+ }
+}
+const domain=new AnyVueDomain();
+const workspace=document.getElementById("workspace");
+document.getElementById("prepare").addEventListener("click",()=>{
+ if(!document.getElementById("question").value.trim()){document.getElementById("question").focus();return}
+ workspace.hidden=false;workspace.scrollIntoView({behavior:"smooth"});
+});
+document.getElementById("compare").addEventListener("click",()=>{
+ const answers={ChatGPT:document.getElementById("openai").value,Claude:document.getElementById("claude").value,Gemini:document.getElementById("gemini").value};
+ document.getElementById("result").textContent=domain.compare(answers);
+ document.getElementById("report").hidden=false;
+});
+</script></body></html>
