@@ -35,6 +35,10 @@ async function gemini(prompt,key){
  const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",{method:"POST",headers:{"x-goog-api-key":key,"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:700}}),signal:timeout(18000)});
  if(!r.ok)throw Error("Gemini provider unavailable");const d=await r.json();return clean(d.candidates?.[0]?.content?.parts?.map(x=>x.text||"").join("\n"));
 }
+export function readiness(){
+ const providerCount=[process.env.OPENAI_API_KEY,process.env.ANTHROPIC_API_KEY,process.env.GEMINI_API_KEY].filter(Boolean).length;
+ return {ready:process.env.ANYVUE_ENABLED==="true"&&!!process.env.OPENAI_API_KEY&&providerCount>=2&&!!process.env.UPSTASH_REDIS_REST_URL&&!!process.env.UPSTASH_REDIS_REST_TOKEN,providerCount};
+}
 export async function POST(request){
  if(process.env.ANYVUE_ENABLED!=="true")return json(503,{error:"Automated ANYVUE is not enabled yet."});
 
@@ -63,7 +67,8 @@ export async function POST(request){
  }catch{return json(502,{error:"VUE synthesis is temporarily unavailable."})}
 }
 export default async function handler(req,res){
- if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed."})}
+ if(req.method==="GET")return res.status(200).setHeader("Cache-Control","no-store").json({status:readiness().ready?"configured":"preview",automated:readiness().ready});
+ if(req.method!=="POST"){res.setHeader("Allow","GET, POST");return res.status(405).json({error:"Method not allowed."})}
  const headers=new Headers(req.headers);
  const response=await POST(new Request("https://localhost/api/anyvue",{method:"POST",headers,body:JSON.stringify(req.body)}));
  res.status(response.status).setHeader("Cache-Control","no-store").json(await response.json());
