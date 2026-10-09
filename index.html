@@ -62,25 +62,25 @@
         <article class="app" id="app-slumpvue">
           <h3>SLUMPVUE 🎲</h3>
           <p id="slump-description">One click, an unexpected discovery. 42 curated surprises across seven themes.</p>
-          <span class="status live" id="slump-status">Available · Interactive experience</span><br>
+          
           <a href="./slumpvue.html" id="slump-link">Try SLUMPVUE →</a>
         </article>
         <article class="app" id="app-anivue">
           <h3>ANIVUE</h3>
           <p>AI-assisted animal health observations and preliminary guidance for pet owners.</p>
-          <span class="status live">Available · Public beta</span><br>
+          
           <a href="https://www.anivueapp.se" rel="noopener noreferrer">Explore ANIVUE &rarr;</a>
         </article>
         <article class="app" id="app-motovue">
           <h3>MOTOVUE</h3>
           <p>A new perspective on vehicle care, maintenance and diagnostics.</p>
-          <span class="status">Interactive prototype</span><br>
+          
           <a href="./motovue.html">Try MOTOVUE preview &rarr;</a>
         </article>
         <article class="app" id="app-anyvue">
           <h3>ANYVUE</h3>
           <p>Ask anything, compare perspectives from multiple AI models, and explore a future VUE synthesis.</p>
-          <span class="status">Interactive preview · Automated AI pending activation</span><br>
+          
           <a href="./anyvue.html">Explore ANYVUE preview &rarr;</a>
         </article>
         <article class="app" id="app-homevue">
@@ -140,7 +140,7 @@ function setLanguage(lang){
  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
  document.querySelector(".hero-swedish").lang=lang;
  const slump=slumpTranslations[lang]||slumpTranslations.en;
- ["slump-description","slump-status","slump-link"].forEach((id,i)=>{document.getElementById(id).textContent=slump[i]});
+ ["slump-description","slump-status","slump-link"].forEach((id,i)=>{(()=>{const el=document.getElementById(id);if(el)el.textContent=slump[i]})()});
  const names=['homevue','plantvue','armvue','foodvue'];
  names.forEach((id,i)=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=id.toUpperCase()+' →'});
  document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=DOMAINS.armvue.locales[lang].types[i]);
