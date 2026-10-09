@@ -12,4 +12,4 @@ jobs:
         with:
           node-version: '22'
       - name: Run VUE CORE tests
-        run: node --test core/core.test.mjs
+        run: node --test core/*.test.mjs
