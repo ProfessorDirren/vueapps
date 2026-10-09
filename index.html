@@ -86,13 +86,13 @@
         <article class="app" id="app-homevue">
           <h3>HOMEVUE</h3>
           <p>Your maintenance checklist, next checks and completed tasks in one place.</p>
-          <span class="status live">Ready to use</span><br>
+          
           <a class="tool-link" href="./homevue.html">Open HOMEVUE &rarr;</a>
         </article>
         <article class="app" id="app-plantvue">
           <h3>PLANTVUE</h3>
           <p>A care journal for your plants. Plan moisture checks, record observations and keep track of each pot.</p>
-          <span class="status live">Ready to use</span><br>
+          
           <a class="tool-link" href="./plantvue.html">Open PLANTVUE &rarr;</a>
         </article>
         <article class="app" id="app-armvue">
@@ -101,7 +101,7 @@
           <ul class="subcategories" aria-label="ARMVUE categories">
             <li>Rifles</li><li>Shotguns</li><li>Handguns</li>
           </ul>
-          <span class="status live">Ready to use</span><br>
+          
           <a class="tool-link" href="./armvue.html">Open ARMVUE &rarr;</a>
         </article>
         <article class="app" id="app-foodvue">
@@ -111,7 +111,7 @@
             <li>Baking</li><li>Meat</li><li>Vegan</li><li>Vegetarian</li>
           </ul>
           <div class="nested"><strong>Baking</strong> &rarr; Bread · Dessert</div>
-          <span class="status live">Ready to use</span><br>
+          
           <a class="tool-link" href="./foodvue.html">Open FOODVUE &rarr;</a>
         </article>
         
@@ -142,7 +142,7 @@ function setLanguage(lang){
  const slump=slumpTranslations[lang]||slumpTranslations.en;
  ["slump-description","slump-status","slump-link"].forEach((id,i)=>{document.getElementById(id).textContent=slump[i]});
  const names=['homevue','plantvue','armvue','foodvue'];
- names.forEach((id,i)=>{const card=document.getElementById('app-'+id);card.querySelector('.status').textContent=UI[lang].live;card.querySelector('.tool-link').textContent=UI[lang].live+' · '+id.toUpperCase()+' →'});
+ names.forEach((id,i)=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=id.toUpperCase()+' →'});
  document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=DOMAINS.armvue.locales[lang].types[i]);
  const food=DOMAINS.foodvue.locales[lang].types;
  document.querySelectorAll('#app-foodvue .subcategories li').forEach((el,i)=>el.textContent=food[[0,2,3,4][i]]);
