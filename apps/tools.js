@@ -1,4 +1,4 @@
-import { UI, DOMAINS } from './content.js';
+import { UI, DOMAINS, localizeLanguagePicker } from './content.js';
 import { validateMedia, LANGUAGES } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
@@ -101,6 +101,7 @@ function renderShopping(){const parent=document.getElementById('shopping');if(!p
  if(recipe.name)parent.append(node('h3',recipe.name));parent.append(node('p',detail().types[recipe.category]+' · '+t('target')+': '+recipe.target,{class:'subtle'}));scaled.forEach(item=>{const row=node('div',undefined,{class:'output-row'});row.append(node('span',item.name),node('strong',new Intl.NumberFormat(language,{maximumFractionDigits:3}).format(item.quantity)+' '+unitLabel(item.unit)));parent.append(row)});
 }
 function render(){
+ localizeLanguagePicker(picker,language);
  document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';picker.value=language;
  document.querySelectorAll('[data-ui]').forEach(e=>e.textContent=t(e.dataset.ui));document.getElementById('headline').textContent=detail().title;document.getElementById('subtitle').textContent=detail().subtitle;document.getElementById('domain-note').textContent=detail().note;
  const reference=document.getElementById('reference');reference.href=config.reference[1];reference.textContent=t('sources')+' ↗';
