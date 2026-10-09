@@ -51,15 +51,10 @@ footer{padding:28px 7%;border-top:1px solid #263943;color:#90a3ac;font-size:13px
 <p class="disclaimer">Safety first: If you cannot control the vehicle, notice smoke, fuel leaks, a serious brake fault, or a rapidly rising temperature, stop safely and seek professional assistance. Never troubleshoot while driving. No information is transmitted or stored by this prototype.</p>
 </main>
 <footer>© 2026 VUEAPPS · MOTOVUE concept preview</footer>
-<script>
-const cases={
-"no-start":{level:"caution",tag:"Check before retrying",title:"Engine will not start",intro:"Several different faults can cause a no-start condition. Do not repeatedly crank the starter.",steps:["Make sure the vehicle is parked safely and the ignition is in the correct position.","Check for obvious signs of a weak battery: dim dashboard lights or a repeated clicking sound.","Check the owner's manual for relevant starting interlocks and warning lights.","If there is smoke, a strong fuel smell, or damaged wiring, stop and arrange professional assistance."]},
-"overheat":{level:"urgent",tag:"Stop safely",title:"Possible overheating",intro:"Continuing to drive with an overheating engine can cause damage and create a safety risk.",steps:["Pull over somewhere safe, turn the engine off, and allow it to cool.","Never open a hot radiator or pressurized coolant cap.","If there is steam, a coolant leak, or repeated high-temperature warnings, arrange recovery or professional inspection.","Consult the owner's manual before any further operation."]},
-"brakes":{level:"urgent",tag:"Do not drive",title:"Braking problem",intro:"Reduced braking performance can make the vehicle unsafe to operate.",steps:["Do not continue driving or riding if braking feels weak, inconsistent, or abnormal.","Park safely and arrange qualified inspection or recovery.","Do not rely on a short test drive to determine whether the brakes are safe."]},
-"tire":{level:"urgent",tag:"Stop safely",title:"Tire damage or puncture",intro:"A flat or damaged tire can lead to loss of control, especially on a motorcycle.",steps:["Stop in a safe location and avoid further travel on the damaged tire.","Inspect visually from a safe position; do not handle sharp objects embedded in the tire.","Follow manufacturer guidance and obtain qualified repair or replacement before continuing."]},
-"noise":{level:"caution",tag:"Investigate before driving",title:"Unusual engine noise",intro:"New knocking, grinding, or metallic sounds may indicate a problem that needs inspection.",steps:["If the noise is severe or accompanied by a warning light, loss of power, or smoke, stop the engine safely.","Note when the sound occurs: idle, acceleration, or deceleration.","Avoid prolonged operation until the cause is understood.","Have a qualified technician assess persistent or worsening noises."]},
-"other":{level:"routine",tag:"More information needed",title:"Describe the symptom",intro:"This early prototype does not yet cover every possible vehicle issue.",steps:["Check the owner's manual and any dashboard warning messages.","If the vehicle seems unsafe to control, stop safely and seek assistance.","For persistent or unclear faults, arrange a qualified inspection."]}
-};
+<script type="module">
+import { VueFlow, validateMedia } from './core/index.js';
+import { MotoVueDomain } from './core/motovue.js';
+const flow = new VueFlow(new MotoVueDomain());
 const form=document.getElementById("guide"),result=document.getElementById("result");
 const objectUrls={};
 function preview(inputId,outputId,tag){
@@ -68,8 +63,8 @@ function preview(inputId,outputId,tag){
   if(objectUrls[inputId]){URL.revokeObjectURL(objectUrls[inputId]);delete objectUrls[inputId]}
   output.replaceChildren();output.hidden=true;
   const file=input.files&&input.files[0];if(!file)return;
-  if(!file.type.startsWith(tag==="img"?"image/":"video/")){input.value="";return}
-  if(file.size>50*1024*1024){alert("Maximum file size is 50 MB.");input.value="";return}
+  const validation=validateMedia(file,tag==="img"?"image":"video");
+  if(!validation.ok){alert(validation.message);input.value="";return}
   objectUrls[inputId]=URL.createObjectURL(file);
   const media=document.createElement(tag);media.src=objectUrls[inputId];
   if(tag==="img")media.alt="Selected vehicle photo";else{media.controls=true;media.preload="metadata"}
@@ -78,20 +73,32 @@ function preview(inputId,outputId,tag){
 }
 preview("photo","photoPreview","img");
 preview("video","videoPreview","video");
-form.addEventListener("submit",event=>{
-event.preventDefault();
-if(!form.reportValidity())return;
-const kind=document.getElementById("vehicle").value;
-const symptom=document.getElementById("symptom").value;
-const item=cases[symptom];
-const extra=kind==="motorcycle"?" Motorcycle-specific reminder: keep the bike stable and never ride with uncertain tire or brake condition.":" Car-specific reminder: activate hazard lights when appropriate and follow local roadside safety rules.";
-result.replaceChildren();
-const level=document.createElement("div");level.className="level "+item.level;level.textContent=item.tag;result.append(level);
-const heading=document.createElement("h3");heading.textContent=item.title;result.append(heading);
-const intro=document.createElement("p");intro.textContent=item.intro+extra;result.append(intro);
-const list=document.createElement("ol");item.steps.forEach(step=>{const li=document.createElement("li");li.textContent=step;list.append(li)});result.append(list);
-const foot=document.createElement("small");foot.textContent="General guidance only. Uploaded media is not analyzed. Not a diagnosis or a substitute for a qualified mechanic.";result.append(foot);
-result.hidden=false;result.scrollIntoView({behavior:"smooth",block:"nearest"});
+form.addEventListener("submit",async event=>{
+ event.preventDefault();
+ if(!form.reportValidity())return;
+ const category=document.getElementById("vehicle").value;
+ const symptom=document.getElementById("symptom").value;
+ const description=document.getElementById("notes").value;
+ const media=[];
+ for(const [id,kind] of [["photo","image"],["video","video"]]){
+   const file=document.getElementById(id).files[0];
+   if(file)media.push({file,kind});
+ }
+ result.replaceChildren();
+ try{
+  const {assessment,source}=await flow.run({category,symptoms:[symptom],description,media,language:"en"});
+  const severity=assessment.severity;
+  const level=document.createElement("div");level.className="level "+(severity==="emergency"?"urgent":severity==="professional"?"caution":"routine");
+  level.textContent=severity==="emergency"?"Stop safely / seek help":severity==="professional"?"Professional inspection recommended":"General guidance";
+  result.append(level);
+  const heading=document.createElement("h3");heading.textContent=assessment.summary;result.append(heading);
+  const list=document.createElement("ol");assessment.recommendations.forEach(step=>{const li=document.createElement("li");li.textContent=step;list.append(li)});result.append(list);
+  const foot=document.createElement("p");foot.textContent=assessment.limitations.join(" ");result.append(foot);
+  const note=document.createElement("small");note.textContent="VUE CORE v0.1 · "+source+" · No AI analysis";result.append(note);
+ }catch(error){
+  const p=document.createElement("p");p.textContent="Unable to show guidance: "+error.message;result.append(p);
+ }
+ result.hidden=false;result.scrollIntoView({behavior:"smooth",block:"nearest"});
 });
 </script>
 </body>
