@@ -47,7 +47,7 @@ export async function POST(request){
  const observation=' Use clear short sections. Do not provide a monetary valuation without current completed-sale evidence. Suggest using the market valuation step.';
  try{
  const payload={model:process.env.ANTIQVUE_MODEL||'gpt-4.1-mini',store:false,instructions:common+(action==='value'?valuation:observation),input:[{role:'user',content:[{type:'input_text',text:b.description||'Please examine this object.'},{type:'input_image',image_url:b.image,detail:'high'}]}],max_output_tokens:2200};
- if(action==='value'){payload.tools=[{type:'web_search',search_context_size:'medium'}];payload.tool_choice='required';payload.max_tool_calls=3;payload.include=['web_search_call.action.sources'];}
+ if(action==='value'){payload.text={format:{type:'json_object'}};payload.tools=[{type:'web_search',search_context_size:'medium'}];payload.tool_choice='required';payload.max_tool_calls=3;payload.include=['web_search_call.action.sources'];}
  const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+process.env.OPENAI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(50000)});
  if(!r.ok)return json(502,{error:'Analysis provider unavailable.'});const d=await r.json();
  if(d.status!=='completed')return json(502,{error:'Analysis did not complete. Please retry.'});
