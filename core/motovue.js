@@ -9,20 +9,29 @@ const ISSUES = Object.freeze({
   "other": {severity:"monitor",summary:"More information needed",recommendations:["Consult the owner's manual and dashboard warnings.","If the vehicle seems unsafe to control, stop and seek professional help."]}
 });
 
+const QUESTIONS={
+ 'no-start':['Does the starter turn, click, or remain silent?','What dashboard warnings appear, and when did the vehicle last run?','What are the make, model, year, powertrain and battery/service history?'],
+ overheat:['Which warning or temperature indication appeared?','Was there steam or a visible leak, and has the engine been switched off safely?','What is the make/model/year and recent cooling-system service history?'],
+ brakes:['Is braking weak, uneven, noisy or inconsistent?','Has travel stopped, and are brake warnings or visible leaks present?','What is the vehicle and brake-service history?'],
+ tire:['Which tyre is affected and what visible damage or pressure warning is present?','Has the vehicle stopped safely?','What tyre size and manufacturer specification apply?'],
+ noise:['When does the noise occur: starting, idle, acceleration or braking?','Are there warning lights, smoke or loss of power?','What changed recently, and what is the make/model/year and service history?'],
+ other:['What are the make, model, year, powertrain and mileage?','What changed, when does it occur and what warnings appear?','What recent maintenance or repair was performed?']
+};
+function issueFor(symptoms,emergencyOnly=false){return symptoms.map(s=>[s,ISSUES[s]]).find(([,issue])=>issue&&(emergencyOnly?issue.severity==='emergency':true))||['other',ISSUES.other]}
 export class MotoVueDomain extends VueDomain {
   constructor() { super({id:"motovue",name:"MOTOVUE",capabilities:{imageAnalysis:false,videoAnalysis:false}}); }
   emergencyCheck({ symptoms }) {
-    const issue=ISSUES[symptoms[0]];
+    const [key,issue]=issueFor(symptoms,true);
     if (!issue || issue.severity!=="emergency") return null;
-    return { ...issue, limitations:["General guidance only. This is not a mechanical diagnosis."] };
+    return { ...issue, followUpQuestions:QUESTIONS[key], limitations:["General guidance only. This is not a mechanical diagnosis."] };
   }
   async assess({ symptoms, category, media }) {
-    const issue=ISSUES[symptoms[0]] || ISSUES.other;
+    const [key,issue]=issueFor(symptoms);
     const vehicle=category==="motorcycle" ? "motorcycle" : "car";
     return {
       ...issue,
       observations:[],
-      followUpQuestions:["When did the problem begin?","Are there any dashboard warning lights?"],
+      followUpQuestions:QUESTIONS[key],
       limitations:[
         "General guidance only. This is not a mechanical diagnosis.",
         media.length ? "Attached photo/video is previewed locally and is NOT analyzed by AI." : "No media analysis was requested.",

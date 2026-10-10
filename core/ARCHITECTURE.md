@@ -32,3 +32,12 @@ VueAnalysisAdapter → VueHttpAnalysisAdapter → same-origin /api/... serverles
 - `src/triagePilot.ts`: conservative low-risk UX pilot.
 
 Migration must preserve ANIVUE's API schema, seven languages, animal safety priority, tests and public beta. Make it in a separate PR, not as an unreviewed deployment.
+
+
+## Domain specialist methods
+
+`specialists.js` records distinct scopes and methods for all ten VUEs. Browser-local planning tools render localized checklists with reference links; they do not silently become AI services. ANTIQVUE and MUSICGEARVUE send object-specific reasoning instructions to their existing photo/research provider. Their public guides ask for discriminating identification, condition and provenance details. Existing independent-sale verification and shared spending controls remain the basis for monetary output.
+
+ANYVUE wraps each provider question in an evidence-focused interdisciplinary method and preserves uncertainty during synthesis. Its existing activation and budget gates still apply. MOTOVUE checks every supplied symptom for urgency before selecting routine guidance, and displays issue-specific follow-up questions. SLUMPVUE offers optional feasibility questions alongside its curated activities.
+
+ANIVUE lives in ProfessorDirren/anivue. Its image endpoint uses species-specific observation questions for dogs, cats and horses, with no medication dosing and no reduction of prior emergency guidance. Specialist profiles are reasoning and information-gathering methods, not professional credentials or verified diagnoses.

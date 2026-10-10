@@ -93,6 +93,7 @@ form.addEventListener("submit",async event=>{
   result.append(level);
   const heading=document.createElement("h3");heading.textContent=assessment.summary;result.append(heading);
   const list=document.createElement("ol");assessment.recommendations.forEach(step=>{const li=document.createElement("li");li.textContent=step;list.append(li)});result.append(list);
+  if(assessment.followUpQuestions.length){const h=document.createElement('h3');h.textContent='Details for a useful assessment';const questions=document.createElement('ul');assessment.followUpQuestions.forEach(q=>{const li=document.createElement('li');li.textContent=q;questions.append(li)});result.append(h,questions)}
   const foot=document.createElement("p");foot.textContent=assessment.limitations.join(" ");result.append(foot);
   const note=document.createElement("small");note.textContent="VUE CORE v0.1 · "+source+" · No AI analysis";result.append(note);
  }catch(error){

@@ -1,3 +1,4 @@
+import { specialistGuide } from '../core/specialists.js';
 import { UI, DOMAINS, localizeLanguagePicker } from './content.js?v=languages-3';
 import { validateMedia, LANGUAGES } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
@@ -37,6 +38,12 @@ try{
   if(r&&typeof r.name==='string'&&r.name.length<=100&&Number.isInteger(r.category)&&r.category>=0&&r.category<detail().types.length&&Array.isArray(r.items)&&r.items.length<=100&&Number.isFinite(r.original)&&r.original>0&&r.original<=1000&&Number.isFinite(r.target)&&r.target>0&&r.target<=1000&&r.items.every(i=>i&&typeof i.name==='string'&&i.name.length<=100&&Number.isFinite(i.quantity)&&i.quantity>=0&&i.quantity<=1000000&&['g','kg','ml','l','pcs','tsp','tbsp'].includes(i.unit)))recipe=r;
  }else if(stored){records=validateRecords(stored.records,detail().types.length);completed=Number.isInteger(stored.completed)&&stored.completed>=0?stored.completed:0}
 }catch{storageAvailable=false}
+function renderSpecialistGuide(category){
+ let guide=document.getElementById('specialist-guide');if(!guide){guide=node('aside',undefined,{class:'guidance',id:'specialist-guide'});workspace.after(guide)}
+ const data=specialistGuide(domain,language);guide.replaceChildren();guide.append(node('h2',data.labels[0]+' · '+detail().types[Number(category)||0]),node('p',data.labels[1]));
+ const list=node('ul');data.questions.forEach(q=>list.append(node('li',q)));guide.append(list);
+ for(const [label,url]of data.sources)guide.append(node('a',label+' ↗',{href:url,target:'_blank',rel:'noopener noreferrer',style:'display:block;margin-top:8px'}));
+}
 function buildPlanner(){
  workspace.className='workspace';workspace.replaceChildren();
  const editor=node('section',undefined,{class:'panel',id:'editor'}), list=node('section',undefined,{class:'panel',id:'plan'});workspace.append(editor,list);
@@ -47,7 +54,8 @@ function buildPlanner(){
  const interval=field(form,'interval','interval','number',{required:'',min:'1',max:'3650',step:'1'});interval.value=domain==='plantvue'?3:30;
  const notes=field(form,'notes','notes','textarea',{maxlength:'1000'});
  const submit=node('button',t('add'),{class:'primary',type:'submit'});form.append(submit);
- category.addEventListener('change',()=>{if(domain==='homevue'&&category.value==='0')interval.value=30});
+ renderSpecialistGuide(category.value);
+ category.addEventListener('change',()=>{renderSpecialistGuide(category.value);if(domain==='homevue'&&category.value==='0')interval.value=30});
  form.addEventListener('submit',event=>{event.preventDefault();if(!form.reportValidity())return;try{
   if(records.length>=200)throw new Error('limit');
   const item={id:crypto.randomUUID(),name:name.value.trim(),type:Number(category.value),due:due.value,interval:Number(interval.value),notes:notes.value};
@@ -76,7 +84,7 @@ function buildFood(){
  const editor=node('section',undefined,{class:'panel',id:'editor'}),result=node('section',undefined,{class:'panel',id:'plan'});workspace.append(editor,result);
  editor.append(node('h2',t('recipe')));const form=node('form');editor.append(form);
  const name=field(form,'recipe','recipe','text',{maxlength:'100'});name.value=recipe.name;
- const category=field(form,'category','category','select');options(category,detail().types);category.value=recipe.category;
+ const category=field(form,'category','category','select');options(category,detail().types);category.value=recipe.category;renderSpecialistGuide(category.value);category.addEventListener('change',()=>renderSpecialistGuide(category.value));
  const pair=node('div',undefined,{class:'two'});form.append(pair);const left=node('div'),right=node('div');pair.append(left,right);
  const original=field(left,'original','original','number',{required:'',min:'0.1',max:'1000',step:'any'}),target=field(right,'target','target','number',{required:'',min:'0.1',max:'1000',step:'any'});original.value=recipe.original;target.value=recipe.target;
  form.append(node('h3',t('ingredients'),{style:'margin-top:25px'}));const ingredients=node('div',undefined,{id:'ingredients'});form.append(ingredients);
