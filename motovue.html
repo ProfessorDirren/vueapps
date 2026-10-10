@@ -16,10 +16,10 @@ h1{font-size:clamp(42px,7vw,70px);letter-spacing:-2px;margin:18px 0}
 .lead{color:#b9c8cf;line-height:1.65;font-size:19px;max-width:700px}
 .card{background:#142630;border:1px solid #29404a;border-radius:18px;padding:28px;margin-top:32px}
 label{display:block;font-weight:700;margin:18px 0 8px}
-select,textarea,input[type=file]{display:block;width:100%;border:1px solid #527078;border-radius:10px;padding:13px;background:#0d2029;color:#f4f7f8;font:inherit}
+select,textarea,input[type=file],input[type=text]{display:block;width:100%;border:1px solid #527078;border-radius:10px;padding:13px;background:#0d2029;color:#f4f7f8;font:inherit}
 textarea{min-height:100px;resize:vertical}
 button{background:#70d6bb;color:#09231e;font:inherit;font-weight:800;padding:14px 22px;border:0;border-radius:10px;margin-top:22px;cursor:pointer}
-button:hover{background:#94ebd5}button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #f1cf80;outline-offset:3px}
+button:hover{background:#94ebd5}input:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #f1cf80;outline-offset:3px}
 #photoPreview img,#videoPreview video{max-width:100%;max-height:260px;border-radius:10px;margin-top:12px}#result{margin-top:26px;padding:24px;border-radius:12px;border:1px solid #46666e;background:#0c212b}
 #result[hidden]{display:none}.level{font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:800}
 .urgent{color:#ffb0a8}.caution{color:#f1cf80}.routine{color:#70d6bb}
@@ -48,14 +48,31 @@ footer{padding:28px 7%;border-top:1px solid #263943;color:#90a3ac;font-size:13px
 </form>
 <div id="result" hidden aria-live="polite" role="status"></div>
 </section>
-<p class="disclaimer">Safety first: If you cannot control the vehicle, notice smoke, fuel leaks, a serious brake fault, or a rapidly rising temperature, stop safely and seek professional assistance. Never troubleshoot while driving. No information is transmitted or stored by this prototype.</p>
+<section class="card" id="workshop-search" aria-labelledby="workshop-title">
+<h2 id="workshop-title">Find a workshop / Sök verkstad</h2>
+<p class="lead">Search Google Maps for workshops near your town or postcode. Choose roadside assistance if the vehicle cannot be driven safely.</p>
+<form id="workshop-form" action="https://www.google.com/maps/search/" method="get" target="_blank" rel="noopener noreferrer">
+<input type="hidden" name="api" value="1"><input type="hidden" name="query" id="workshop-query">
+<label for="workshop-vehicle">Vehicle type</label><select id="workshop-vehicle" required><option value="">Select a vehicle</option><option value="motorcycle">Motorcycle</option><option value="car">Car</option></select>
+<label for="workshop-location">Town or postcode / Ort eller postnummer</label><input id="workshop-location" type="text" maxlength="120" placeholder="Tyresö, Stockholm…" autocomplete="address-level2" required>
+<label for="workshop-help">Help needed</label><select id="workshop-help"><option value="workshop">Workshop</option><option value="roadside">Roadside assistance / Towing</option></select>
+<button type="submit">Find workshops / Sök verkstad →</button>
+<p class="disclaimer">Opens an external Google Maps search with the vehicle type and location you enter. Check opening hours and whether the workshop handles your vehicle. Results are not independently verified by MOTOVUE. Your photos, symptoms and notes are not included in the search.</p>
+</form></section>
+<p class="disclaimer">Safety first: If you cannot control the vehicle, notice smoke, fuel leaks, a serious brake fault, or a rapidly rising temperature, stop safely and seek professional assistance. Never troubleshoot while driving. The symptom guide keeps your entries on this device. Workshop search sends only the chosen vehicle type, help category and location to Google Maps when you submit it.</p>
 </main>
 <footer>© 2026 VUEAPPS · MOTOVUE concept preview</footer>
 <script type="module">
 import { VueFlow, validateMedia } from './core/index.js';
 import { MotoVueDomain } from './core/motovue.js';
+import { workshopQuery } from './core/workshops.js';
 const flow = new VueFlow(new MotoVueDomain());
 const form=document.getElementById("guide"),result=document.getElementById("result");
+const workshopForm=document.getElementById('workshop-form');
+workshopForm.addEventListener('submit',event=>{
+ try{document.getElementById('workshop-query').value=workshopQuery(document.getElementById('workshop-vehicle').value,document.getElementById('workshop-location').value,document.getElementById('workshop-help').value)}catch{event.preventDefault();workshopForm.reportValidity()}
+});
+document.getElementById('vehicle').addEventListener('change',event=>{document.getElementById('workshop-vehicle').value=event.target.value});
 const objectUrls={};
 function preview(inputId,outputId,tag){
  const input=document.getElementById(inputId),output=document.getElementById(outputId);
@@ -91,6 +108,7 @@ form.addEventListener("submit",async event=>{
   const level=document.createElement("div");level.className="level "+(severity==="emergency"?"urgent":severity==="professional"?"caution":"routine");
   level.textContent=severity==="emergency"?"Stop safely / seek help":severity==="professional"?"Professional inspection recommended":"General guidance";
   result.append(level);
+  const findHelp=document.createElement('a');findHelp.href='#workshop-search';findHelp.textContent=severity==='emergency'?'Find roadside assistance — do not drive an unsafe vehicle':'Find a workshop / Sök verkstad →';findHelp.addEventListener('click',()=>{document.getElementById('workshop-vehicle').value=category;document.getElementById('workshop-help').value=severity==='emergency'?'roadside':'workshop';document.getElementById('workshop-location').focus({preventScroll:true})});result.append(findHelp);
   const heading=document.createElement("h3");heading.textContent=assessment.summary;result.append(heading);
   const list=document.createElement("ol");assessment.recommendations.forEach(step=>{const li=document.createElement("li");li.textContent=step;list.append(li)});result.append(list);
   if(assessment.followUpQuestions.length){const h=document.createElement('h3');h.textContent='Details for a useful assessment';const questions=document.createElement('ul');assessment.followUpQuestions.forEach(q=>{const li=document.createElement('li');li.textContent=q;questions.append(li)});result.append(h,questions)}
