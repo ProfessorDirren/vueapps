@@ -1,11 +1,12 @@
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
-export function ready(){return !!(process.env.OPENAI_API_KEY&&process.env.UPSTASH_REDIS_REST_URL&&process.env.UPSTASH_REDIS_REST_TOKEN)}
+function redisConfig(){return process.env.UPSTASH_REDIS_REST_URL&&process.env.UPSTASH_REDIS_REST_TOKEN?{url:process.env.UPSTASH_REDIS_REST_URL,token:process.env.UPSTASH_REDIS_REST_TOKEN}:{url:process.env.KV_REST_API_URL,token:process.env.KV_REST_API_TOKEN}}
+export function ready(){const c=redisConfig();return !!(process.env.OPENAI_API_KEY&&c.url&&c.token)}
 async function budget(){
  const limit=Number(process.env.ANTIQVUE_DAILY_MODEL_CALL_LIMIT||40);
  if(!Number.isSafeInteger(limit)||limit<1||limit>10000)return false;
  const script="local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],172800) end; return n";
- try{const u=new URL(process.env.UPSTASH_REDIS_REST_URL);if(u.protocol!=='https:')return false;
- const r=await fetch(u.origin,{method:'POST',headers:{Authorization:'Bearer '+process.env.UPSTASH_REDIS_REST_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(['EVAL',script,'1','antiqvue:global:'+new Date().toISOString().slice(0,10)]),signal:AbortSignal.timeout(3500)});
+ try{const c=redisConfig();const u=new URL(c.url);if(u.protocol!=='https:')return false;
+ const r=await fetch(u.origin,{method:'POST',headers:{Authorization:'Bearer '+c.token,'Content-Type':'application/json'},body:JSON.stringify(['EVAL',script,'1','antiqvue:global:'+new Date().toISOString().slice(0,10)]),signal:AbortSignal.timeout(3500)});
  if(!r.ok)return false;const d=await r.json();return Number.isInteger(d.result)&&d.result<=limit}catch{return false}
 }
 export function validImage(image){
