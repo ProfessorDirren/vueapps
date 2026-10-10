@@ -11,6 +11,12 @@
     },
     "api/wardrobevue.js": {
       "maxDuration": 60
+    },
+    "api/medivue.js": {
+      "maxDuration": 60
+    },
+    "api/foodvue.js": {
+      "maxDuration": 60
     }
   }
 }

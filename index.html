@@ -98,6 +98,7 @@
           
           <a class="tool-link" href="./homevue.html">Open HOMEVUE &rarr;</a>
         </article>
+        <article class="app" id="app-medivue"><h3>MEDIVUE</h3><p>Read public medication leaflets. Separate side-effect frequency from explicit urgent warnings.</p><a href="./medivue.html">MEDIVUE →</a></article>
         <article class="app" id="app-motovue">
           <h3>MOTOVUE</h3>
           <p>A new perspective on vehicle care, maintenance and diagnostics.</p>
@@ -144,6 +145,8 @@ const vinylTranslations={"en": "Identify vinyl records, compare pressings and re
 const communityTranslations={"en": ["Help choose the next VUE.", "Paid members can propose new VUEs and vote. The backlog is ranked by votes; the team reviews feasibility before scheduling builds.", "Community backlog →"], "sv": ["Välj nästa VUE.", "Betalande medlemmar kan föreslå nya VUEs och rösta. Backloggen sorteras efter röster; teamet bedömer genomförbarheten innan bygget planeras.", "Gemensam backlogg →"], "es": ["Elige el próximo VUE.", "Los miembros de pago pueden proponer y votar. La lista se ordena por votos; el equipo revisa la viabilidad antes de programar.", "Lista de la comunidad →"], "hi": ["अगला VUE चुनें।", "भुगतान करने वाले सदस्य प्रस्ताव और वोट दे सकते हैं। सूची वोट के अनुसार है; टीम निर्माण से पहले व्यवहार्यता जाँचती है।", "सामुदायिक सूची →"], "zh-CN": ["选择下一个 VUE。", "付费会员可提出新 VUE 并投票。清单按票数排序；团队评估可行性后安排开发。", "社区待办清单 →"], "ru": ["Выберите следующий VUE.", "Платные участники предлагают новые VUE и голосуют. Список сортируется по голосам; команда проверяет реализуемость перед планированием.", "Список сообщества →"], "ar": ["اختر VUE التالي.", "يمكن للأعضاء المشتركين اقتراح VUE والتصويت. ترتب القائمة بالأصوات ويراجع الفريق الجدوى قبل جدولة البناء.", "قائمة المجتمع →"]};
 const possessionsTranslations={"en": ["Inventory a whole home, room by room. Plan what to keep, sell, donate or recycle.", "Catalogue clothes, shoes, bags and accessories. Track wear and prepare sale drafts."], "sv": ["Inventera ett helt hem, rum för rum. Planera vad som ska behållas, säljas, skänkas eller återvinnas.", "Inventera kläder, skor, väskor och accessoarer. Registrera användning och förbered annonsutkast."], "es": ["Inventaría una casa por habitaciones. Planifica conservar, vender, donar o reciclar.", "Cataloga ropa, zapatos, bolsos y accesorios. Registra usos y prepara borradores de venta."], "hi": ["कमरे दर कमरे घर की सूची बनाएँ। रखने, बेचने, दान या पुनर्चक्रण की योजना बनाएँ।", "कपड़े, जूते, बैग और सहायक वस्तुएँ दर्ज करें। उपयोग और बिक्री मसौदे तैयार करें।"], "zh-CN": ["逐房间整理整个家的物品，计划保留、出售、捐赠或回收。", "整理衣物、鞋子、包袋和配饰，记录使用并准备出售草稿。"], "ru": ["Список всего дома по комнатам. Планируйте оставить, продать, пожертвовать или переработать.", "Каталог одежды, обуви, сумок и аксессуаров. Записывайте использование и готовьте объявления."], "ar": ["احصر المنزل غرفة بغرفة وخطط للاحتفاظ أو البيع أو التبرع أو التدوير.", "سجل الملابس والأحذية والحقائب والملحقات والاستخدام وحضر مسودات بيع."]};
 const picker=document.getElementById("language");
+const mediTranslations={"en": "Read public medication leaflets. Separate side-effect frequency from explicit urgent warnings.", "sv": "Granska offentliga bipacksedlar. Skilj biverkningsfrekvens från uttryckliga akuta varningar.", "es": "Revisa prospectos públicos. Distingue frecuencia de efectos adversos y avisos urgentes.", "hi": "सार्वजनिक दवा पर्चे जाँचें। दुष्प्रभाव की आवृत्ति और स्पष्ट आपात चेतावनी अलग देखें।", "zh-CN": "审查公开药品说明书，区分副作用发生频率和明确紧急警告。", "ru": "Читайте публичные инструкции. Отделяйте частоту побочных эффектов от срочных предупреждений.", "ar": "راجع نشرات الأدوية العامة وافصل تكرار الآثار الجانبية عن التحذيرات العاجلة."};
+const foodReviewTranslations={"en": "Scale recipes and review ingredient labels, E numbers and source-supported risk information.", "sv": "Skala recept och granska ingredienser, E-nummer och källbelagd riskinformation.", "es": "Ajusta recetas y revisa ingredientes, números E y riesgos con fuentes.", "hi": "रेसिपी मात्रा बदलें और सामग्री, E नंबर तथा स्रोत आधारित जोखिम जाँचें।", "zh-CN": "调整食谱并审查配料、E编号与有来源的风险信息。", "ru": "Пересчитывайте рецепты, проверяйте ингредиенты, E-номера и данные о рисках.", "ar": "عدل الوصفات وراجع المكونات وأرقام E والمخاطر المدعومة بالمصادر."};
 function setLanguage(lang){
  renderVueNames(document,lang);
  ["estatevue","wardrobevue"].forEach((id,i)=>document.querySelector("#app-"+id+" p").textContent=(possessionsTranslations[lang]||possessionsTranslations.en)[i]);
@@ -164,6 +167,8 @@ function setLanguage(lang){
  const food=DOMAINS.foodvue.locales[lang].types;
  document.querySelectorAll('#app-foodvue .subcategories li').forEach((el,i)=>el.textContent=food[[0,2,3,4][i]]);
  document.querySelector('#app-foodvue .nested').textContent=food.slice(0,2).join(' · ');
+ document.querySelector("#app-medivue p").textContent=mediTranslations[lang]||mediTranslations.en;
+ document.querySelector("#app-foodvue p").textContent=foodReviewTranslations[lang]||foodReviewTranslations.en;
  picker.value=lang;
  try{localStorage.setItem("vueapps-language-v2",lang)}catch{}
 }
