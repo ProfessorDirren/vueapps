@@ -116,9 +116,11 @@
           
           <a href="./slumpvue.html" id="slump-link">Try SLUMPVUE →</a>
         </article>
+        <article class="app" id="app-vinylvue"><h3>VINYLVUE</h3><p>Identify vinyl records, compare pressings and research completed-sale evidence.</p><a href="./vinylvue.html">VINYLVUE →</a></article>
       </div>
     </section>
     <p class="note main-note">VUE planning tools support your own decisions. ANIVUE observations are preliminary and do not replace veterinary care.</p>
+    <section class="app" aria-labelledby="community-title" style="margin-top:32px"><h2 id="community-title">Choose the next VUE</h2><p id="community-description">Paid members propose and vote on new VUEs. Explore the community backlog.</p><a id="community-link" href="./vue-backlog.html">Open community backlog →</a></section>
   </main>
   <footer>&copy; 2026 VUEAPPS. All rights reserved.</footer>
 <script type="module">
@@ -135,9 +137,13 @@ ru:["Один клик — неожиданное открытие. 42 сюрп�
 ar:["نقرة واحدة ومفاجأة جديدة. 42 فكرة في سبعة مواضيع.","متاح · تجربة تفاعلية","جرّب SLUMPVUE ←"]};
 const antiqTranslations={"en": "Antiques, furniture, old jewellery and decorative objects. Start with the evidence.", "sv": "Antikviteter, möbler, gamla smycken och prydnadsföremål. Börja med beläggen.", "es": "Antigüedades, muebles, joyas antiguas y objetos decorativos. Empieza con las pruebas.", "hi": "प्राचीन वस्तुएँ, फर्नीचर, पुराने आभूषण और सजावटी वस्तुएँ। प्रमाण से शुरुआत करें।", "zh-CN": "古董、家具、旧珠宝和装饰物，从证据开始。", "ru": "Антиквариат, мебель, старинные украшения и предметы декора. Начните с фактов.", "ar": "تحف وأثاث ومجوهرات قديمة وقطع زخرفية. ابدأ بالأدلة."};
 const musicTranslations={"en": "New and used instruments, amplifiers, DJ and studio equipment. Identify your gear and research its value.", "sv": "Nya och begagnade instrument, förstärkare, DJ- och studioutrustning. Identifiera utrustningen och undersök värdet.", "es": "Instrumentos nuevos y usados, amplificadores y equipos de DJ y estudio. Identifica tu equipo e investiga su valor.", "hi": "नए और पुराने वाद्ययंत्र, एम्पलीफायर, DJ और स्टूडियो उपकरण। पहचान और मूल्य शोध करें।", "zh-CN": "新旧乐器、放大器、DJ及录音室设备。识别设备并研究其价值。", "ru": "Новые и подержанные инструменты, усилители, оборудование для диджеев и студий. Определите оборудование и изучите его стоимость.", "ar": "آلات جديدة ومستعملة ومضخمات ومعدات DJ واستوديو. تعرّف على معداتك وابحث عن قيمتها."};
+const vinylTranslations={"en": "Identify vinyl records, compare pressings and research completed-sale evidence.", "sv": "Identifiera vinylskivor, jämför pressningar och undersök verkliga försäljningar.", "es": "Identifica vinilos, compara ediciones e investiga ventas realizadas.", "hi": "विनाइल पहचानें, प्रेसिंग की तुलना करें और वास्तविक बिक्री के प्रमाण खोजें।", "zh-CN": "识别黑胶唱片，比较版本并查找已完成交易的证据。", "ru": "Определяйте виниловые издания, сравнивайте тиражи и изучайте завершённые продажи.", "ar": "تعرّف على أسطوانات الفينيل وقارن الطبعات وابحث عن أدلة المبيعات المكتملة."};
+const communityTranslations={"en": ["Help choose the next VUE.", "Paid members can propose new VUEs and vote. The backlog is ranked by votes; the team reviews feasibility before scheduling builds.", "Community backlog →"], "sv": ["Välj nästa VUE.", "Betalande medlemmar kan föreslå nya VUEs och rösta. Backloggen sorteras efter röster; teamet bedömer genomförbarheten innan bygget planeras.", "Gemensam backlogg →"], "es": ["Elige el próximo VUE.", "Los miembros de pago pueden proponer y votar. La lista se ordena por votos; el equipo revisa la viabilidad antes de programar.", "Lista de la comunidad →"], "hi": ["अगला VUE चुनें।", "भुगतान करने वाले सदस्य प्रस्ताव और वोट दे सकते हैं। सूची वोट के अनुसार है; टीम निर्माण से पहले व्यवहार्यता जाँचती है।", "सामुदायिक सूची →"], "zh-CN": ["选择下一个 VUE。", "付费会员可提出新 VUE 并投票。清单按票数排序；团队评估可行性后安排开发。", "社区待办清单 →"], "ru": ["Выберите следующий VUE.", "Платные участники предлагают новые VUE и голосуют. Список сортируется по голосам; команда проверяет реализуемость перед планированием.", "Список сообщества →"], "ar": ["اختر VUE التالي.", "يمكن للأعضاء المشتركين اقتراح VUE والتصويت. ترتب القائمة بالأصوات ويراجع الفريق الجدوى قبل جدولة البناء.", "قائمة المجتمع →"]};
 const picker=document.getElementById("language");
 function setLanguage(lang){
  localizeLanguagePicker(picker,lang);
+ document.querySelector("#app-vinylvue p").textContent=vinylTranslations[lang]||vinylTranslations.en;
+ ["community-title","community-description","community-link"].forEach((id,i)=>document.getElementById(id).textContent=(communityTranslations[lang]||communityTranslations.en)[i]);
  document.querySelector("#app-antiqvue p").textContent=antiqTranslations[lang]||antiqTranslations.en;
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
