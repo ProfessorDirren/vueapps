@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../api/antiqvue.js',import.meta.url),'utf8');
-const {validImage,POST,pageSaleEvidence,saleURL}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {validImage,POST,pageSaleEvidence,saleURL,researchLinks}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 test('ANTIQVUE rejects renamed and oversized images',()=>{assert.equal(validImage('data:image/png;base64,'+Buffer.from('not an image at all').toString('base64')),false);assert.equal(validImage('data:image/png;base64,'+'A'.repeat(15*1024*1024)),false);assert.equal(validImage('data:image/png;base64,'+Buffer.from([137,80,78,71,13,10,26,10,0,0,0,0]).toString('base64')),true)});
 test('ANTIQVUE reports unavailable instead of fabricated analysis without credentials',async()=>{const previous=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;try{const r=await POST(new Request('https://localhost/api/antiqvue',{method:'POST'}));assert.equal(r.status,503);assert.match((await r.json()).error,/not configured/)}finally{if(previous!==undefined)process.env.OPENAI_API_KEY=previous}});
 test('ANYVUE stays first, then ANIVUE and ANTIQVUE before ARMVUE',async()=>{const html=await readFile(new URL('../index.html',import.meta.url),'utf8');const positions=['anyvue','anivue','antiqvue','armvue'].map(id=>html.indexOf(`id="app-${id}"`));assert.ok(positions.every(x=>x>=0));assert.deepEqual([...positions].sort((a,b)=>a-b),positions)});
@@ -72,4 +72,18 @@ test('valuation retrieves and checks both disclosed sale pages before returning 
  const c=comps.find(c=>c.url===url);if(c){pages++;return new Response('<article>'+c.evidence.excerpt+'</article>',{headers:{'Content-Type':'text/html'}})}
  return Response.json({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:comps.map(c=>({url:c.url}))}},{type:'message',content:[{type:'output_text',text:JSON.stringify({analysis:'Synligt: förstärkare. Ägaruppgift: modell. Osäkerhet: invändigt skick.',searchTerms:terms,comparables:comps})}]}]});
  },async()=>{const r=await POST(request({action:'value'}));assert.equal(r.status,200);const d=await r.json();assert.equal(pages,2);assert.equal(d.comparables.length,2);assert.equal(d.valuation.low,10000);assert.equal(d.valuation.high,14000)});
+});
+
+test('context links are retrieved citations, safely labelled and never treated as sales',()=>{
+ const links=researchLinks([{url:'https://auctionet.com/en/context'},{url:'https://auctionet.com/en/context'},{url:'https://reverb.com/item/folkesson-owner'},{url:'http://auctionet.com/x'},{url:'https://evil.example/x'}],[]);
+ assert.equal(links.length,1);assert.equal(links[0].amount,undefined);assert.equal(links[0].title,'auctionet.com');
+});
+test('prose research formatting retains the photo and produces separated visible observations',async()=>{
+ let aiCalls=0;
+ await withMocks(async(url,options)=>{
+ if(url==='https://redis.example')return Response.json({result:1});aiCalls++;const payload=JSON.parse(options.body);
+ if(aiCalls===1)return Response.json({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:[{url:'https://auctionet.com/en/context'}]}},{type:'message',content:[{type:'output_text',text:'No independently disclosed matching sale prices found.'}]}]});
+ assert.equal(payload.input[0].content[1].image_url,image);assert.equal(payload.tools,undefined);assert.match(payload.instructions,/owner details as unavailable/);
+ return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({analysis:'research',exterior:'Svart förstärkartopp med separat högtalarlåda och synlig Marshall-logotyp.',comparables:[]})}]}]});
+ },async()=>{const response=await POST(request({action:'value'}));assert.equal(response.status,200);const data=await response.json();assert.match(data.analysis,/Svart förstärkartopp/);assert.match(data.analysis,/Ägarens uppgifter/);assert.equal(data.researchSources.length,1);assert.equal(data.valuation,null);assert.equal(aiCalls,2)});
 });
