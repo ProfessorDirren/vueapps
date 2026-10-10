@@ -54,7 +54,7 @@ export async function POST(request){
  const parts=(d.output||[]).filter(x=>x.type==='message').flatMap(x=>x.content||[]).filter(x=>x.type==='output_text');
  const text=parts.map(x=>x.text).join('\n');if(!text.trim())return json(502,{error:'No analysis returned.'});
  if(action==='observe')return json(200,{analysis:text,comparables:[],valuation:null});
- let report;try{report=JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch{return json(502,{error:'Market research could not be read. Please retry.'})}
+ let report;try{report=JSON.parse(text.slice(text.indexOf('{'),text.lastIndexOf('}')+1))}catch{return json(502,{error:'Market research could not be read. Please retry.'})}
  if(typeof report?.analysis!=='string')return json(502,{error:'Invalid market research.'});
  const searched=(d.output||[]).some(x=>x.type==='web_search_call'&&x.status==='completed');
  const sources=(d.output||[]).filter(x=>x.type==='web_search_call').flatMap(x=>x.action?.sources||[]).concat(parts.flatMap(x=>x.annotations||[]));
