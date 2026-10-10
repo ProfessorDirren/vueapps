@@ -8,6 +8,9 @@
     },
     "api/vinylvue.js": {
       "maxDuration": 60
+    },
+    "api/wardrobevue.js": {
+      "maxDuration": 60
     }
   }
 }

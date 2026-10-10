@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
-const existing=new Set(['ANYVUE','ANIVUE','ANTIQVUE','ARMVUE','FOODVUE','HOMEVUE','MOTOVUE','MUSICGEARVUE','PLANTVUE','SLUMPVUE','VINYLVUE']);
+const existing=new Set(['ANYVUE','ANIVUE','ANTIQVUE','ARMVUE','FOODVUE','HOMEVUE','MOTOVUE','MUSICGEARVUE','PLANTVUE','SLUMPVUE','VINYLVUE','ESTATEVUE','WARDROBEVUE']);
 const states=['proposed','planned','building','released'];
 function config(){return {url:process.env.UPSTASH_REDIS_REST_URL||process.env.KV_REST_API_URL,token:process.env.UPSTASH_REDIS_REST_TOKEN||process.env.KV_REST_API_TOKEN}}
 export function configured(){const c=config();return !!(c.url&&c.token)}

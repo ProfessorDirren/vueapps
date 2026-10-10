@@ -1,3 +1,4 @@
+import {consumeHandoff} from '../core/handoff.js';
 import { initCollection } from './vinyl-collection.js';
 import {discogsSearch} from '../core/vinyl-collection.js';
 let collectionController=null;
@@ -72,3 +73,5 @@ $('download').onclick=()=>{const u=URL.createObjectURL(new Blob([exportText()],{
 window.addEventListener('pagehide',()=>{if(url)URL.revokeObjectURL(url)});render();
 collectionController=initCollection({language,getReport:exportText,getDescription:()=>$('description').value,setDescription:value=>{$('description').value=value;output('');$('description').focus();$('description').scrollIntoView({behavior:'smooth',block:'center'})}});
 $('description').addEventListener('input',()=>{$('discogs-check').href=discogsSearch($('description').value)});
+
+try{const handed=consumeHandoff(sessionStorage,document.body.dataset.domain);if(handed!==null)document.getElementById('description').value=handed}catch{}
