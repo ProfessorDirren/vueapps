@@ -3,7 +3,7 @@ import {MEMORY_DOMAINS} from './memory.js';
 const rules=[
  ['estatevue',7,/dödsbo|arvskifte|inventera (?:hem|hus)|hela (?:hemmet|huset)|estate inventory|deceased estate|succession|遗产|наследств|تركة|विरासत/iu],
  ['medivue',6,/bipacksedel|läkemedel|medicin|biverkning|medication|medicine|leaflet|side effects|prospecto|medicamento|药品|药物|лекарств|دواء|दवा/iu],
- ['vinylvue',5,/vinyl|grammofon|skivor|skiva|\blp\b|discogs|runout|pressning|record collection|黑胶|винил|أسطوان|विनाइल/iu],
+ ['vinylvue',5,/vinyl|grammofon|skivor|skiva|(?<![\p{L}\p{N}_])lp(?![\p{L}\p{N}_])|discogs|runout|pressning|record collection|黑胶|винил|أسطوان|विनाइल/iu],
  ['musicgearvue',5,/gitarr|guitar|förstärkar|amplifier|marshall|fender|gibson|synt(?:h|ar)|trumm|piano|instrument|dj[- ]|turntable|guitarra|吉他|乐器|гитар|усилител|غيتار|गिटार/iu],
  ['wardrobevue',5,/kläder|klänning|jacka|skor|handväska|wardrobe|clothing|dress|jacket|shoes|handbag|ropa|vestido|衣服|服装|одежд|плать|ملابس|कपड़े/iu],
  ['anivue',5,/\bhund\b|\bkatt\b|\bhäst\b|\bdog\b|\bcat\b|\bhorse\b|veterinär|perro|gato|caballo|宠物|小狗|小猫|狗|猫|собак|кошк|лошад|كلب|قط|حصان|कुत्ता|बिल्ली|घोड़ा/iu],
