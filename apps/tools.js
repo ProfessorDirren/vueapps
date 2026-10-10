@@ -59,7 +59,7 @@ function buildPlanner(){
  form.addEventListener('submit',event=>{event.preventDefault();if(!form.reportValidity())return;try{
   if(records.length>=200)throw new Error('limit');
   const item={id:crypto.randomUUID(),name:name.value.trim(),type:Number(category.value),due:due.value,interval:Number(interval.value),notes:notes.value};
-  validateRecords([item],detail().types.length);records.push(item);save();renderRecords();name.value='';notes.value='';name.focus();
+  validateRecords([item],detail().types.length);records.push(item);save();renderRecords();window.dispatchEvent(new CustomEvent('vue:case-select',{detail:{domain,itemId:item.id,title:item.name}}));window.dispatchEvent(new CustomEvent('vue:case-record',{detail:{domain,question:item.name,answer:JSON.stringify(item)}}));name.value='';notes.value='';window.dispatchEvent(new CustomEvent('vue:new-item',{detail:{domain}}));name.focus();
  }catch{announce('error')}});
  const head=node('div',undefined,{class:'section-top'});head.append(node('h2',t('list')));list.append(head);
  toolbar(list,()=>download(JSON.stringify({app:domain,version:1,exported:today(),records,completed},null,2),'json','application/json'));
@@ -127,3 +127,6 @@ attachMedia('photo','image');attachMedia('video','video');
 document.getElementById('clear-media').addEventListener('click',()=>{for(const id of ['photo','video']){if(urls[id])URL.revokeObjectURL(urls[id]);delete urls[id];document.getElementById(id).value='';document.getElementById(id+'-preview').replaceChildren()}clearNotice()});
 window.addEventListener('pagehide',()=>Object.values(urls).forEach(url=>URL.revokeObjectURL(url)));
 render();
+
+window.addEventListener('vue:restore',event=>{if(event.detail?.domain!==domain||domain!=='foodvue'||!event.detail.fields?.recipeState)return;try{const data=JSON.parse(event.detail.fields.recipeState),r=data.recipe;if(data.version!==1||!r||typeof r.name!=='string'||r.name.length>100||!Number.isInteger(r.category)||r.category<0||r.category>=detail().types.length)throw Error('recipe');scaleIngredients(r.items,r.original,r.target);recipe=r;scaled=[];save();render()}catch{announce('error')}});
+window.addEventListener('vue:new-case',event=>{if(event.detail?.domain===domain&&domain==='foodvue'){recipe={name:'',category:0,original:4,target:4,items:[{name:'',quantity:0,unit:'g'}]};scaled=[];save();render()}});

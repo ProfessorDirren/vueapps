@@ -1,1 +1,1 @@
-{"name":"@vueapps/core","version":"0.1.0","private":true,"type":"module","description":"Shared VUE domain contracts and flow"}
+{"name":"@vueapps/core","version":"0.2.0","private":true,"type":"module","description":"Shared VUE contracts, case memory and verified public source archive"}

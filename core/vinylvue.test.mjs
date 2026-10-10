@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../api/vinylvue.js',import.meta.url),'utf8');
-const api=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const api=await import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("../core/memory-context.js",new URL("./memory-context.js",import.meta.url).href).replaceAll("../core/specialist-memory.js",new URL("./specialist-memory.js",import.meta.url).href)).toString('base64'));
 const image='data:image/png;base64,'+Buffer.from([137,80,78,71,13,10,26,10,0,0,0,0]).toString('base64');
 const req=(description='David Bowie Hunky Dory LSP-4623',action='value')=>new Request('https://www.vueapps.se/api/vinylvue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,description,language:'sv',action,currency:'SEK',market:'Sweden'})});
 async function mocked(fetcher,run){const names=['OPENAI_API_KEY','KV_REST_API_URL','KV_REST_API_TOKEN','UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN'];const before=Object.fromEntries(names.map(n=>[n,process.env[n]])),old=globalThis.fetch;process.env.OPENAI_API_KEY='test';process.env.KV_REST_API_URL='https://redis.example';process.env.KV_REST_API_TOKEN='test';delete process.env.UPSTASH_REDIS_REST_URL;delete process.env.UPSTASH_REDIS_REST_TOKEN;globalThis.fetch=fetcher;try{await run()}finally{globalThis.fetch=old;for(const n of names)if(before[n]===undefined)delete process.env[n];else process.env[n]=before[n]}}

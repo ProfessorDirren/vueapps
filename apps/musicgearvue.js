@@ -68,4 +68,4 @@ $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(exportText()
 $('download').onclick=()=>{const u=URL.createObjectURL(new Blob([exportText()],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='musicgearvue-research.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 window.addEventListener('pagehide',()=>{if(url)URL.revokeObjectURL(url)});render();
 
-try{const handed=consumeHandoff(sessionStorage,document.body.dataset.domain);if(handed!==null)document.getElementById('description').value=handed}catch{}
+try{const handed=consumeHandoff(sessionStorage,document.body.dataset.domain);if(handed!==null){document.body.dataset.handoff='true';document.getElementById('description').value=handed}}catch{}

@@ -1,9 +1,9 @@
 /**
- * VUE CORE v0.1 — browser/Node compatible, dependency-free domain foundation.
+ * VUE CORE v0.2 — browser/Node compatible, dependency-free domain foundation.
  * Shared contracts and flow orchestration; domain-specific rules live in adapters.
- * No API keys, persistence, tracking or hidden network calls.
+ * No API keys, tracking or hidden network calls. Memory uses explicitly injected storage.
  */
-export const CORE_VERSION = "0.1.0";
+export const CORE_VERSION = "0.2.0";
 export const MEDIA_LIMITS = Object.freeze({ image: 10 * 1024 * 1024, video: 50 * 1024 * 1024 });
 export const IMAGE_TYPES = Object.freeze(["image/jpeg","image/png","image/webp","image/heic","image/heif"]);
 export const LANGUAGES = Object.freeze(["en","sv","es","hi","zh-CN","ru","ar"]);
@@ -75,3 +75,5 @@ export class VueFlow {
     return { domain:this.domain.id, assessment:assessed, source:"domain", mediaAnalyzed:false };
   }
 }
+
+export { VueMemory, MEMORY_VERSION, MEMORY_LIMITS, selectHistory } from "./memory.js";

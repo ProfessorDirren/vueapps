@@ -36,8 +36,16 @@ Migration must preserve ANIVUE's API schema, seven languages, animal safety prio
 
 ## Domain specialist methods
 
-`specialists.js` records distinct scopes and methods for all ten VUEs. Browser-local planning tools render localized checklists with reference links; they do not silently become AI services. ANTIQVUE and MUSICGEARVUE send object-specific reasoning instructions to their existing photo/research provider. Their public guides ask for discriminating identification, condition and provenance details. Existing independent-sale verification and shared spending controls remain the basis for monetary output.
+`specialists.js` records distinct scopes and methods for all fourteen VUEs. Browser-local planning tools render localized checklists with reference links; they do not silently become AI services. ANTIQVUE and MUSICGEARVUE send object-specific reasoning instructions to their existing photo/research provider. Their public guides ask for discriminating identification, condition and provenance details. Existing independent-sale verification and shared spending controls remain the basis for monetary output.
 
 ANYVUE wraps each provider question in an evidence-focused interdisciplinary method and preserves uncertainty during synthesis. Its existing activation and budget gates still apply. MOTOVUE checks every supplied symptom for urgency before selecting routine guidance, and displays issue-specific follow-up questions. SLUMPVUE offers optional feasibility questions alongside its curated activities.
 
 ANIVUE lives in ProfessorDirren/anivue. Its image endpoint uses species-specific observation questions for dogs, cats and horses, with no medication dosing and no reduction of prior emergency guidance. Specialist profiles are reasoning and information-gathering methods, not professional credentials or verified diagnoses.
+
+## CORE-VUE case memory
+
+`memory.js` provides domain-separated, versioned case storage with explicitly injected browser storage, atomic validation, export/import, deletion and bounded relevant context. Private cases remain on the same browser/device; there is no account sync. Photos, credentials and obvious identifiers are excluded. MEDIVUE has session-only public-product review memory and no saved patient profile. The identifier filter is a precaution, not a guarantee that arbitrary text contains no personal information.
+
+`apps/memory.js` connects all fourteen specialists. Owner fields and past answers remain fallible case context, never fresh evidence. Follow-ups are explicit requests; there is no background model activity. Current clinical/vehicle emergency rules override history. ANIVUE keeps prior urgent AI cautions on case reload and clears them only by starting a separate case.
+
+`specialist-memory.js` stores a bounded public archive of server-verified official or sold-page passages using existing server storage. No client may submit arbitrary archive entries. Quotes are dated, domain-scoped and must be checked again for applicability and currency. Raw user questions, images, recipe text and AI answers never enter this shared archive. The archive fails gracefully when storage is unavailable; it does not establish a verified current conclusion.

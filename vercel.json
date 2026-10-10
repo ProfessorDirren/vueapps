@@ -17,6 +17,12 @@
     },
     "api/foodvue.js": {
       "maxDuration": 60
+    },
+    "api/vue-followup.js": {
+      "maxDuration": 60
+    },
+    "api/vue-memory.js": {
+      "maxDuration": 10
     }
   }
 }

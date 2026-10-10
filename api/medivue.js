@@ -1,3 +1,4 @@
+import {collectPublicEvidence} from '../core/specialist-memory.js';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
 function redisConfig(){return process.env.UPSTASH_REDIS_REST_URL&&process.env.UPSTASH_REDIS_REST_TOKEN?{url:process.env.UPSTASH_REDIS_REST_URL,token:process.env.UPSTASH_REDIS_REST_TOKEN}:{url:process.env.KV_REST_API_URL,token:process.env.KV_REST_API_TOKEN}}
 export function ready(){const c=redisConfig();return !!(process.env.OPENAI_API_KEY&&c.url&&c.token)}
@@ -86,6 +87,7 @@ export async function POST(request){
  const quote=typeof report.identityQuote==='string'?clean(report.identityQuote):'';
  const match=report.matched===true&&report.country===b.country&&source&&quote.length>=10&&source.text.includes(quote)&&['name','strength','form'].every(k=>quote.toLowerCase().includes(clean(b[k]).toLowerCase()));
  const effects=match?verifiedEffects(report.effects,source.text):[];
+ if(match&&!supplied)await collectPublicEvidence('medivue',effects.map(e=>({url:source.url,quote:e.excerpt,verifiedBy:'server_source_passage'})));
  return json(200,{matched:!!match,effects,source:match?{url:source.url,type:supplied?'user_supplied_unverified':'official_page_passages_verified',checkedAt:new Date().toISOString(),identityQuote:quote}:null,links:links.map(url=>({url})),incomplete:true,noPersonalRiskScore:true});
  }catch{return json(502,{error:'Leaflet review unavailable. Please retry or open the official leaflet.'})}
 }

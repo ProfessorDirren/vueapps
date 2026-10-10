@@ -10,14 +10,14 @@ test('music and antiques have separate seven-language pages, client routes and p
  const positions=['app-motovue','app-musicgearvue','app-plantvue'].map(id=>portal.indexOf(`id="${id}"`));assert.ok(positions.every(n=>n>=0));assert.deepEqual(positions,[...positions].sort((a,b)=>a-b));
 });
 test('music endpoint handles a photo with a music-specific prompt and the shared spending budget',async()=>{
- const source=await read('api/musicgearvue.js');const {POST}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+ const source=await read('api/musicgearvue.js');const {POST}=await import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("../core/memory-context.js",new URL("./memory-context.js",import.meta.url).href).replaceAll("../core/specialist-memory.js",new URL("./specialist-memory.js",import.meta.url).href)).toString('base64'));
  const names=['OPENAI_API_KEY','UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN'];const before=Object.fromEntries(names.map(n=>[n,process.env[n]]));const originalFetch=globalThis.fetch;
  process.env.OPENAI_API_KEY='test';process.env.UPSTASH_REDIS_REST_URL='https://redis.example';process.env.UPSTASH_REDIS_REST_TOKEN='test';
  globalThis.fetch=async(url,options)=>{const body=JSON.parse(options.body);if(url==='https://redis.example'){assert.match(body[3],/^antiqvue:global:/);return Response.json({result:1})}assert.match(body.instructions,/MUSICGEARVUE/);assert.match(body.instructions,/DJ equipment/);assert.match(body.instructions,/new retail asking prices/);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Visible music equipment.'}]}]})};
  try{const image='data:image/png;base64,'+Buffer.from([137,80,78,71,13,10,26,10,0,0,0,0]).toString('base64');const r=await POST(new Request('https://localhost/api/musicgearvue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,description:'DJ controller',language:'en',action:'observe'})}));assert.equal(r.status,200);assert.equal((await r.json()).analysis,'Visible music equipment.')}finally{globalThis.fetch=originalFetch;for(const n of names)if(before[n]===undefined)delete process.env[n];else process.env[n]=before[n]}
 });
 const apiSource=await read('api/musicgearvue.js');
-const refined=await import('data:text/javascript;base64,'+Buffer.from(apiSource).toString('base64'));
+const refined=await import('data:text/javascript;base64,'+Buffer.from(apiSource.replaceAll("../core/memory-context.js",new URL("./memory-context.js",import.meta.url).href).replaceAll("../core/specialist-memory.js",new URL("./specialist-memory.js",import.meta.url).href)).toString('base64'));
 test('Marshall package questions address each component without assuming cabinet date or asking for disassembly',()=>{
  const q=refined.gearQuestions('Marshall JMP 1987 50W Folkesson Mk III and 4x12 cabinet with 1970 speakers','en');
  assert.equal(q.length,4);assert.match(q[0],/modification documentation/);assert.match(q[2],/existing speaker-label photos/);assert.match(q[2],/Do not open/);assert.match(q[3],/footswitches/);

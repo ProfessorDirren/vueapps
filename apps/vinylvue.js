@@ -74,4 +74,4 @@ window.addEventListener('pagehide',()=>{if(url)URL.revokeObjectURL(url)});render
 collectionController=initCollection({language,getReport:exportText,getDescription:()=>$('description').value,setDescription:value=>{$('description').value=value;output('');$('description').focus();$('description').scrollIntoView({behavior:'smooth',block:'center'})}});
 $('description').addEventListener('input',()=>{$('discogs-check').href=discogsSearch($('description').value)});
 
-try{const handed=consumeHandoff(sessionStorage,document.body.dataset.domain);if(handed!==null)document.getElementById('description').value=handed}catch{}
+try{const handed=consumeHandoff(sessionStorage,document.body.dataset.domain);if(handed!==null){document.body.dataset.handoff='true';document.getElementById('description').value=handed}}catch{}
