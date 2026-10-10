@@ -25,7 +25,16 @@
       "maxDuration": 10
     },
     "api/vue-router.js": {
-      "maxDuration": 60
+      "maxDuration": 90
+    },
+    "api/core-api.js": {
+      "maxDuration": 120
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/core-api?path=:path*"
+    }
+  ]
 }
