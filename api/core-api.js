@@ -6,6 +6,7 @@ export default async function handler(req,res){
   try{
     const original=new URL(req.url,'https://www.vueapps.se');
     let path=original.pathname;
+    if(path.startsWith('/api/v1/')&&original.searchParams.getAll('path').length===1&&original.searchParams.get('path')===path.slice('/api/v1/'.length))original.searchParams.delete('path');
     if(path==='/api/core-api'){const route=original.searchParams.get('path')||'';if(!/^[a-zA-Z0-9/-]*$/.test(route))return res.status(400).json({error:{code:'invalid_request',message:'Invalid API path.'}});path='/api/v1/'+route;original.searchParams.delete('path')}
     const headers=new Headers();for(const [key,value]of Object.entries(req.headers))if(value!==undefined)headers.set(key,Array.isArray(value)?value.join(', '):String(value));
     const method=req.method||'GET';let body;

@@ -37,7 +37,7 @@ A tenant is assigned by the key registry, never by the request body. Key rotatio
 
 ## First photo request
 
-Supply a JPEG, PNG or WebP **base64 data URL**, not a remote URL. Decoded image size is limited to 3 MiB. Total JSON body is limited to 4,250,000 bytes. `image_public: true` confirms that the image contains no personal identifiers or private patient data. This declaration and the classifier's privacy check are safeguards, not a guarantee that every identifier will be detected; the caller is responsible for redaction before sending.
+Supply a JPEG, PNG or WebP **base64 data URL**, not a remote URL. Decoded image size is limited to 3 MiB; dimensions must be at least 128×128, at most 8192 per side and at most 12 million pixels. PNG inputs must use 8-bit non-interlaced grayscale/RGB (optional alpha); uniform/empty PNGs are rejected. Convert unsupported PNG variants to JPEG. The portal also checks pixel variation before encoding its image. JPEG/WebP API inputs have format/dimension checks but no decoded-pixel variation check; this quality gate does not guarantee correct visual identification. Total JSON body is limited to 4,250,000 bytes. `image_public: true` confirms that the image contains no personal identifiers or private patient data. This declaration and the classifier's privacy check are safeguards, not a guarantee that every identifier will be detected; the caller is responsible for redaction before sending.
 
 ```json
 {

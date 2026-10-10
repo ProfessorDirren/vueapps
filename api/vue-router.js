@@ -1,3 +1,4 @@
+import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
 import {POST as followup,validImage,urgentFollowup} from './vue-followup.js';
 import {routeQuestion,routingFields} from '../core/router.js';
@@ -9,7 +10,7 @@ const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'n
 export async function POST(request){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
  if(!b||!ROUTER_TEXT[b.language])return json(400,{error:'Invalid language'});
- if(b.image!==undefined&&(!validImage(b.image)||b.image_public!==true))return json(400,{error:'A valid public image and confirmation are required'});
+ if(b.image!==undefined&&(!validImage(b.image)||!usableImage(b.image)||b.image_public!==true))return json(400,{error:'A valid public image and confirmation are required'});
  if(b.question!==undefined&&typeof b.question!=='string')return json(400,{error:'Invalid question'});
  const text=ROUTER_TEXT[b.language];const question=b.question?.trim()|| (b.image?text[24]:'');
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});

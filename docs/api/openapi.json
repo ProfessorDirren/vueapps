@@ -796,7 +796,7 @@
             "type": "string",
             "pattern": "^data:image/(jpeg|png|webp);base64,",
             "maxLength": 4194304,
-            "description": "Base64 data URL. Valid file signature and <=3 MiB decoded are required; remote URLs and videos are rejected."
+            "description": "Base64 data URL. Valid file signature and <=3 MiB decoded are required; remote URLs and videos are rejected. At least 128×128 pixels; maximum 8192 per side / 12 million pixels. PNG: non-interlaced 8-bit grayscale/RGB with optional alpha; uniform PNGs rejected."
           },
           "image_public": {
             "type": "boolean",

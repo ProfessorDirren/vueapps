@@ -1,10 +1,11 @@
+import {usableImage} from './image-input.js';
 import {SPECIALIST_TREE} from './specialist-tree.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {SUB_SPECIALISTS} from './sub-specialists.js';
 import {budget,ready,validImage} from '../api/vue-followup.js';
 export class ImageRoutingError extends Error{constructor(status,message){super(message);this.status=status}}
 export async function classifyImage(image,question,{fetcher=fetch,spend=budget,configured=ready}={}){
- if(!validImage(image))throw new ImageRoutingError(400,'Invalid image.');
+ if(!validImage(image)||!usableImage(image))throw new ImageRoutingError(400,'Invalid image.');
  if(!configured())throw new ImageRoutingError(503,'Image routing is not configured.');
  if(!await spend())throw new ImageRoutingError(429,'Shared model budget is reached or unavailable.');
  const domains=MEMORY_DOMAINS,paths=[...SPECIALIST_TREE.keys()].filter(p=>p!=='corevue');

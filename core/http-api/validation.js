@@ -1,3 +1,4 @@
+import {usableImage} from '../image-input.js';
 import {validImage} from '../../api/vue-followup.js';
 import {ApiError} from './auth.js';
 import {MEMORY_DOMAINS,obviousIdentifier,sanitizeFields} from '../memory.js';
@@ -18,7 +19,7 @@ export async function body(request){
 }
 export function validateAsk(b){
   plain(b);known(b,['question','language','specialist','case_id','fields','image','image_public','sub_specialist','specialist_path']);
-  if(b.image!==undefined&&(!validImage(b.image)||b.image_public!==true))bad('image must be a JPEG, PNG or WebP data URL of at most 3 MiB; image_public must be true.');
+  if(b.image!==undefined&&(!validImage(b.image)||!usableImage(b.image)||b.image_public!==true))bad('image must be a readable JPEG, PNG or WebP data URL, at least 128×128 pixels, at most 3 MiB; image_public must be true.');
   if(b.image===undefined&&b.image_public!==undefined)bad('image_public requires image.');
   if(b.image&&b.question===undefined)b={...b,question:'Describe the photographed object and guide me.'};
   if(b.specialist_path!==undefined&&(typeof b.specialist_path!=='string'||!/^corevue(?:\/[a-z][a-z0-9_-]*)+$/.test(b.specialist_path)))bad('Invalid specialist_path.');
