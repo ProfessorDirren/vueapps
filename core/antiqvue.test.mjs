@@ -83,7 +83,7 @@ test('prose research formatting retains the photo and produces separated visible
  await withMocks(async(url,options)=>{
  if(url==='https://redis.example')return Response.json({result:1});aiCalls++;const payload=JSON.parse(options.body);
  if(aiCalls===1)return Response.json({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:[{url:'https://auctionet.com/en/context'}]}},{type:'message',content:[{type:'output_text',text:'No independently disclosed matching sale prices found.'}]}]});
- assert.equal(payload.input[0].content[1].image_url,image);assert.equal(payload.tools,undefined);assert.match(payload.instructions,/owner details as unavailable/);
- return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({analysis:'research',exterior:'Svart förstärkartopp med separat högtalarlåda och synlig Marshall-logotyp.',comparables:[]})}]}]});
+ assert.equal(payload.input[0].content[0].image_url,image);assert.equal(payload.tools,undefined);assert.equal(payload.input[0].content.length,1);assert.match(payload.instructions,/visible exterior/);
+ return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Svart förstärkartopp med separat högtalarlåda och synlig Marshall-logotyp.'}]}]});
  },async()=>{const response=await POST(request({action:'value'}));assert.equal(response.status,200);const data=await response.json();assert.match(data.analysis,/Svart förstärkartopp/);assert.match(data.analysis,/Ägarens uppgifter/);assert.equal(data.researchSources.length,1);assert.equal(data.valuation,null);assert.equal(aiCalls,2)});
 });
