@@ -71,7 +71,7 @@
           
           <a href="https://www.anivueapp.se" rel="noopener noreferrer">Explore ANIVUE &rarr;</a>
         </article>
-        <article class="app" id="app-antiqvue"><h3>ANTIQVUE</h3><p>Antiques, vintage instruments and collectibles. Explore identity, condition and evidence for value.</p><a href="./antiqvue.html">ANTIQVUE &rarr;</a></article>
+        <article class="app" id="app-antiqvue"><h3>ANTIQVUE</h3><p>Antiques, furniture, old jewellery and decorative objects. Explore identity, condition and evidence for value.</p><a href="./antiqvue.html">ANTIQVUE &rarr;</a></article>
         <article class="app" id="app-armvue">
           <h3>ARMVUE</h3>
           <p>An equipment and service planner for rifles, shotguns and handguns. Keep inspection dates and manual references together.</p>
@@ -103,6 +103,7 @@
           
           <a href="./motovue.html">Try MOTOVUE preview &rarr;</a>
         </article>
+        <article class="app" id="app-musicgearvue"><h3>MUSICGEARVUE</h3><p>New and used instruments, amplifiers, DJ and studio equipment. Identify your gear and research its value.</p><a href="./musicgearvue.html">MUSICGEARVUE &rarr;</a></article>
         <article class="app" id="app-plantvue">
           <h3>PLANTVUE</h3>
           <p>A care journal for your plants. Plan moisture checks, record observations and keep track of each pot.</p>
@@ -132,11 +133,13 @@ hi:["एक क्लिक, एक नया आश्चर्य। सात
 "zh-CN":["点击一次，发现惊喜。七个主题，42 个创意。","现已开放 · 互动体验","体验 SLUMPVUE →"],
 ru:["Один клик — неожиданное открытие. 42 сюрприза в семи темах.","Доступно · Интерактивно","Открыть SLUMPVUE →"],
 ar:["نقرة واحدة ومفاجأة جديدة. 42 فكرة في سبعة مواضيع.","متاح · تجربة تفاعلية","جرّب SLUMPVUE ←"]};
-const antiqTranslations={"en": "Antiques, vintage instruments and curious finds. Start with the evidence.", "sv": "Antikviteter, vintageinstrument och fynd. Börja med beläggen.", "es": "Antigüedades, instrumentos vintage y hallazgos. Empieza con las pruebas.", "hi": "प्राचीन वस्तुएँ, पुराने वाद्ययंत्र और खोजें। प्रमाण से शुरुआत करें।", "zh-CN": "古董、复古乐器和珍藏，从证据开始。", "ru": "Антиквариат, винтажные инструменты и находки. Начните с фактов.", "ar": "تحف وآلات قديمة ومقتنيات. ابدأ بالأدلة."};
+const antiqTranslations={"en": "Antiques, furniture, old jewellery and decorative objects. Start with the evidence.", "sv": "Antikviteter, möbler, gamla smycken och prydnadsföremål. Börja med beläggen.", "es": "Antigüedades, muebles, joyas antiguas y objetos decorativos. Empieza con las pruebas.", "hi": "प्राचीन वस्तुएँ, फर्नीचर, पुराने आभूषण और सजावटी वस्तुएँ। प्रमाण से शुरुआत करें।", "zh-CN": "古董、家具、旧珠宝和装饰物，从证据开始。", "ru": "Антиквариат, мебель, старинные украшения и предметы декора. Начните с фактов.", "ar": "تحف وأثاث ومجوهرات قديمة وقطع زخرفية. ابدأ بالأدلة."};
+const musicTranslations={"en": "New and used instruments, amplifiers, DJ and studio equipment. Identify your gear and research its value.", "sv": "Nya och begagnade instrument, förstärkare, DJ- och studioutrustning. Identifiera utrustningen och undersök värdet.", "es": "Instrumentos nuevos y usados, amplificadores y equipos de DJ y estudio. Identifica tu equipo e investiga su valor.", "hi": "नए और पुराने वाद्ययंत्र, एम्पलीफायर, DJ और स्टूडियो उपकरण। पहचान और मूल्य शोध करें।", "zh-CN": "新旧乐器、放大器、DJ及录音室设备。识别设备并研究其价值。", "ru": "Новые и подержанные инструменты, усилители, оборудование для диджеев и студий. Определите оборудование и изучите его стоимость.", "ar": "آلات جديدة ومستعملة ومضخمات ومعدات DJ واستوديو. تعرّف على معداتك وابحث عن قيمتها."};
 const picker=document.getElementById("language");
 function setLanguage(lang){
  localizeLanguagePicker(picker,lang);
  document.querySelector("#app-antiqvue p").textContent=antiqTranslations[lang]||antiqTranslations.en;
+ document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";

@@ -1,1 +1,1 @@
-{"functions":{"api/antiqvue.js":{"maxDuration":60}}}
+{"functions": {"api/antiqvue.js": {"maxDuration": 60}, "api/musicgearvue.js": {"maxDuration": 60}}}
