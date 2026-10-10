@@ -5,8 +5,8 @@ import { readFileSync } from "node:fs";
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
 test("homepage retains all seven language choices and descriptive labels",()=>{
  const expected=[
-  ['en','English'],['es','Español'],['sv','Svenska'],['hi','हिन्दी'],
-  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية']
+  ['en','English'],['es','Español'],['sv','Svenska'],['hi','हिन्दी (Hindi)'],
+  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)']
  ];
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
