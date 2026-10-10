@@ -77,3 +77,6 @@ export class VueFlow {
 }
 
 export { VueMemory, MEMORY_VERSION, MEMORY_LIMITS, selectHistory } from "./memory.js";
+
+export {routeQuestion,routingFields} from './router.js';
+export {readFavorite,rememberFavorite,favoriteCommand} from './favorites.js';

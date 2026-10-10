@@ -42,6 +42,7 @@
     @media (max-width: 600px) { main { padding-top: 65px; } .apps { grid-template-columns: 1fr; } }
   </style>
   <script src="./analytics.js" defer></script>
+  <script type="module" src="./apps/router.js"></script>
 </head>
 <body>
   <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div></header>
@@ -51,7 +52,13 @@
       <h1 class="hero-title" id="hero-title">THE PORTAL TO KNOWLEDGE</h1>
       <p class="hero-swedish" lang="en">NO MORE DAMN CLICKING AROUND!</p>
       <p class="hero-tagline">Stop Clicking Around. VUE Does It for You.</p>
-      <a class="hero-link" href="./anyvue.html">Explore ANYVUE &rarr;</a>
+      <section id="vue-router" style="max-width:760px;margin:28px auto 0;text-align:start">
+        <h2 data-router="0"></h2><p id="vue-router-favorite"></p><p data-router="17" style="font-size:13px;color:#90a3ac"></p><label for="vue-router-question" data-router="1"></label>
+        <textarea id="vue-router-question" rows="5" maxlength="3000" aria-describedby="vue-router-hint" style="display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:16px;border:1px solid #527078;border-radius:12px;background:#0d2029;color:#f4f7f8;font:inherit;resize:vertical"></textarea>
+        <p id="vue-router-hint" data-router="3" style="font-size:14px"></p><button id="vue-router-send" type="button" style="padding:12px 20px;border:0;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;cursor:pointer"></button>
+        <p id="vue-router-status" role="status" aria-live="polite"></p><p id="vue-router-hint-other"></p><h3 id="vue-router-specialist"></h3><div id="vue-router-replies" aria-live="polite"></div>
+        <a id="vue-router-workspace" hidden></a><p data-router="15" style="font-size:13px;color:#90a3ac"></p><p data-router="6" style="font-size:13px;color:#90a3ac"></p>
+      </section>
     </section>
     <p class="intro">A New Perspective. Intelligent applications designed to help you understand the world around you. One ecosystem. Endless possibilities.</p>
 

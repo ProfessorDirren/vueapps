@@ -23,6 +23,9 @@
     },
     "api/vue-memory.js": {
       "maxDuration": 10
+    },
+    "api/vue-router.js": {
+      "maxDuration": 60
     }
   }
 }

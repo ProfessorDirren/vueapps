@@ -42,3 +42,9 @@ const result = await flow.run({
 Use `VueMemory` from `index.js` with an explicitly injected storage object. Each specialist has separate named cases with owner fields, bounded question/answer history, resumption, export/import, deletion and pause controls. Historic AI answers are unverified context; current input and safety rules take precedence. Stored media, credentials and obvious identifiers are excluded.
 
 The server public archive accepts only passages checked by specialist server source-verification flows. Archive entries contain public URLs, passages and check dates. Raw questions, private cases and AI answers are not shared archive material. Read and follow-up APIs fail gracefully when existing storage/model configuration is unavailable.
+
+## Keyboard-first portal routing
+
+The portal accepts a single free-text request and Enter submission. `router.js` conservatively matches explicit specialist topics, asks a short clarification for tied topics, and otherwise continues the selected specialist or CORE-VUE general assistance. New topics discard previous specialist history at the server boundary. Specialist text replies remain independently unverified and cannot establish new prices or see a photo. MEDIVUE routes to public-product requirements, preserving its confirmed-leaflet workflow.
+
+`favorites.js` stores browser-local favourite metadata, learned from use or explicitly set through text (for example, “My favorite VUE is VINYLVUE”). The portal starts with that favourite on the next visit and offers a brief hint when another specialist fits the current task. Private case histories remain domain-scoped; a favourite preference alone never imports another case's history.
