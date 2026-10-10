@@ -46,7 +46,7 @@ test('valuation requires live search and filters unsourced comparable prices bef
  await withMocks(async(url,options)=>{
  if(url==='https://redis.example')return Response.json({result:1});const payload=JSON.parse(options.body);assert.equal(payload.tool_choice,'required');assert.equal(payload.max_tool_calls,3);assert.equal(payload.tools[0].type,'web_search');
  return Response.json({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:urls}},{type:'message',content:[{type:'output_text',text:JSON.stringify({analysis:'Svensk analys',comparables:[sale(urls[0].url,10000),sale(urls[1].url,14000),sale('https://invented.example',99999)]})}]}]});
- },async()=>{const r=await POST(request({action:'value',currency:'SEK',market:'Sweden'}));assert.equal(r.status,200);const d=await r.json();assert.equal(d.comparables.length,0);assert.equal(d.valuation,null);assert.equal(d.currency,'SEK')});
+ },async()=>{const r=await POST(request({action:'value',currency:'SEK',market:'Sweden'}));assert.equal(r.status,200);const d=await r.json();assert.equal(d.comparables.length,0);assert.equal(d.valuation,null);assert.equal(d.currency,'SEK');assert.match(d.analysis,/Ägarens uppgifter — inte oberoende verifierade\nVintage amplifier/);assert.doesNotMatch(d.analysis,/Svensk analys/)});
 });
 test('tracking URLs and repeated descriptions of the same sale do not inflate evidence',()=>{
  const sourceUrls=[...urls,{url:urls[0].url+'?utm_source=test'},{url:'https://other.example/mirror'}];
