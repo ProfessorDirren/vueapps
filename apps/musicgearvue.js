@@ -36,6 +36,7 @@ $('photo').onchange=async()=>{
 };
 function showReport(data,action){
  output(data.analysis);
+ if(Array.isArray(data.sections)){$('result').replaceChildren();for(const section of data.sections){if(typeof section.title!=='string'||typeof section.body!=='string')continue;const heading=document.createElement('h3');heading.textContent=section.title;const body=document.createElement('p');body.textContent=section.body;body.style.whiteSpace='pre-wrap';$('result').append(heading,body)}}
  if(action!=='value')return;
  const money=amount=>new Intl.NumberFormat(language,{style:'currency',currency:data.currency||'SEK',maximumFractionDigits:0}).format(amount);
  const basisLabel=basis=>BASIS[language][['hammer','including premium','disclosed transaction'].indexOf(basis)]||basis;
@@ -50,7 +51,7 @@ function showReport(data,action){
   $('sources').append(Object.assign(document.createElement('h3'),{textContent:RESEARCH[language][0]}));
   $('sources').append(Object.assign(document.createElement('p'),{textContent:RESEARCH[language][1],className:'subtle'}));
   for(const source of data.researchSources){let url;try{url=new URL(source.url);if(url.protocol!=='https:')continue}catch{continue}
-   const card=document.createElement('article');card.className='record';const link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent=source.title;card.append(link);$('sources').append(card);
+   const card=document.createElement('article');card.className='record';const link=document.createElement('a');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent=source.title;const meta=document.createElement('p');meta.className='subtle';meta.textContent=source.host||url.hostname;card.append(link,meta);$('sources').append(card);
   }
  }
  $('sources').append(Object.assign(document.createElement('p'),{textContent:EXTRA[language][7],className:'subtle'}));
@@ -61,7 +62,7 @@ async function analyze(action){
  try{const r=await fetch('/api/musicgearvue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,description:$('description').value,language,action,market:$('market').value,currency:$('currency').value}),signal:controller.signal});if(r.status===503){output(brief());status(10);return}if(!r.ok)throw Error('analysis');const data=await r.json();if(typeof data.analysis!=='string'||!data.analysis.trim())throw Error('response');showReport(data,action);$('notice').textContent=''}catch{status(11)}finally{clearTimeout(timer);busy=false;for(const id of ['photo','market','currency','prepare','description'])$(id).disabled=false;$('analyze').disabled=!image;$('observe').disabled=!image;picker.disabled=false}
 }
 $('analyze').onclick=()=>analyze('value');$('observe').onclick=()=>analyze('observe');
-function exportText(){return [$('result').textContent,$('valuation').textContent, ...[...$('sources').querySelectorAll('article')].map(c=>c.textContent+'\n'+c.querySelector('a').href)].filter(Boolean).join('\n\n')}
+function exportText(){return [[...$('result').children].length?[...$('result').children].map(e=>e.textContent).join('\n\n'):$('result').textContent,$('valuation').textContent, ...[...$('sources').querySelectorAll('article')].map(c=>c.textContent+'\n'+c.querySelector('a').href)].filter(Boolean).join('\n\n')}
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(exportText());status(16)}catch{$('result').tabIndex=0;$('result').focus()}};
 $('download').onclick=()=>{const u=URL.createObjectURL(new Blob([exportText()],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download='musicgearvue-research.txt';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
 window.addEventListener('pagehide',()=>{if(url)URL.revokeObjectURL(url)});render();
