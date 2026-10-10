@@ -102,9 +102,12 @@ export async function POST(request){
  const searched=(d.output||[]).some(x=>x.type==='web_search_call'&&x.status==='completed');
  const sources=(d.output||[]).filter(x=>x.type==='web_search_call').flatMap(x=>x.action?.sources||[]).concat(parts.flatMap(x=>x.annotations||[]));
  const evidence=await verifySales(b.description.trim()?report.comparables:[],report.searchTerms,sources,currency,searched);
- // Keep unchecked asking prices and broken Markdown links out of the narrative.
- const analysis=report.analysis.split(/\n\s*\n/).filter(p=>!/(?:[€£$]\s*\d|\b(?:SEK|EUR|USD|GBP)\b|\d[\d,. ]*\s*(?:SEK|EUR|USD|GBP|kr)\b)/i.test(p)).map(p=>p.replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/g,'$1')).join('\n\n');
- return json(200,{analysis:analysis||'Identification details and independent completed-sale evidence are needed.',...evidence,market,currency,researchedAt:new Date().toISOString()});
+ // Owner details are rendered separately by the server, never as photographic proof.
+ const labels={sv:['Bildunderlag','Fotot räcker inte för att bekräfta exakt modell, årtal, invändigt skick eller äkthet.','Ägarens uppgifter — inte oberoende verifierade','Osäkerheter och nästa underlag','Komplettera med läsbara modell- och serienummer, proveniens och dokumentation om modifieringar. Dolda delar kan inte verifieras i en exteriörbild. Undvik egna ingrepp och låt en sakkunnig bedöma föremålet.'],en:['Photo evidence','The photo alone cannot confirm the exact model, date, internal condition or authenticity.','Owner details — not independently verified','Uncertainties and next evidence','Provide readable model and serial markings, provenance and modification records. Hidden parts cannot be verified in an exterior photo. Avoid interventions and consult a suitable expert.']};
+ const l=labels[b.language]||labels.en;
+ const owner=b.description.trim()||'—';
+ const analysis=l[0]+'\n'+l[1]+'\n\n'+l[2]+'\n'+owner+'\n\n'+l[3]+'\n'+l[4];
+ return json(200,{analysis,...evidence,market,currency,researchedAt:new Date().toISOString()});
  }catch{return json(502,{error:'Analysis temporarily unavailable.'})}
 }
 export default async function handler(req,res){
