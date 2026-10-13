@@ -27,3 +27,20 @@ test('ANIVUE breathing emergency maps to urgent safety field',()=>{
   assert.deepEqual(routingFields('anivue','Min hund har svårt att andas'),{selected:'["breathing"]'});
   assert.deepEqual(routingFields('anivue','My dog cannot breathe'),{selected:'["breathing"]'});
 });
+
+test('VUECORE routes multilingual animal terms without changing the selected language',()=>{
+  for(const question of ['Mi caballo está enfermo','我的猫生病了','Моя собака заболела','كلبي مريض','मेरी बिल्ली बीमार है']){
+    assert.equal(routeQuestion(question).domain,'anivue',question);
+  }
+});
+test('VUECORE distinguishes specialist priorities when one topic is higher risk',()=>{
+  assert.deepEqual(routeQuestion('Medicine side effects for my cat'),{domain:'medivue',clarify:false});
+});
+test('VUECORE leaves unclear questions in the safe generic specialist',()=>{
+  assert.deepEqual(routeQuestion('Could you help me?',null),{domain:'anyvue',clarify:false});
+});
+test('VUEGUARD prevents accidental removal of the legacy ANIVUE domain dependency without migration',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+  assert.match(source,/www\\.anivueapp\\.se|www\.anivueapp\.se/);
+});
