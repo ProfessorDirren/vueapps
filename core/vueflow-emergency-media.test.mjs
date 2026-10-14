@@ -63,3 +63,15 @@ test('VUECORE requires safe integer byte sizes',()=>{
  }
  assert.equal(validateMedia({type:'image/png',size:1024},'image').ok,true);
 });
+
+test('VUECORE normalized assessment arrays cannot be mutated after validation',()=>{
+ const original={severity:'monitor',summary:' Example ',observations:['visible'],recommendations:['observe'],followUpQuestions:['when?'],limitations:['not a diagnosis']};
+ const result=normalizeAssessment(original);
+ assert.equal(result.summary,'Example');
+ for(const key of ['observations','recommendations','followUpQuestions','limitations']){
+  assert.ok(Object.isFrozen(result[key]),key);
+  assert.throws(()=>result[key].push('injected'),TypeError,key);
+ }
+ original.observations.push('later');
+ assert.deepEqual(result.observations,['visible']);
+});
