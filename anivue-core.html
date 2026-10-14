@@ -9,6 +9,9 @@
 <p><a href="https://www.anivueapp.se" rel="noopener noreferrer" id="standalone"></a></p>
 <script type="module">
 import {ROUTER_TEXT} from './apps/router-content.js';
+import {VueFlow} from './core/index.js';
+import {AniVueDomain} from './core/anivue.js';
+const flow=new VueFlow(new AniVueDomain());
 const $=id=>document.getElementById(id),labels={
 en:['VUECORE-native ANIVUE preview — not feature-complete.','For breathing difficulty, collapse or severe bleeding, contact emergency veterinary care immediately. Do not wait for AI.','Describe the animal and what you noticed','Ask ANIVUE','AI guidance is not a veterinary diagnosis.','Open full standalone ANIVUE'],
 es:['Vista previa ANIVUE en VUECORE — aún no tiene todas las funciones.','Si hay dificultad para respirar, colapso o hemorragia grave, busca atención veterinaria urgente. No esperes a la IA.','Describe el animal y lo que has observado','Preguntar a ANIVUE','La orientación de IA no sustituye al veterinario.','Abrir ANIVUE independiente'],
@@ -20,5 +23,5 @@ ar:['معاينة ANIVUE في VUECORE — الوظائف غير مكتملة.','
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
 function render(){const l=picker.value,t=labels[l];document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';$('preview').textContent=t[0];$('safety').textContent=t[1];$('prompt').textContent=t[2];$('send').textContent=t[3];$('disclaimer').textContent=t[4];$('standalone').textContent=t[5];}
 picker.onchange=()=>{try{localStorage.setItem('vue-language',picker.value)}catch{}render()};render();
-$('ask').onsubmit=async event=>{event.preventDefault();if(busy)return;const question=$('question').value.trim();if(question.length<3)return;busy=true;$('send').disabled=true;$('status').textContent=ROUTER_TEXT[picker.value][4];try{const r=await fetch('/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:picker.value,previous:'anivue',newCase:true}),signal:AbortSignal.timeout(90000)});if(!r.ok)throw Error();const d=await r.json();if(d.domain!=='anivue'||!d.answer)throw Error();$('answer').textContent=d.answer;$('result').hidden=false;$('status').textContent='';}catch{$('status').textContent=ROUTER_TEXT[picker.value][5]}finally{busy=false;$('send').disabled=false}};
+$('ask').onsubmit=async event=>{event.preventDefault();if(busy)return;const question=$('question').value.trim();if(question.length<3)return;busy=true;$('send').disabled=true;$('status').textContent=ROUTER_TEXT[picker.value][4];try{const check=await flow.run({category:'unknown',description:question,language:picker.value});if(check.assessment.severity==='emergency'){$('answer').textContent=check.assessment.summary;$('result').hidden=false;$('status').textContent='';return}const r=await fetch('/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:picker.value,previous:'anivue',newCase:true}),signal:AbortSignal.timeout(90000)});if(!r.ok)throw Error();const d=await r.json();if(d.domain!=='anivue'||!d.answer)throw Error();$('answer').textContent=d.answer;$('result').hidden=false;$('status').textContent='';}catch{$('status').textContent=ROUTER_TEXT[picker.value][5]}finally{busy=false;$('send').disabled=false}};
 </script></body></html>
