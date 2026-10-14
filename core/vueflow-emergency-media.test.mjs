@@ -85,3 +85,13 @@ test('VUECORE rejects malformed domain media capability declarations',()=>{
  assert.equal(domain.capabilities.videoAnalysis,false);
  assert.ok(Object.isFrozen(domain.capabilities));
 });
+
+test('VUECORE capability declarations must be plain records',()=>{
+ for(const capabilities of [new Date(),new Map(),new Set(),Object.create({imageAnalysis:true})]){
+  assert.throws(()=>new VueDomain({id:'bad-domain',capabilities}),error=>error instanceof VueCoreError&&error.code==='invalid_capabilities');
+ }
+ const nullPrototype=Object.create(null);
+ nullPrototype.imageAnalysis=true;
+ const domain=new VueDomain({id:'good-domain',capabilities:nullPrototype});
+ assert.equal(domain.capabilities.imageAnalysis,true);
+});
