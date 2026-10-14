@@ -36,3 +36,12 @@ test('rejects unsupported species and language without charging budget',async()=
  assert.equal((await POST(request({...good,language:'fr'}),opts)).status,400);
  assert.equal(charges,0);
 });
+
+test('accepts valid PNG at exact 3 MiB upload boundary',async()=>{
+ const bytes=Buffer.alloc(3*1024*1024);Buffer.from([137,80,78,71,13,10,26,10]).copy(bytes);
+ const image='data:image/png;base64,'+bytes.toString('base64');
+ let charged=0;
+ const response=await POST(request({species:'horse',language:'en',image}),{configured:()=>true,spend:async()=>{charged++;return false}});
+ assert.equal(response.status,429);
+ assert.equal(charged,1);
+});
