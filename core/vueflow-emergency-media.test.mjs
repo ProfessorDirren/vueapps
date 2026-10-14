@@ -75,3 +75,13 @@ test('VUECORE normalized assessment arrays cannot be mutated after validation',(
  original.observations.push('later');
  assert.deepEqual(result.observations,['visible']);
 });
+
+test('VUECORE rejects malformed domain media capability declarations',()=>{
+ for(const capabilities of [null,[],false,'image',{imageAnalysis:'true'},{videoAnalysis:1}]){
+  assert.throws(()=>new VueDomain({id:'bad-domain',capabilities}),error=>error instanceof VueCoreError&&error.code==='invalid_capabilities');
+ }
+ const domain=new VueDomain({id:'valid-domain',capabilities:{imageAnalysis:true,videoAnalysis:false}});
+ assert.equal(domain.capabilities.imageAnalysis,true);
+ assert.equal(domain.capabilities.videoAnalysis,false);
+ assert.ok(Object.isFrozen(domain.capabilities));
+});
