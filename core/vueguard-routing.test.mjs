@@ -44,3 +44,11 @@ test('VUEGUARD prevents accidental removal of the legacy ANIVUE domain dependenc
   const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
   assert.match(source,/www\\.anivueapp\\.se|www\.anivueapp\.se/);
 });
+
+test('VUEGUARD ensures language selection is passed unchanged to the specialist API',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+  assert.match(source,/language:b\.language/);
+  assert.match(source,/!ROUTER_TEXT\[b\.language\]/);
+  assert.doesNotMatch(source,/language\s*:\s*(?:route\.language|detectLanguage\()/);
+});
