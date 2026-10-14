@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {POST} from '../api/anivue-analyze.js';
+import {POST} from './anivue-vision.js';
 const url='https://localhost/api/anivue-analyze';
 const request=body=>new Request(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 const good={species:'horse',language:'en',image:'data:image/png;base64,invalid'};
