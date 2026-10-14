@@ -54,3 +54,12 @@ test('VUECORE rejects empty or malformed video MIME subtypes',()=>{
  }
  assert.equal(validateMedia({type:'video/mp4',size:1024},'video').ok,true);
 });
+
+test('VUECORE requires safe integer byte sizes',()=>{
+ for(const size of [0.5,1024.25,Number.MAX_SAFE_INTEGER+1]){
+  const result=validateMedia({type:'image/png',size},'image');
+  assert.equal(result.ok,false,String(size));
+  assert.equal(result.code,'invalid_file');
+ }
+ assert.equal(validateMedia({type:'image/png',size:1024},'image').ok,true);
+});
