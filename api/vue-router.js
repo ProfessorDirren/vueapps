@@ -1,3 +1,4 @@
+import {POST as analyzeAnimal} from '../core/anivue-vision.js';
 import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
 import {POST as followup,validImage,urgentFollowup} from './vue-followup.js';
@@ -9,6 +10,7 @@ import {ROUTER_TEXT} from '../apps/router-content.js';
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(request){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
+ if(b?.action==='anivue_analyze')return analyzeAnimal(new Request('https://localhost/api/anivue-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}));
  if(!b||!ROUTER_TEXT[b.language])return json(400,{error:'Invalid language'});
  if(b.image!==undefined&&(!validImage(b.image)||!usableImage(b.image)||b.image_public!==true))return json(400,{error:'A valid public image and confirmation are required'});
  if(b.question!==undefined&&typeof b.question!=='string')return json(400,{error:'Invalid question'});
