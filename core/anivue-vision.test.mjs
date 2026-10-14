@@ -21,3 +21,18 @@ test('rejects oversized request',async()=>{
  const response=await POST(request({...good,description:'x'.repeat(4300000)}));
  assert.equal(response.status,413);
 });
+
+test('rejects missing photo',async()=>{
+ const response=await POST(request({species:'horse',language:'en'}));
+ assert.equal(response.status,400);
+});
+test('rejects invalid request JSON',async()=>{
+ const response=await POST(new Request(url,{method:'POST',body:'{'}));
+ assert.equal(response.status,400);
+});
+test('rejects unsupported species and language without charging budget',async()=>{
+ let charges=0;const opts={configured:()=>true,spend:async()=>{charges++;return true}};
+ assert.equal((await POST(request({...good,species:'cow'}),opts)).status,400);
+ assert.equal((await POST(request({...good,language:'fr'}),opts)).status,400);
+ assert.equal(charges,0);
+});
