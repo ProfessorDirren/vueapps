@@ -31,10 +31,10 @@ export function normalizeAssessment(assessment) {
   return Object.freeze({
     severity:assessment.severity,
     summary:assessment.summary.trim(),
-    observations:Array.isArray(assessment.observations) ? assessment.observations.filter(x=>typeof x==="string") : [],
-    recommendations:Array.isArray(assessment.recommendations) ? assessment.recommendations.filter(x=>typeof x==="string") : [],
-    followUpQuestions:Array.isArray(assessment.followUpQuestions) ? assessment.followUpQuestions.filter(x=>typeof x==="string") : [],
-    limitations:Array.isArray(assessment.limitations) ? assessment.limitations.filter(x=>typeof x==="string") : []
+    observations:Object.freeze(Array.isArray(assessment.observations) ? assessment.observations.filter(x=>typeof x==="string") : []),
+    recommendations:Object.freeze(Array.isArray(assessment.recommendations) ? assessment.recommendations.filter(x=>typeof x==="string") : []),
+    followUpQuestions:Object.freeze(Array.isArray(assessment.followUpQuestions) ? assessment.followUpQuestions.filter(x=>typeof x==="string") : []),
+    limitations:Object.freeze(Array.isArray(assessment.limitations) ? assessment.limitations.filter(x=>typeof x==="string") : [])
   });
 }
 
