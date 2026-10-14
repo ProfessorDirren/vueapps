@@ -58,18 +58,20 @@ export class VueFlow {
     if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
     if (!Array.isArray(symptoms) || !Array.isArray(media)) throw new VueCoreError("invalid_input","Expected arrays");
     if (typeof description !== "string" || description.length > 2000) throw new VueCoreError("invalid_description","Invalid description");
-    for (const asset of media) {
-      if (!asset || !["image","video"].includes(asset.kind)) throw new VueCoreError("invalid_media","Invalid media asset");
-      const result=validateMedia(asset.file,asset.kind);
-      if (!result.ok) throw new VueCoreError(result.code,result.message);
-    }
     const context={ category, symptoms:[...symptoms], description, media:[...media], language };
+    // Emergency detection must run before media validation so bad or oversized
+    // uploads cannot delay an immediate safety recommendation.
     // Deterministic emergency handling takes precedence over all AI/other assessments.
     const emergency=await this.domain.emergencyCheck(context);
     if (emergency) {
       const assessed=normalizeAssessment(emergency);
       if (assessed.severity !== "emergency") throw new VueCoreError("invalid_emergency","Emergency check must return emergency severity");
       return { domain:this.domain.id, assessment:assessed, source:"safety-rule", mediaAnalyzed:false };
+    }
+    for (const asset of media) {
+      if (!asset || !["image","video"].includes(asset.kind)) throw new VueCoreError("invalid_media","Invalid media asset");
+      const result=validateMedia(asset.file,asset.kind);
+      if (!result.ok) throw new VueCoreError(result.code,result.message);
     }
     const assessed=normalizeAssessment(await this.domain.assess(context));
     return { domain:this.domain.id, assessment:assessed, source:"domain", mediaAnalyzed:false };
