@@ -15,7 +15,7 @@ export class VueCoreError extends Error {
 
 export function validateMedia(file, kind) {
   if (!["image","video"].includes(kind)) throw new VueCoreError("invalid_kind","Unknown media kind");
-  if (!file || typeof file.size !== "number" || typeof file.type !== "string")
+  if (!file || typeof file.size !== "number" || !Number.isFinite(file.size) || typeof file.type !== "string")
     return { ok:false, code:"invalid_file", message:"Invalid file." };
   const validType = kind === "image" ? IMAGE_TYPES.includes(file.type.toLowerCase()) : file.type.toLowerCase().startsWith("video/");
   if (!validType) return { ok:false, code:"unsupported_type", message:"Unsupported file type." };

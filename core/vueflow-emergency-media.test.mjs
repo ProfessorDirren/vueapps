@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {VueDomain,VueFlow,normalizeAssessment,VueCoreError} from './index.js';
+import {VueDomain,VueFlow,normalizeAssessment,VueCoreError,validateMedia} from './index.js';
 
 class SafetyDomain extends VueDomain {
  constructor(){super({id:'safety-test',name:'Safety Test'});this.assessCalls=0}
@@ -36,4 +36,12 @@ test('VUECORE rejects non-emergency severity returned by emergency gate',async()
  domain.emergencyCheck=()=>({severity:'monitor',summary:'Incorrect emergency severity.'});
  await assert.rejects(new VueFlow(domain).run({symptoms:['emergency']}),error=>error instanceof VueCoreError&&error.code==='invalid_emergency');
  assert.equal(domain.assessCalls,0);
+});
+
+test('VUECORE rejects non-finite media sizes in shared validator',()=>{
+ for(const size of [NaN,Infinity,-Infinity]){
+  const result=validateMedia({type:'image/png',size},'image');
+  assert.equal(result.ok,false);
+  assert.equal(result.code,'invalid_file');
+ }
 });
