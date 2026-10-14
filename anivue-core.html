@@ -25,16 +25,19 @@ ru:['ANIVUE в VUECORE — предварительная версия с неп
 ar:['معاينة ANIVUE في VUECORE — الوظائف غير مكتملة.','عند صعوبة التنفس أو الانهيار أو النزيف الشديد اطلب رعاية بيطرية عاجلة فورًا. لا تنتظر الذكاء الاصطناعي.','صف الحيوان وما لاحظته','اسأل ANIVUE','إرشادات الذكاء الاصطناعي ليست تشخيصًا بيطريًا.','افتح ANIVUE المستقل']};
 const photo=$('photo');
 let imageData=null;
+let photoReadVersion=0;
 photo.onchange=async()=>{
+ const version=++photoReadVersion;
  imageData=null;
  const file=photo.files?.[0];
  if(!file){$('photoStatus').textContent='';return}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>3*1024*1024||file.size===0){$('photoStatus').textContent='Unsupported image or file exceeds 3 MB.';photo.value='';return}
  try{
   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+  if(version!==photoReadVersion)return;
   if(typeof data!=='string')throw Error();
   imageData=data;$('photoStatus').textContent='Photo ready. Photo analysis is optional.';
- }catch{$('photoStatus').textContent='Unable to read photo.'}
+ }catch{if(version===photoReadVersion)$('photoStatus').textContent='Unable to read photo.'}
 };
 const controls={
  en:['Animal','Symptom','Optional photo (JPEG, PNG or WebP, max 3 MB)','Find an animal hospital','Dog','Cat','Horse','Other','Breathing difficulty'],
