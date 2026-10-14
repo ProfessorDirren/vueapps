@@ -4,7 +4,8 @@
 <body><a href="./">← VUEAPPS</a><h1>ANIVUE · VUECORE</h1><p id="preview"></p>
 <label>Language <select id="language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी</option><option value="zh-CN">简体中文</option><option value="ru">Русский</option><option value="ar">العربية</option></select></label>
 <label for="species">Animal <select id="species"><option value="dog">Dog</option><option value="cat">Cat</option><option value="horse">Horse</option></select></label><label for="symptom">Symptom <select id="symptom"></select></label>
-<section><label for="photo">Optional photo (JPEG, PNG or WebP, max 10 MB) <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><p id="photoStatus" role="status"></p></section>
+<section><label for="photo">Optional photo (JPEG, PNG or WebP, max 3 MB) <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><p id="photoStatus" role="status"></p></section>
+<section><a id="vetlink" href="https://www.google.com/maps/search/emergency+veterinary+hospital" target="_blank" rel="noopener noreferrer">Find an animal hospital</a></section>
 <section><p id="safety"></p><p id="status" role="status" aria-live="polite"></p></section>
 <form id="ask"><label id="prompt" for="question"></label><textarea id="question" maxlength="3000" required minlength="3"></textarea><button id="send" type="submit"></button></form>
 <section id="result" hidden><h2>ANIVUE</h2><div id="answer"></div><p id="disclaimer"></p></section>
@@ -28,12 +29,21 @@ photo.onchange=async()=>{
  imageData=null;
  const file=photo.files?.[0];
  if(!file){$('photoStatus').textContent='';return}
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024||file.size===0){$('photoStatus').textContent='Unsupported image or file exceeds 10 MB.';photo.value='';return}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>3*1024*1024||file.size===0){$('photoStatus').textContent='Unsupported image or file exceeds 3 MB.';photo.value='';return}
  try{
   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
   if(typeof data!=='string')throw Error();
   imageData=data;$('photoStatus').textContent='Photo ready. Photo analysis is optional.';
  }catch{$('photoStatus').textContent='Unable to read photo.'}
+};
+const controls={
+ en:['Animal','Symptom','Optional photo (JPEG, PNG or WebP, max 3 MB)','Find an animal hospital','Dog','Cat','Horse','Other','Breathing difficulty'],
+ es:['Animal','Síntoma','Foto opcional (JPEG, PNG o WebP, máximo 3 MB)','Buscar un hospital veterinario','Perro','Gato','Caballo','Otro','Dificultad para respirar'],
+ sv:['Djur','Symtom','Frivilligt foto (JPEG, PNG eller WebP, högst 3 MB)','Hitta djursjukhus','Hund','Katt','Häst','Annat','Andningssvårigheter'],
+ hi:['जानवर','लक्षण','वैकल्पिक फोटो (JPEG, PNG या WebP, अधिकतम 3 MB)','पशु अस्पताल खोजें','कुत्ता','बिल्ली','घोड़ा','अन्य','सांस लेने में कठिनाई'],
+ 'zh-CN':['动物','症状','可选照片（JPEG、PNG 或 WebP，最大 3 MB）','查找动物医院','狗','猫','马','其他','呼吸困难'],
+ ru:['Животное','Симптом','Необязательное фото (JPEG, PNG или WebP, до 3 МБ)','Найти ветеринарную клинику','Собака','Кошка','Лошадь','Другое','Затруднённое дыхание'],
+ ar:['الحيوان','العرض','صورة اختيارية (JPEG أو PNG أو WebP، بحد أقصى 3 ميغابايت)','ابحث عن مستشفى بيطري','كلب','قطة','حصان','أخرى','صعوبة التنفس']
 };
 const symptoms={
  dog:[['other','Other'],['breathing','Breathing difficulty']],cat:[['other','Other'],['breathing','Breathing difficulty']],
@@ -42,7 +52,7 @@ const symptoms={
 function updateSymptoms(){const selected=$('symptom');selected.replaceChildren(...symptoms[$('species').value].map(([id,label])=>new Option(label,id)));}
 $('species').onchange=updateSymptoms;updateSymptoms();
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
-function render(){const l=picker.value,t=labels[l];document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';$('preview').textContent=t[0];$('safety').textContent=t[1];$('prompt').textContent=t[2];$('send').textContent=t[3];$('disclaimer').textContent=t[4];$('standalone').textContent=t[5];}
+function render(){const l=picker.value,t=labels[l],u=controls[l];document.querySelector('label[for="species"]').firstChild.textContent=u[0]+' ';document.querySelector('label[for="symptom"]').firstChild.textContent=u[1]+' ';document.querySelector('label[for="photo"]').firstChild.textContent=u[2]+' ';$('vetlink').textContent=u[3];[...$('species').options].forEach((o,i)=>o.textContent=u[i+4]);updateSymptoms();const symptom=$('symptom');for(const o of symptom.options){if(o.value==='other'||o.value==='horseOther')o.textContent=u[7];if(o.value==='breathing'||o.value==='horseBreathingDistress')o.textContent=u[8];}document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';$('preview').textContent=t[0];$('safety').textContent=t[1];$('prompt').textContent=t[2];$('send').textContent=t[3];$('disclaimer').textContent=t[4];$('standalone').textContent=t[5];}
 picker.onchange=()=>{try{localStorage.setItem('vue-language',picker.value)}catch{}render()};render();
 $('ask').onsubmit=async event=>{event.preventDefault();if(busy)return;const question=$('question').value.trim();if(question.length<3)return;busy=true;$('send').disabled=true;$('status').textContent=ROUTER_TEXT[picker.value][4];try{const animal=$('species').value;const symptom=$('symptom').value;const check=await flow.run({category:animal,symptoms:[symptom],description:question,language:picker.value});if(check.assessment.severity==='emergency'){$('answer').textContent=check.assessment.summary;$('result').hidden=false;$('status').textContent='';return}const r=await fetch('/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:animal+' '+symptom+' '+question,language:picker.value,previous:'anivue',newCase:true,...(imageData?{image:imageData,image_public:true}:{})}),signal:AbortSignal.timeout(90000)});if(!r.ok)throw Error();const d=await r.json();if(d.domain!=='anivue'||!d.answer)throw Error();$('answer').textContent=d.answer;$('result').hidden=false;$('status').textContent='';}catch{$('status').textContent=ROUTER_TEXT[picker.value][5]}finally{busy=false;$('send').disabled=false}};
 </script></body></html>
