@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ANIVUE · VUECORE preview</title>
+<style>body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:auto;padding:22px;background:#0b1720;color:#f4f7f8}button,select,textarea{font:inherit;padding:12px;border-radius:8px}textarea{box-sizing:border-box;width:100%;min-height:120px}button{cursor:pointer;background:#70d6bb;color:#071920;border:0}section{padding:16px;border:1px solid #456;border-radius:12px;margin:18px 0}a{color:#70d6bb}#answer{white-space:pre-wrap}label{display:block;margin:12px 0}</style></head>
+<body><a href="./">← VUEAPPS</a><h1>ANIVUE · VUECORE</h1><p id="preview"></p>
+<label>Language <select id="language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी</option><option value="zh-CN">简体中文</option><option value="ru">Русский</option><option value="ar">العربية</option></select></label>
+<section><p id="safety"></p><p id="status" role="status" aria-live="polite"></p></section>
+<form id="ask"><label id="prompt" for="question"></label><textarea id="question" maxlength="3000" required minlength="3"></textarea><button id="send" type="submit"></button></form>
+<section id="result" hidden><h2>ANIVUE</h2><div id="answer"></div><p id="disclaimer"></p></section>
+<p><a href="https://www.anivueapp.se" rel="noopener noreferrer" id="standalone"></a></p>
+<script type="module">
+import {ROUTER_TEXT} from './apps/router-content.js';
+const $=id=>document.getElementById(id),labels={
+en:['VUECORE-native ANIVUE preview — not feature-complete.','For breathing difficulty, collapse or severe bleeding, contact emergency veterinary care immediately. Do not wait for AI.','Describe the animal and what you noticed','Ask ANIVUE','AI guidance is not a veterinary diagnosis.','Open full standalone ANIVUE'],
+es:['Vista previa ANIVUE en VUECORE — aún no tiene todas las funciones.','Si hay dificultad para respirar, colapso o hemorragia grave, busca atención veterinaria urgente. No esperes a la IA.','Describe el animal y lo que has observado','Preguntar a ANIVUE','La orientación de IA no sustituye al veterinario.','Abrir ANIVUE independiente'],
+sv:['ANIVUE i VUECORE — förhandsversion utan full funktionalitet.','Vid andningssvårigheter, kollaps eller kraftig blödning: kontakta akut veterinärvård direkt. Vänta inte på AI.','Beskriv djuret och vad du märkt','Fråga ANIVUE','AI-vägledning ersätter inte veterinärvård.','Öppna fristående ANIVUE'],
+hi:['VUECORE ANIVUE पूर्वावलोकन — सभी सुविधाएँ उपलब्ध नहीं।','सांस लेने में कठिनाई, गिरने या गंभीर रक्तस्राव पर तुरंत आपात पशु चिकित्सा लें। AI की प्रतीक्षा न करें।','जानवर और लक्षण बताएँ','ANIVUE से पूछें','AI सलाह पशु चिकित्सक का विकल्प नहीं है।','मूल ANIVUE खोलें'],
+'zh-CN':['VUECORE ANIVUE 预览版，功能尚不完整。','呼吸困难、昏倒或严重出血时立即联系急诊兽医，不要等待AI。','描述动物和观察到的情况','询问ANIVUE','AI建议不能替代兽医诊疗。','打开独立ANIVUE'],
+ru:['ANIVUE в VUECORE — предварительная версия с неполным набором функций.','При затруднении дыхания, коллапсе или сильном кровотечении срочно обратитесь к ветеринару. Не ждите ИИ.','Опишите животное и симптомы','Спросить ANIVUE','ИИ не заменяет ветеринара.','Открыть отдельный ANIVUE'],
+ar:['معاينة ANIVUE في VUECORE — الوظائف غير مكتملة.','عند صعوبة التنفس أو الانهيار أو النزيف الشديد اطلب رعاية بيطرية عاجلة فورًا. لا تنتظر الذكاء الاصطناعي.','صف الحيوان وما لاحظته','اسأل ANIVUE','إرشادات الذكاء الاصطناعي ليست تشخيصًا بيطريًا.','افتح ANIVUE المستقل']};
+let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
+function render(){const l=picker.value,t=labels[l];document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';$('preview').textContent=t[0];$('safety').textContent=t[1];$('prompt').textContent=t[2];$('send').textContent=t[3];$('disclaimer').textContent=t[4];$('standalone').textContent=t[5];}
+picker.onchange=()=>{try{localStorage.setItem('vue-language',picker.value)}catch{}render()};render();
+$('ask').onsubmit=async event=>{event.preventDefault();if(busy)return;const question=$('question').value.trim();if(question.length<3)return;busy=true;$('send').disabled=true;$('status').textContent=ROUTER_TEXT[picker.value][4];try{const r=await fetch('/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:picker.value,previous:'anivue',newCase:true}),signal:AbortSignal.timeout(90000)});if(!r.ok)throw Error();const d=await r.json();if(d.domain!=='anivue'||!d.answer)throw Error();$('answer').textContent=d.answer;$('result').hidden=false;$('status').textContent='';}catch{$('status').textContent=ROUTER_TEXT[picker.value][5]}finally{busy=false;$('send').disabled=false}};
+</script></body></html>
