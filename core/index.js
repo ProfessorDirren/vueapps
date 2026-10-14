@@ -42,6 +42,10 @@ export function normalizeAssessment(assessment) {
 export class VueDomain {
   constructor({ id, name, capabilities = {} }) {
     if (!/^[a-z][a-z0-9-]*$/.test(id || "")) throw new VueCoreError("invalid_domain","Domain id required");
+    if (!capabilities || typeof capabilities !== "object" || Array.isArray(capabilities)) throw new VueCoreError("invalid_capabilities","Expected capability object");
+    for (const key of ["imageAnalysis","videoAnalysis"]) {
+      if (key in capabilities && typeof capabilities[key] !== "boolean") throw new VueCoreError("invalid_capabilities","Media capabilities must be booleans");
+    }
     this.id=id; this.name=name || id.toUpperCase();
     this.capabilities=Object.freeze({ imageAnalysis:false, videoAnalysis:false, ...capabilities });
   }
