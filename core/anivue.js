@@ -32,7 +32,7 @@ const EQUINE={
  ru:'Немедленно свяжитесь с экстренным ветеринаром для лошадей.',
  ar:'اتصل فوراً بطبيب بيطري طارئ متخصص بالخيول.'
 };
-const URGENT_RE=/\b(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar)\b/i;
+const URGENT_RE=/(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar)/i;
 export class AniVueDomain extends VueDomain {
  constructor(){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:false,videoAnalysis:false}})}
  emergencyCheck({category='',species='',symptoms=[],description='',language='en'}={}){
