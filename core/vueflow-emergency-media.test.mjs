@@ -85,3 +85,21 @@ test('VUECORE rejects malformed domain media capability declarations',()=>{
  assert.equal(domain.capabilities.videoAnalysis,false);
  assert.ok(Object.isFrozen(domain.capabilities));
 });
+
+test('VUECORE protects flow input arrays from domain adapter mutation',async()=>{
+ const domain=new SafetyDomain();
+ domain.emergencyCheck=({symptoms,media})=>{
+  assert.ok(Object.isFrozen(symptoms));
+  assert.ok(Object.isFrozen(media));
+  assert.throws(()=>symptoms.push('emergency'),TypeError);
+  assert.throws(()=>media.push({kind:'image'}),TypeError);
+  return null;
+ };
+ const symptoms=['ordinary'];
+ const media=[];
+ const result=await new VueFlow(domain).run({symptoms,media});
+ assert.equal(result.source,'domain');
+ assert.deepEqual(symptoms,['ordinary']);
+ assert.deepEqual(media,[]);
+ assert.equal(domain.assessCalls,1);
+});
