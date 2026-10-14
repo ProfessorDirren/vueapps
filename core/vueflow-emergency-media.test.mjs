@@ -23,3 +23,17 @@ test('VUECORE still rejects invalid media on non-emergency path',async()=>{
  await assert.rejects(new VueFlow(domain).run({media:invalidMedia}),error=>error instanceof VueCoreError&&error.code==='too_large');
  assert.equal(domain.assessCalls,0);
 });
+
+test('VUECORE waits for asynchronous emergency gate before assessing',async()=>{
+ const domain=new SafetyDomain();
+ domain.emergencyCheck=async()=>{await Promise.resolve();return {severity:'emergency',summary:'Immediate help required.'}};
+ const result=await new VueFlow(domain).run({media:invalidMedia});
+ assert.equal(result.assessment.severity,'emergency');
+ assert.equal(domain.assessCalls,0);
+});
+test('VUECORE rejects non-emergency severity returned by emergency gate',async()=>{
+ const domain=new SafetyDomain();
+ domain.emergencyCheck=()=>({severity:'monitor',summary:'Incorrect emergency severity.'});
+ await assert.rejects(new VueFlow(domain).run({symptoms:['emergency']}),error=>error instanceof VueCoreError&&error.code==='invalid_emergency');
+ assert.equal(domain.assessCalls,0);
+});
