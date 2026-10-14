@@ -98,3 +98,21 @@ test('VUECORE capability declarations must be plain records',()=>{
  const defaultDomain=new VueDomain({id:'default-domain'});
  assert.deepEqual(defaultDomain.capabilities,{imageAnalysis:false,videoAnalysis:false});
 });
+
+test('VUECORE protects flow input arrays from domain adapter mutation',async()=>{
+ const domain=new SafetyDomain();
+ domain.emergencyCheck=({symptoms,media})=>{
+  assert.ok(Object.isFrozen(symptoms));
+  assert.ok(Object.isFrozen(media));
+  assert.throws(()=>symptoms.push('emergency'),TypeError);
+  assert.throws(()=>media.push({kind:'image'}),TypeError);
+  return null;
+ };
+ const symptoms=['ordinary'];
+ const media=[];
+ const result=await new VueFlow(domain).run({symptoms,media});
+ assert.equal(result.source,'domain');
+ assert.deepEqual(symptoms,['ordinary']);
+ assert.deepEqual(media,[]);
+ assert.equal(domain.assessCalls,1);
+});
