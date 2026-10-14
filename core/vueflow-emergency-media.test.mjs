@@ -45,3 +45,12 @@ test('VUECORE rejects non-finite media sizes in shared validator',()=>{
   assert.equal(result.code,'invalid_file');
  }
 });
+
+test('VUECORE rejects empty or malformed video MIME subtypes',()=>{
+ for(const type of ['video/','video/ ','video/;codecs=abc']){
+  const result=validateMedia({type,size:1024},'video');
+  assert.equal(result.ok,false,type);
+  assert.equal(result.code,'unsupported_type');
+ }
+ assert.equal(validateMedia({type:'video/mp4',size:1024},'video').ok,true);
+});

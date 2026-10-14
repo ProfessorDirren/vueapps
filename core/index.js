@@ -17,7 +17,7 @@ export function validateMedia(file, kind) {
   if (!["image","video"].includes(kind)) throw new VueCoreError("invalid_kind","Unknown media kind");
   if (!file || typeof file.size !== "number" || !Number.isFinite(file.size) || typeof file.type !== "string")
     return { ok:false, code:"invalid_file", message:"Invalid file." };
-  const validType = kind === "image" ? IMAGE_TYPES.includes(file.type.toLowerCase()) : file.type.toLowerCase().startsWith("video/");
+  const validType = kind === "image" ? IMAGE_TYPES.includes(file.type.toLowerCase()) : /^video\/[a-z0-9][a-z0-9.+-]*$/.test(file.type.toLowerCase());
   if (!validType) return { ok:false, code:"unsupported_type", message:"Unsupported file type." };
   if (file.size <= 0) return { ok:false, code:"empty_file", message:"File is empty." };
   if (file.size > MEDIA_LIMITS[kind]) return { ok:false, code:"too_large", message:"File exceeds size limit." };
