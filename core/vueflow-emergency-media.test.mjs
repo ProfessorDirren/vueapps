@@ -94,4 +94,7 @@ test('VUECORE capability declarations must be plain records',()=>{
  nullPrototype.imageAnalysis=true;
  const domain=new VueDomain({id:'good-domain',capabilities:nullPrototype});
  assert.equal(domain.capabilities.imageAnalysis,true);
+ assert.equal(domain.capabilities.videoAnalysis,false);
+ const defaultDomain=new VueDomain({id:'default-domain'});
+ assert.deepEqual(defaultDomain.capabilities,{imageAnalysis:false,videoAnalysis:false});
 });
