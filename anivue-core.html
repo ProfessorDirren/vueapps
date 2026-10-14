@@ -49,7 +49,16 @@ const symptoms={
  dog:[['other','Other'],['breathing','Breathing difficulty']],cat:[['other','Other'],['breathing','Breathing difficulty']],
  horse:[['horseOther','Other'],['horseColic','Colic'],['horseChoke','Choke'],['horseBreathingDistress','Breathing distress'],['horseSevereBleeding','Severe bleeding'],['horseUnableStand','Unable to stand'],['horseNeuro','Neurological symptoms'],['horseEyeTrauma','Eye trauma'],['horseFoalingDifficulty','Foaling difficulty'],['horseCannotBearWeight','Cannot bear weight'],['horseDiarrhea','Diarrhea'],['horseNotEating','Not eating']]
 };
-function updateSymptoms(){const selected=$('symptom');selected.replaceChildren(...symptoms[$('species').value].map(([id,label])=>new Option(label,id)));}
+const horseTranslations={
+ en:['Other','Colic','Choke','Breathing distress','Severe bleeding','Unable to stand','Neurological symptoms','Eye trauma','Foaling difficulty','Cannot bear weight','Diarrhea','Not eating'],
+ es:['Otro','Cólico','Obstrucción esofágica','Dificultad respiratoria','Hemorragia grave','No puede levantarse','Síntomas neurológicos','Lesión ocular','Dificultad en el parto','No puede apoyar una extremidad','Diarrea','No come'],
+ sv:['Annat','Kolik','Foderstrupsförstoppning','Andningssvårigheter','Kraftig blödning','Kan inte stå upp','Neurologiska symtom','Ögonskada','Fölningsproblem','Kan inte belasta benet','Diarré','Äter inte'],
+ hi:['अन्य','पेट दर्द (कोलिक)','भोजन नली में रुकावट','सांस लेने में कठिनाई','गंभीर रक्तस्राव','खड़ा नहीं हो पा रहा','तंत्रिका संबंधी लक्षण','आंख में चोट','प्रसव में कठिनाई','पैर पर वजन नहीं डाल पा रहा','दस्त','खाना नहीं खा रहा'],
+ 'zh-CN':['其他','疝痛','食道阻塞','呼吸困难','严重出血','无法站立','神经系统症状','眼部外伤','分娩困难','肢体无法负重','腹泻','不进食'],
+ ru:['Другое','Колики','Закупорка пищевода','Затруднённое дыхание','Сильное кровотечение','Не может стоять','Неврологические симптомы','Травма глаза','Трудные роды','Не опирается на конечность','Диарея','Не ест'],
+ ar:['أخرى','مغص','انسداد المريء','صعوبة التنفس','نزيف شديد','غير قادر على الوقوف','أعراض عصبية','إصابة العين','صعوبة الولادة','لا يستطيع تحميل الوزن على الطرف','إسهال','لا يأكل']
+};
+function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=animal==='horse'?horseTranslations[$('language').value]:null;selected.replaceChildren(...symptoms[animal].map(([id,label],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
 $('species').onchange=updateSymptoms;updateSymptoms();
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
 function render(){const l=picker.value,t=labels[l],u=controls[l];document.querySelector('label[for="species"]').firstChild.textContent=u[0]+' ';document.querySelector('label[for="symptom"]').firstChild.textContent=u[1]+' ';document.querySelector('label[for="photo"]').firstChild.textContent=u[2]+' ';$('vetlink').textContent=u[3];[...$('species').options].forEach((o,i)=>o.textContent=u[i+4]);updateSymptoms();const symptom=$('symptom');for(const o of symptom.options){if(o.value==='other'||o.value==='horseOther')o.textContent=u[7];if(o.value==='breathing'||o.value==='horseBreathingDistress')o.textContent=u[8];}document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';$('preview').textContent=t[0];$('safety').textContent=t[1];$('prompt').textContent=t[2];$('send').textContent=t[3];$('disclaimer').textContent=t[4];$('standalone').textContent=t[5];}
