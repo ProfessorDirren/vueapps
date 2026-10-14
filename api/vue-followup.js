@@ -17,7 +17,7 @@ export async function budget(){
  if(!r.ok)return false;const d=await r.json();return Number.isInteger(d.result)&&d.result<=limit}catch{return false}
 }
 export function validImage(image){
- if(typeof image!=='string'||image.length>4*1024*1024)return false;
+ if(typeof image!=='string'||image.length>4*1024*1024+64)return false;
  const m=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(image);if(!m||m[2].length%4)return false;
  const b=Buffer.from(m[2],'base64');if(b.length>3*1024*1024||b.length<12)return false;
  return m[1]==='jpeg'?b[0]===255&&b[1]===216&&b[2]===255:m[1]==='png'?b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):b.toString('ascii',0,4)==='RIFF'&&b.toString('ascii',8,12)==='WEBP';
