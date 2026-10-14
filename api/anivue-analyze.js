@@ -27,6 +27,7 @@ export async function POST(request,{fetcher=fetch,configured=ready,spend=budget}
   const d=await r.json();if(d.status!=='completed')return json(502,{error:'Analysis incomplete'});
   const raw=(d.output||[]).filter(x=>x.type==='message').flatMap(x=>x.content||[]).filter(x=>x.type==='output_text').map(x=>x.text).join('');
   const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.visibleObservations)||!Array.isArray(parsed.limitations)||!Array.isArray(parsed.suggestedFollowUpQuestions)||typeof parsed.summary!=='string')return json(502,{error:'Invalid analysis'});
+  if(!parsed.species||typeof parsed.species!=='object'||!parsed.breedAssessment||!parsed.ageAssessment||!Array.isArray(parsed.emergencySignals)||!['low','medium','high'].includes(parsed.species.confidence)||parsed.visibleObservations.length<1||parsed.visibleObservations.length>10||parsed.limitations.length<1||parsed.limitations.length>8||parsed.suggestedFollowUpQuestions.length<2||parsed.suggestedFollowUpQuestions.length>5||parsed.emergencySignals.length>5||parsed.summary.length<1)return json(502,{error:'Invalid structured analysis'});
   parsed.species.value=b.species;
   return json(200,{...parsed,emergencyAdvice:emergency?.summary||null,verified:false});
  }catch{return json(502,{error:'Analysis unavailable'})}
