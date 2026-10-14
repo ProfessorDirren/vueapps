@@ -44,3 +44,11 @@ test('VUEGUARD prevents accidental removal of the legacy ANIVUE domain dependenc
   const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
   assert.match(source,/www\\.anivueapp\\.se|www\.anivueapp\.se/);
 });
+
+// Keep VUECORE as the primary animal workspace without deleting the legacy fallback.
+test('VUECORE owns the animal workspace while retaining the legacy fallback',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+  assert.match(source,/workspace:route\.domain==='anivue'\?'\.\/anivue-core\.html'/);
+  assert.match(source,/legacy_workspace:'https:\/\/www\.anivueapp\.se'/);
+});
