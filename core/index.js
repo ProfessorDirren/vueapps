@@ -58,11 +58,11 @@ export class VueFlow {
     if (!(domain instanceof VueDomain)) throw new VueCoreError("invalid_domain","Expected VueDomain");
     this.domain=domain;
   }
-  async run({ category, symptoms = [], description = "", media = [], language = "en" } = {}) {
+  async run({ category, species, symptoms = [], description = "", media = [], language = "en" } = {}) {
     if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
     if (!Array.isArray(symptoms) || !Array.isArray(media)) throw new VueCoreError("invalid_input","Expected arrays");
     if (typeof description !== "string" || description.length > 2000) throw new VueCoreError("invalid_description","Invalid description");
-    const context={ category, symptoms:Object.freeze([...symptoms]), description, media:Object.freeze([...media]), language };
+    const context={ category, species, symptoms:Object.freeze([...symptoms]), description, media:Object.freeze([...media]), language };
     // Emergency detection must run before media validation so bad or oversized
     // uploads cannot delay an immediate safety recommendation.
     // Deterministic emergency handling takes precedence over all AI/other assessments.
