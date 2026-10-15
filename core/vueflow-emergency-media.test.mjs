@@ -116,3 +116,16 @@ test('VUECORE protects flow input arrays from domain adapter mutation',async()=>
  assert.deepEqual(media,[]);
  assert.equal(domain.assessCalls,1);
 });
+
+
+test('VUECORE forwards explicit animal species to specialist emergency gate',async()=>{
+ const domain=new SafetyDomain();
+ domain.emergencyCheck=({species,category})=>{
+  assert.equal(species,'horse');
+  assert.equal(category,'animal');
+  return {severity:'emergency',summary:'Contact an equine emergency veterinarian now.'};
+ };
+ const result=await new VueFlow(domain).run({category:'animal',species:'horse'});
+ assert.equal(result.source,'safety-rule');
+ assert.equal(domain.assessCalls,0);
+});
