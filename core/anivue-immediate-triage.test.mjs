@@ -29,3 +29,12 @@ test('horse high fever has a localized selectable symptom and immediate emergenc
  for(const label of ['Measured fever >39.5°C','Fiebre medida >39,5 °C','Uppmätt feber >39,5 °C','मापा गया तापमान >39.5°C','实测体温 >39.5°C','Измеренная температура >39,5 °C','حرارة مقاسة أعلى من 39.5°م'])assert.ok(page.includes(label),label);
  for(const language of ['en','es','sv','hi','zh-CN','ru','ar'])assert.equal(new AniVueDomain().emergencyCheck({species:'horse',symptoms:['horseHighFever'],language})?.severity,'emergency');
 });
+
+test('dog and cat collapse and severe bleeding trigger immediate triage in all seven languages',()=>{
+ const domain=new AniVueDomain();
+ for(const species of ['dog','cat'])for(const language of ['en','es','sv','hi','zh-CN','ru','ar'])for(const symptom of ['collapse','severeBleeding']){
+  assert.equal(domain.emergencyCheck({species,symptoms:[symptom],language})?.severity,'emergency',species+' '+language+' '+symptom);
+ }
+ for(const label of ['Collapse / unconscious','Colapso / inconsciente','Kollaps / medvetslös','गिरना / बेहोशी','倒地 / 失去意识','Коллапс / без сознания','انهيار / فقدان الوعي'])assert.ok(page.includes(label),label);
+ assert.match(page,/const companionTranslations=/);
+});
