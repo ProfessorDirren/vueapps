@@ -145,11 +145,18 @@ test('VUECORE text flow adapts ANYVUE synthesis without changing its endpoint co
    return {ok:true,json:async()=>({synthesis:'  A balanced synthesis  ',perspectives:[]})};
  }});
  const result=await new VueFlow(domain).runText({description:'Compare two approaches'});
- assert.deepEqual(result,{domain:'anyvue',answer:'A balanced synthesis',kind:'synthesis',sub_specialist:null,source:'domain'});
+ assert.deepEqual(result,{domain:'anyvue',answer:'A balanced synthesis',kind:'synthesis',sub_specialist:null,source:'domain',disclaimer:'',perspectives:[]});
  assert.equal(calls[0].url,'/api/anyvue');
  assert.deepEqual(JSON.parse(calls[0].options.body),{question:'Compare two approaches'});
 });
 test('VUECORE text flow fails closed when ANYVUE synthesis is missing',async()=>{
  const domain=new class extends VueDomain{constructor(){super({id:'anyvue'})}async assess(){return {answer:'Wrong shape'}}}();
  await assert.rejects(new VueFlow(domain).runText({description:'Compare two approaches'}),error=>error.code==='invalid_assessment');
+});
+
+test('ANYVUE shared flow preserves individual perspectives and disclaimer',async()=>{
+ const domain=createSpecialistDomain('anyvue',{fetcher:async()=>({ok:true,json:async()=>({synthesis:'Summary',disclaimer:'AI is unverified',perspectives:[{model:'Model A',answer:'Perspective A'}]})})});
+ const answer=await new VueFlow(domain).runText({description:'Explain the tradeoffs'});
+ assert.equal(answer.disclaimer,'AI is unverified');
+ assert.deepEqual(answer.perspectives,[{model:'Model A',answer:'Perspective A'}]);
 });
