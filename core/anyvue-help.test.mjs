@@ -20,3 +20,13 @@ test('ANYVUE defaults to English and preserves Arabic RTL', () => {
   assert.equal(new AnyVueHelp().getHelp().language, 'en');
   assert.equal(new AnyVueHelp().getHelp('ar').direction, 'rtl');
 });
+
+test('ANYVUE Help is translated for all seven supported languages', () => {
+  for (const language of ['en', 'es', 'sv', 'hi', 'zh-CN', 'ru', 'ar']) {
+    const copy = new AnyVueHelp().getHelp(language);
+    assert.equal(copy.language, language);
+    assert.ok(copy.title.length > 0);
+    assert.ok(copy.topics.length > 0);
+    assert.equal(copy.direction, language === 'ar' ? 'rtl' : 'ltr');
+  }
+});
