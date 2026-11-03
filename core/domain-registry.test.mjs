@@ -20,9 +20,9 @@ test('ANIVUE uses its safety-specialized subclass, not a generic placeholder',()
 });
 
 test('ordinary specialists expose their inherited domain contract without claiming unimplemented AI',async()=>{
- const domain=createSpecialistDomain('anyvue');
+ const domain=createSpecialistDomain('medivue');
  assert.ok(domain instanceof SpecialistVueDomain);
- assert.equal(domain.profile,SPECIALISTS.anyvue);
+ assert.equal(domain.profile,SPECIALISTS.medivue);
  assert.equal(domain.capabilities.imageAnalysis,false);
  await assert.rejects(domain.assess({}),error=>error instanceof VueCoreError&&error.code==='not_implemented');
 });
