@@ -23,3 +23,9 @@ test('every horse emergency ID triggers immediate advice in every supported lang
 test('routine horse symptoms do not trigger the emergency alert',()=>{
  assert.equal(new AniVueDomain().emergencyCheck({species:'horse',symptoms:['horseOther']}),null);
 });
+
+test('horse high fever has a localized selectable symptom and immediate emergency guidance',()=>{
+ assert.match(page,/\['horseHighFever','Measured fever >39\.5°C'\]/);
+ for(const label of ['Measured fever >39.5°C','Fiebre medida >39,5 °C','Uppmätt feber >39,5 °C','मापा गया तापमान >39.5°C','实测体温 >39.5°C','Измеренная температура >39,5 °C','حرارة مقاسة أعلى من 39.5°م'])assert.ok(page.includes(label),label);
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar'])assert.equal(new AniVueDomain().emergencyCheck({species:'horse',symptoms:['horseHighFever'],language})?.severity,'emergency');
+});
