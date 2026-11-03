@@ -35,7 +35,8 @@ button:disabled{opacity:.5;cursor:wait}.cards{display:grid;grid-template-columns
 </main>
 <script type="module">
 import { createSpecialistDomain } from "./core/domain-registry.js";
-const domain=createSpecialistDomain("anyvue"),question=document.getElementById("question"),button=document.getElementById("prepare"),workspace=document.getElementById("workspace"),result=document.getElementById("result"),details=document.getElementById("details"),perspectives=document.getElementById("perspectives");
+import { VueFlow } from "./core/index.js";
+const domain=createSpecialistDomain("anyvue"),flow=new VueFlow(domain),question=document.getElementById("question"),button=document.getElementById("prepare"),workspace=document.getElementById("workspace"),result=document.getElementById("result"),details=document.getElementById("details"),perspectives=document.getElementById("perspectives");
 const serviceStatus=document.getElementById("service-status");
 async function checkReadiness(){
  try{
@@ -51,7 +52,7 @@ button.addEventListener("click",async()=>{
  const prompt=question.value.trim();if(prompt.length<3){question.focus();return}
  button.disabled=true;button.textContent="Consulting AI perspectives…";workspace.hidden=false;result.textContent="Analyzing your question…";details.hidden=true;
  try{
-  const answer=await domain.assess({description:prompt});result.textContent=answer.synthesis+"\n\n"+answer.disclaimer;
+  const answer=await flow.runText({description:prompt});result.textContent=answer.answer+"\n\n"+answer.disclaimer;
   perspectives.replaceChildren();
   for(const item of answer.perspectives){
    const card=document.createElement("article");card.className="card";
