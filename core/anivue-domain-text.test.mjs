@@ -127,3 +127,14 @@ test('common alternate breathing phrases trigger emergency without AI',async()=>
  }
  assert.equal(calls,0);
 });
+
+test('English contracted cannot-breathe emergencies never wait for AI',async()=>{
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('unexpected AI call')}});
+ for(const description of ["My dog can't breathe","My dog can’t breathe"]){
+  const result=await new VueFlow(domain).run({category:'dog',symptoms:['other'],description,language:'en'});
+  assert.equal(result.source,'safety-rule');
+  assert.equal(result.assessment.severity,'emergency');
+ }
+ assert.equal(calls,0);
+});
