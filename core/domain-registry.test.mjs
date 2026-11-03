@@ -83,3 +83,18 @@ test('every informational VUE routes through its own inherited assessment contra
   assert.deepEqual(JSON.parse(calls[0].options.body),{question:'Please assess this example',language:'es',previous:id,newCase:true},id);
  }
 });
+
+test('shared specialist router requests have a bounded timeout signal',async()=>{
+ const domain=createSpecialistDomain('vinylvue',{fetcher:async(_url,options)=>{
+  assert.ok(options.signal instanceof AbortSignal);
+  assert.equal(options.signal.aborted,false);
+  return {ok:true,json:async()=>({domain:'vinylvue',answer:'Unverified example'})};
+ }});
+ await domain.assess({description:'What is this record?'});
+});
+test('shared specialist router fails closed on upstream errors and empty answers',async()=>{
+ const unavailable=createSpecialistDomain('musicgearvue',{fetcher:async()=>({ok:false})});
+ await assert.rejects(unavailable.assess({description:'Identify amplifier'}),e=>e.code==='service_unavailable');
+ const empty=createSpecialistDomain('musicgearvue',{fetcher:async()=>({ok:true,json:async()=>({domain:'musicgearvue',answer:' '})})});
+ await assert.rejects(empty.assess({description:'Identify amplifier'}),e=>e.code==='specialist_mismatch');
+});
