@@ -111,3 +111,19 @@ test('explicit breathing distress in all seven supported languages triggers imme
  }
  assert.equal(calls,0);
 });
+
+test('common alternate breathing phrases trigger emergency without AI',async()=>{
+ const cases=[
+  {language:'en',description:'My cat has trouble breathing'},
+  {language:'sv',description:'Min katt kan inte andas'},
+  {language:'es',description:'A mi gato le cuesta respirar'}
+ ];
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('unexpected AI call')}});
+ for(const {language,description} of cases){
+  const result=await new VueFlow(domain).run({category:'cat',symptoms:['other'],description,language});
+  assert.equal(result.source,'safety-rule',language);
+  assert.equal(result.assessment.severity,'emergency',language);
+ }
+ assert.equal(calls,0);
+});
