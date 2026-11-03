@@ -16,3 +16,27 @@ test('Arabic ANIVUE questions select the correct species sub-specialist',()=>{fo
 test('Spanish ANIVUE prompt explicitly avoids mixed-language animal headings',async()=>{const saved={...process.env},old=globalThis.fetch;Object.assign(process.env,{UPSTASH_REDIS_REST_URL:'https://redis.test',UPSTASH_REDIS_REST_TOKEN:'test',OPENAI_API_KEY:'test'});let checked=false;globalThis.fetch=async(url,options)=>{if(url==='https://redis.test')return Response.json({result:1});const body=JSON.parse(options.body);assert.match(body.instructions,/Problema de salud del perro/);assert.match(body.instructions,/Hund Problem/);assert.match(body.instructions,/required response language is Spanish/);checked=true;return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Describe los síntomas del perro.'}]}]})};try{const r=await POST(req({question:'Mi perro está cansado',language:'es'}));assert.equal(r.status,200);assert.equal((await r.json()).domain,'anivue');assert.equal(checked,true)}finally{globalThis.fetch=old;process.env=saved}});
 
 test('direct ANIVUE follow-up prioritizes multilingual breathing emergencies without model calls',async()=>{const {POST:followup}=await import('../api/vue-followup.js');for(const [language,question] of [['es','Mi perro tiene dificultad para respirar'],['ar','قطتي تعاني من صعوبة في التنفس'],['zh-CN','我的狗呼吸困难'],['ru','Моя собака трудно дышать'],['hi','मेरे कुत्ते को सांस लेने में कठिनाई है']]){const r=await followup(req({domain:'anivue',language,question}));assert.equal(r.status,200,language);assert.equal((await r.json()).kind,'safety_rule',language)}});
+
+test('seven-language routing preserves explicit specialist intent across stale prior context',()=>{
+ const cases=[
+  ['en','My guitar amplifier needs service','musicgearvue'],
+  ['es','Mi guitarra necesita reparación','musicgearvue'],
+  ['sv','Min gitarr behöver service','musicgearvue'],
+  ['hi','मेरी गिटार को मरम्मत चाहिए','musicgearvue'],
+  ['zh-CN','我的吉他需要维修','musicgearvue'],
+  ['ru','Моя гитара нуждается в ремонте','musicgearvue'],
+  ['ar','غيتار يحتاج إصلاح','musicgearvue']
+ ];
+ for(const [language,question,domain] of cases){
+  assert.equal(routeQuestion(question,'vinylvue').domain,domain,language);
+ }
+});
+test('router API rejects unsupported languages and preserves MEDIVUE local guidance in Spanish',async()=>{
+ let response=await POST(req({question:'Mi medicamento tiene efectos secundarios',language:'es',previous:'musicgearvue',newCase:true}));
+ assert.equal(response.status,200);
+ let data=await response.json();
+ assert.equal(data.domain,'medivue');
+ assert.equal(data.kind,'local_guidance');
+ response=await POST(req({question:'My guitar amplifier',language:'xx'}));
+ assert.equal(response.status,400);
+});
