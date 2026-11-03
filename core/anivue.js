@@ -1,4 +1,4 @@
-import {VueDomain,normalizeAssessment} from './index.js';
+import {VueDomain,VueCoreError,normalizeAssessment,LANGUAGES} from './index.js';
 import {routingFields} from './router.js';
 
 /**
@@ -34,7 +34,22 @@ const EQUINE={
 };
 const URGENT_RE=/(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar)/i;
 export class AniVueDomain extends VueDomain {
- constructor(){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:false,videoAnalysis:false}})}
+ constructor({fetcher=fetch}={}){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:true,videoAnalysis:false}});this.fetcher=fetcher}
+ /** Optional supplementary photo analysis via the VUECORE-native server endpoint. */
+ async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
+  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
+  if(typeof image!=='string'||!image.startsWith('data:image/'))throw new VueCoreError('invalid_image','Image required');
+  const response=await this.fetcher('/api/vue-router',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({action:'anivue_analyze',image,species,description,symptoms,language}),
+   signal:AbortSignal.timeout(90000)
+  });
+  const data=await response.json();
+  if(!response.ok)throw new VueCoreError('image_analysis_unavailable',data.error||'Image analysis unavailable');
+  if(!data||typeof data.summary!=='string'||!Array.isArray(data.visibleObservations))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
+  return data;
+ }
  emergencyCheck({category='',species='',symptoms=[],description='',language='en'}={}){
   const animal=species||category;
   const selected=new Set(Array.isArray(symptoms)?symptoms:[]);

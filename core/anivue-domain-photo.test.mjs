@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {AniVueDomain} from './anivue.js';
+import {VueDomain} from './index.js';
+
+test('native photo analysis uses the VUECORE domain inheritance and API',async()=>{
+ const calls=[];
+ const domain=new AniVueDomain({fetcher:async(url,options)=>{
+  calls.push({url,options});
+  return {ok:true,json:async()=>({summary:'Visual observation',visibleObservations:[],emergencyAdvice:'Contact emergency veterinarian'})};
+ }});
+ assert.ok(domain instanceof VueDomain);
+ assert.equal(domain.capabilities.imageAnalysis,true);
+ const result=await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',symptoms:['horseColic'],language:'es'});
+ assert.equal(result.emergencyAdvice,'Contact emergency veterinarian');
+ assert.equal(calls[0].url,'/api/vue-router');
+ const body=JSON.parse(calls[0].options.body);
+ assert.equal(body.action,'anivue_analyze');
+ assert.deepEqual(body.symptoms,['horseColic']);
+ assert.equal(body.language,'es');
+});
+
+test('unsupported species and language do not reach photo provider',async()=>{
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('Unexpected')}});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'fr'}),error=>error.code==='invalid_language');
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cow',language:'en'}),error=>error.code==='invalid_species');
+ assert.equal(calls,0);
+});
+
+test('emergency rules remain independent of photo service availability',()=>{
+ const domain=new AniVueDomain({fetcher:async()=>{throw Error('Provider unavailable')}});
+ assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseColic']}).severity,'emergency');
+});
