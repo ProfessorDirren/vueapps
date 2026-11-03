@@ -34,17 +34,8 @@ button:disabled{opacity:.5;cursor:wait}.cards{display:grid;grid-template-columns
 <p class="muted">Preview: one-click automated analysis is being connected. It becomes available only when provider credentials and server-side cost/rate limits are configured. The system does not claim to use 17 models yet. AI output is not independently verified. ANYVUE is not a licensed psychologist or a substitute for professional help.</p>
 </main>
 <script type="module">
-import { VueDomain } from "./core/index.js";
-class AnyVueDomain extends VueDomain {
- constructor(){super({id:"anyvue",name:"ANYVUE",capabilities:{imageAnalysis:false,videoAnalysis:false}})}
- async assess({description}){
-  const response=await fetch("/api/anyvue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:description})});
-  const data=await response.json();
-  if(!response.ok)throw Error(data.error||"ANYVUE is unavailable.");
-  return data;
- }
-}
-const domain=new AnyVueDomain(),question=document.getElementById("question"),button=document.getElementById("prepare"),workspace=document.getElementById("workspace"),result=document.getElementById("result"),details=document.getElementById("details"),perspectives=document.getElementById("perspectives");
+import { createSpecialistDomain } from "./core/domain-registry.js";
+const domain=createSpecialistDomain("anyvue"),question=document.getElementById("question"),button=document.getElementById("prepare"),workspace=document.getElementById("workspace"),result=document.getElementById("result"),details=document.getElementById("details"),perspectives=document.getElementById("perspectives");
 const serviceStatus=document.getElementById("service-status");
 async function checkReadiness(){
  try{

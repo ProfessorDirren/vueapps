@@ -13,8 +13,8 @@
 <script type="module">
 import {ROUTER_TEXT} from './apps/router-content.js';
 import {VueFlow} from './core/index.js';
-import {AniVueDomain} from './core/anivue.js';
-const flow=new VueFlow(new AniVueDomain());
+import {createSpecialistDomain} from './core/domain-registry.js';
+const flow=new VueFlow(createSpecialistDomain('anivue'));
 const $=id=>document.getElementById(id),labels={
 en:['VUECORE-native ANIVUE preview — not feature-complete.','For breathing difficulty, collapse or severe bleeding, contact emergency veterinary care immediately. Do not wait for AI.','Describe the animal and what you noticed','Ask ANIVUE','AI guidance is not a veterinary diagnosis.','Open full standalone ANIVUE'],
 es:['Vista previa ANIVUE en VUECORE — aún no tiene todas las funciones.','Si hay dificultad para respirar, colapso o hemorragia grave, busca atención veterinaria urgente. No esperes a la IA.','Describe el animal y lo que has observado','Preguntar a ANIVUE','La orientación de IA no sustituye al veterinario.','Abrir ANIVUE independiente'],
