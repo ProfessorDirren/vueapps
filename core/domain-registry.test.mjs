@@ -160,3 +160,11 @@ test('ANYVUE shared flow preserves individual perspectives and disclaimer',async
  assert.equal(answer.disclaimer,'AI is unverified');
  assert.deepEqual(answer.perspectives,[{model:'Model A',answer:'Perspective A'}]);
 });
+
+
+test('ANYVUE rejects absent or unreadable HTTP responses without TypeError',async()=>{
+ for(const response of [null,undefined,{}]){
+  const domain=createSpecialistDomain('anyvue',{fetcher:async()=>response});
+  await assert.rejects(domain.assess({description:'Compare the options'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
+ }
+});

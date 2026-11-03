@@ -58,6 +58,8 @@ export class AnyVueDomain extends SpecialistVueDomain {
     } catch(error) {
       throw new VueCoreError(error?.name==='TimeoutError'||error?.name==='AbortError'?'service_timeout':'service_unavailable','ANYVUE is unavailable.');
     }
+    if(!response || typeof response.json !== 'function')
+      throw new VueCoreError('invalid_response','ANYVUE returned no readable response');
     let data;
     try { data=await response.json(); } catch {
       throw new VueCoreError('invalid_response','ANYVUE response could not be read');
