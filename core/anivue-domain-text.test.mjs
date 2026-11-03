@@ -146,3 +146,17 @@ test('native ANIVUE inline module JavaScript remains syntactically valid',()=>{
  const script=match[1].replace(/^import .*;$/gm,'');
  assert.doesNotThrow(()=>new Function(script));
 });
+
+test('native ANIVUE translations have one label per symptom in all seven languages',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const begin=page.indexOf('const symptoms=');
+ const end=page.indexOf('function updateSymptoms()');
+ assert.ok(begin>=0&&end>begin,'symptom dictionaries are present');
+ const dictionarySource=page.slice(begin,end);
+ const dictionaries=new Function(dictionarySource+';return {symptoms,horseTranslations,companionTranslations};')();
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar']){
+  assert.equal(dictionaries.horseTranslations[language]?.length,dictionaries.symptoms.horse.length,'horse '+language);
+  assert.equal(dictionaries.companionTranslations[language]?.length,dictionaries.symptoms.dog.length,'dog '+language);
+  assert.equal(dictionaries.companionTranslations[language]?.length,dictionaries.symptoms.cat.length,'cat '+language);
+ }
+});
