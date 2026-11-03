@@ -138,3 +138,11 @@ test('English contracted cannot-breathe emergencies never wait for AI',async()=>
  }
  assert.equal(calls,0);
 });
+
+test('native ANIVUE inline module JavaScript remains syntactically valid',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const match=page.match(/<script type="module">([\s\S]*?)<\/script>/);
+ assert.ok(match,'native ANIVUE inline module exists');
+ const script=match[1].replace(/^import .*;$/gm,'');
+ assert.doesNotThrow(()=>new Function(script));
+});
