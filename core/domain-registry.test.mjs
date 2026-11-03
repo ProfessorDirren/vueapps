@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { VueDomain, VueCoreError } from './index.js';
+import { VueDomain, VueCoreError, VueFlow } from './index.js';
 import { SPECIALISTS } from './specialists.js';
 import { createSpecialistDomain, SpecialistVueDomain, AnyVueDomain } from './domain-registry.js';
 import { AniVueDomain } from './anivue.js';
@@ -124,4 +124,16 @@ test('ANYVUE handles network, timeout, malformed JSON and empty assessments safe
  await assert.rejects(empty.assess({description:'Compare these options'}),error=>error.code==='invalid_response');
  const unavailable=createSpecialistDomain('anyvue',{fetcher:async()=>({ok:false,json:async()=>null})});
  await assert.rejects(unavailable.assess({description:'Compare these options'}),error=>error.code==='service_unavailable');
+});
+
+test('VUECORE text flow runs real informational specialist contract without inventing severity',async()=>{
+ const domain=createSpecialistDomain('vinylvue',{fetcher:async()=>({ok:true,json:async()=>({domain:'vinylvue',answer:'  Inspect runout matrix  ',kind:'ai_unverified'})})});
+ const result=await new VueFlow(domain).runText({description:'Identify this record',language:'en'});
+ assert.deepEqual(result,{domain:'vinylvue',answer:'Inspect runout matrix',kind:'ai_unverified',sub_specialist:null,source:'domain'});
+ assert.equal('severity' in result,false);
+ await assert.rejects(new VueFlow(domain).runText({description:'Identify this record',language:'invalid'}),error=>error.code==='invalid_language');
+});
+test('VUECORE text flow rejects mismatched domain answers',async()=>{
+ const domain=new class extends VueDomain{constructor(){super({id:'vinylvue'})}async assess(){return {domain:'musicgearvue',answer:'Wrong domain'}}}();
+ await assert.rejects(new VueFlow(domain).runText({description:'Identify this record'}),error=>error.code==='invalid_assessment');
 });
