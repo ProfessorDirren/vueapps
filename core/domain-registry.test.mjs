@@ -98,3 +98,10 @@ test('shared specialist router fails closed on upstream errors and empty answers
  const empty=createSpecialistDomain('musicgearvue',{fetcher:async()=>({ok:true,json:async()=>({domain:'musicgearvue',answer:' '})})});
  await assert.rejects(empty.assess({description:'Identify amplifier'}),e=>e.code==='specialist_mismatch');
 });
+
+test('shared specialist adapter reports timeout and network failures consistently',async()=>{
+ for(const [name,code] of [['TimeoutError','service_timeout'],['AbortError','service_timeout'],['TypeError','service_unavailable']]){
+  const domain=createSpecialistDomain('vinylvue',{fetcher:async()=>{const error=new Error('network failure');error.name=name;throw error;}});
+  await assert.rejects(domain.assess({description:'Assess this record'}),error=>error instanceof VueCoreError&&error.code===code,name);
+ }
+});
