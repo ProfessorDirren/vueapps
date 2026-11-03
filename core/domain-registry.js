@@ -9,13 +9,26 @@ import { AniVueDomain } from './anivue.js';
  * an informational specialist has implemented assessment or image analysis.
  */
 export class SpecialistVueDomain extends VueDomain {
-  constructor(id) {
+  constructor(id, {fetcher = fetch} = {}) {
     if (!Object.hasOwn(SPECIALISTS,id)) throw new VueCoreError('unknown_specialist','Unknown VUE specialist');
     super({id,name:id.toUpperCase(),capabilities:{imageAnalysis:false,videoAnalysis:false}});
     this.profile=SPECIALISTS[id];
+    this.fetcher=fetcher;
   }
-  async assess() {
-    throw new VueCoreError('not_implemented','Specialist assessment must be supplied by the specialist adapter');
+  async assess({description,language='en'} = {}) {
+    if(typeof description!=='string'||description.trim().length<3||description.length>2000)
+      throw new VueCoreError('invalid_question','Enter a question of 3–2000 characters');
+    if(!['en','sv','es','hi','zh-CN','ru','ar'].includes(language))
+      throw new VueCoreError('invalid_language','Unsupported language');
+    const response=await this.fetcher('/api/vue-router',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:description.trim(),language,previous:this.id,newCase:true})
+    });
+    if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
+    const data=await response.json();
+    if(data.domain!==this.id||typeof data.answer!=='string'||!data.answer.trim())
+      throw new VueCoreError('specialist_mismatch','No matching specialist answer available');
+    return {domain:this.id,answer:data.answer,kind:data.kind||'unverified',sub_specialist:data.sub_specialist||null};
   }
 }
 
@@ -41,5 +54,5 @@ export class AnyVueDomain extends SpecialistVueDomain {
 export function createSpecialistDomain(id, options) {
   if (id === 'anivue') return new AniVueDomain(options);
   if (id === 'anyvue') return new AnyVueDomain(options);
-  return new SpecialistVueDomain(id);
+  return new SpecialistVueDomain(id, options);
 }
