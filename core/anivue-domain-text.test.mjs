@@ -62,3 +62,23 @@ test('emergency symptoms never call text AI via VUEFlow',async()=>{
  assert.equal(result.assessment.severity,'emergency');
  assert.equal(calls,0);
 });
+
+test('explicit breathing distress in all seven supported languages triggers immediate triage',async()=>{
+ const descriptions={
+  en:'My dog has difficulty breathing',
+  es:'Mi perro tiene dificultad para respirar',
+  sv:'Min hund har svårt att andas',
+  hi:'मेरे कुत्ते को सांस लेने में कठिनाई है',
+  'zh-CN':'我的狗呼吸困难',
+  ru:'Моей собаке трудно дышать',
+  ar:'كلبي يعاني من صعوبة التنفس'
+ };
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('unexpected network request')}});
+ for(const [language,description] of Object.entries(descriptions)){
+  const result=await new VueFlow(domain).run({category:'dog',symptoms:['other'],description,language});
+  assert.equal(result.source,'safety-rule',language);
+  assert.equal(result.assessment.severity,'emergency',language);
+ }
+ assert.equal(calls,0);
+});
