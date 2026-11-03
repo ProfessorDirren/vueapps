@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {AniVueDomain} from './anivue.js';
 import {VueDomain} from './index.js';
+import {createSpecialistDomain} from './domain-registry.js';
 
 test('native ANIVUE text requests use inherited domain adapter',async()=>{
  const calls=[];
@@ -30,4 +31,15 @@ test('native page delegates both text and photo to VUECORE domain',()=>{
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.match(page,/flow\.domain\.analyzeText\(/);
  assert.match(page,/flow\.domain\.analyzePhoto\(/);
+});
+
+test('registry forwards injected fetcher to ANIVUE specialist adapter',async()=>{
+ let calls=0;
+ const domain=createSpecialistDomain('anivue',{fetcher:async()=>{
+  calls++;
+  return {ok:true,json:async()=>({domain:'anivue',answer:'Contact a veterinarian'})};
+ }});
+ assert.ok(domain instanceof AniVueDomain);
+ await domain.analyzeText({species:'cat',description:'Cat not eating'});
+ assert.equal(calls,1);
 });
