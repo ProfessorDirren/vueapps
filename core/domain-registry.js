@@ -48,12 +48,23 @@ export class AnyVueDomain extends SpecialistVueDomain {
   async assess({description} = {}) {
     if(typeof description !== 'string' || description.trim().length < 3 || description.length > 3000)
       throw new VueCoreError('invalid_question','Enter a question of 3–3000 characters');
-    const response=await this.fetcher('/api/anyvue',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:description.trim()})
-    });
-    const data=await response.json();
-    if(!response.ok)throw new VueCoreError('service_unavailable',data.error||'ANYVUE is unavailable.');
+    let response;
+    try {
+      response=await this.fetcher('/api/anyvue',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        signal:AbortSignal.timeout(30000),
+        body:JSON.stringify({question:description.trim()})
+      });
+    } catch(error) {
+      throw new VueCoreError(error?.name==='TimeoutError'||error?.name==='AbortError'?'service_timeout':'service_unavailable','ANYVUE is unavailable.');
+    }
+    let data;
+    try { data=await response.json(); } catch {
+      throw new VueCoreError('invalid_response','ANYVUE response could not be read');
+    }
+    if(!response.ok)throw new VueCoreError('service_unavailable',typeof data?.error==='string'?data.error:'ANYVUE is unavailable.');
+    if(!data||typeof data!=='object'||typeof data.synthesis!=='string'||!data.synthesis.trim())
+      throw new VueCoreError('invalid_response','ANYVUE returned an invalid assessment');
     return data;
   }
 }

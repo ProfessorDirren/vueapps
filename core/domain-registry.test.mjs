@@ -112,3 +112,16 @@ test('shared specialist adapter handles malformed JSON and null responses withou
  const empty=createSpecialistDomain('vinylvue',{fetcher:async()=>({ok:true,json:async()=>null})});
  await assert.rejects(empty.assess({description:'Assess this pressing'}),error=>error instanceof VueCoreError&&error.code==='specialist_mismatch');
 });
+
+test('ANYVUE handles network, timeout, malformed JSON and empty assessments safely',async()=>{
+ for(const [name,code] of [['TimeoutError','service_timeout'],['TypeError','service_unavailable']]){
+  const domain=createSpecialistDomain('anyvue',{fetcher:async()=>{const error=new Error('failed');error.name=name;throw error;}});
+  await assert.rejects(domain.assess({description:'Compare these options'}),error=>error instanceof VueCoreError&&error.code===code);
+ }
+ const malformed=createSpecialistDomain('anyvue',{fetcher:async()=>({ok:true,json:async()=>{throw new SyntaxError('bad JSON')}})});
+ await assert.rejects(malformed.assess({description:'Compare these options'}),error=>error.code==='invalid_response');
+ const empty=createSpecialistDomain('anyvue',{fetcher:async()=>({ok:true,json:async()=>({synthesis:' '})})});
+ await assert.rejects(empty.assess({description:'Compare these options'}),error=>error.code==='invalid_response');
+ const unavailable=createSpecialistDomain('anyvue',{fetcher:async()=>({ok:false,json:async()=>null})});
+ await assert.rejects(unavailable.assess({description:'Compare these options'}),error=>error.code==='service_unavailable');
+});
