@@ -42,8 +42,8 @@ photo.onchange=()=>{
  const version=++photoReadVersion;
  imageData=null;
  const file=photo.files?.[0];
- if(!file){showPhotoStatus(null);return}
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>3*1024*1024||file.size===0){showPhotoStatus(0);photo.value='';return}
+ if(!file){photoReadTask=Promise.resolve();showPhotoStatus(null);return}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>3*1024*1024||file.size===0){photoReadTask=Promise.resolve();showPhotoStatus(0);photo.value='';return}
  photoReadTask=(async()=>{try{
   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
   if(version!==photoReadVersion)return;
