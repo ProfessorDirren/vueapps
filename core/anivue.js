@@ -87,7 +87,8 @@ export class AniVueDomain extends VueDomain {
    limitations:['Deterministic triage is not a diagnosis. Veterinary review required for equine mapping.']
   });
  }
- async assess(){
-  return normalizeAssessment({severity:'monitor',summary:'VUECORE ANIVUE image analysis is not yet integrated. Use the standalone ANIVUE for full functionality.',limitations:['No diagnosis, image analysis or feature parity is claimed.']});
+ async assess({category='',species='',symptoms=[],description='',language='en'}={}){
+  const result=await this.analyzeText({species:species||category,symptoms,description,language});
+  return normalizeAssessment({severity:'monitor',summary:result.answer,limitations:['AI-generated guidance is not a veterinary diagnosis.']});
  }
 }
