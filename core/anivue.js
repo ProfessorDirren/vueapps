@@ -12,7 +12,7 @@ export const HORSE_EMERGENCY_IDS=Object.freeze([
  'horseColic','horseChoke','horseBreathingDistress','horseSevereBleeding',
  'horseUnableStand','horseNeuro','horseEyeTrauma','horseFoalingDifficulty','horseCannotBearWeight','horseHighFever'
 ]);
-export const COMPANION_EMERGENCY_IDS=Object.freeze(['breathing']);
+export const COMPANION_EMERGENCY_IDS=Object.freeze(['breathing','collapse','severeBleeding']);
 export const HORSE_PROMPT_CONTACT_IDS=Object.freeze(['horseDiarrhea','horseNotEating','horseOther']);
 const MESSAGES={
  en:'Seek emergency veterinary care now. Do not wait for AI or photo analysis.',
