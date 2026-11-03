@@ -40,12 +40,20 @@
     .note { color: #90a3ac; font-size: 13px; line-height: 1.6; margin-top: 34px; }
     footer { padding: 35px 7%; color: #90a3ac; border-top: 1px solid #263943; font-size: 13px; }
     @media (max-width: 600px) { main { padding-top: 65px; } .apps { grid-template-columns: 1fr; } }
+    #vuecore-help { margin-top:12px; }
+    .vuecore-help-trigger,.vuecore-help-panel button { background:#142630;color:#f4f7f8;border:1px solid #36525a;border-radius:8px;padding:8px 12px;cursor:pointer; }
+    .vuecore-help-panel { margin-top:10px;padding:16px;border:1px solid #36525a;border-radius:12px;background:#142630;max-width:700px; }
+    .vuecore-help-panel[hidden] { display:none; }
+    .vuecore-help-panel h2 { margin:0 0 10px; }
+    .vuecore-help-panel h3 { margin:14px 0 4px; }
+    .vuecore-help-panel p { margin:0;line-height:1.5; }
   </style>
   <script src="./analytics.js" defer></script>
   <script type="module" src="./apps/router.js"></script>
+  <script type="module" src="./apps/help.js"></script>
 </head>
 <body>
-  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div></header>
+  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div><div id="vuecore-help"></div></header>
   <main>
     <section class="hero" aria-labelledby="hero-title">
       <p class="hero-mark">VUEAPPS.se</p>
