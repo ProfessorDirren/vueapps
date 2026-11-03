@@ -10,7 +10,7 @@ import {routingFields} from './router.js';
  */
 export const HORSE_EMERGENCY_IDS=Object.freeze([
  'horseColic','horseChoke','horseBreathingDistress','horseSevereBleeding',
- 'horseUnableStand','horseNeuro','horseEyeTrauma','horseFoalingDifficulty','horseCannotBearWeight'
+ 'horseUnableStand','horseNeuro','horseEyeTrauma','horseFoalingDifficulty','horseCannotBearWeight','horseHighFever'
 ]);
 export const COMPANION_EMERGENCY_IDS=Object.freeze(['breathing']);
 export const HORSE_PROMPT_CONTACT_IDS=Object.freeze(['horseDiarrhea','horseNotEating','horseOther']);
