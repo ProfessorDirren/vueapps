@@ -19,7 +19,27 @@ export class SpecialistVueDomain extends VueDomain {
   }
 }
 
-export function createSpecialistDomain(id) {
+/** ANYVUE uses the same registered inheritance chain as other specialists. */
+export class AnyVueDomain extends SpecialistVueDomain {
+  constructor({fetcher = fetch} = {}) {
+    super('anyvue');
+    this.fetcher=fetcher;
+  }
+  async assess({description} = {}) {
+    if(typeof description !== 'string' || description.trim().length < 3 || description.length > 3000)
+      throw new VueCoreError('invalid_question','Enter a question of 3–3000 characters');
+    const response=await this.fetcher('/api/anyvue',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:description.trim()})
+    });
+    const data=await response.json();
+    if(!response.ok)throw new VueCoreError('service_unavailable',data.error||'ANYVUE is unavailable.');
+    return data;
+  }
+}
+
+export function createSpecialistDomain(id, options) {
   if (id === 'anivue') return new AniVueDomain();
+  if (id === 'anyvue') return new AnyVueDomain(options);
   return new SpecialistVueDomain(id);
 }
