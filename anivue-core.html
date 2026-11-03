@@ -73,7 +73,7 @@ const resultLabels={
  en:['Breed','Age'],es:['Raza','Edad'],sv:['Ras','Ålder'],hi:['नस्ल','उम्र'],'zh-CN':['品种','年龄'],ru:['Порода','Возраст'],ar:['السلالة','العمر']
 };
 const symptoms={
- dog:[['other','Other'],['breathing','Breathing difficulty']],cat:[['other','Other'],['breathing','Breathing difficulty']],
+ dog:[['other','Other'],['breathing','Breathing difficulty'],['collapse','Collapse / unconscious'],['severeBleeding','Severe bleeding']],cat:[['other','Other'],['breathing','Breathing difficulty'],['collapse','Collapse / unconscious'],['severeBleeding','Severe bleeding']],
  horse:[['horseOther','Other'],['horseColic','Colic'],['horseChoke','Choke'],['horseBreathingDistress','Breathing distress'],['horseSevereBleeding','Severe bleeding'],['horseUnableStand','Unable to stand'],['horseNeuro','Neurological symptoms'],['horseEyeTrauma','Eye trauma'],['horseFoalingDifficulty','Foaling difficulty'],['horseCannotBearWeight','Cannot bear weight'],['horseDiarrhea','Diarrhea'],['horseNotEating','Not eating'],['horseHighFever','Measured fever >39.5°C']]
 };
 const horseTranslations={
@@ -85,7 +85,16 @@ const horseTranslations={
  ru:['Другое','Колики','Закупорка пищевода','Затруднённое дыхание','Сильное кровотечение','Не может стоять','Неврологические симптомы','Травма глаза','Трудные роды','Не опирается на конечность','Диарея','Не ест','Измеренная температура >39,5 °C'],
  ar:['أخرى','مغص','انسداد المريء','صعوبة التنفس','نزيف شديد','غير قادر على الوقوف','أعراض عصبية','إصابة العين','صعوبة الولادة','لا يستطيع تحميل الوزن على الطرف','إسهال','لا يأكل']
 };
-function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=animal==='horse'?horseTranslations[$('language').value]:null;selected.replaceChildren(...symptoms[animal].map(([id,label,'حرارة مقاسة أعلى من 39.5°م','حرارة مقاسة أعلى من 39.5°م'],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
+const companionTranslations={
+ en:['Other','Breathing difficulty','Collapse / unconscious','Severe bleeding'],
+ es:['Otro','Dificultad para respirar','Colapso / inconsciente','Hemorragia grave'],
+ sv:['Annat','Andningssvårigheter','Kollaps / medvetslös','Kraftig blödning'],
+ hi:['अन्य','सांस लेने में कठिनाई','गिरना / बेहोशी','गंभीर रक्तस्राव'],
+ 'zh-CN':['其他','呼吸困难','倒地 / 失去意识','严重出血'],
+ ru:['Другое','Затруднённое дыхание','Коллапс / без сознания','Сильное кровотечение'],
+ ar:['أخرى','صعوبة التنفس','انهيار / فقدان الوعي','نزيف شديد']
+};
+function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=(animal==='horse'?horseTranslations:companionTranslations)[$('language').value];selected.replaceChildren(...symptoms[animal].map(([id,label,'حرارة مقاسة أعلى من 39.5°م','حرارة مقاسة أعلى من 39.5°م'],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
 $('species').onchange=()=>{updateSymptoms();showImmediateTriage()};updateSymptoms();
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
 function showImmediateTriage(){const check=flow.domain.emergencyCheck({species:$('species').value,symptoms:[$('symptom').value],description:$('question').value,language:$('language').value});const warning=$('immediate-triage');warning.hidden=!check;warning.textContent=check?.summary||'';}
