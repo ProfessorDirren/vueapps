@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {AniVueDomain,HORSE_EMERGENCY_IDS} from './anivue.js';
+
+const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+test('native ANIVUE renders an assertive immediate triage region',()=>{
+ assert.match(page,/id="immediate-triage" role="alert" aria-live="assertive"/);
+ assert.match(page,/symptom'\)\.addEventListener\('change',showImmediateTriage\)/);
+ assert.match(page,/function showImmediateTriage\(\)/);
+ assert.match(page,/showImmediateTriage\(\);\}/);
+});
+test('every horse emergency ID triggers immediate advice in every supported language',()=>{
+ const domain=new AniVueDomain();
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar']){
+  for(const symptom of HORSE_EMERGENCY_IDS){
+   const advice=domain.emergencyCheck({species:'horse',symptoms:[symptom],language});
+   assert.equal(advice.severity,'emergency',language+': '+symptom);
+   assert.ok(advice.summary.length>20);
+  }
+ }
+});
+test('routine horse symptoms do not trigger the emergency alert',()=>{
+ assert.equal(new AniVueDomain().emergencyCheck({species:'horse',symptoms:['horseOther']}),null);
+});
