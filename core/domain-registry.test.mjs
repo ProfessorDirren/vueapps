@@ -67,3 +67,19 @@ test('ANYVUE rejects invalid questions before contacting provider',async()=>{
  await assert.rejects(domain.assess({description:'x'}),error=>error.code==='invalid_question');
  assert.equal(called,false);
 });
+
+test('every informational VUE routes through its own inherited assessment contract',async()=>{
+ for(const id of Object.keys(SPECIALISTS).filter(x=>!['anivue','anyvue'].includes(x))){
+  const calls=[];
+  const domain=createSpecialistDomain(id,{fetcher:async(url,options)=>{
+   calls.push({url,options});
+   return {ok:true,json:async()=>({domain:id,answer:'Specialist guidance',kind:'ai_unverified'})};
+  }});
+  assert.ok(domain instanceof SpecialistVueDomain,id);
+  const result=await domain.assess({description:'Please assess this example',language:'es'});
+  assert.equal(result.domain,id);
+  assert.equal(calls.length,1,id);
+  assert.equal(calls[0].url,'/api/vue-router',id);
+  assert.deepEqual(JSON.parse(calls[0].options.body),{question:'Please assess this example',language:'es',previous:id,newCase:true},id);
+ }
+});
