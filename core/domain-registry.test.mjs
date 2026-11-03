@@ -137,3 +137,19 @@ test('VUECORE text flow rejects mismatched domain answers',async()=>{
  const domain=new class extends VueDomain{constructor(){super({id:'vinylvue'})}async assess(){return {domain:'musicgearvue',answer:'Wrong domain'}}}();
  await assert.rejects(new VueFlow(domain).runText({description:'Identify this record'}),error=>error.code==='invalid_assessment');
 });
+
+test('VUECORE text flow adapts ANYVUE synthesis without changing its endpoint contract',async()=>{
+ const calls=[];
+ const domain=createSpecialistDomain('anyvue',{fetcher:async(url,options)=>{
+   calls.push({url,options});
+   return {ok:true,json:async()=>({synthesis:'  A balanced synthesis  ',perspectives:[]})};
+ }});
+ const result=await new VueFlow(domain).runText({description:'Compare two approaches'});
+ assert.deepEqual(result,{domain:'anyvue',answer:'A balanced synthesis',kind:'synthesis',sub_specialist:null,source:'domain'});
+ assert.equal(calls[0].url,'/api/anyvue');
+ assert.deepEqual(JSON.parse(calls[0].options.body),{question:'Compare two approaches'});
+});
+test('VUECORE text flow fails closed when ANYVUE synthesis is missing',async()=>{
+ const domain=new class extends VueDomain{constructor(){super({id:'anyvue'})}async assess(){return {answer:'Wrong shape'}}}();
+ await assert.rejects(new VueFlow(domain).runText({description:'Compare two approaches'}),error=>error.code==='invalid_assessment');
+});
