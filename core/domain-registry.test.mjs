@@ -168,3 +168,11 @@ test('ANYVUE rejects absent or unreadable HTTP responses without TypeError',asyn
   await assert.rejects(domain.assess({description:'Compare the options'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
  }
 });
+
+
+test('shared informational specialists reject missing router responses safely',async()=>{
+ for(const response of [null,undefined,{}]){
+  const domain=createSpecialistDomain('vinylvue',{fetcher:async()=>response});
+  await assert.rejects(domain.assess({description:'Assess this record'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
+ }
+});
