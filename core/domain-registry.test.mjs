@@ -171,8 +171,10 @@ test('ANYVUE rejects absent or unreadable HTTP responses without TypeError',asyn
 
 
 test('shared informational specialists reject missing router responses safely',async()=>{
- for(const response of [null,undefined,{}]){
+ for(const response of [null,undefined]){
   const domain=createSpecialistDomain('vinylvue',{fetcher:async()=>response});
   await assert.rejects(domain.assess({description:'Assess this record'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
  }
+ const unreadable=createSpecialistDomain('vinylvue',{fetcher:async()=>({ok:true})});
+ await assert.rejects(unreadable.assess({description:'Assess this record'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
 });
