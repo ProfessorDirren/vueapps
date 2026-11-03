@@ -105,3 +105,10 @@ test('shared specialist adapter reports timeout and network failures consistentl
   await assert.rejects(domain.assess({description:'Assess this record'}),error=>error instanceof VueCoreError&&error.code===code,name);
  }
 });
+
+test('shared specialist adapter handles malformed JSON and null responses without crashing',async()=>{
+ const malformed=createSpecialistDomain('vinylvue',{fetcher:async()=>({ok:true,json:async()=>{throw new SyntaxError('invalid JSON')}})});
+ await assert.rejects(malformed.assess({description:'Assess this pressing'}),error=>error instanceof VueCoreError&&error.code==='invalid_response');
+ const empty=createSpecialistDomain('vinylvue',{fetcher:async()=>({ok:true,json:async()=>null})});
+ await assert.rejects(empty.assess({description:'Assess this pressing'}),error=>error instanceof VueCoreError&&error.code==='specialist_mismatch');
+});
