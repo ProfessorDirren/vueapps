@@ -58,6 +58,16 @@ export class VueFlow {
     if (!(domain instanceof VueDomain)) throw new VueCoreError("invalid_domain","Expected VueDomain");
     this.domain=domain;
   }
+  /** Informational text assessments have an answer contract, not a medical severity contract. */
+  async runText({description='',language='en'} = {}) {
+    if (!LANGUAGES.includes(language)) throw new VueCoreError('invalid_language','Unsupported language');
+    if (typeof description!=='string'||description.trim().length<3||description.length>2000)
+      throw new VueCoreError('invalid_description','Enter a question of 3–2000 characters');
+    const result=await this.domain.assess({description:description.trim(),language});
+    if(!result||typeof result!=='object'||result.domain!==this.domain.id||typeof result.answer!=='string'||!result.answer.trim())
+      throw new VueCoreError('invalid_assessment','Specialist returned no valid text answer');
+    return Object.freeze({domain:this.domain.id,answer:result.answer.trim(),kind:result.kind||'unverified',sub_specialist:result.sub_specialist||null,source:'domain'});
+  }
   async run({ category, species, symptoms = [], description = "", media = [], language = "en" } = {}) {
     if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
     if (!Array.isArray(symptoms) || !Array.isArray(media)) throw new VueCoreError("invalid_input","Expected arrays");
