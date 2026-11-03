@@ -85,7 +85,7 @@ const horseTranslations={
  ru:['Другое','Колики','Закупорка пищевода','Затруднённое дыхание','Сильное кровотечение','Не может стоять','Неврологические симптомы','Травма глаза','Трудные роды','Не опирается на конечность','Диарея','Не ест','Измеренная температура >39,5 °C'],
  ar:['أخرى','مغص','انسداد المريء','صعوبة التنفس','نزيف شديد','غير قادر على الوقوف','أعراض عصبية','إصابة العين','صعوبة الولادة','لا يستطيع تحميل الوزن على الطرف','إسهال','لا يأكل']
 };
-function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=animal==='horse'?horseTranslations[$('language').value]:null;selected.replaceChildren(...symptoms[animal].map(([id,label,'حرارة مقاسة أعلى من 39.5°م'],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
+function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=animal==='horse'?horseTranslations[$('language').value]:null;selected.replaceChildren(...symptoms[animal].map(([id,label,'حرارة مقاسة أعلى من 39.5°م','حرارة مقاسة أعلى من 39.5°م'],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
 $('species').onchange=()=>{updateSymptoms();showImmediateTriage()};updateSymptoms();
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
 function showImmediateTriage(){const check=flow.domain.emergencyCheck({species:$('species').value,symptoms:[$('symptom').value],description:$('question').value,language:$('language').value});const warning=$('immediate-triage');warning.hidden=!check;warning.textContent=check?.summary||'';}
