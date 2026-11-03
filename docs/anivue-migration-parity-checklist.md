@@ -2,11 +2,13 @@
 
 Status: implementation in progress; **do not retire anivueapp.se**.
 
-## Verified in repositories
-- VUECORE `core/anivue.js` extends `VueDomain`, but its assess method is a placeholder and declares imageAnalysis false.
-- `anivue-core.html` is a limited text-first preview, not equivalent to the standalone React application.
-- `api/vue-router.js` returns `workspace: 'https://www.anivueapp.se'` for ANIVUE.
-- Standalone ANIVUE documents seven languages, dog/cat/horse, emergency-first triage, optional image analysis, equine sources and veterinary navigation.
+## Verified in repositories (updated after PR #75)
+- VUECORE `core/anivue.js` implements `AniVueDomain extends VueDomain`, deterministic dog/cat/horse emergency checks, and a native `analyzePhoto()` adapter to the VUECORE image API. The image API validates JPEG/PNG/WebP up to **3 MiB** and returns structured, unverified visual observations. `assess()` is still a placeholder: full functional parity is **not** achieved.
+- `core/domain-registry.js` constructs ANIVUE and ANYVUE through shared VUECORE domain inheritance. The native `anivue-core.html` and `anyvue.html` pages use the registry. Other specialists still need actual adapter integration.
+- `anivue-core.html` is still a preview, but it supports dog/cat/horse symptom selection, seven languages, RTL, optional photo, veterinarian map search and immediate deterministic emergency advice on symptom selection. Photo analysis now goes through the inherited domain adapter.
+- `api/vue-router.js` routes animal answers to `./anivue-core.html` and retains `legacy_workspace: https://www.anivueapp.se`. Standalone ANIVUE remains operational as a fallback.
+- Standalone ANIVUE supports a larger image envelope (10 MiB and additional image formats including HEIC/HEIF), and a fuller React workflow. These differences must be resolved or explicitly accepted before cutover.
+- Automated CI tests cover VUECORE emergency-first behavior and photo contracts. They **do not** constitute a completed human Preview parity or production smoke test.
 
 ## Mandatory implementation before cutover
 1. Inventory and port the standalone API handler, structured output validation, image type/signature/size handling, privacy/consent behavior and model prompt safety to VUECORE's shared image/model infrastructure. Never expose API keys to the browser.
@@ -18,4 +20,4 @@ Status: implementation in progress; **do not retire anivueapp.se**.
 7. Only after explicit approval and successful smoke/rollback verification change the ANIVUE workspace from the old domain to the native workspace. Keep standalone live until DNS, links, usage and rollback are independently cleared.
 
 ## Stop conditions
-No DNS changes, no standalone repository deletion, no removal of existing domain, no PR merge, and no production cutover on the basis of documentation or a placeholder adapter alone.
+No DNS changes, no standalone repository deletion, no removal of existing domain, and no production cutover on the basis of documentation or a placeholder adapter alone. Ordinary reviewed PR merges may proceed with green CI and appropriate checks; production cutover requires explicit approval and completed parity verification.
