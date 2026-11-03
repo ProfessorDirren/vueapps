@@ -22,6 +22,7 @@ export class SpecialistVueDomain extends VueDomain {
       throw new VueCoreError('invalid_language','Unsupported language');
     const response=await this.fetcher('/api/vue-router',{
       method:'POST',headers:{'Content-Type':'application/json'},
+      signal:AbortSignal.timeout(30000),
       body:JSON.stringify({question:description.trim(),language,previous:this.id,newCase:true})
     });
     if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
