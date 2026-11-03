@@ -32,7 +32,7 @@ const EQUINE={
  ru:'Немедленно свяжитесь с экстренным ветеринаром для лошадей.',
  ar:'اتصل فوراً بطبيب بيطري طارئ متخصص بالخيول.'
 };
-const URGENT_RE=/(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar)/i;
+const URGENT_RE=/(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar|no puede respirar|saans lene mein dikkat|सांस लेने में (?:दिक्कत|कठिनाई|परेशानी)|साँस लेने में (?:दिक्कत|कठिनाई|परेशानी)|呼吸困难|呼吸困難|无法呼吸|затруднен(?:о|ное|ное) дыхание|трудно дышать|صعوبة (?:في )?التنفس|لا يستطيع التنفس)/i;
 /** Explicit equine Celsius readings above 39.5°C warrant emergency contact. */
 function highHorseFever(description){
  const text=String(description||'');
