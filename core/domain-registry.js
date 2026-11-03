@@ -39,7 +39,7 @@ export class AnyVueDomain extends SpecialistVueDomain {
 }
 
 export function createSpecialistDomain(id, options) {
-  if (id === 'anivue') return new AniVueDomain();
+  if (id === 'anivue') return new AniVueDomain(options);
   if (id === 'anyvue') return new AnyVueDomain(options);
   return new SpecialistVueDomain(id);
 }
