@@ -33,6 +33,12 @@ const EQUINE={
  ar:'اتصل فوراً بطبيب بيطري طارئ متخصص بالخيول.'
 };
 const URGENT_RE=/(breathing difficulty|difficulty breathing|cannot breathe|struggling to breathe|andningssvårigheter|svårt att andas|dificultad para respirar)/i;
+/** Explicit equine Celsius readings above 39.5°C warrant emergency contact. */
+function highHorseFever(description){
+ const text=String(description||'');
+ const readings=[...text.matchAll(/(?:^|[^\d])([34]\d(?:[.,]\d+)?)\s*(?:°\s*C|°C|celsius|grader\s*C|degrees\s*C)(?![a-z])/gi)];
+ return readings.some(match=>Number(match[1].replace(',','.'))>39.5);
+}
 export class AniVueDomain extends VueDomain {
  constructor({fetcher=fetch}={}){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:true,videoAnalysis:false}});this.fetcher=fetcher}
  /** Optional supplementary photo analysis via the VUECORE-native server endpoint. */
@@ -57,7 +63,7 @@ export class AniVueDomain extends VueDomain {
   const explicit=horse?HORSE_EMERGENCY_IDS:COMPANION_EMERGENCY_IDS;
   const route=routingFields('anivue',description);
   const routeBreathing=route.selected==='["breathing"]';
-  const urgent=explicit.some(id=>selected.has(id))||selected.has('breathing')||routeBreathing||URGENT_RE.test(description);
+  const urgent=explicit.some(id=>selected.has(id))||selected.has('breathing')||routeBreathing||URGENT_RE.test(description)||(horse&&highHorseFever(description));
   if(!urgent)return null;
   return normalizeAssessment({
    severity:'emergency',
