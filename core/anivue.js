@@ -41,6 +41,22 @@ function highHorseFever(description){
 }
 export class AniVueDomain extends VueDomain {
  constructor({fetcher=fetch}={}){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:true,videoAnalysis:false}});this.fetcher=fetcher}
+ /** Native VUECORE specialist text response, independent of deterministic emergency checks. */
+ async analyzeText({species,description='',symptoms=[],language='en'}={}){
+  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
+  if(typeof description!=='string'||description.trim().length<3||description.length>2000)throw new VueCoreError('invalid_description','Description must be 3–2000 characters');
+  const symptom=Array.isArray(symptoms)?symptoms.filter(x=>typeof x==='string').slice(0,12).join(' '):'';
+  const response=await this.fetcher('/api/vue-router',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({question:species+' '+symptom+' '+description.trim(),language,previous:'anivue',newCase:true}),
+   signal:AbortSignal.timeout(90000)
+  });
+  const data=await response.json();
+  if(!response.ok)throw new VueCoreError('service_unavailable',data?.error||'ANIVUE text analysis unavailable');
+  if(data?.domain!=='anivue'||typeof data.answer!=='string'||!data.answer.trim())throw new VueCoreError('invalid_analysis','Invalid ANIVUE response');
+  return data;
+ }
  /** Optional supplementary photo analysis via the VUECORE-native server endpoint. */
  async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
   if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
