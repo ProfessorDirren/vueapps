@@ -62,3 +62,32 @@ test('emergency symptoms never call text AI via VUEFlow',async()=>{
  assert.equal(result.assessment.severity,'emergency');
  assert.equal(calls,0);
 });
+
+test('ANIVUE preserves each of seven selected languages in live text assessments',async()=>{
+ const languages=['en','es','sv','hi','zh-CN','ru','ar'];
+ const calls=[];
+ const domain=new AniVueDomain({fetcher:async(url,options)=>{
+  calls.push(JSON.parse(options.body));
+  return {ok:true,json:async()=>({domain:'anivue',answer:'Veterinary guidance'})};
+ }});
+ for(const language of languages){
+  const result=await new VueFlow(domain).run({category:'cat',symptoms:['other'],description:'Cat has a mild rash',language});
+  assert.equal(result.source,'domain',language);
+  assert.equal(result.assessment.summary,'Veterinary guidance',language);
+ }
+ assert.deepEqual(calls.map(call=>call.language),languages);
+ assert.ok(calls.every(call=>call.previous==='anivue'&&call.newCase===true));
+});
+
+test('ANIVUE emergency triage remains AI-free in all seven languages',async()=>{
+ const languages=['en','es','sv','hi','zh-CN','ru','ar'];
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('unexpected network request')}});
+ for(const language of languages){
+  const result=await new VueFlow(domain).run({category:'horse',symptoms:['horseColic'],description:'Horse has severe colic',language});
+  assert.equal(result.source,'safety-rule',language);
+  assert.equal(result.assessment.severity,'emergency',language);
+  assert.ok(result.assessment.summary.length>20,language);
+ }
+ assert.equal(calls,0);
+});
