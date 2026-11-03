@@ -94,7 +94,7 @@ const companionTranslations={
  ru:['Другое','Затруднённое дыхание','Коллапс / без сознания','Сильное кровотечение'],
  ar:['أخرى','صعوبة التنفس','انهيار / فقدان الوعي','نزيف شديد']
 };
-function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=(animal==='horse'?horseTranslations:companionTranslations)[$('language').value];selected.replaceChildren(...symptoms[animal].map(([id,label,'حرارة مقاسة أعلى من 39.5°م','حرارة مقاسة أعلى من 39.5°م'],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
+function updateSymptoms(){const selected=$('symptom'),previous=selected.value,animal=$('species').value,translated=(animal==='horse'?horseTranslations:companionTranslations)[$('language').value];selected.replaceChildren(...symptoms[animal].map(([id,label],i)=>new Option(translated?.[i]||label,id)));if([...selected.options].some(o=>o.value===previous))selected.value=previous;}
 $('species').onchange=()=>{updateSymptoms();showImmediateTriage()};updateSymptoms();
 let busy=false;const picker=$('language');try{const v=localStorage.getItem('vue-language');if(labels[v])picker.value=v}catch{}
 function showImmediateTriage(){const check=flow.domain.emergencyCheck({species:$('species').value,symptoms:[$('symptom').value],description:$('question').value,language:$('language').value});const warning=$('immediate-triage');warning.hidden=!check;warning.textContent=check?.summary||'';}
