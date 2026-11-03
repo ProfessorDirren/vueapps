@@ -23,7 +23,8 @@ test('horse emergencies take priority over invalid photo uploads',async()=>{
  assert.equal(result.source,'safety-rule');
 });
 test('non-emergency horse symptom does not claim immediate emergency',async()=>{
- const result=await new VueFlow(new AniVueDomain()).run({species:'horse',symptoms:['horseOther']});
+ const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({domain:'anivue',answer:'Routine guidance'})})});
+ const result=await new VueFlow(domain).run({species:'horse',symptoms:['horseOther'],description:'Horse has a mild concern'});
  assert.equal(result.source,'domain');
  assert.equal(result.assessment.severity,'monitor');
 });
