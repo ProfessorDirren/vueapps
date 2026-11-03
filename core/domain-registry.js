@@ -29,8 +29,11 @@ export class SpecialistVueDomain extends VueDomain {
       throw new VueCoreError(error?.name==='TimeoutError'||error?.name==='AbortError'?'service_timeout':'service_unavailable','Specialist routing unavailable');
     }
     if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
-    const data=await response.json();
-    if(data.domain!==this.id||typeof data.answer!=='string'||!data.answer.trim())
+    let data;
+    try { data=await response.json(); } catch {
+      throw new VueCoreError('invalid_response','Specialist response could not be read');
+    }
+    if(!data||typeof data!=='object'||data.domain!==this.id||typeof data.answer!=='string'||!data.answer.trim())
       throw new VueCoreError('specialist_mismatch','No matching specialist answer available');
     return {domain:this.id,answer:data.answer,kind:data.kind||'unverified',sub_specialist:data.sub_specialist||null};
   }
