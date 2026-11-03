@@ -50,7 +50,7 @@ async function checkReadiness(){
 await checkReadiness();
 button.addEventListener("click",async()=>{
  const prompt=question.value.trim();if(prompt.length<3){question.focus();return}
- button.disabled=true;button.textContent="Consulting AI perspectives…";workspace.hidden=false;result.textContent="Analyzing your question…";details.hidden=true;
+ button.disabled=true;button.textContent="Consulting AI perspectives…";workspace.hidden=false;result.textContent="Analyzing your question…";details.hidden=true;perspectives.replaceChildren();
  try{
   const answer=await flow.runText({description:prompt});result.textContent=answer.answer+"\n\n"+answer.disclaimer;
   perspectives.replaceChildren();
@@ -60,7 +60,7 @@ button.addEventListener("click",async()=>{
    const text=document.createElement("p");text.textContent=item.answer;
    card.append(heading,text);perspectives.append(card);
   }
-  details.hidden=false;
+  details.hidden=answer.perspectives.length===0;
  }catch(error){result.textContent=error.message+"\n\nAutomated analysis is not live yet; no model answers have been fabricated."}
  finally{button.textContent="Ask ANYVUE";await checkReadiness()}
 });
