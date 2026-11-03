@@ -29,7 +29,7 @@ test('invalid text inputs never call the backend',async()=>{
 
 test('native page delegates both text and photo to VUECORE domain',()=>{
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(page,/flow\.domain\.analyzeText\(/);
+ assert.match(page,/await flow\.run\(context\)/);
  assert.match(page,/flow\.domain\.analyzePhoto\(/);
 });
 
