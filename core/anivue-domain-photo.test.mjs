@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AniVueDomain} from './anivue.js';
 import {VueDomain} from './index.js';
+import {readFileSync} from 'node:fs';
 
 test('native photo analysis uses the VUECORE domain inheritance and API',async()=>{
  const calls=[];
@@ -31,4 +32,10 @@ test('unsupported species and language do not reach photo provider',async()=>{
 test('emergency rules remain independent of photo service availability',()=>{
  const domain=new AniVueDomain({fetcher:async()=>{throw Error('Provider unavailable')}});
  assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseColic']}).severity,'emergency');
+});
+
+test('native photo picker invalidation resets the pending read task',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(page,/if\(!file\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(null\);return\}/);
+ assert.match(page,/file\.size===0\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(0\);photo\.value='';return\}/);
 });
