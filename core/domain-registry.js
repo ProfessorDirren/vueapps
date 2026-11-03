@@ -20,11 +20,14 @@ export class SpecialistVueDomain extends VueDomain {
       throw new VueCoreError('invalid_question','Enter a question of 3–2000 characters');
     if(!['en','sv','es','hi','zh-CN','ru','ar'].includes(language))
       throw new VueCoreError('invalid_language','Unsupported language');
-    const response=await this.fetcher('/api/vue-router',{
+    let response;
+    try { response=await this.fetcher('/api/vue-router',{
       method:'POST',headers:{'Content-Type':'application/json'},
       signal:AbortSignal.timeout(30000),
       body:JSON.stringify({question:description.trim(),language,previous:this.id,newCase:true})
-    });
+    }); } catch(error) {
+      throw new VueCoreError(error?.name==='TimeoutError'||error?.name==='AbortError'?'service_timeout':'service_unavailable','Specialist routing unavailable');
+    }
     if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
     const data=await response.json();
     if(data.domain!==this.id||typeof data.answer!=='string'||!data.answer.trim())
