@@ -69,7 +69,7 @@ export class VueFlow {
     if(this.domain.id==='anyvue'){
       if(!result||typeof result!=='object'||typeof result.synthesis!=='string'||!result.synthesis.trim())
         throw new VueCoreError('invalid_assessment','ANYVUE returned no valid synthesis');
-      return Object.freeze({domain:'anyvue',answer:result.synthesis.trim(),kind:'synthesis',sub_specialist:null,source:'domain'});
+      return Object.freeze({domain:'anyvue',answer:result.synthesis.trim(),kind:'synthesis',sub_specialist:null,source:'domain',disclaimer:typeof result.disclaimer==='string'?result.disclaimer:'',perspectives:Object.freeze(Array.isArray(result.perspectives)?result.perspectives.filter(item=>item&&typeof item.model==='string'&&typeof item.answer==='string').map(item=>Object.freeze({model:item.model,answer:item.answer})):[])});
     }
     if(!result||typeof result!=='object'||result.domain!==this.domain.id||typeof result.answer!=='string'||!result.answer.trim())
       throw new VueCoreError('invalid_assessment','Specialist returned no valid text answer');
