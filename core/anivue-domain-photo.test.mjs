@@ -133,3 +133,14 @@ test('ANIVUE preserves successful photo analysis in every supported language',as
   assert.equal(result.summary,'Visible findings');
  }
 });
+
+
+test('ANIVUE defaults photo requests to English unless a language is selected',async()=>{
+ let request;
+ const domain=new AniVueDomain({fetcher:async(_url,options)=>{
+  request=JSON.parse(options.body);
+  return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+ }});
+ await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'});
+ assert.equal(request.language,'en');
+});
