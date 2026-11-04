@@ -24,6 +24,12 @@ test('missing token blocks request before upload or provider call',async()=>{
 });
 test('multipart request returns VINYLVUE result',async()=>{
  const form=new FormData();form.set('file',clip());
- const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',fetcher:async()=>({ok:true,json:async()=>({status:'success',result:{artist:'A',title:'B'}})})});
+ const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',enabled:true,budgetGate:async()=>true,fetcher:async()=>({ok:true,json:async()=>({status:'success',result:{artist:'A',title:'B'}})})});
  assert.equal(response.status,200);assert.deepEqual(await response.json(),{match:{artist:'A',title:'B',album:null,release_date:null,song_link:null},specialist:'vinylvue'});
+});
+
+test('fail-closed quota denies provider call',async()=>{
+ const form=new FormData();form.set('file',clip());let called=false;
+ const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',enabled:true,budgetGate:async()=>false,fetcher:async()=>{called=true;throw Error('must not call provider')}});
+ assert.equal(response.status,429);assert.equal(called,false);
 });
