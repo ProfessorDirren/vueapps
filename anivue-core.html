@@ -4,7 +4,7 @@
 <body><a href="./">← VUEAPPS</a><h1>ANIVUE · VUECORE</h1><div id="anivue-help"></div><p id="preview"></p>
 <label>Language <select id="language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी</option><option value="zh-CN">简体中文</option><option value="ru">Русский</option><option value="ar">العربية</option></select></label>
 <label for="species">Animal <select id="species"><option value="dog">Dog</option><option value="cat">Cat</option><option value="horse">Horse</option></select></label><label for="symptom">Symptom <select id="symptom"></select></label>
-<section><label for="photo">Optional photo (JPEG, PNG or WebP, max 3 MB) <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><label for="camera" id="cameraLabel">Take photo <input id="camera" type="file"></label><label for="video" id="videoLabel">Record video <input id="video" type="file"></label><p id="photoStatus" role="status"></p><p id="videoStatus" role="status"></p></section>
+<section><label for="photo">Optional photo (JPEG, PNG or WebP, max 10 MB) <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><label for="camera" id="cameraLabel">Take photo <input id="camera" type="file"></label><label for="video" id="videoLabel">Record video <input id="video" type="file"></label><p id="photoStatus" role="status"></p><p id="videoStatus" role="status"></p></section>
 <section><a id="vetlink" href="https://www.google.com/maps/search/emergency+veterinary+hospital" target="_blank" rel="noopener noreferrer">Find an animal hospital</a></section>
 <section><p id="immediate-triage" role="alert" aria-live="assertive" hidden></p><p id="safety"></p><p id="status" role="status" aria-live="polite"></p></section>
 <form id="ask"><label id="prompt" for="question"></label><textarea id="question" maxlength="3000" required minlength="3"></textarea><button id="send" type="submit"></button></form>
@@ -43,6 +43,21 @@ let videoStatusIndex=null;
 function showVideoStatus(){ $('videoStatus').textContent=videoStatusIndex===null?'':captureLabels[$('language').value][videoStatusIndex] }
 video.onchange=()=>{const file=video.files?.[0];videoStatusIndex=!file?null:validateMedia(file,'video').ok?2:3;showVideoStatus();};
 let imageData=null;
+async function preparePhoto(file){
+ if(file.size<=3*1024*1024)return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+ const bitmap=await createImageBitmap(file);
+ try{
+  let scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
+  for(let attempt=0;attempt<5;attempt++){
+   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   const data=canvas.toDataURL('image/jpeg',0.78);
+   if(data.startsWith('data:image/jpeg;base64,')&&data.length<=4*1024*1024)return data;
+   scale*=0.7;
+  }
+  throw Error('Unable to reduce photo');
+ }finally{bitmap.close()}
+}
 let photoReadVersion=0;
 let photoReadTask=Promise.resolve();
 function handlePhoto(file){
@@ -50,9 +65,9 @@ function handlePhoto(file){
  imageData=null;
  selectedPhotoFile=file||null;
  if(!file){photoReadTask=Promise.resolve();showPhotoStatus(null);return}
- if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>3*1024*1024||file.size===0){photoReadTask=Promise.resolve();showPhotoStatus(0);photo.value='';camera.value='';selectedPhotoFile=null;return}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024||file.size===0){photoReadTask=Promise.resolve();showPhotoStatus(0);photo.value='';camera.value='';selectedPhotoFile=null;return}
  photoReadTask=(async()=>{try{
-  const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+  const data=await preparePhoto(file);
   if(version!==photoReadVersion)return;
   if(typeof data!=='string')throw Error();
   imageData=data;showPhotoStatus(1);
@@ -61,13 +76,13 @@ function handlePhoto(file){
 photo.onchange=()=>handlePhoto(photo.files?.[0]);
 camera.onchange=()=>handlePhoto(camera.files?.[0]);
 const controls={
- en:['Animal','Symptom','Optional photo (JPEG, PNG or WebP, max 3 MB)','Find an animal hospital','Dog','Cat','Horse','Other','Breathing difficulty'],
- es:['Animal','Síntoma','Foto opcional (JPEG, PNG o WebP, máximo 3 MB)','Buscar un hospital veterinario','Perro','Gato','Caballo','Otro','Dificultad para respirar'],
- sv:['Djur','Symtom','Frivilligt foto (JPEG, PNG eller WebP, högst 3 MB)','Hitta djursjukhus','Hund','Katt','Häst','Annat','Andningssvårigheter'],
- hi:['जानवर','लक्षण','वैकल्पिक फोटो (JPEG, PNG या WebP, अधिकतम 3 MB)','पशु अस्पताल खोजें','कुत्ता','बिल्ली','घोड़ा','अन्य','सांस लेने में कठिनाई'],
- 'zh-CN':['动物','症状','可选照片（JPEG、PNG 或 WebP，最大 3 MB）','查找动物医院','狗','猫','马','其他','呼吸困难'],
- ru:['Животное','Симптом','Необязательное фото (JPEG, PNG или WebP, до 3 МБ)','Найти ветеринарную клинику','Собака','Кошка','Лошадь','Другое','Затруднённое дыхание'],
- ar:['الحيوان','العرض','صورة اختيارية (JPEG أو PNG أو WebP، بحد أقصى 3 ميغابايت)','ابحث عن مستشفى بيطري','كلب','قطة','حصان','أخرى','صعوبة التنفس']
+ en:['Animal','Symptom','Optional photo (JPEG, PNG or WebP, max 10 MB)','Find an animal hospital','Dog','Cat','Horse','Other','Breathing difficulty'],
+ es:['Animal','Síntoma','Foto opcional (JPEG, PNG o WebP, máximo 10 MB)','Buscar un hospital veterinario','Perro','Gato','Caballo','Otro','Dificultad para respirar'],
+ sv:['Djur','Symtom','Frivilligt foto (JPEG, PNG eller WebP, högst 10 MB)','Hitta djursjukhus','Hund','Katt','Häst','Annat','Andningssvårigheter'],
+ hi:['जानवर','लक्षण','वैकल्पिक फोटो (JPEG, PNG या WebP, अधिकतम 10 MB)','पशु अस्पताल खोजें','कुत्ता','बिल्ली','घोड़ा','अन्य','सांस लेने में कठिनाई'],
+ 'zh-CN':['动物','症状','可选照片（JPEG、PNG 或 WebP，最大 10 MB）','查找动物医院','狗','猫','马','其他','呼吸困难'],
+ ru:['Животное','Симптом','Необязательное фото (JPEG, PNG или WebP, до 10 МБ)','Найти ветеринарную клинику','Собака','Кошка','Лошадь','Другое','Затруднённое дыхание'],
+ ar:['الحيوان','العرض','صورة اختيارية (JPEG أو PNG أو WebP، بحد أقصى 10 ميغابايت)','ابحث عن مستشفى بيطري','كلب','قطة','حصان','أخرى','صعوبة التنفس']
 };
 const photoErrors={
  en:['Photo analysis is temporarily unavailable. Try again later; seek veterinary care promptly for concerning symptoms.','The photo could not be analyzed. Choose a clear JPEG, PNG or WebP image under 3 MB.','Photo analysis limit reached. Try again later; do not delay veterinary care.'],
@@ -75,7 +90,7 @@ const photoErrors={
  sv:['Bildanalysen är tillfälligt otillgänglig. Försök senare; sök veterinärvård snarast vid oroande symtom.','Bilden kunde inte analyseras. Välj en tydlig JPEG-, PNG- eller WebP-bild under 3 MB.','Gränsen för bildanalyser är nådd. Försök senare; vänta inte med veterinärvård.'],
  hi:['फोटो विश्लेषण अभी उपलब्ध नहीं है। बाद में प्रयास करें; चिंताजनक लक्षणों पर तुरंत पशु चिकित्सक से संपर्क करें।','फोटो का विश्लेषण नहीं हो सका। 3 MB से छोटी स्पष्ट JPEG, PNG या WebP छवि चुनें।','फोटो विश्लेषण की सीमा पूरी हो गई है। बाद में प्रयास करें; पशु चिकित्सा में देरी न करें।'],
  'zh-CN':['图片分析暂时不可用，请稍后重试；如有令人担忧的症状，请尽快就医。','无法分析图片。请选择小于 3 MB 的清晰 JPEG、PNG 或 WebP 图片。','图片分析次数已达上限，请稍后重试；不要延误兽医诊疗。'],
- ru:['Анализ фото временно недоступен. Повторите позже; при тревожных симптомах срочно обратитесь к ветеринару.','Не удалось проанализировать фото. Выберите чёткое изображение JPEG, PNG или WebP размером до 3 МБ.','Лимит анализа фото исчерпан. Повторите позже; не откладывайте ветеринарную помощь.'],
+ ru:['Анализ фото временно недоступен. Повторите позже; при тревожных симптомах срочно обратитесь к ветеринару.','Не удалось проанализировать фото. Выберите чёткое изображение JPEG, PNG или WebP размером до 10 МБ.','Лимит анализа фото исчерпан. Повторите позже; не откладывайте ветеринарную помощь.'],
  ar:['تحليل الصور غير متاح مؤقتًا. حاول لاحقًا؛ اطلب الرعاية البيطرية سريعًا عند ظهور أعراض مقلقة.','تعذّر تحليل الصورة. اختر صورة واضحة بصيغة JPEG أو PNG أو WebP بحجم أقل من 3 ميغابايت.','تم بلوغ حد تحليل الصور. حاول لاحقًا؛ لا تؤخر الرعاية البيطرية.']
 };
 const resultLabels={
