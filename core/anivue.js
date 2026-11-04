@@ -61,7 +61,7 @@ export class AniVueDomain extends VueDomain {
  async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
   if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
-  if(typeof image!=='string'||!image.startsWith('data:image/'))throw new VueCoreError('invalid_image','Image required');
+  if(typeof image!=='string'||!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)||image.length>4200000)throw new VueCoreError('invalid_image','Supported JPEG, PNG or WebP image required (max 3 MB after conversion)');
   let response;
   try{response=await this.fetcher('/api/vue-router',{
    method:'POST',headers:{'Content-Type':'application/json'},
