@@ -47,12 +47,11 @@ export class AniVueDomain extends VueDomain {
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof description!=='string'||description.trim().length<3||description.length>2000)throw new VueCoreError('invalid_description','Description must be 3–2000 characters');
   const symptom=Array.isArray(symptoms)?symptoms.filter(x=>typeof x==='string').slice(0,12).join(' '):'';
-  let response;
-  try{response=await this.fetcher('/api/vue-router',{
+  const response=await this.fetcher('/api/vue-router',{
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({question:species+' '+symptom+' '+description.trim(),language,previous:'anivue',newCase:true}),
    signal:AbortSignal.timeout(90000)
-  })}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis service unavailable')}
+  });
   const data=await response.json();
   if(!response.ok)throw new VueCoreError('service_unavailable',data?.error||'ANIVUE text analysis unavailable');
   if(data?.domain!=='anivue'||typeof data.answer!=='string'||!data.answer.trim())throw new VueCoreError('invalid_analysis','Invalid ANIVUE response');
