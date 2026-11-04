@@ -63,11 +63,12 @@ export class AniVueDomain extends VueDomain {
   if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof image!=='string'||!image.startsWith('data:image/'))throw new VueCoreError('invalid_image','Image required');
-  const response=await this.fetcher('/api/vue-router',{
+  let response;
+  try{response=await this.fetcher('/api/vue-router',{
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({action:'anivue_analyze',image,species,description,symptoms,language}),
    signal:AbortSignal.timeout(90000)
-  });
+  })}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis service unavailable')}
   let data;
   try{data=await response.json()}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis returned an unreadable response')}
   if(!response.ok)throw new VueCoreError('image_analysis_unavailable',typeof data?.error==='string'?data.error:'Image analysis unavailable');
