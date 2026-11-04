@@ -65,6 +65,8 @@ test('ANIVUE native photo upload remains aligned with the supported server image
  assert.ok(page.includes('Invalid prepared photo'));
  assert.ok(page.includes('const photoVersionAtSubmit=photoReadVersion;await photoReadTask;'));
  assert.ok(page.includes('photoVersionAtSubmit!==photoReadVersion'));
+ assert.ok(page.includes('if(photoVersionAtSubmit!==photoReadVersion)throw Error(photoStatusText[picker.value][2]);}catch(error)'));
+ assert.ok(page.includes('if(error?.message===photoStatusText[picker.value][2])throw error;'));
  assert.match(page,/imageData=null;\s*showPhotoStatus\(null\);\s*selectedPhotoFile=file\|\|null;/);
  assert.ok(server.includes('bytes.length>3*1024*1024'));
  assert.ok(server.includes('jpeg|png|webp'));
