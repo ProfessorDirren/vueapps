@@ -80,3 +80,18 @@ test('rejects spoofed PNG and WebP uploads before calling external services',asy
   assert.equal(calls,0,format);
  }
 });
+
+
+test('rejects unsupported HEIC and HEIF uploads without charging model budget',async()=>{
+ for(const format of ['heic','heif']){
+  let calls=0;
+  const image='data:image/'+format+';base64,'+Buffer.from('unsupported image').toString('base64');
+  const response=await POST(request({species:'horse',language:'en',image}),{
+   configured:()=>{calls++;return true},
+   spend:async()=>{calls++;return true},
+   fetcher:async()=>{calls++;throw Error('provider must not run')}
+  });
+  assert.equal(response.status,400,format);
+  assert.equal(calls,0,format);
+ }
+});
