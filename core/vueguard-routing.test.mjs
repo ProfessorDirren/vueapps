@@ -68,3 +68,14 @@ test('runtime files never link to retired standalone ANIVUE',async()=>{
  }
  await scan(root);
 });
+
+
+test('native ANIVUE displays emergency triage before starting image analysis',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const triage=native.indexOf("const emergency=flow.domain.emergencyCheck(context)");
+ const visible=native.indexOf("if(urgent){$('answer').textContent=check.assessment.summary");
+ const vision=native.indexOf('await flow.domain.analyzePhoto(');
+ assert.ok(triage>=0&&visible>triage&&vision>visible,'emergency warning must precede photo analysis');
+ assert.match(native,/if\(!imageData&&!selectedPhotoFile\)return;/);
+});
