@@ -198,3 +198,10 @@ test('ANIVUE rejects non-text breed and age predictions',async()=>{
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
  }
 });
+
+
+test('ANIVUE rejects malformed emergency advice rather than rendering an object',async()=>{
+ const result={species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:{message:'Call vet'}};
+ const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+});
