@@ -218,3 +218,11 @@ test('ANIVUE rejects empty or excessive observations even with otherwise valid m
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
  }
 });
+
+
+test('ANIVUE distinguishes exhausted image quota from other provider failures',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>({ok:false,status:429,json:async()=>({error:'Daily analysis budget unavailable'})})});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat'}),error=>error.code==='image_analysis_limit');
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.ok(page.includes("error?.code==='image_analysis_limit'?2:0"));
+});
