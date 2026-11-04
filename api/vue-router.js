@@ -1,7 +1,7 @@
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
 import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
-import {SPECIALISTS} from '../core/specialists.js';
+import {isRegisteredSpecialist} from '../core/specialists.js';
 import {POST as followup,validImage,urgentFollowup} from './vue-followup.js';
 import {routeQuestion,routingFields} from '../core/router.js';
 import {subSpecialist} from '../core/sub-specialists.js';
@@ -20,7 +20,7 @@ export async function POST(request){
  let route=routeQuestion(question,b.previous);
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
- if(!route.clarify&&!Object.hasOwn(SPECIALISTS,route.domain))return json(422,{error:'Unregistered VUE specialist'});
+ if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
