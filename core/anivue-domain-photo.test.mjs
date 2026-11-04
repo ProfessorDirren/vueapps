@@ -243,3 +243,30 @@ test('ANIVUE emergency assessment bypasses remote text flow even without photo',
  assert.ok(page.includes("const check=emergency?{assessment:emergency}:(imageData||selectedPhotoFile)?"));
  assert.ok(page.includes("if(!imageData&&!selectedPhotoFile)return;"));
 });
+
+test('large photo preprocessing produces bounded JPEG and releases decoded bitmap',async()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
+ assert.ok(source.startsWith('async function preparePhoto(file){'));
+ const operations=[];
+ const bitmap={width:4000,height:3000,close:()=>operations.push('close')};
+ const prepare=new Function('createImageBitmap','document',source+';return preparePhoto;')(
+  async()=>bitmap,
+  {createElement:()=>({width:0,height:0,getContext(){return {set fillStyle(value){operations.push(value)},fillRect(){operations.push('fill')},drawImage(){operations.push('draw')}}},toDataURL(){return 'data:image/jpeg;base64,'+'A'.repeat(1200)}})}
+ );
+ const result=await prepare({size:8*1024*1024,type:'image/png'});
+ assert.ok(result.startsWith('data:image/jpeg;base64,'));
+ assert.deepEqual(operations,['#ffffff','fill','draw','close']);
+});
+
+test('large photo preprocessing rejects un-decodable or too-small images safely',async()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
+ let closed=false;
+ const prepare=new Function('createImageBitmap','document',source+';return preparePhoto;')(
+  async()=>({width:80,height:80,close(){closed=true}}),
+  {createElement(){throw Error('Canvas should not be created')}}
+ );
+ await assert.rejects(prepare({size:8*1024*1024,type:'image/png'}),/Unsupported photo dimensions/);
+ assert.equal(closed,true);
+});
