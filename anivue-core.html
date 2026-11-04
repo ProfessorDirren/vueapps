@@ -56,7 +56,7 @@ function handlePhoto(file){
   if(version!==photoReadVersion)return;
   if(typeof data!=='string')throw Error();
   imageData=data;showPhotoStatus(1);
- }catch{if(version===photoReadVersion)showPhotoStatus(2)}})();
+ }catch{if(version===photoReadVersion){imageData=null;selectedPhotoFile=null;photo.value='';camera.value='';showPhotoStatus(2)}}})();
 }
 photo.onchange=()=>handlePhoto(photo.files?.[0]);
 camera.onchange=()=>handlePhoto(camera.files?.[0]);
