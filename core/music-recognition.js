@@ -1,5 +1,5 @@
 /** Shared VUECORE music recognition adapter. Provider credentials never leave the server. */
-export const MUSIC_LIMIT_BYTES = 10 * 1024 * 1024;
+export const MUSIC_LIMIT_BYTES = 4 * 1024 * 1024;
 export const MUSIC_TYPES = Object.freeze(['audio/webm','audio/mp4','audio/mpeg','audio/wav','audio/x-wav','audio/ogg','audio/aac','audio/flac','video/mp4','video/webm','video/quicktime']);
 export function validateMusicClip(file) {
  if (!file || !MUSIC_TYPES.includes((file.type||'').toLowerCase())) return {ok:false,code:'unsupported_type'};
