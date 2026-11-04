@@ -51,15 +51,20 @@ test('ANIVUE workspace remains native and has no external fallback',async()=>{
 
 test('runtime files never link to retired standalone ANIVUE',async()=>{
  const {readdir,readFile}=await import('node:fs/promises');
- const root=new URL('../',import.meta.url);
- const paths=await readdir(root,{recursive:true,withFileTypes:true});
- for(const entry of paths){
-  if(!entry.isFile()||!(/\.(?:html|js|mjs|json)$/.test(entry.name)))continue;
-  const parent=entry.parentPath||entry.path||'';
-  const relative=parent.replace(root.pathname,'').replace(/^\//,'');
-  if(/^(?:docs|node_modules|\.git|\.vercel|core)(?:\/|$)/.test(relative)&&relative.startsWith('core')&&entry.name.endsWith('.test.mjs'))continue;
-  if(/^(?:docs|node_modules|\.git|\.vercel)(?:\/|$)/.test(relative))continue;
-  const source=await readFile(parent+'/'+entry.name,'utf8');
-  assert.doesNotMatch(source,/https?:\/\/www\.anivueapp\.se|legacy_workspace\s*:/,relative+'/'+entry.name);
+ const {join,relative,sep}=await import('node:path');
+ const root=new URL('../',import.meta.url).pathname;
+ const excluded=new Set(['docs','node_modules','.git','.vercel']);
+ async function scan(directory){
+  for(const entry of await readdir(directory,{withFileTypes:true})){
+   const path=join(directory,entry.name);
+   if(entry.isDirectory()){
+    if(!excluded.has(entry.name))await scan(path);
+    continue;
+   }
+   if(!entry.isFile()||!(/\\.(?:html|js|mjs|json)$/.test(entry.name))||entry.name.endsWith('.test.mjs'))continue;
+   const content=await readFile(path,'utf8');
+   assert.doesNotMatch(content,/anivueapp\\.se|legacy_workspace\\s*:/,relative(root,path).split(sep).join('/'));
+  }
  }
+ await scan(root);
 });
