@@ -1,12 +1,12 @@
 # ANIVUE → VUECORE migration: parity and cutover gates
 
-Status: implementation in progress; **do not retire anivueapp.se**.
+Status: standalone ANIVUE links and router fallback removed in PR #113 branch; native feature parity remains incomplete. **Do not decommission the old deployment or change DNS without a separate release decision.**
 
 ## Verified in repositories (updated after PR #87)
 - VUECORE `core/anivue.js` implements `AniVueDomain extends VueDomain`, deterministic dog/cat/horse emergency checks, and a native `analyzePhoto()` adapter to the VUECORE image API. The image API validates JPEG/PNG/WebP up to **3 MiB** and returns structured, unverified visual observations. `assess()` now delegates non-emergency text assessment to the shared VUECORE router via `analyzeText()` (PR #83); full functional parity is **not** achieved.
 - `core/domain-registry.js` constructs ANIVUE and ANYVUE through shared VUECORE domain inheritance. The native `anivue-core.html` and `anyvue.html` pages use the registry. Other specialists still need actual adapter integration.
 - `anivue-core.html` is still a preview, but it supports dog/cat/horse symptom selection, seven languages, RTL, optional photo, veterinarian map search and immediate deterministic emergency advice on symptom selection. Photo analysis now goes through the inherited domain adapter. Photo read invalidation is handled on replacement/removal (PR #84).
-- `api/vue-router.js` routes animal answers to `./anivue-core.html` and retains `legacy_workspace: https://www.anivueapp.se`. Standalone ANIVUE remains operational as a fallback.
+- `api/vue-router.js` routes animal answers to `./anivue-core.html` without a standalone workspace fallback in PR #113. The portal and native page no longer link to the standalone site. This does not establish native feature parity.
 - Standalone ANIVUE supports a larger image envelope (10 MiB and additional image formats including HEIC/HEIF), and a fuller React workflow. These differences must be resolved or explicitly accepted before cutover.
 - Automated CI tests cover VUECORE emergency-first behavior, photo contracts, and seven-language text routing and emergency checks (PRs #85 and #87). They **do not** constitute a completed human Preview parity or production smoke test.
 
