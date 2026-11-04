@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 200" role="img" aria-label="Gray anatomical brain">
+<defs>
+<radialGradient id="tissue" cx="35%" cy="22%" r="78%"><stop stop-color="#f0eef0"/><stop offset=".42" stop-color="#bdbbc3"/><stop offset=".78" stop-color="#88848f"/><stop offset="1" stop-color="#55515e"/></radialGradient>
+<linearGradient id="stem" x2=".8" y2="1"><stop stop-color="#b9b7c0"/><stop offset="1" stop-color="#605a66"/></linearGradient>
+<filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2"/></filter>
+</defs>
+<path d="M144 133 Q155 154 153 177 L166 180 Q172 159 166 133Z" fill="url(#stem)" stroke="#5c5862" stroke-width="2"/>
+<path d="M54 102 Q33 93 38 74 Q37 58 51 50 Q53 33 72 32 Q82 15 101 24 Q115 11 132 23 Q149 11 162 29 Q181 21 193 39 Q213 40 214 61 Q230 76 217 94 Q224 112 204 124 Q198 144 177 141 Q159 157 140 142 Q119 153 102 140 Q81 150 66 132 Q46 128 54 102Z" fill="url(#tissue)" stroke="#55515d" stroke-width="3"/>
+<g fill="none" stroke="#625d69" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity=".94">
+<path d="M78 36 Q65 48 78 56 Q87 65 73 76 Q57 87 71 99 Q82 107 69 123"/>
+<path d="M103 26 Q93 38 104 48 Q115 58 99 68 Q89 76 98 88 Q113 101 97 113 Q86 124 103 137"/>
+<path d="M131 23 Q120 37 134 48 Q146 58 132 72 Q121 81 135 94 Q148 106 133 117 Q122 130 141 143"/>
+<path d="M158 31 Q145 45 161 56 Q174 65 158 78 Q148 89 165 100 Q176 112 161 128"/>
+<path d="M190 45 Q175 55 188 67 Q202 80 185 92 Q173 105 187 116"/>
+<path d="M57 65 Q69 56 86 68 M72 96 Q87 89 102 102 M100 45 Q117 37 130 52 M105 120 Q122 111 136 123 M134 73 Q147 63 162 74 M164 100 Q178 93 194 103 M158 129 Q177 121 190 132"/>
+</g>
+<g fill="none" stroke="#e4e0e7" stroke-width="2" stroke-linecap="round" opacity=".9">
+<path d="M75 39 Q66 49 80 54 M104 29 Q97 39 108 46 M132 27 Q124 38 136 44 M160 34 Q150 46 164 53 M190 49 Q181 58 191 65 M73 101 Q82 105 74 116 M101 121 Q95 129 106 135"/>
+</g>
+<path d="M53 107 Q84 139 128 135 Q157 144 184 126" fill="none" stroke="#4c4854" stroke-width="3" opacity=".7"/>
+</svg>
