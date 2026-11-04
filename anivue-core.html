@@ -24,13 +24,13 @@ hi:['VUECORE ANIVUE पूर्वावलोकन — सभी सुवि
 ru:['ANIVUE в VUECORE — предварительная версия с неполным набором функций.','При затруднении дыхания, коллапсе или сильном кровотечении срочно обратитесь к ветеринару. Не ждите ИИ.','Опишите животное и симптомы','Спросить ANIVUE','ИИ не заменяет ветеринара.'],
 ar:['معاينة ANIVUE في VUECORE — الوظائف غير مكتملة.','عند صعوبة التنفس أو الانهيار أو النزيف الشديد اطلب رعاية بيطرية عاجلة فورًا. لا تنتظر الذكاء الاصطناعي.','صف الحيوان وما لاحظته','اسأل ANIVUE','إرشادات الذكاء الاصطناعي ليست تشخيصًا بيطريًا.']};
 const photoStatusText={
- en:['Unsupported image or file exceeds 3 MB.','Photo ready. Photo analysis is optional.','Unable to read photo.'],
- es:['Imagen no compatible o archivo de más de 3 MB.','Foto lista. El análisis es opcional.','No se pudo leer la foto.'],
- sv:['Bildformatet stöds inte eller filen överstiger 3 MB.','Bilden är klar. Bildanalys är frivillig.','Det gick inte att läsa bilden.'],
- hi:['चित्र समर्थित नहीं है या फ़ाइल 3 MB से बड़ी है।','फ़ोटो तैयार है। विश्लेषण वैकल्पिक है।','फ़ोटो पढ़ी नहीं जा सकी।'],
- 'zh-CN':['图片格式不受支持或文件超过 3 MB。','图片已就绪。图片分析是可选的。','无法读取图片。'],
- ru:['Формат изображения не поддерживается или файл превышает 3 МБ.','Фото готово. Анализ необязателен.','Не удалось прочитать фото.'],
- ar:['صيغة الصورة غير مدعومة أو يتجاوز الملف 3 ميغابايت.','الصورة جاهزة. تحليل الصورة اختياري.','تعذّرت قراءة الصورة.']
+ en:['Unsupported image or file exceeds 10 MB.','Photo ready. Photo analysis is optional.','Unable to read photo.'],
+ es:['Imagen no compatible o archivo de más de 10 MB.','Foto lista. El análisis es opcional.','No se pudo leer la foto.'],
+ sv:['Bildformatet stöds inte eller filen överstiger 10 MB.','Bilden är klar. Bildanalys är frivillig.','Det gick inte att läsa bilden.'],
+ hi:['चित्र समर्थित नहीं है या फ़ाइल 10 MB से बड़ी है।','फ़ोटो तैयार है। विश्लेषण वैकल्पिक है।','फ़ोटो पढ़ी नहीं जा सकी।'],
+ 'zh-CN':['图片格式不受支持或文件超过 10 MB。','图片已就绪。图片分析是可选的。','无法读取图片。'],
+ ru:['Формат изображения не поддерживается или файл превышает 10 МБ.','Фото готово. Анализ необязателен.','Не удалось прочитать фото.'],
+ ar:['صيغة الصورة غير مدعومة أو يتجاوز الملف 10 ميغابايت.','الصورة جاهزة. تحليل الصورة اختياري.','تعذّرت قراءة الصورة.']
 };
 let photoStatusIndex=null;
 function showPhotoStatus(index){photoStatusIndex=index;$('photoStatus').textContent=index===null?'':photoStatusText[$('language').value][index]}
@@ -85,13 +85,13 @@ const controls={
  ar:['الحيوان','العرض','صورة اختيارية (JPEG أو PNG أو WebP، بحد أقصى 10 ميغابايت)','ابحث عن مستشفى بيطري','كلب','قطة','حصان','أخرى','صعوبة التنفس']
 };
 const photoErrors={
- en:['Photo analysis is temporarily unavailable. Try again later; seek veterinary care promptly for concerning symptoms.','The photo could not be analyzed. Choose a clear JPEG, PNG or WebP image under 3 MB.','Photo analysis limit reached. Try again later; do not delay veterinary care.'],
- es:['El análisis de fotos no está disponible temporalmente. Inténtalo más tarde; ante síntomas preocupantes consulta pronto al veterinario.','No se pudo analizar la foto. Elige una imagen JPEG, PNG o WebP clara de menos de 3 MB.','Se alcanzó el límite de análisis de fotos. Inténtalo más tarde; no retrases la atención veterinaria.'],
- sv:['Bildanalysen är tillfälligt otillgänglig. Försök senare; sök veterinärvård snarast vid oroande symtom.','Bilden kunde inte analyseras. Välj en tydlig JPEG-, PNG- eller WebP-bild under 3 MB.','Gränsen för bildanalyser är nådd. Försök senare; vänta inte med veterinärvård.'],
- hi:['फोटो विश्लेषण अभी उपलब्ध नहीं है। बाद में प्रयास करें; चिंताजनक लक्षणों पर तुरंत पशु चिकित्सक से संपर्क करें।','फोटो का विश्लेषण नहीं हो सका। 3 MB से छोटी स्पष्ट JPEG, PNG या WebP छवि चुनें।','फोटो विश्लेषण की सीमा पूरी हो गई है। बाद में प्रयास करें; पशु चिकित्सा में देरी न करें।'],
- 'zh-CN':['图片分析暂时不可用，请稍后重试；如有令人担忧的症状，请尽快就医。','无法分析图片。请选择小于 3 MB 的清晰 JPEG、PNG 或 WebP 图片。','图片分析次数已达上限，请稍后重试；不要延误兽医诊疗。'],
+ en:['Photo analysis is temporarily unavailable. Try again later; seek veterinary care promptly for concerning symptoms.','The photo could not be analyzed. Choose a clear JPEG, PNG or WebP image under 10 MB.','Photo analysis limit reached. Try again later; do not delay veterinary care.'],
+ es:['El análisis de fotos no está disponible temporalmente. Inténtalo más tarde; ante síntomas preocupantes consulta pronto al veterinario.','No se pudo analizar la foto. Elige una imagen JPEG, PNG o WebP clara de menos de 10 MB.','Se alcanzó el límite de análisis de fotos. Inténtalo más tarde; no retrases la atención veterinaria.'],
+ sv:['Bildanalysen är tillfälligt otillgänglig. Försök senare; sök veterinärvård snarast vid oroande symtom.','Bilden kunde inte analyseras. Välj en tydlig JPEG-, PNG- eller WebP-bild under 10 MB.','Gränsen för bildanalyser är nådd. Försök senare; vänta inte med veterinärvård.'],
+ hi:['फोटो विश्लेषण अभी उपलब्ध नहीं है। बाद में प्रयास करें; चिंताजनक लक्षणों पर तुरंत पशु चिकित्सक से संपर्क करें।','फोटो का विश्लेषण नहीं हो सका। 10 MB से छोटी स्पष्ट JPEG, PNG या WebP छवि चुनें।','फोटो विश्लेषण की सीमा पूरी हो गई है। बाद में प्रयास करें; पशु चिकित्सा में देरी न करें।'],
+ 'zh-CN':['图片分析暂时不可用，请稍后重试；如有令人担忧的症状，请尽快就医。','无法分析图片。请选择小于 10 MB 的清晰 JPEG、PNG 或 WebP 图片。','图片分析次数已达上限，请稍后重试；不要延误兽医诊疗。'],
  ru:['Анализ фото временно недоступен. Повторите позже; при тревожных симптомах срочно обратитесь к ветеринару.','Не удалось проанализировать фото. Выберите чёткое изображение JPEG, PNG или WebP размером до 10 МБ.','Лимит анализа фото исчерпан. Повторите позже; не откладывайте ветеринарную помощь.'],
- ar:['تحليل الصور غير متاح مؤقتًا. حاول لاحقًا؛ اطلب الرعاية البيطرية سريعًا عند ظهور أعراض مقلقة.','تعذّر تحليل الصورة. اختر صورة واضحة بصيغة JPEG أو PNG أو WebP بحجم أقل من 3 ميغابايت.','تم بلوغ حد تحليل الصور. حاول لاحقًا؛ لا تؤخر الرعاية البيطرية.']
+ ar:['تحليل الصور غير متاح مؤقتًا. حاول لاحقًا؛ اطلب الرعاية البيطرية سريعًا عند ظهور أعراض مقلقة.','تعذّر تحليل الصورة. اختر صورة واضحة بصيغة JPEG أو PNG أو WebP بحجم أقل من 10 ميغابايت.','تم بلوغ حد تحليل الصور. حاول لاحقًا؛ لا تؤخر الرعاية البيطرية.']
 };
 const resultLabels={
  en:['Breed','Age'],es:['Raza','Edad'],sv:['Ras','Ålder'],hi:['नस्ल','उम्र'],'zh-CN':['品种','年龄'],ru:['Порода','Возраст'],ar:['السلالة','العمر']
