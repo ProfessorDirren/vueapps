@@ -1,5 +1,5 @@
 import {musicBudget} from '../core/music-budget.js';
-import {identifyMusic,MUSIC_LIMIT_BYTES} from '../core/music-recognition.js';
+import {identifyMusic,validateMusicClip,MUSIC_LIMIT_BYTES} from '../core/music-recognition.js';
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(request,{token=process.env.AUDD_API_TOKEN,fetcher=fetch,budgetGate=musicBudget,enabled=process.env.MUSIC_RECOGNITION_ENABLED==='true'}={}){
  if(!enabled||!token)return json(503,{error:'Music recognition is not configured'});
@@ -8,6 +8,8 @@ export async function POST(request,{token=process.env.AUDD_API_TOKEN,fetcher=fet
  let form;try{form=await request.formData()}catch{return json(400,{error:'Invalid upload'})}
  const clip=form.get('file');
  if(!clip||typeof clip.arrayBuffer!=='function')return json(400,{error:'Missing clip'});
+ const valid=validateMusicClip(clip);
+ if(!valid.ok)return json(valid.code==='invalid_size'?413:415,{error:valid.code});
  if(!(await budgetGate()))return json(429,{error:'Daily music recognition budget unavailable or exhausted'});
  const result=await identifyMusic(clip,{token,fetcher,signal:AbortSignal.timeout(15000)});
  if(!result.ok)return json(result.error==='invalid_size'?413:result.error==='unsupported_type'?415:502,{error:result.error});
