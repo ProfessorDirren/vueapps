@@ -26,3 +26,8 @@ test('branch vocabulary alone cannot surface an unrelated archived source',()=>{
  const context=selectSpecialistEvidence(unrelated,'musicgearvue','Why does the fuse blow repeatedly?', 'corevue/musicgearvue/amplifiers/marshall/jmp');
  assert.equal(context,'');
 });
+
+test('an archive URL cannot manufacture relevance when the passage says nothing about the question',()=>{
+ const misleading=[{domain:'musicgearvue',branch:'corevue/musicgearvue/amplifiers/marshall/jmp',url:'https://www.bonhams.com/marshall-jmp-fuse',quote:'Historic catalogue page describing a wooden display cabinet without electrical details.',checkedAt:'2026-10-01'}];
+ assert.equal(selectSpecialistEvidence(misleading,'musicgearvue','Marshall JMP fuse', 'corevue/musicgearvue/amplifiers/marshall/jmp'),'');
+});
