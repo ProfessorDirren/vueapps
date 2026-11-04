@@ -100,3 +100,9 @@ test('ANIVUE rejects non-string elements in vision result arrays',async()=>{
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'en'}),error=>error.code==='invalid_analysis',key);
  }
 });
+
+
+test('ANIVUE normalizes failed vision network requests',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>{throw new TypeError('network disconnected')}});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='image_analysis_unavailable');
+});
