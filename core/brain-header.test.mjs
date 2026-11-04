@@ -10,7 +10,7 @@ test('VUECORE header loads realistic optimized image, not SVG cone or emoji',()=
 test('realistic brain moves gently and respects reduced motion',()=>{
  assert.match(html,/animation:vue-brain-turn 18s ease-in-out infinite/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
- assert.match(html,/\.vue-brain-core,\.vue-brain-orbit \{ animation:none; \}/);
+ assert.match(html,/\.vue-brain-core,\.vue-brain-orbit,\.vue-brain-glint \{ animation:none; \}/);
  assert.doesNotMatch(html,/@keyframes vue-brain-turn \{ from \{ transform:rotateY\(0deg\)/);
 });
 
@@ -18,4 +18,10 @@ test('brain image fits its header box and has an accurate accessible description
  assert.match(html,/\.vue-brain-core \{ width:auto;height:100%;max-width:100%;object-fit:contain;/);
  assert.match(html,/aria-label="Gray brain with pink neon orbit"/);
  assert.match(html,/header \{ position:relative;min-height:150px; \}/);
+});
+
+test('pink orbit has a visible moving highlight and remains decorative',()=>{
+ assert.match(html,/class="vue-brain-glint" aria-hidden="true"/);
+ assert.match(html,/animation:vue-brain-glint 10s linear infinite/);
+ assert.match(html,/@keyframes vue-brain-glint/);
 });
