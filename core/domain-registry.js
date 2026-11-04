@@ -71,3 +71,7 @@ export function createConfiguredSpecialistDomain(definition, options) {
  const DomainClass=createInformationalVueClass(definition);
  return new DomainClass(options);
 }
+
+export function listSpecialistDefinitions() {
+ return Object.freeze(Object.entries(SPECIALISTS).map(([id,profile])=>Object.freeze({id,scope:profile.scope,method:profile.method})));
+}
