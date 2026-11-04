@@ -60,7 +60,7 @@ test('ANIVUE native photo upload remains aligned with the supported server image
  assert.ok(page.includes("canvas.width<128||canvas.height<128"));
  assert.ok(page.includes("canvas.toDataURL('image/jpeg',0.78)"));
  assert.ok(page.includes('data.length<=3900000'));
- assert.ok(page.includes('imageData=null;\\n showPhotoStatus(null);\\n selectedPhotoFile=file||null;'));
+ assert.match(page,/imageData=null;\s*showPhotoStatus\(null\);\s*selectedPhotoFile=file\|\|null;/);
  assert.ok(server.includes('bytes.length>3*1024*1024'));
  assert.ok(server.includes('jpeg|png|webp'));
 });
