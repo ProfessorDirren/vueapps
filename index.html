@@ -49,7 +49,7 @@
     .vuecore-help-panel p { margin:0;line-height:1.5; }
 
     .vue-brain { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:195px;height:105px;display:grid;place-items:center;overflow:hidden;pointer-events:none;isolation:isolate;perspective:650px; }
-    .vue-brain-core { width:auto;height:100%;max-width:100%;object-fit:contain;display:block;mix-blend-mode:screen;mask-image:radial-gradient(ellipse 47% 46% at center,#000 67%,transparent 100%);filter:drop-shadow(0 0 5px #fc79c440);will-change:transform;animation:vue-brain-turn 18s ease-in-out infinite; }
+    .vue-brain-core { width:auto;height:100%;max-width:100%;object-fit:contain;display:block;mix-blend-mode:screen;mask-image:radial-gradient(ellipse 47% 46% at center,#000 67%,transparent 100%);filter:drop-shadow(0 0 5px #fc79c440);will-change:transform;animation:vue-brain-turn 12s linear infinite; }
     .vue-brain-orbit { position:absolute;width:205px;height:66px;border:3px solid #ff69c7;border-radius:50%;box-shadow:0 0 8px #ff35aa,0 0 22px #ff35aa77,inset 0 0 7px #ff35aa;transform:rotate(-20deg);animation:vue-brain-orbit 12s linear infinite;will-change:transform; }
     .vue-brain-orbit::after { content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:#ffe0f6;box-shadow:0 0 12px 5px #ff3cad;top:-5px;left:24px; }
 
@@ -57,7 +57,7 @@
     .vue-brain-glint { position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#ffe5f8;box-shadow:0 0 9px 4px #ff4abf;animation:vue-brain-glint 10s linear infinite; }
     @keyframes vue-brain-glint { 0% { transform:translate(-50%,-50%) translate(72px,-17px);opacity:.9 } 25% { transform:translate(-50%,-50%) translate(0px,24px);opacity:.8 } 50% { transform:translate(-50%,-50%) translate(-72px,17px);opacity:.9 } 75% { transform:translate(-50%,-50%) translate(0px,-24px);opacity:.8 } 100% { transform:translate(-50%,-50%) translate(72px,-17px);opacity:.9 } }
     header { position:relative;min-height:150px; }
-    @keyframes vue-brain-turn { 0%,100% { transform:rotate(-7deg) scale(1) } 50% { transform:rotate(7deg) scale(1.025) } }
+    @keyframes vue-brain-turn { 0% { transform:rotateY(0deg) rotateZ(-4deg) } 25% { transform:rotateY(90deg) rotateZ(-2deg) } 50% { transform:rotateY(180deg) rotateZ(0deg) } 75% { transform:rotateY(270deg) rotateZ(2deg) } 100% { transform:rotateY(360deg) rotateZ(-4deg) } }
     @keyframes vue-brain-orbit { from { transform:rotate(-20deg) } to { transform:rotate(340deg) } }
     @media(max-width:600px) { header { min-height:188px; } .vue-brain { left:50%;top:125px;width:150px;height:81px;transform:translate(-50%,-50%); } .vue-brain-glint { animation:none; } }
     @media(prefers-reduced-motion:reduce) { .vue-brain-core,.vue-brain-orbit,.vue-brain-glint { animation:none; } }
