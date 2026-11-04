@@ -42,3 +42,8 @@ test('API never mislabels generated expert responses as live verified or schedul
  const source=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
  assert.match(source,/evidence_status:'not_live_verified',followup_scheduled:false/);
 });
+
+test('public router preserves unverified provenance for AI-generated answers',()=>{
+ const source=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ assert.match(source,/d\.kind==='ai_unverified'\?\{verified:false,evidence_status:'not_live_verified',followup_scheduled:false\}/);
+});
