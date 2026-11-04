@@ -31,3 +31,9 @@ export function specialistPath(domain,question='',requested=null,sub=null,tree=S
  while(current){lineage.push({path:current.path,method:current.method});current=current.parent?tree.get(current.parent):null}
  lineage.reverse();return {path,lineage,focus:lineage.filter(n=>n.path.split('/').length>2).map(n=>n.method).join('\n')};
 }
+
+/** Inherit every ancestor method so deep experts retain parent constraints. */
+export function expertiseMethods(selection){
+ if(!selection||!Array.isArray(selection.lineage))throw Error('Invalid expertise selection');
+ return selection.lineage.map((node,depth)=>({depth,path:node.path,method:node.method}));
+}
