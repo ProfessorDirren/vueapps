@@ -130,3 +130,10 @@ test('every VUE definition has a unique valid method and scope',()=>{
   ids.add(entry.id);
  }
 });
+
+import {routeRegisteredQuestion} from './router.js';
+test('registered routing preserves fallback and animal emergency selection',()=>{
+ assert.equal(routeRegisteredQuestion('A question without a specialist').domain,'anyvue');
+ assert.equal(routeRegisteredQuestion('My horse has colic').domain,'anivue');
+ assert.equal(routeRegisteredQuestion('My dog cannot breathe').domain,'anivue');
+});
