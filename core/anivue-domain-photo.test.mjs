@@ -37,5 +37,13 @@ test('emergency rules remain independent of photo service availability',()=>{
 test('native photo picker invalidation resets the pending read task',()=>{
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.match(page,/if\(!file\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(null\);return\}/);
- assert.match(page,/file\.size===0\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(0\);photo\.value='';return\}/);
+ assert.match(page,/file\.size===0\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(0\);photo\.value='';camera\.value='';selectedPhotoFile=null;return\}/);
+});
+
+test('mobile capture controls use VUECORE hints without claiming video analysis',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(page,/MEDIA_CAPTURE,validateMedia/);
+ assert.match(page,/input\.setAttribute\('capture',MEDIA_CAPTURE\[kind\]\.capture\)/);
+ assert.match(page,/validateMedia\(file,'video'\)/);
+ assert.match(page,/Video analysis is not available yet/);
 });
