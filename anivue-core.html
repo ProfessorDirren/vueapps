@@ -45,6 +45,7 @@ video.onchange=()=>{const file=video.files?.[0];videoStatusIndex=!file?null:vali
 let imageData=null;
 async function preparePhoto(file){
  if(file.size<=3*1024*1024)return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
+ if(typeof createImageBitmap!=='function')throw Error('Photo conversion unavailable');
  const bitmap=await createImageBitmap(file);
  try{
   if(bitmap.width<128||bitmap.height<128)throw Error('Photo resolution too low');
