@@ -70,7 +70,7 @@ export class AniVueDomain extends VueDomain {
   let data;
   try{data=await response.json()}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis returned an unreadable response')}
   if(!response.ok)throw new VueCoreError('image_analysis_unavailable',typeof data?.error==='string'?data.error:'Image analysis unavailable');
-  if(!data||typeof data.summary!=='string'||!Array.isArray(data.visibleObservations))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
+  if(!data||typeof data.summary!=='string'||!data.summary.trim()||!Array.isArray(data.visibleObservations)||!data.visibleObservations.every(item=>item&&typeof item.observation==='string'&&item.observation.trim()))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
   return data;
  }
  emergencyCheck({category='',species='',symptoms=[],description='',language='en'}={}){
