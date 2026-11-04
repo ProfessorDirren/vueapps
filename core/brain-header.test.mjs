@@ -29,3 +29,7 @@ test('pink orbit has a visible moving highlight and remains decorative',()=>{
 test('brain image backdrop is softly feathered instead of showing a rectangular edge',()=>{
  assert.match(html,/mask-image:radial-gradient\(ellipse 47% 46% at center,#000 67%,transparent 100%\)/);
 });
+
+test('mobile header reserves a second row for the brain without covering controls',()=>{
+ assert.match(html,/@media\(max-width:600px\) \{ header \{ min-height:188px; \} \.vue-brain \{ left:50%;top:125px;width:150px;height:81px;/);
+});
