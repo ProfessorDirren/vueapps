@@ -1,18 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,statSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const art=readFileSync(new URL('../assets/vue-brain.svg',import.meta.url),'utf8');
-test('VUECORE brain header uses local detailed artwork, not emoji',()=>{
- assert.match(html,/src="\.\/assets\/vue-brain\.svg"/);
- assert.match(html,/class="vue-brain-orbit"/);
- assert.doesNotMatch(html,/class="vue-brain-core"[^>]*>🧠/);
- assert.match(art,/<svg[^>]+viewBox=/);
- assert.match(art,/id="fold"/);
+test('VUECORE header loads realistic optimized image, not SVG cone or emoji',()=>{
+ assert.match(html,/src="\.\/assets\/vue-brain-realistic\.webp"/);
+ assert.doesNotMatch(html,/src="\.\/assets\/vue-brain\.svg"/);
+ assert.ok(statSync(new URL('../assets/vue-brain-realistic.webp',import.meta.url)).size>1000);
 });
-test('brain and pink orbit rotate slowly with reduced-motion support',()=>{
+test('realistic brain moves gently and respects reduced motion',()=>{
  assert.match(html,/animation:vue-brain-turn 24s ease-in-out infinite/);
- assert.match(html,/animation:vue-brain-orbit 12s linear infinite/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(html,/\.vue-brain-core,\.vue-brain-orbit \{ animation:none; \}/);
+ assert.doesNotMatch(html,/@keyframes vue-brain-turn \{ from \{ transform:rotateY\(0deg\)/);
 });
