@@ -8,7 +8,7 @@ test('native photo analysis uses the VUECORE domain inheritance and API',async()
  const calls=[];
  const domain=new AniVueDomain({fetcher:async(url,options)=>{
   calls.push({url,options});
-  return {ok:true,json:async()=>({summary:'Visual observation',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:'Contact emergency veterinarian'})};
+  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual observation',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:'Contact emergency veterinarian'})};
  }});
  assert.ok(domain instanceof VueDomain);
  assert.equal(domain.capabilities.imageAnalysis,true);
@@ -126,7 +126,7 @@ test('ANIVUE preserves successful photo analysis in every supported language',as
   let sent;
   const domain=new AniVueDomain({fetcher:async(_url,options)=>{
    sent=JSON.parse(options.body);
-   return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[{observation:'Visible finding',significance:'normal',confidence:'medium'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+   return {ok:true,json:async()=>({species:{value:'cat',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visible findings',visibleObservations:[{observation:'Visible finding',significance:'normal',confidence:'medium'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
   }});
   const result=await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language});
   assert.equal(sent.language,language);
@@ -139,7 +139,7 @@ test('ANIVUE defaults photo requests to English unless a language is selected',a
  let request;
  const domain=new AniVueDomain({fetcher:async(_url,options)=>{
   request=JSON.parse(options.body);
-  return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+  return {ok:true,json:async()=>({species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visible findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
  }});
  await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'});
  assert.equal(request.language,'en');
@@ -150,7 +150,7 @@ test('ANIVUE photo request preserves user observations for the selected species'
  let request;
  const domain=new AniVueDomain({fetcher:async(_url,options)=>{
   request=JSON.parse(options.body);
-  return {ok:true,json:async()=>({summary:'Visual findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
  }});
  await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',description:'Limping after exercise',symptoms:['horseCannotBearWeight'],language:'sv'});
  assert.equal(request.species,'horse');
@@ -163,6 +163,15 @@ test('ANIVUE photo request preserves user observations for the selected species'
 test('ANIVUE rejects observations without valid urgency and confidence metadata',async()=>{
  for(const observation of [{observation:'Swelling'},{observation:'Swelling',significance:'urgent'},{observation:'Swelling',significance:'unknown',confidence:'high'}]){
   const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({summary:'Photo',visibleObservations:[observation],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+ }
+});
+
+
+test('ANIVUE rejects mismatched species and missing age or breed assessments',async()=>{
+ for(const bad of [{species:{value:'cat',confidence:'high'}},{breedAssessment:null},{ageAssessment:null}]){
+  const result={species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],...bad};
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
  }
 });
