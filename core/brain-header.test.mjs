@@ -11,7 +11,7 @@ test('VUECORE brain header uses local detailed artwork, not emoji',()=>{
  assert.match(art,/id="fold"/);
 });
 test('brain and pink orbit rotate slowly with reduced-motion support',()=>{
- assert.match(html,/animation:vue-brain-turn 24s linear infinite/);
+ assert.match(html,/animation:vue-brain-turn 24s ease-in-out infinite/);
  assert.match(html,/animation:vue-brain-orbit 12s linear infinite/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(html,/\.vue-brain-core,\.vue-brain-orbit \{ animation:none; \}/);
