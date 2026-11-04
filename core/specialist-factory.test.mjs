@@ -73,3 +73,11 @@ test('all informational VUEs have router rules or an explicit default',()=>{
  }
  assert.equal(routed.size,ROUTED_SPECIALIST_IDS.length);
 });
+
+import {readFileSync} from 'node:fs';
+test('portal specialist cards match the shared VUECORE registry',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const cardIds=[...html.matchAll(/id="app-([a-z0-9-]+)"/g)].map(match=>match[1]);
+ const registryIds=listSpecialistDefinitions().map(item=>item.id);
+ assert.deepEqual([...cardIds].sort(),[...registryIds].sort());
+});
