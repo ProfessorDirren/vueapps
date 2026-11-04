@@ -68,3 +68,11 @@ test('new VUECORE navigation starts at page top without auto-scrolling restored 
  assert.match(source,/reply\(previous\.question,previous\.answer,active\.domain,previous\.kind,false\)/);
  assert.match(source,/window\.addEventListener\('pageshow',\(\)=>window\.scrollTo\(\{top:0,left:0,behavior:'instant'\}\)\)/);
 });
+
+test('specialist routing requires complete words rather than embedded brand fragments',()=>{
+ assert.equal(specialistPath('musicgearvue','This is a nonmarshall amplifier',null,'amplifiers').path,'corevue/musicgearvue/amplifiers');
+ assert.equal(specialistPath('musicgearvue','Marshall JMP Folkesson',null,'amplifiers').path,'corevue/musicgearvue/amplifiers/marshall/jmp/folkesson');
+});
+test('Chinese emergency terms still route without word separators',()=>{
+ assert.equal(specialistPath('anivue','狗呼吸困难',null,'dog').path,'corevue/anivue/dog/breathing');
+});
