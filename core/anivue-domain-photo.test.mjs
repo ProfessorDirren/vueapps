@@ -56,6 +56,7 @@ test('ANIVUE native photo upload remains aligned with the supported server image
  assert.ok(page.includes("input.accept=kind==='image'?'image/jpeg,image/png,image/webp':MEDIA_CAPTURE[kind].accept"));
  assert.ok(page.includes('file.size>10*1024*1024'));
  assert.ok(page.includes('createImageBitmap(file)'));
+ assert.ok(page.includes("typeof createImageBitmap!=='function'"));
  assert.ok(page.includes("bitmap.width<128||bitmap.height<128"));
  assert.ok(page.includes("canvas.width<128||canvas.height<128"));
  assert.ok(page.includes("canvas.toDataURL('image/jpeg',0.78)"));
