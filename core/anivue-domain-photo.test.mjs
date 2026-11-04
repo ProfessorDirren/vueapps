@@ -106,3 +106,9 @@ test('ANIVUE normalizes failed vision network requests',async()=>{
  const domain=new AniVueDomain({fetcher:async()=>{throw new TypeError('network disconnected')}});
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='image_analysis_unavailable');
 });
+
+
+test('ANIVUE clears failed photo reads without blocking text-only assessments',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.ok(page.includes("selectedPhotoFile=null;photo.value='';camera.value='';showPhotoStatus(2)"));
+});
