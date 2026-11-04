@@ -90,3 +90,11 @@ test('portal uses VUECORE manifest without replacing localized cards',()=>{
  assert.match(html,/id="app-anivue"/);
  assert.match(html,/https:\/\/www\.anivueapp\.se/);
 });
+
+test('new portal VUE cards are noninteractive until workspace review',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/document\.createElement\('article'\)/);
+ assert.match(html,/description\.textContent=definition\.scope/);
+ assert.match(html,/Coming soon · Workspace not yet available/);
+ assert.match(html,/pending\.append\(heading,description,status\)/);
+});
