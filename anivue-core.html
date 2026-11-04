@@ -47,10 +47,12 @@ async function preparePhoto(file){
  if(file.size<=3*1024*1024)return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
  const bitmap=await createImageBitmap(file);
  try{
+  if(bitmap.width<128||bitmap.height<128)throw Error('Photo resolution too low');
   let scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
   for(let attempt=0;attempt<5;attempt++){
    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
    const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   if(canvas.width<128||canvas.height<128)break;
    const data=canvas.toDataURL('image/jpeg',0.78);
    if(data.startsWith('data:image/jpeg;base64,')&&data.length<=4*1024*1024)return data;
    scale*=0.7;
