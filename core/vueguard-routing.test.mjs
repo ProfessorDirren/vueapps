@@ -48,3 +48,18 @@ test('ANIVUE workspace remains native and has no external fallback',async()=>{
  for(const file of [source,portal,native])assert.doesNotMatch(file,/anivueapp\.se|legacy_workspace/);
  assert.match(portal,/href="\.\/anivue-core\.html"/);
 });
+
+test('runtime files never link to retired standalone ANIVUE',async()=>{
+ const {readdir,readFile}=await import('node:fs/promises');
+ const root=new URL('../',import.meta.url);
+ const paths=await readdir(root,{recursive:true,withFileTypes:true});
+ for(const entry of paths){
+  if(!entry.isFile()||!(/\.(?:html|js|mjs|json)$/.test(entry.name)))continue;
+  const parent=entry.parentPath||entry.path||'';
+  const relative=parent.replace(root.pathname,'').replace(/^\//,'');
+  if(/^(?:docs|node_modules|\.git|\.vercel|core)(?:\/|$)/.test(relative)&&relative.startsWith('core')&&entry.name.endsWith('.test.mjs'))continue;
+  if(/^(?:docs|node_modules|\.git|\.vercel)(?:\/|$)/.test(relative))continue;
+  const source=await readFile(parent+'/'+entry.name,'utf8');
+  assert.doesNotMatch(source,/https?:\/\/www\.anivueapp\.se|legacy_workspace\s*:/,relative+'/'+entry.name);
+ }
+});
