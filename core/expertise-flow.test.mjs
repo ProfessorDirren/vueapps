@@ -43,3 +43,8 @@ test('ignore forged, malformed or future-dated archive entries',()=>{
  assert.equal(selectSpecialistEvidence(bad,'musicgearvue','Marshall amplifier','corevue/musicgearvue/amplifiers'),'');
  assert.ok(selectSpecialistEvidence([base],'musicgearvue','Marshall amplifier','corevue/musicgearvue/amplifiers').includes('bonhams.com'));
 });
+
+test('a forged specialist branch cannot supply evidence to a legitimate descendant',()=>{
+ const forged={domain:'musicgearvue',branch:'corevue/musicgearvue/amplifiers/marshall/jmp/imaginary',url:'https://www.bonhams.com/auction/123',quote:'Marshall amplifier verified historical chassis details',checkedAt:'2026-10-01',type:'public_passage_checked'};
+ assert.equal(selectSpecialistEvidence([forged],'musicgearvue','Marshall amplifier','corevue/musicgearvue/amplifiers/marshall/jmp/imaginary/child'),'');
+});
