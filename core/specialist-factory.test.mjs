@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {VueDomain,VueCoreError,VueFlow} from './index.js';
 import {createInformationalVueClass} from './specialist-factory.js';
+import {createConfiguredSpecialistDomain} from './domain-registry.js';
 
 test('new informational VUE inherits VUECORE and routes with English default',async()=>{
  const calls=[];
@@ -39,4 +40,12 @@ test('new VUE fails closed on wrong domain, malformed response, and timeout',asy
   const domain=new DemoVue({fetcher});
   await assert.rejects(domain.assess({description:'Please research'}),e=>e instanceof VueCoreError);
  }
+});
+
+test('registry creates a new configured VUE without specialist-specific adapter code',async()=>{
+ const domain=createConfiguredSpecialistDomain({id:'newvue',method:'Ask for evidence'},
+  {fetcher:async(_url,options)=>({ok:true,json:async()=>({domain:'newvue',answer:'Checked '+JSON.parse(options.body).language})})});
+ assert.ok(domain instanceof VueDomain);
+ assert.equal(domain.id,'newvue');
+ assert.equal((await new VueFlow(domain).runText({description:'Investigate this',language:'es'})).answer,'Checked es');
 });
