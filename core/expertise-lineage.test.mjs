@@ -23,3 +23,11 @@ test('follow-up specialist policy explicitly handles conflicting and missing evi
  assert.match(source,/An archived passage is not live verification/);
  assert.match(source,/Never invent citations, measurements/);
 });
+
+test('specialist follow-up forbids fabricated live verification and contradictory question limits',()=>{
+ const source=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
+ assert.match(source,/Do not claim to have checked a live website/);
+ assert.match(source,/do not substitute a plausible-looking URL, number or quotation/);
+ assert.match(source,/Ask at most one precise missing-information question/);
+ assert.doesNotMatch(source,/Use at most three precise missing-information questions/);
+});
