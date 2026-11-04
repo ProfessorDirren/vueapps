@@ -8,7 +8,7 @@ test('native photo analysis uses the VUECORE domain inheritance and API',async()
  const calls=[];
  const domain=new AniVueDomain({fetcher:async(url,options)=>{
   calls.push({url,options});
-  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual observation',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:'Contact emergency veterinarian'})};
+  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual observation',visibleObservations:[{observation:'Visible detail',confidence:'medium',significance:'normal'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:'Contact emergency veterinarian'})};
  }});
  assert.ok(domain instanceof VueDomain);
  assert.equal(domain.capabilities.imageAnalysis,true);
@@ -139,7 +139,7 @@ test('ANIVUE defaults photo requests to English unless a language is selected',a
  let request;
  const domain=new AniVueDomain({fetcher:async(_url,options)=>{
   request=JSON.parse(options.body);
-  return {ok:true,json:async()=>({species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visible findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+  return {ok:true,json:async()=>({species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visible findings',visibleObservations:[{observation:'Visible detail',confidence:'medium',significance:'normal'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
  }});
  await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'});
  assert.equal(request.language,'en');
@@ -150,7 +150,7 @@ test('ANIVUE photo request preserves user observations for the selected species'
  let request;
  const domain=new AniVueDomain({fetcher:async(_url,options)=>{
   request=JSON.parse(options.body);
-  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual findings',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+  return {ok:true,json:async()=>({species:{value:'horse',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Visual findings',visibleObservations:[{observation:'Visible detail',confidence:'medium',significance:'normal'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
  }});
  await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',description:'Limping after exercise',symptoms:['horseCannotBearWeight'],language:'sv'});
  assert.equal(request.species,'horse');
