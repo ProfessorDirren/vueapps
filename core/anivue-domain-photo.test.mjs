@@ -90,3 +90,13 @@ test('ANIVUE rejects missing structured vision arrays',async()=>{
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='invalid_analysis');
  }
 });
+
+
+test('ANIVUE rejects non-string elements in vision result arrays',async()=>{
+ for(const key of ['limitations','suggestedFollowUpQuestions','emergencySignals']){
+  const result={summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]};
+  result[key]=[null];
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'en'}),error=>error.code==='invalid_analysis',key);
+ }
+});
