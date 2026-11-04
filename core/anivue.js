@@ -67,8 +67,9 @@ export class AniVueDomain extends VueDomain {
    body:JSON.stringify({action:'anivue_analyze',image,species,description,symptoms,language}),
    signal:AbortSignal.timeout(90000)
   });
-  const data=await response.json();
-  if(!response.ok)throw new VueCoreError('image_analysis_unavailable',data.error||'Image analysis unavailable');
+  let data;
+  try{data=await response.json()}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis returned an unreadable response')}
+  if(!response.ok)throw new VueCoreError('image_analysis_unavailable',typeof data?.error==='string'?data.error:'Image analysis unavailable');
   if(!data||typeof data.summary!=='string'||!Array.isArray(data.visibleObservations))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
   return data;
  }
