@@ -58,3 +58,9 @@ test('shared specialist manifest exposes stable, immutable onboarding definition
  assert.ok(Object.isFrozen(definitions));
  assert.ok(Object.isFrozen(definitions[0]));
 });
+
+import {ROUTED_SPECIALIST_IDS} from './router.js';
+test('router specialists exist in registry',()=>{
+ const ids=listSpecialistDefinitions().map(item=>item.id);
+ for(const id of ROUTED_SPECIALIST_IDS)assert.ok(ids.includes(id),id);
+});
