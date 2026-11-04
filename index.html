@@ -48,8 +48,8 @@
     .vuecore-help-panel h3 { margin:14px 0 4px; }
     .vuecore-help-panel p { margin:0;line-height:1.5; }
 
-    .vue-brain { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:210px;height:132px;display:grid;place-items:center;pointer-events:none;isolation:isolate;perspective:650px; }
-    .vue-brain-core { width:190px;height:145px;display:block;filter:drop-shadow(0 6px 8px #0009) drop-shadow(0 0 5px #fc79c480);backface-visibility:visible;will-change:transform;animation:vue-brain-turn 24s ease-in-out infinite; }
+    .vue-brain { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:235px;height:145px;display:grid;place-items:center;pointer-events:none;isolation:isolate;perspective:650px; }
+    .vue-brain-core { width:235px;height:auto;display:block;filter:drop-shadow(0 0 6px #fc79c440);backface-visibility:visible;will-change:transform;animation:vue-brain-turn 24s ease-in-out infinite; }
     .vue-brain-orbit { position:absolute;width:205px;height:66px;border:3px solid #ff69c7;border-radius:50%;box-shadow:0 0 8px #ff35aa,0 0 22px #ff35aa77,inset 0 0 7px #ff35aa;transform:rotate(-20deg);animation:vue-brain-orbit 12s linear infinite;will-change:transform; }
     .vue-brain-orbit::after { content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:#ffe0f6;box-shadow:0 0 12px 5px #ff3cad;top:-5px;left:24px; }
     header { position:relative;min-height:132px; }
@@ -63,7 +63,7 @@
   <script type="module" src="./apps/help.js"></script>
 </head>
 <body>
-  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div><div class="vue-brain" role="img" aria-label="Rotating pink brain"><span class="vue-brain-orbit" aria-hidden="true"></span><img class="vue-brain-core" src="./assets/vue-brain.svg" alt="" aria-hidden="true"></div><div id="vuecore-help"></div></header>
+  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div><div class="vue-brain" role="img" aria-label="Rotating pink brain"><img class="vue-brain-core" src="./assets/vue-brain-realistic.webp" alt="" aria-hidden="true"></div><div id="vuecore-help"></div></header>
   <main>
     <section class="hero" aria-labelledby="hero-title">
       <p class="hero-mark">VUEAPPS.se</p>
