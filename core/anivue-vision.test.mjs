@@ -52,3 +52,16 @@ test('accepts valid PNG at exact 3 MiB upload boundary',async()=>{
  assert.equal(response.status,429);
  assert.equal(charged,1);
 });
+
+
+test('rejects a JPEG MIME claim with invalid JPEG bytes before spending budget',async()=>{
+ let calls=0;
+ const image='data:image/jpeg;base64,'+Buffer.from('not a JPEG image').toString('base64');
+ const response=await POST(request({species:'dog',language:'en',image}),{
+  configured:()=>{calls++;return true},
+  spend:async()=>{calls++;return true},
+  fetcher:async()=>{calls++;throw Error('provider must not run')}
+ });
+ assert.equal(response.status,400);
+ assert.equal(calls,0);
+});
