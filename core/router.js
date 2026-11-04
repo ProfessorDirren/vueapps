@@ -7,7 +7,7 @@ const rules=[
  ['vinylvue',5,/vinyl|grammofon|skivor|skiva|(?<![\p{L}\p{N}_])lp(?![\p{L}\p{N}_])|discogs|runout|pressning|record collection|黑胶|винил|أسطوان|विनाइल/iu],
  ['musicgearvue',5,/gitarr|guitar|förstärkar|amplifier|marshall|fender|gibson|synt(?:h|ar)|trumm|piano|instrument|dj[- ]|turntable|guitarra|吉他|乐器|гитар|усилител|غيتار|गिटार/iu],
  ['wardrobevue',5,/kläder|klänning|jacka|skor|handväska|wardrobe|clothing|dress|jacket|shoes|handbag|ropa|vestido|衣服|服装|одежд|плать|ملابس|कपड़े/iu],
- ['anivue',5,/\bhund\b|\bkatt\b|\bhäst(?:en|ar|arna|ens)?\b|\bdog\b|\bcat\b|\bhorses?\b|\bmare\b|\bfoal\b|veterinär|perro|gato|caballo|yegua|potro|宠物|小狗|小猫|狗|猫|собак|кошк|лошад|كلب|قط|حصان|कुत्ता|कुत्ते|बिल्ली|घोड़ा/iu],
+ ['anivue',5,/\bhund(?:en|ens|ar|arna)?\b|\bkatt(?:en|ens|er|erna)?\b|\bhäst(?:en|ens|ar|arna|arnas)?\b|\bdogs?\b|\bcats?\b|\bhorses?\b|\bmare\b|\bfoal\b|veterinär|perro|gato|caballo|yegua|potro|宠物|小狗|小猫|狗|猫|собак|кошк|лошад|كلب|قط|حصان|कुत्ता|कुत्ते|बिल्ली|घोड़ा/iu],
  ['motovue',5,/\bbil\b|motorcykel|motorcycle|\bcar\b|\bmotor\b|broms|brake|verkstad|starter|coche|automóvil|汽车|摩托|автомоб|тормоз|سيارة|कार/iu],
  ['foodvue',5,/e[- ]?nummer|\be\d{3,4}[a-z]?\b|ingredien|livsmedel|recept|matlagning|recipe|food|additive|receta|alimento|食品|食谱|пищ|рецепт|طعام|وصفة|भोजन/iu],
  ['plantvue',5,/växt|blomma|krukväxt|vattna|plant|flower|watering|planta|植物|цвет|растен|نبات|पौधा/iu],
