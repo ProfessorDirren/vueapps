@@ -64,3 +64,12 @@ test('router specialists exist in registry',()=>{
  const ids=listSpecialistDefinitions().map(item=>item.id);
  for(const id of ROUTED_SPECIALIST_IDS)assert.ok(ids.includes(id),id);
 });
+
+test('all informational VUEs have router rules or an explicit default',()=>{
+ const routed=new Set(ROUTED_SPECIALIST_IDS);
+ for(const definition of listSpecialistDefinitions()){
+  if(definition.id==='anyvue')continue;
+  assert.ok(routed.has(definition.id),'Missing router rule: '+definition.id);
+ }
+ assert.equal(routed.size,ROUTED_SPECIALIST_IDS.length);
+});
