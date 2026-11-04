@@ -47,3 +47,13 @@ test('mobile capture controls use VUECORE hints without claiming video analysis'
  assert.match(page,/validateMedia\(file,'video'\)/);
  assert.match(page,/Video analysis is not available yet/);
 });
+
+
+test('ANIVUE native photo upload remains aligned with the supported server image formats',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const server=readFileSync(new URL('./image-input.js',import.meta.url),'utf8');
+ assert.ok(page.includes('accept="image/jpeg,image/png,image/webp"'));
+ assert.ok(page.includes('file.size>3*1024*1024'));
+ assert.ok(server.includes('bytes.length>3*1024*1024'));
+ assert.ok(server.includes('jpeg|png|webp'));
+});
