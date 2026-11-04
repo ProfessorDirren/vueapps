@@ -8,7 +8,7 @@ test('native photo analysis uses the VUECORE domain inheritance and API',async()
  const calls=[];
  const domain=new AniVueDomain({fetcher:async(url,options)=>{
   calls.push({url,options});
-  return {ok:true,json:async()=>({summary:'Visual observation',visibleObservations:[],emergencyAdvice:'Contact emergency veterinarian'})};
+  return {ok:true,json:async()=>({summary:'Visual observation',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],emergencyAdvice:'Contact emergency veterinarian'})};
  }});
  assert.ok(domain instanceof VueDomain);
  assert.equal(domain.capabilities.imageAnalysis,true);
@@ -68,7 +68,7 @@ test('ANIVUE reports a controlled error when vision service returns unreadable J
 
 test('ANIVUE rejects empty or malformed image observations',async()=>{
  for(const observations of [[{observation:''}],[null],[{observation:42}]]){
-  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({summary:'Photo',visibleObservations:observations})})});
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({summary:'Photo',visibleObservations:observations,limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})})});
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language:'en'}),error=>error.code==='invalid_analysis');
  }
 });
@@ -78,5 +78,15 @@ test('ANIVUE masks malformed error bodies from the vision service',async()=>{
  for(const body of [null,{}, {error:42}]){
   const domain=new AniVueDomain({fetcher:async()=>({ok:false,json:async()=>body})});
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'en'}),error=>error.code==='image_analysis_unavailable'&&error.message==='Image analysis unavailable');
+ }
+});
+
+
+test('ANIVUE rejects missing structured vision arrays',async()=>{
+ for(const key of ['limitations','suggestedFollowUpQuestions','emergencySignals']){
+  const result={summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]};
+  delete result[key];
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='invalid_analysis');
  }
 });
