@@ -72,7 +72,7 @@ function handlePhoto(file){
  photoReadTask=(async()=>{try{
   const data=await preparePhoto(file);
   if(version!==photoReadVersion)return;
-  if(typeof data!=='string')throw Error();
+  if(typeof data!=='string'||!/^data:image\/(jpeg|png|webp);base64,/.test(data)||data.length>4200000)throw Error('Invalid prepared photo');
   imageData=data;showPhotoStatus(1);
  }catch{if(version===photoReadVersion){imageData=null;selectedPhotoFile=null;photo.value='';camera.value='';showPhotoStatus(2)}}})();
 }
