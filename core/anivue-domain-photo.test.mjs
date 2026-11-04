@@ -56,11 +56,11 @@ test('ANIVUE native photo upload remains aligned with the supported server image
  assert.ok(page.includes("input.accept=kind==='image'?'image/jpeg,image/png,image/webp':MEDIA_CAPTURE[kind].accept"));
  assert.ok(page.includes('file.size>10*1024*1024'));
  assert.ok(page.includes('createImageBitmap(file)'));
- assert.ok(page.includes("typeof createImageBitmap!=='function'"));
+ assert.ok(page.includes("typeof createImageBitmap==='function'?await createImageBitmap(file):await new Promise"));
  assert.ok(page.includes("bitmap.width<128||bitmap.height<128"));
  assert.ok(page.includes("canvas.width<128||canvas.height<128"));
  assert.ok(page.includes("canvas.toDataURL('image/jpeg',0.78)"));
- assert.ok(page.includes("ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap"));
+ assert.ok(page.includes("ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap.image||bitmap"));
  assert.ok(page.includes('data.length<=3900000'));
  assert.ok(page.includes('data.length>4200000'));
  assert.ok(page.includes('Invalid prepared photo'));
@@ -278,4 +278,22 @@ test('ANIVUE refuses unsupported or oversized photo data before network access',
   await assert.rejects(domain.analyzePhoto({image,species:'dog'}),error=>error.code==='invalid_image');
  }
  assert.equal(calls,0);
+});
+
+test('ANIVUE fallback decodes large images and revokes temporary object URLs',async()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
+ const operations=[];
+ class MockImage{
+  naturalWidth=1600;naturalHeight=1200;
+  set src(value){operations.push('load '+value);this.onload()}
+ }
+ const prepare=new Function('createImageBitmap','document','URL','Image',source+';return preparePhoto;')(
+  undefined,
+  {createElement:()=>({width:0,height:0,getContext(){return {set fillStyle(value){},fillRect(){},drawImage(){operations.push('draw')}}},toDataURL(){return 'data:image/jpeg;base64,QUJD'}})},
+  {createObjectURL(){operations.push('create');return 'blob:photo'},revokeObjectURL(){operations.push('revoke')}},
+  MockImage
+ );
+ assert.equal(await prepare({size:5*1024*1024,type:'image/png'}),'data:image/jpeg;base64,QUJD');
+ assert.deepEqual(operations,['create','load blob:photo','revoke','draw']);
 });
