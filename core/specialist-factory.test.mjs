@@ -118,3 +118,15 @@ test('case memory domains are inherited from the specialist registry',()=>{
  assert.deepEqual(MEMORY_DOMAINS,listSpecialistDefinitions().map(item=>item.id).sort());
  assert.ok(Object.isFrozen(MEMORY_DOMAINS));
 });
+
+test('every VUE definition has a unique valid method and scope',()=>{
+ const definitions=listSpecialistDefinitions();
+ const ids=new Set();
+ for(const entry of definitions){
+  assert.match(entry.id,/^[a-z][a-z0-9-]*$/);
+  assert.ok(typeof entry.scope==='string'&&entry.scope.trim().length>0,entry.id);
+  assert.ok(typeof entry.method==='string'&&entry.method.trim().length>0,entry.id);
+  assert.equal(ids.has(entry.id),false,'Duplicate VUE: '+entry.id);
+  ids.add(entry.id);
+ }
+});
