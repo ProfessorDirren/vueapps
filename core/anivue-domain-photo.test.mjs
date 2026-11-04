@@ -189,3 +189,12 @@ test('ANIVUE rejects malformed alternative breed entries',async()=>{
  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[null,123],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})})});
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
 });
+
+
+test('ANIVUE rejects non-text breed and age predictions',async()=>{
+ for(const change of [{breedAssessment:{likelyBreed:42,alternatives:[],confidence:'low'}},{ageAssessment:{estimatedRange:{years:5},confidence:'low'}}]){
+  const result={species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[],...change};
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+ }
+});
