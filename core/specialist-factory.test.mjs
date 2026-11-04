@@ -49,3 +49,12 @@ test('registry creates a new configured VUE without specialist-specific adapter 
  assert.equal(domain.id,'newvue');
  assert.equal((await new VueFlow(domain).runText({description:'Investigate this',language:'es'})).answer,'Checked es');
 });
+
+import {listSpecialistDefinitions} from './domain-registry.js';
+test('shared specialist manifest exposes stable, immutable onboarding definitions',()=>{
+ const definitions=listSpecialistDefinitions();
+ assert.ok(definitions.some(x=>x.id==='vinylvue'&&x.method));
+ assert.ok(definitions.some(x=>x.id==='anivue'&&x.method));
+ assert.ok(Object.isFrozen(definitions));
+ assert.ok(Object.isFrozen(definitions[0]));
+});
