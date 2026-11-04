@@ -175,7 +175,7 @@ import {UI, DOMAINS, localizeLanguagePicker} from "./apps/content.js?v=languages
 // Keep the existing localized card content and links; derive ordering from VUECORE.
 const appGrid=document.querySelector('.apps');
 const cards=new Map([...appGrid.querySelectorAll(':scope > article[id^="app-"]')].map(card=>[card.id.slice(4),card]));
-for(const definition of listSpecialistDefinitions().sort((a,b)=>a.id.localeCompare(b.id,'en'))){
+for(const definition of [...listSpecialistDefinitions()].sort((a,b)=>a.id.localeCompare(b.id,'en'))){
  const card=cards.get(definition.id);
  if(card)appGrid.append(card);
 }
