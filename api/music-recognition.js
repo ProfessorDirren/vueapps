@@ -11,3 +11,12 @@ export async function POST(request,{token=process.env.AUDD_API_TOKEN,fetcher=fet
  if(!result.ok)return json(result.error==='invalid_size'?413:result.error==='unsupported_type'?415:502,{error:result.error});
  return json(200,{match:result.match,specialist:'vinylvue'});
 }
+
+export default async function handler(req,res){
+ if(req.method!=='POST')return res.status(405).json({error:'POST required'});
+ let bytes=0;const chunks=[];
+ try{for await(const chunk of req){bytes+=chunk.length;if(bytes>MUSIC_LIMIT_BYTES+8192)return res.status(413).json({error:'Clip too large'});chunks.push(chunk)}}
+ catch{return res.status(400).json({error:'Invalid upload'})}
+ const request=new Request('https://localhost/api/music-recognition',{method:'POST',headers:{'content-type':req.headers['content-type']||''},body:Buffer.concat(chunks)});
+ const response=await POST(request);return res.status(response.status).json(await response.json());
+}
