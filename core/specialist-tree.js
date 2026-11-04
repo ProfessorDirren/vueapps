@@ -26,7 +26,7 @@ export function specialistPath(domain,question='',requested=null,sub=null,tree=S
  if(!tree.has(path)||tree.get(path).domain!==domain)throw Error('Unknown specialist path for this domain.');
  if(!requested){const focused=subSpecialist(domain,question,sub);if(focused)path+='/'+focused}
  const q=String(question).toLocaleLowerCase();
- const matchesTerm=(term)=>{const needle=term.toLocaleLowerCase();let at=q.indexOf(needle);while(at!==-1){const before=at>0?q[at-1]:'';const after=q[at+needle.length]||'';const startOK=!/[\\p{L}\\p{N}]/u.test(needle[0])||!/[\\p{L}\\p{N}]/u.test(before);const endOK=!/[\\p{L}\\p{N}]/u.test(needle[needle.length-1])||!/[\\p{L}\\p{N}]/u.test(after);if(startOK&&endOK)return true;at=q.indexOf(needle,at+1)}return false};
+ const matchesTerm=(term)=>{const needle=term.toLocaleLowerCase();if(/[\u3400-\u9fff]/u.test(needle))return q.includes(needle);let at=q.indexOf(needle);while(at!==-1){const before=at>0?q[at-1]:'';const after=q[at+needle.length]||'';const startOK=!/[\\p{L}\\p{N}]/u.test(needle[0])||!/[\\p{L}\\p{N}]/u.test(before);const endOK=!/[\\p{L}\\p{N}]/u.test(needle[needle.length-1])||!/[\\p{L}\\p{N}]/u.test(after);if(startOK&&endOK)return true;at=q.indexOf(needle,at+1)}return false};
  while(true){const matches=[...tree.values()].filter(n=>n.parent===path&&n.matches.length&&n.matches.some(matchesTerm));if(matches.length!==1)break;path=matches[0].path}
  const lineage=[];let current=tree.get(path);
  while(current){lineage.push({path:current.path,method:current.method});current=current.parent?tree.get(current.parent):null}
