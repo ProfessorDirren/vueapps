@@ -16,3 +16,10 @@ test('server uses inherited expertise in specialist prompt',()=>{
  assert.match(source,/Inherited expertise methods/);
  assert.match(source,/never overrides parent safety/);
 });
+
+test('follow-up specialist policy explicitly handles conflicting and missing evidence',()=>{
+ const source=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
+ assert.match(source,/If sources disagree, state the disagreement/);
+ assert.match(source,/An archived passage is not live verification/);
+ assert.match(source,/Never invent citations, measurements/);
+});
