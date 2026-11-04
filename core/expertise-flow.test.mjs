@@ -31,3 +31,8 @@ test('an archive URL cannot manufacture relevance when the passage says nothing 
  const misleading=[{domain:'musicgearvue',branch:'corevue/musicgearvue/amplifiers/marshall/jmp',url:'https://www.bonhams.com/marshall-jmp-fuse',quote:'Historic catalogue page describing a wooden display cabinet without electrical details.',checkedAt:'2026-10-01'}];
  assert.equal(selectSpecialistEvidence(misleading,'musicgearvue','Marshall JMP fuse', 'corevue/musicgearvue/amplifiers/marshall/jmp'),'');
 });
+
+test('partial-word matches do not make an unrelated source relevant',()=>{
+ const rows=[{domain:'musicgearvue',branch:'corevue/musicgearvue/amplifiers',url:'https://www.bonhams.com/auction/123',quote:'A sample example of a historic decorative display cabinet.',checkedAt:'2026-10-01'}];
+ assert.equal(selectSpecialistEvidence(rows,'musicgearvue','amp','corevue/musicgearvue/amplifiers'),'');
+});
