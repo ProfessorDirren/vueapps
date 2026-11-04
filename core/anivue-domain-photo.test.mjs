@@ -270,3 +270,12 @@ test('large photo preprocessing rejects un-decodable or too-small images safely'
  await assert.rejects(prepare({size:8*1024*1024,type:'image/png'}),/Unsupported photo dimensions/);
  assert.equal(closed,true);
 });
+
+test('ANIVUE refuses unsupported or oversized photo data before network access',async()=>{
+ let calls=0;
+ const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('Must not send')}});
+ for(const image of ['data:image/heic;base64,YWJj','data:image/png;base64,invalid?','data:image/jpeg;base64,'+'A'.repeat(4200000)]){
+  await assert.rejects(domain.analyzePhoto({image,species:'dog'}),error=>error.code==='invalid_image');
+ }
+ assert.equal(calls,0);
+});
