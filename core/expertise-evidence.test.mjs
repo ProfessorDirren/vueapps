@@ -10,6 +10,7 @@ test('public evidence can be scoped to a matching deep specialist branch',()=>{
 test('reject cross-domain and malformed evidence branches',()=>{
  assert.equal(publicRecord('vinylvue',{...evidence,branch:'corevue/musicgearvue/amplifiers'}),null);
  assert.equal(publicRecord('musicgearvue',{...evidence,branch:'corevue/musicgearvue/../vinylvue'}),null);
+ assert.equal(publicRecord('musicgearvue',{...evidence,branch:'corevue/musicgearvue/amplifiers/fakebrand'}),null);
 });
 test('legacy domain-level public evidence remains valid',()=>{
  const row=publicRecord('musicgearvue',evidence);
