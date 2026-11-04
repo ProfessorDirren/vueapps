@@ -5,6 +5,12 @@
  */
 export const CORE_VERSION = "0.2.0";
 export const MEDIA_LIMITS = Object.freeze({ image: 10 * 1024 * 1024, video: 50 * 1024 * 1024 });
+/** Mobile capture input hints shared by VUE specialists. Browsers may offer a picker instead of opening the camera. */
+export const MEDIA_CAPTURE = Object.freeze({
+  image: Object.freeze({ accept: "image/*", capture: "environment" }),
+  video: Object.freeze({ accept: "video/*", capture: "environment" })
+});
+
 export const IMAGE_TYPES = Object.freeze(["image/jpeg","image/png","image/webp","image/heic","image/heif"]);
 export const LANGUAGES = Object.freeze(["en","sv","es","hi","zh-CN","ru","ar"]);
 export const SEVERITIES = Object.freeze(["normal","monitor","professional","emergency"]);
