@@ -72,3 +72,11 @@ test('ANIVUE rejects empty or malformed image observations',async()=>{
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language:'en'}),error=>error.code==='invalid_analysis');
  }
 });
+
+
+test('ANIVUE masks malformed error bodies from the vision service',async()=>{
+ for(const body of [null,{}, {error:42}]){
+  const domain=new AniVueDomain({fetcher:async()=>({ok:false,json:async()=>body})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'en'}),error=>error.code==='image_analysis_unavailable'&&error.message==='Image analysis unavailable');
+ }
+});
