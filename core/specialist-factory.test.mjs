@@ -98,3 +98,9 @@ test('new portal VUE cards are noninteractive until workspace review',()=>{
  assert.match(html,/Coming soon · Workspace not yet available/);
  assert.match(html,/pending\.append\(heading,description,status\)/);
 });
+
+test('server router rejects unregistered specialists before followup',()=>{
+ const source=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ assert.match(source,/Object\.hasOwn\(SPECIALISTS,route\.domain\)/);
+ assert.match(source,/Unregistered VUE specialist/);
+});
