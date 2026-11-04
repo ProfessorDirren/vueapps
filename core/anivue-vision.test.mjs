@@ -47,10 +47,11 @@ test('accepts valid PNG at exact 3 MiB upload boundary',async()=>{
  const filler=Buffer.alloc(3*1024*1024-start.length-12-12);
  const bytes=Buffer.concat([start,chunk('tEXt',filler),chunk('IEND',Buffer.alloc(0))]);
  const image='data:image/png;base64,'+bytes.toString('base64');
- let charged=0;
- const response=await POST(request({species:'horse',language:'en',image}),{configured:()=>true,spend:async()=>{charged++;return false}});
+ let charged=0;let namespace;
+ const response=await POST(request({species:'horse',language:'en',image}),{configured:()=>true,spend:async key=>{namespace=key;charged++;return false}});
  assert.equal(response.status,429);
  assert.equal(charged,1);
+ assert.equal(namespace,'anivue');
 });
 
 
