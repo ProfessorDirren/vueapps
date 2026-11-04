@@ -26,8 +26,9 @@ export function createInformationalVueClass({id,method,endpoint='/api/vue-router
    }catch(error){
     throw new VueCoreError(['TimeoutError','AbortError'].includes(error?.name)?'service_timeout':'service_unavailable','Specialist routing unavailable');
    }
-   if(!response||typeof response.json!=='function')throw new VueCoreError('invalid_response','Specialist router returned no readable response');
+   if(!response)throw new VueCoreError('invalid_response','Specialist router returned no response');
    if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
+   if(typeof response.json!=='function')throw new VueCoreError('invalid_response','Specialist router returned no readable response');
    let data;
    try{data=await response.json()}catch{throw new VueCoreError('invalid_response','Specialist response could not be read')}
    if(!data||data.domain!==id||typeof data.answer!=='string'||!data.answer.trim())
