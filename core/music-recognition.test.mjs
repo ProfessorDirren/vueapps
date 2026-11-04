@@ -33,3 +33,15 @@ test('fail-closed quota denies provider call',async()=>{
  const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',enabled:true,budgetGate:async()=>false,fetcher:async()=>{called=true;throw Error('must not call provider')}});
  assert.equal(response.status,429);assert.equal(called,false);
 });
+
+test('unsupported clip does not consume a paid quota slot',async()=>{
+ const form=new FormData();form.set('file',new File(['not audio'],'notes.txt',{type:'text/plain'}));
+ let charged=false;
+ const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',enabled:true,budgetGate:async()=>{charged=true;return true}});
+ assert.equal(response.status,415);assert.equal(charged,false);
+});
+test('music endpoint is disabled even when provider key is supplied',async()=>{
+ const form=new FormData();form.set('file',clip());
+ const response=await POST(new Request('https://localhost/api/music-recognition',{method:'POST',body:form}),{token:'test-secret',enabled:false});
+ assert.equal(response.status,503);
+});
