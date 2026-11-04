@@ -58,3 +58,9 @@ test('ANIVUE native photo upload remains aligned with the supported server image
  assert.ok(server.includes('bytes.length>3*1024*1024'));
  assert.ok(server.includes('jpeg|png|webp'));
 });
+
+
+test('ANIVUE reports a controlled error when vision service returns unreadable JSON',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>({ok:false,json:async()=>{throw new SyntaxError('bad json')}})});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='image_analysis_unavailable');
+});
