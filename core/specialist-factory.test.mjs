@@ -101,6 +101,14 @@ test('new portal VUE cards are noninteractive until workspace review',()=>{
 
 test('server router rejects unregistered specialists before followup',()=>{
  const source=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
- assert.match(source,/Object\.hasOwn\(SPECIALISTS,route\.domain\)/);
+ assert.match(source,/isRegisteredSpecialist\(route\.domain\)/);
  assert.match(source,/Unregistered VUE specialist/);
+});
+
+import {isRegisteredSpecialist} from './specialists.js';
+test('registration gate rejects unknown and inherited object keys',()=>{
+ assert.equal(isRegisteredSpecialist('anivue'),true);
+ assert.equal(isRegisteredSpecialist('toString'),false);
+ assert.equal(isRegisteredSpecialist('__proto__'),false);
+ assert.equal(isRegisteredSpecialist(null),false);
 });
