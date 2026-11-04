@@ -25,3 +25,7 @@ test('pink orbit has a visible moving highlight and remains decorative',()=>{
  assert.match(html,/animation:vue-brain-glint 10s linear infinite/);
  assert.match(html,/@keyframes vue-brain-glint/);
 });
+
+test('brain image backdrop is softly feathered instead of showing a rectangular edge',()=>{
+ assert.match(html,/mask-image:radial-gradient\(ellipse 47% 46% at center,#000 67%,transparent 100%\)/);
+});
