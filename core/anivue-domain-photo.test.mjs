@@ -233,3 +233,10 @@ test('ANIVUE distinguishes exhausted image quota from other provider failures',a
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.ok(page.includes("error?.code==='image_analysis_limit'?2:0"));
 });
+
+
+test('ANIVUE emergency assessment bypasses remote text flow even without photo',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.ok(page.includes("const check=emergency?{assessment:emergency}:(imageData||selectedPhotoFile)?"));
+ assert.ok(page.includes("if(!imageData&&!selectedPhotoFile)return;"));
+});
