@@ -39,16 +39,12 @@ test('VUECORE distinguishes specialist priorities when one topic is higher risk'
 test('VUECORE leaves unclear questions in the safe generic specialist',()=>{
   assert.deepEqual(routeQuestion('Could you help me?',null),{domain:'anyvue',clarify:false});
 });
-test('VUEGUARD prevents accidental removal of the legacy ANIVUE domain dependency without migration',async()=>{
-  const {readFile}=await import('node:fs/promises');
-  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
-  assert.match(source,/www\\.anivueapp\\.se|www\.anivueapp\.se/);
-});
-
-// Keep VUECORE as the primary animal workspace without deleting the legacy fallback.
-test('VUECORE owns the animal workspace while retaining the legacy fallback',async()=>{
-  const {readFile}=await import('node:fs/promises');
-  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
-  assert.match(source,/workspace:route\.domain==='anivue'\?'\.\/anivue-core\.html'/);
-  assert.match(source,/legacy_workspace:'https:\/\/www\.anivueapp\.se'/);
+test('ANIVUE workspace remains native and has no external fallback',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ const portal=await readFile(new URL('../index.html',import.meta.url),'utf8');
+ const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(source,/workspace:route\.domain==='anivue'\?'\.\/anivue-core\.html'/);
+ for(const file of [source,portal,native])assert.doesNotMatch(file,/anivueapp\.se|legacy_workspace/);
+ assert.match(portal,/href="\.\/anivue-core\.html"/);
 });
