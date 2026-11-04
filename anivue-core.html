@@ -54,7 +54,7 @@ async function preparePhoto(file){
    const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
    if(canvas.width<128||canvas.height<128)break;
    const data=canvas.toDataURL('image/jpeg',0.78);
-   if(data.startsWith('data:image/jpeg;base64,')&&data.length<=4*1024*1024)return data;
+   if(data.startsWith('data:image/jpeg;base64,')&&data.length<=3900000)return data;
    scale*=0.7;
   }
   throw Error('Unable to reduce photo');
@@ -65,6 +65,7 @@ let photoReadTask=Promise.resolve();
 function handlePhoto(file){
  const version=++photoReadVersion;
  imageData=null;
+ showPhotoStatus(null);
  selectedPhotoFile=file||null;
  if(!file){photoReadTask=Promise.resolve();showPhotoStatus(null);return}
  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024||file.size===0){photoReadTask=Promise.resolve();showPhotoStatus(0);photo.value='';camera.value='';selectedPhotoFile=null;return}
