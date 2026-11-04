@@ -1,6 +1,7 @@
 import { VueDomain, VueCoreError } from './index.js';
 import { SPECIALISTS } from './specialists.js';
 import { AniVueDomain } from './anivue.js';
+import { createInformationalVueClass } from './specialist-factory.js';
 
 /**
  * Shared specialist registry. Every VUE domain is a VueDomain descendant.
@@ -79,4 +80,14 @@ export function createSpecialistDomain(id, options) {
   if (id === 'anivue') return new AniVueDomain(options);
   if (id === 'anyvue') return new AnyVueDomain(options);
   return new SpecialistVueDomain(id, options);
+}
+
+/**
+ * Create a VUECORE-derived informational adapter from a specialist definition.
+ * This is deliberately not an automatic public router/UI registration: those
+ * require reviewed server routing, policy and frontend configuration.
+ */
+export function createConfiguredSpecialistDomain(definition, options) {
+ const DomainClass=createInformationalVueClass(definition);
+ return new DomainClass(options);
 }
