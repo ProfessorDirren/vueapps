@@ -48,7 +48,7 @@ async function preparePhoto(file){
  if(typeof createImageBitmap!=='function')throw Error('Photo conversion unavailable');
  const bitmap=await createImageBitmap(file);
  try{
-  if(bitmap.width<128||bitmap.height<128)throw Error('Photo resolution too low');
+  if(!Number.isFinite(bitmap.width)||!Number.isFinite(bitmap.height)||bitmap.width<128||bitmap.height<128||bitmap.width>8192||bitmap.height>8192||bitmap.width*bitmap.height>12000000)throw Error('Unsupported photo dimensions');
   let scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
   for(let attempt=0;attempt<5;attempt++){
    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
