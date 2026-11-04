@@ -46,3 +46,9 @@ test('horse inflections route to ANIVUE across Swedish, English and Spanish',()=
   assert.equal(routeQuestion(question).domain,'anivue',question);
  }
 });
+
+test('common inflected dog, cat and horse phrases select ANIVUE',()=>{
+ for(const question of ['Hunden är sjuk','Hundarna hostar','Katten är sjuk','Katterna kräks','Hästarna är sjuka','Hästens ben är svullet','Dogs are sick','Cats are sick']){
+  assert.equal(routeQuestion(question).domain,'anivue',question);
+ }
+});
