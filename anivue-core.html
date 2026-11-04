@@ -45,14 +45,18 @@ video.onchange=()=>{const file=video.files?.[0];videoStatusIndex=!file?null:vali
 let imageData=null;
 async function preparePhoto(file){
  if(file.size<=3*1024*1024)return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
- if(typeof createImageBitmap!=='function')throw Error('Photo conversion unavailable');
- const bitmap=await createImageBitmap(file);
+ const bitmap=typeof createImageBitmap==='function'?await createImageBitmap(file):await new Promise((resolve,reject)=>{
+  const url=URL.createObjectURL(file);const img=new Image();
+  img.onload=()=>{URL.revokeObjectURL(url);resolve({width:img.naturalWidth,height:img.naturalHeight,close(){},image:img})};
+  img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Photo conversion unavailable'))};
+  img.src=url;
+ });
  try{
   if(!Number.isFinite(bitmap.width)||!Number.isFinite(bitmap.height)||bitmap.width<128||bitmap.height<128)throw Error('Unsupported photo dimensions');
   let scale=Math.min(1,2048/Math.max(bitmap.width,bitmap.height));
   for(let attempt=0;attempt<5;attempt++){
    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
-   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+   const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas unavailable');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap.image||bitmap,0,0,canvas.width,canvas.height);
    if(canvas.width<128||canvas.height<128)break;
    const data=canvas.toDataURL('image/jpeg',0.78);
    if(data.startsWith('data:image/jpeg;base64,')&&data.length<=3900000)return data;
