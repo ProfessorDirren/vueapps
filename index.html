@@ -59,7 +59,7 @@
     header { position:relative;min-height:150px; }
     @keyframes vue-brain-turn { 0%,100% { transform:rotate(-7deg) scale(1) } 50% { transform:rotate(7deg) scale(1.025) } }
     @keyframes vue-brain-orbit { from { transform:rotate(-20deg) } to { transform:rotate(340deg) } }
-    @media(max-width:600px) { .vue-brain { left:53%;width:150px;transform:translate(-50%,-50%) scale(.72); } }
+    @media(max-width:600px) { header { min-height:188px; } .vue-brain { left:50%;top:125px;width:150px;height:81px;transform:translate(-50%,-50%); } .vue-brain-glint { animation:none; } }
     @media(prefers-reduced-motion:reduce) { .vue-brain-core,.vue-brain-orbit,.vue-brain-glint { animation:none; } }
   </style>
   <script src="./analytics.js" defer></script>
