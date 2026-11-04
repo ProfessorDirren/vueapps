@@ -126,7 +126,7 @@ test('ANIVUE preserves successful photo analysis in every supported language',as
   let sent;
   const domain=new AniVueDomain({fetcher:async(_url,options)=>{
    sent=JSON.parse(options.body);
-   return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[{observation:'Visible finding'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+   return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[{observation:'Visible finding',significance:'normal',confidence:'medium'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
   }});
   const result=await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language});
   assert.equal(sent.language,language);
@@ -157,4 +157,12 @@ test('ANIVUE photo request preserves user observations for the selected species'
  assert.equal(request.description,'Limping after exercise');
  assert.deepEqual(request.symptoms,['horseCannotBearWeight']);
  assert.equal(request.language,'sv');
+});
+
+
+test('ANIVUE rejects observations without valid urgency and confidence metadata',async()=>{
+ for(const observation of [{observation:'Swelling'},{observation:'Swelling',significance:'urgent'},{observation:'Swelling',significance:'unknown',confidence:'high'}]){
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({summary:'Photo',visibleObservations:[observation],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+ }
 });
