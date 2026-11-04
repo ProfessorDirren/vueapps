@@ -205,3 +205,12 @@ test('ANIVUE rejects malformed emergency advice rather than rendering an object'
  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
 });
+
+
+test('ANIVUE rejects empty or excessive observations even with otherwise valid metadata',async()=>{
+ for(const count of [0,11]){
+  const result={species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:Array.from({length:count},()=>({observation:'Visible detail',confidence:'medium',significance:'normal'})),limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]};
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>result})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+ }
+});
