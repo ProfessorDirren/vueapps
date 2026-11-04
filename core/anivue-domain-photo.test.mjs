@@ -64,3 +64,11 @@ test('ANIVUE reports a controlled error when vision service returns unreadable J
  const domain=new AniVueDomain({fetcher:async()=>({ok:false,json:async()=>{throw new SyntaxError('bad json')}})});
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='image_analysis_unavailable');
 });
+
+
+test('ANIVUE rejects empty or malformed image observations',async()=>{
+ for(const observations of [[{observation:''}],[null],[{observation:42}]]){
+  const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({summary:'Photo',visibleObservations:observations})})});
+  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language:'en'}),error=>error.code==='invalid_analysis');
+ }
+});
