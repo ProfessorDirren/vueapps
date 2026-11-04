@@ -37,3 +37,8 @@ test('specialists propose verifiable next actions without claiming background fo
  assert.match(source,/identify the most useful next verification step/);
  assert.match(source,/do not promise to research later, monitor, contact anyone, or return with findings/);
 });
+
+test('API never mislabels generated expert responses as live verified or scheduled',()=>{
+ const source=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
+ assert.match(source,/evidence_status:'not_live_verified',followup_scheduled:false/);
+});
