@@ -112,3 +112,10 @@ test('ANIVUE clears failed photo reads without blocking text-only assessments',(
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.ok(page.includes("selectedPhotoFile=null;photo.value='';camera.value='';showPhotoStatus(2)"));
 });
+
+
+test('ANIVUE photo timeouts become controlled errors without affecting emergency triage',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>{const error=new Error('Timed out');error.name='TimeoutError';throw error}});
+ assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseChoke']}).severity,'emergency');
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'sv'}),error=>error.code==='image_analysis_unavailable');
+});
