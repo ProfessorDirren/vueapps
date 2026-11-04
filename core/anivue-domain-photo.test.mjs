@@ -183,3 +183,9 @@ test('ANIVUE reports a useful fallback when provider error text is blank',async(
   await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='image_analysis_unavailable'&&error.message==='Image analysis unavailable');
  }
 });
+
+
+test('ANIVUE rejects malformed alternative breed entries',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>({ok:true,json:async()=>({species:{value:'dog',confidence:'high'},breedAssessment:{likelyBreed:null,alternatives:[null,123],confidence:'low'},ageAssessment:{estimatedRange:null,confidence:'low'},summary:'Photo',visibleObservations:[],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})})});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog'}),error=>error.code==='invalid_analysis');
+});
