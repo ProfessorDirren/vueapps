@@ -1,12 +1,12 @@
 import {MUSIC_LIMIT_BYTES,MUSIC_TYPES} from '../core/music-recognition.js';
 const labels={
- en:['Identify song','Record 12 seconds','Choose audio/video','Ready to identify','Listening…','Identifying…','No matching song found','Music recognition is not configured yet','Recording is not available on this device','Clip must be audio/video and under 10 MB','Recognition unavailable. Try again.','Stop recording'],
- es:['Identificar canción','Grabar 12 segundos','Elegir audio/vídeo','Listo para identificar','Grabando…','Identificando…','No se encontró la canción','Reconocimiento musical aún no configurado','Grabación no disponible','Audio/vídeo de menos de 10 MB','Reconocimiento no disponible','Detener grabación'],
- sv:['Identifiera låt','Spela in 12 sekunder','Välj ljud/video','Redo att identifiera','Spelar in…','Identifierar…','Ingen låt hittades','Musikidentifiering är inte konfigurerad ännu','Inspelning stöds inte på enheten','Ljud/video måste vara under 10 MB','Identifiering misslyckades','Stoppa inspelning'],
- hi:['गीत पहचानें','12 सेकंड रिकॉर्ड करें','ऑडियो/वीडियो चुनें','पहचान के लिए तैयार','रिकॉर्डिंग…','पहचान जारी…','गीत नहीं मिला','संगीत पहचान अभी सेट नहीं है','रिकॉर्डिंग उपलब्ध नहीं','10 MB से कम ऑडियो/वीडियो चुनें','पहचान उपलब्ध नहीं','रिकॉर्डिंग रोकें'],
- 'zh-CN':['识别歌曲','录制12秒','选择音频/视频','准备识别','录制中…','识别中…','未找到歌曲','音乐识别尚未配置','无法录音','请选择小于10MB的音视频','识别失败','停止录制'],
- ru:['Определить песню','Записать 12 секунд','Выбрать аудио/видео','Готово к распознаванию','Запись…','Распознавание…','Песня не найдена','Распознавание пока не настроено','Запись недоступна','Аудио/видео до 10 МБ','Распознавание недоступно','Остановить запись'],
- ar:['التعرف على الأغنية','سجّل 12 ثانية','اختر صوتًا أو فيديو','جاهز للتعرف','جارٍ التسجيل…','جارٍ التعرف…','لم يتم العثور على أغنية','خدمة التعرف غير مهيأة بعد','التسجيل غير متاح','اختر صوتًا أو فيديو أقل من 10 ميغابايت','التعرف غير متاح','إيقاف التسجيل']
+ en:['Identify song','Record 12 seconds','Choose audio/video','Ready to identify','Listening…','Identifying…','No matching song found','Music recognition is not configured yet','Recording is not available on this device','Clip must be audio/video and under 4 MB','Recognition unavailable. Try again.','Stop recording'],
+ es:['Identificar canción','Grabar 12 segundos','Elegir audio/vídeo','Listo para identificar','Grabando…','Identificando…','No se encontró la canción','Reconocimiento musical aún no configurado','Grabación no disponible','Audio/vídeo de menos de 4 MB','Reconocimiento no disponible','Detener grabación'],
+ sv:['Identifiera låt','Spela in 12 sekunder','Välj ljud/video','Redo att identifiera','Spelar in…','Identifierar…','Ingen låt hittades','Musikidentifiering är inte konfigurerad ännu','Inspelning stöds inte på enheten','Ljud/video måste vara under 4 MB','Identifiering misslyckades','Stoppa inspelning'],
+ hi:['गीत पहचानें','12 सेकंड रिकॉर्ड करें','ऑडियो/वीडियो चुनें','पहचान के लिए तैयार','रिकॉर्डिंग…','पहचान जारी…','गीत नहीं मिला','संगीत पहचान अभी सेट नहीं है','रिकॉर्डिंग उपलब्ध नहीं','4 MB से कम ऑडियो/वीडियो चुनें','पहचान उपलब्ध नहीं','रिकॉर्डिंग रोकें'],
+ 'zh-CN':['识别歌曲','录制12秒','选择音频/视频','准备识别','录制中…','识别中…','未找到歌曲','音乐识别尚未配置','无法录音','请选择小于4MB的音视频','识别失败','停止录制'],
+ ru:['Определить песню','Записать 12 секунд','Выбрать аудио/видео','Готово к распознаванию','Запись…','Распознавание…','Песня не найдена','Распознавание пока не настроено','Запись недоступна','Аудио/видео до 4 МБ','Распознавание недоступно','Остановить запись'],
+ ar:['التعرف على الأغنية','سجّل 12 ثانية','اختر صوتًا أو فيديو','جاهز للتعرف','جارٍ التسجيل…','جارٍ التعرف…','لم يتم العثور على أغنية','خدمة التعرف غير مهيأة بعد','التسجيل غير متاح','اختر صوتًا أو فيديو أقل من 4 ميغابايت','التعرف غير متاح','إيقاف التسجيل']
 };
 export function mountMusicRecognition(host){
  if(!host)return;
