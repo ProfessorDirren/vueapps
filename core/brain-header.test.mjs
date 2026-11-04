@@ -7,11 +7,12 @@ test('VUECORE header loads realistic optimized image, not SVG cone or emoji',()=
  assert.doesNotMatch(html,/src="\.\/assets\/vue-brain\.svg"/);
  assert.ok(statSync(new URL('../assets/vue-brain-realistic.webp',import.meta.url)).size>1000);
 });
-test('realistic brain moves gently and respects reduced motion',()=>{
- assert.match(html,/animation:vue-brain-turn 18s ease-in-out infinite/);
+test('realistic brain completes a full rotation and respects reduced motion',()=>{
+ assert.match(html,/animation:vue-brain-turn 12s linear infinite/);
+ assert.match(html,/@keyframes vue-brain-turn \{ 0% \{ transform:rotateY\(0deg\)/);
+ assert.match(html,/100% \{ transform:rotateY\(360deg\)/);
  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(html,/\.vue-brain-core,\.vue-brain-orbit,\.vue-brain-glint \{ animation:none; \}/);
- assert.doesNotMatch(html,/@keyframes vue-brain-turn \{ from \{ transform:rotateY\(0deg\)/);
 });
 
 test('brain image fits its header box and has an accurate accessible description',()=>{
