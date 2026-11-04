@@ -31,3 +31,9 @@ test('specialist follow-up forbids fabricated live verification and contradictor
  assert.match(source,/Ask at most one precise missing-information question/);
  assert.doesNotMatch(source,/Use at most three precise missing-information questions/);
 });
+
+test('specialists propose verifiable next actions without claiming background follow-up',()=>{
+ const source=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
+ assert.match(source,/identify the most useful next verification step/);
+ assert.match(source,/do not promise to research later, monitor, contact anyone, or return with findings/);
+});
