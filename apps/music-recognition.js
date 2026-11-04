@@ -22,14 +22,15 @@ export function mountMusicRecognition(host){
  pick.onclick=()=>file.click();file.onchange=()=>{accept(file.files?.[0]);file.value=''};
  record.onclick=async()=>{
  if(recorder&&recorder.state==='recording'){recorder.stop();return}
- if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){status.textContent=words()[8];return}
+ if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'||typeof MediaRecorder.isTypeSupported!=='function'){status.textContent=words()[8];return}
  try{
  stream=await navigator.mediaDevices.getUserMedia({audio:true});
- const mime=['audio/webm','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t));
+ const mime=['audio/webm;codecs=opus','audio/mp4','audio/webm'].find(t=>MediaRecorder.isTypeSupported(t));
  if(!mime)throw Error('codec');
  const parts=[];recorder=new MediaRecorder(stream,{mimeType:mime});
  recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};
- recorder.onstop=()=>{clearTimeout(timeout);stream?.getTracks().forEach(t=>t.stop());stream=null;const f=new File(parts,'song-clip.'+(mime==='audio/mp4'?'m4a':'webm'),{type:mime});recorder=null;accept(f)};
+ recorder.onstop=()=>{clearTimeout(timeout);stream?.getTracks().forEach(t=>t.stop());stream=null;const recordedType=mime.startsWith('audio/mp4')?'audio/mp4':'audio/webm';const f=new File(parts,'song-clip.'+(recordedType==='audio/mp4'?'m4a':'webm'),{type:recordedType});recorder=null;accept(f)};
+ recorder.onerror=()=>{clearTimeout(timeout);stream?.getTracks().forEach(t=>t.stop());stream=null;recorder=null;clip=null;status.textContent=words()[8];render()};
  recorder.start();status.textContent=words()[4];render();timeout=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop()},12000);
  }catch{stream?.getTracks().forEach(t=>t.stop());stream=null;status.textContent=words()[8];render()}
  };
