@@ -112,3 +112,9 @@ test('registration gate rejects unknown and inherited object keys',()=>{
  assert.equal(isRegisteredSpecialist('__proto__'),false);
  assert.equal(isRegisteredSpecialist(null),false);
 });
+
+import {MEMORY_DOMAINS} from './memory.js';
+test('case memory domains are inherited from the specialist registry',()=>{
+ assert.deepEqual(MEMORY_DOMAINS,listSpecialistDefinitions().map(item=>item.id).sort());
+ assert.ok(Object.isFrozen(MEMORY_DOMAINS));
+});
