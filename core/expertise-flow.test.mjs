@@ -12,11 +12,11 @@ test('question routes to deep expert and retains all inherited methods',()=>{
  assert.equal(selected.path,'corevue/musicgearvue/amplifiers/marshall/jmp/folkesson');
  assert.equal(expertiseMethods(selected).length,6);
  const context=selectSpecialistEvidence(rows,'musicgearvue','Marshall JMP Folkesson',selected.path);
- assert.match(context,/bonhams.com\\/jmp/);
- assert.doesNotMatch(context,/bonhams.com\\/guitar|bonhams.com\\/vinyl/);
+ assert.ok(context.includes('bonhams.com/jmp'));
+ assert.ok(!context.includes('bonhams.com/guitar')&&!context.includes('bonhams.com/vinyl'));
 });
 test('another branch cannot borrow the JMP specialist source',()=>{
  const selected=specialistPath('musicgearvue','guitar',null,'instruments');
  const context=selectSpecialistEvidence(rows,'musicgearvue','Marshall JMP Folkesson',selected.path);
- assert.doesNotMatch(context,/bonhams.com\\/jmp/);
+ assert.ok(!context.includes('bonhams.com/jmp'));
 });
