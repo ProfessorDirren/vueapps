@@ -61,3 +61,10 @@ test('restored saved VUECORE turns retain their AI provenance label',()=>{
  assert.match(source,/if\(kind==='ai_unverified'\)/);
  assert.match(source,/article\.append\(provenance\)/);
 });
+
+test('new VUECORE navigation starts at page top without auto-scrolling restored reply',()=>{
+ const source=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ assert.match(source,/input\.focus\(\{preventScroll:true\}\)/);
+ assert.match(source,/reply\(previous\.question,previous\.answer,active\.domain,previous\.kind,false\)/);
+ assert.match(source,/window\.addEventListener\('pageshow',\(\)=>window\.scrollTo\(\{top:0,left:0,behavior:'instant'\}\)\)/);
+});
