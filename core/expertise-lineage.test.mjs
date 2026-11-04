@@ -47,3 +47,10 @@ test('public router preserves unverified provenance for AI-generated answers',()
  const source=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
  assert.match(source,/d\.kind==='ai_unverified'\?\{verified:false,evidence_status:'not_live_verified',followup_scheduled:false\}/);
 });
+
+test('VUECORE UI labels unverified AI answers in all seven languages',()=>{
+ const source=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ for(const lang of ['en:','es:','sv:','hi:',"'zh-CN':",'ru:','ar:'])assert.ok(source.includes(lang));
+ assert.match(source,/data\.kind==='ai_unverified'/);
+ assert.match(source,/provenanceLabel\[document\.documentElement\.lang\]/);
+});
