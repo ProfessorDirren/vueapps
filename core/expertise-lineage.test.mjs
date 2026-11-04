@@ -51,13 +51,13 @@ test('public router preserves unverified provenance for AI-generated answers',()
 test('VUECORE UI labels unverified AI answers in all seven languages',()=>{
  const source=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
  for(const lang of ['en:','es:','sv:','hi:',"'zh-CN':",'ru:','ar:'])assert.ok(source.includes(lang));
- assert.match(source,/data\.kind==='ai_unverified'/);
+ assert.match(source,/if\(kind==='ai_unverified'\)/);
  assert.match(source,/provenanceLabel\[document\.documentElement\.lang\]/);
 });
 
 test('restored saved VUECORE turns retain their AI provenance label',()=>{
  const source=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
- assert.match(source,/if\(previous\)reply\(previous\.question,previous\.answer,active\.domain,previous\.kind\)/);
+ assert.match(source,/if\(previous\)reply\(previous\.question,previous\.answer,active\.domain,previous\.kind,false\)/);
  assert.match(source,/if\(kind==='ai_unverified'\)/);
  assert.match(source,/article\.append\(provenance\)/);
 });
