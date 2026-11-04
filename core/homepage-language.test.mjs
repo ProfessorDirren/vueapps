@@ -22,5 +22,5 @@ test("homepage hero and navigation retain brand and product promises",()=>{
  assert.match(html,/VUEAPPS\.se/);
  assert.match(html,/THE PORTAL TO KNOWLEDGE/);
  assert.match(html,/href="\.\/anyvue\.html"/);
- assert.match(html,/href="https:\/\/www\.anivueapp\.se"/);
+ assert.match(html,/href="\.\/anivue-core\.html"/);
 });
