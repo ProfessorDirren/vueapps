@@ -14,6 +14,7 @@ export async function POST(request,{token=process.env.AUDD_API_TOKEN,fetcher=fet
  return json(200,{match:result.match,specialist:'vinylvue'});
 }
 
+export const config={api:{bodyParser:false}};
 export default async function handler(req,res){
  if(req.method!=='POST')return res.status(405).json({error:'POST required'});
  let bytes=0;const chunks=[];
