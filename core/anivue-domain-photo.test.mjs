@@ -119,3 +119,17 @@ test('ANIVUE photo timeouts become controlled errors without affecting emergency
  assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseChoke']}).severity,'emergency');
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'sv'}),error=>error.code==='image_analysis_unavailable');
 });
+
+
+test('ANIVUE preserves successful photo analysis in every supported language',async()=>{
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar']){
+  let sent;
+  const domain=new AniVueDomain({fetcher:async(_url,options)=>{
+   sent=JSON.parse(options.body);
+   return {ok:true,json:async()=>({summary:'Visible findings',visibleObservations:[{observation:'Visible finding'}],limitations:[],suggestedFollowUpQuestions:[],emergencySignals:[]})};
+  }});
+  const result=await domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat',language});
+  assert.equal(sent.language,language);
+  assert.equal(result.summary,'Visible findings');
+ }
+});
