@@ -1,5 +1,5 @@
 import { VueDomain, VueCoreError } from './index.js';
-import { SPECIALISTS } from './specialists.js';
+import { SPECIALISTS, isRegisteredSpecialist } from './specialists.js';
 import { AniVueDomain } from './anivue.js';
 import { createInformationalVueClass } from './specialist-factory.js';
 
@@ -11,7 +11,7 @@ import { createInformationalVueClass } from './specialist-factory.js';
  */
 export class SpecialistVueDomain extends VueDomain {
   constructor(id, {fetcher = fetch} = {}) {
-    if (!Object.hasOwn(SPECIALISTS,id)) throw new VueCoreError('unknown_specialist','Unknown VUE specialist');
+    if (!isRegisteredSpecialist(id)) throw new VueCoreError('unknown_specialist','Unknown VUE specialist');
     super({id,name:id.toUpperCase(),capabilities:{imageAnalysis:false,videoAnalysis:false}});
     this.profile=SPECIALISTS[id];
     this.fetcher=fetcher;
