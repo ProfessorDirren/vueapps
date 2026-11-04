@@ -81,3 +81,12 @@ test('portal specialist cards match the shared VUECORE registry',()=>{
  const registryIds=listSpecialistDefinitions().map(item=>item.id);
  assert.deepEqual([...cardIds].sort(),[...registryIds].sort());
 });
+
+test('portal uses VUECORE manifest without replacing localized cards',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/import \{listSpecialistDefinitions\} from '\.\/core\/domain-registry\.js'/);
+ assert.match(html,/\[\.\.\.listSpecialistDefinitions\(\)\]\.sort\(/);
+ assert.match(html,/appGrid\.append\(card\)/);
+ assert.match(html,/id="app-anivue"/);
+ assert.match(html,/https:\/\/www\.anivueapp\.se/);
+});
