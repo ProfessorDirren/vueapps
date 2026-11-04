@@ -20,3 +20,9 @@ test('another branch cannot borrow the JMP specialist source',()=>{
  const context=selectSpecialistEvidence(rows,'musicgearvue','Marshall JMP Folkesson',selected.path);
  assert.ok(!context.includes('bonhams.com/jmp'));
 });
+
+test('branch vocabulary alone cannot surface an unrelated archived source',()=>{
+ const unrelated=[{domain:'musicgearvue',branch:'corevue/musicgearvue/amplifiers/marshall/jmp',url:'https://www.bonhams.com/jmp',quote:'Marshall JMP amplifier historical catalogue listing with no relevant issue details',checkedAt:'2026-10-01'}];
+ const context=selectSpecialistEvidence(unrelated,'musicgearvue','Why does the fuse blow repeatedly?', 'corevue/musicgearvue/amplifiers/marshall/jmp');
+ assert.equal(context,'');
+});
