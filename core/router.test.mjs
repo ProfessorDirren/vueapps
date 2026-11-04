@@ -40,3 +40,9 @@ test('router API rejects unsupported languages and preserves MEDIVUE local guida
  response=await POST(req({question:'My guitar amplifier',language:'xx'}));
  assert.equal(response.status,400);
 });
+
+test('horse inflections route to ANIVUE across Swedish, English and Spanish',()=>{
+ for(const question of ['Hästen har kolik','Mina hästar är sjuka','The mare is ill','The foal needs help','My horses are sick','La yegua está enferma','El potro tiene dolor']){
+  assert.equal(routeQuestion(question).domain,'anivue',question);
+ }
+});
