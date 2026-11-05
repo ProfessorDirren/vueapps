@@ -12,6 +12,6 @@ export function videoAnalysisDecision({file,consent=false}={}){
  if(!VIDEO_POLICY.acceptedMimeTypes.includes(file.type))return {allowed:false,reason:'unsupported_type'};
  if(!Number.isSafeInteger(file.size)||file.size<1||file.size>VIDEO_POLICY.maxBytes)return {allowed:false,reason:'invalid_size'};
  if(consent!==true)return {allowed:false,reason:'consent_required'};
- if(!VIDEO_POLICY.analysisEnabled||!VIDEO_POLICY.uploadEnabled)return {allowed:false,reason:'analysis_disabled'};
- return {allowed:true,reason:'ready'};
+ // Explicit fail-closed: enabling video requires a separately reviewed implementation.
+ return {allowed:false,reason:'analysis_disabled'};
 }
