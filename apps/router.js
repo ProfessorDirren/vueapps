@@ -1,4 +1,5 @@
 import {specialistLabel} from './specialist-labels.js';
+import {mountVuecoreVideoInput} from '../core/video-input.js';
 import {VueMemory,obviousIdentifier} from '../core/memory.js';
 import {routingFields} from '../core/router.js';
 import {readFavorite,rememberFavorite,favoriteCommand} from '../core/favorites.js';
@@ -22,31 +23,4 @@ for(const id of ['vue-router-camera-file','vue-router-gallery-file'])$(id).oncha
 $('vue-router-camera').onclick=()=>{if(!busy&&!loadingPhoto)$('vue-router-camera-file').click()};$('vue-router-gallery').onclick=()=>{if(!busy&&!loadingPhoto)$('vue-router-gallery-file').click()};$('vue-router-photo-remove').onclick=()=>{if(!busy&&!loadingPhoto)clearPhoto()};
 
 
-// Shared VUECORE video picker. Video remains local until an approved, tested API exists.
-let videoObjectUrl=null;
-function clearVideo(){
-  if(videoObjectUrl){URL.revokeObjectURL(videoObjectUrl);videoObjectUrl=null;}
-  $('vue-router-video-preview').removeAttribute('src');
-  $('vue-router-video-preview').load();
-  $('vue-router-video-panel').hidden=true;
-  for(const id of ['vue-router-video-record-file','vue-router-video-choose-file'])$(id).value='';
-}
-function chooseVideo(event){
-  if(busy)return;
-  const file=event.target.files?.[0];if(!file)return;
-  const allowed=['video/mp4','video/webm','video/quicktime'];
-  if(!allowed.includes(file.type)||file.size>50*1024*1024||file.size===0){
-    $('vue-router-status').textContent='Choose an MP4, WebM or MOV video under 50 MB.';
-    event.target.value='';return;
-  }
-  clearVideo();
-  videoObjectUrl=URL.createObjectURL(file);
-  $('vue-router-video-preview').src=videoObjectUrl;
-  $('vue-router-video-panel').hidden=false;
-  $('vue-router-status').textContent='Video selected for local preview. Video AI analysis is not yet supported.';
-}
-for(const id of ['vue-router-video-record-file','vue-router-video-choose-file'])$(id).addEventListener('change',chooseVideo);
-$('vue-router-video-record').onclick=()=>{if(!busy)$('vue-router-video-record-file').click()};
-$('vue-router-video-choose').onclick=()=>{if(!busy)$('vue-router-video-choose-file').click()};
-$('vue-router-video-remove').onclick=clearVideo;
-window.addEventListener('pagehide',clearVideo);
+mountVuecoreVideoInput({isBusy:()=>busy||loadingPhoto});
