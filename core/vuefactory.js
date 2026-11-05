@@ -58,6 +58,7 @@ export function scaffoldVue(input){
   +'// Import this profile into core/specialists.js only after domain review.\n'
   +'export const profile = Object.freeze('+JSON.stringify(profile,null,2)+');\n'
   +'export const labels = Object.freeze('+JSON.stringify(d.labels,null,2)+');\n';
+ const routingCandidates=Array.isArray(input.routingKeywords)?buildRoutingCandidates(input):null;
  const integration={
   version:1,
   specialist:d.id,
@@ -65,7 +66,7 @@ export function scaffoldVue(input){
   registration:{profile:'core/specialists.js',memory:'core/memory.js',router:'core/router.js',api:'api/vue-router.js'},
   languages:FACTORY_LANGUAGES,
   labels:d.labels,
-  routing:{patterns:[],priority:null,collisionReviewRequired:true},
+  routing:{patterns:routingCandidates?.keywords||[],priority:null,collisionReviewRequired:true},
   safety:{emergencyReviewRequired:true,sourceReviewRequired:true,apiReviewRequired:true},
   deploy:{automatic:false,approved:false}
  };
@@ -86,5 +87,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
 }
