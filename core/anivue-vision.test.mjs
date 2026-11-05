@@ -127,3 +127,17 @@ test('emergency phrase beyond first 500 characters still blocks provider and quo
  assert.equal(response.status,409);
  assert.equal(calls,0);
 });
+
+test('emergency symptom beyond the first twelve IDs blocks provider and quota',async()=>{
+ const header=Buffer.from([137,80,78,71,13,10,26,10]);
+ const ihdr=Buffer.alloc(13);ihdr.writeUInt32BE(128,0);ihdr.writeUInt32BE(128,4);ihdr[8]=8;ihdr[9]=2;
+ const raw=Buffer.alloc(128*(128*3+1));for(let y=0;y<128;y++)for(let x=0;x<128;x++){const p=y*385+1+x*3;raw[p]=x*2;raw[p+1]=y*2;raw[p+2]=(x+y)&255}
+ const chunk=(type,data)=>{const len=Buffer.alloc(4);len.writeUInt32BE(data.length);return Buffer.concat([len,Buffer.from(type),data,Buffer.alloc(4)])};
+ const image='data:image/png;base64,'+Buffer.concat([header,chunk('IHDR',ihdr),chunk('IDAT',deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]).toString('base64');
+ let calls=0;
+ const response=await POST(request({species:'horse',language:'en',image,description:'Unclear symptoms',symptoms:[...Array(12).fill('horseOther'),'horseColic']}),{
+  configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('Must not call model')}
+ });
+ assert.equal(response.status,409);
+ assert.equal(calls,0);
+});
