@@ -19,7 +19,7 @@ The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `metho
 
 ## Dry-run integration
 
-`simulateVueIntegration(definition, question, routeQuestion)` exercises proposed BOOKVUE routing against the real VUECORE router without registering anything. Existing specialist decisions and clarifications take precedence; only ANYVUE fallbacks may be provisionally matched to the new specialist. This is a simulation, not a production integration or an end-to-end API test.
+`simulateVueIntegration(definition, question, routeQuestion)` exercises proposed BOOKVUE routing against the real VUECORE router without registering anything. Existing specialist decisions and clarifications take precedence; only ANYVUE fallbacks may be provisionally matched to the new specialist. The CLI also writes `integration-dry-run.json`, recording the proposed outcome for each candidate keyword. This is a simulation, not a production integration or an end-to-end API test.
 
 ## Not yet automatic
 
