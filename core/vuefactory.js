@@ -87,6 +87,26 @@ export function simulateVueIntegration(input,question,routeExisting){
   return {domain:existing.domain??null,clarify:!!existing.clarify,candidates:existing.candidates||[],source:'existing',proposedMatch:proposed.matched,reviewRequired:true};
  return {domain:proposed.matched?proposed.specialist:existing.domain,clarify:false,source:proposed.matched?'factory-preview':'existing',proposedMatch:proposed.matched,reviewRequired:true};
 }
+/**
+ * Isolated, in-memory specialist registration for integration tests.
+ * The real VUECORE registry and router remain unchanged.
+ */
+export function createFactoryTestRegistry(input,existingSpecialists,routeExisting){
+ const definition=checkVueCollision(input,Object.keys(existingSpecialists||{}));
+ if(typeof routeExisting!=='function')throw Error('Existing VUECORE router required');
+ const profile=Object.freeze({scope:definition.scope,method:definition.method,...(definition.sources.length?{sources:definition.sources}:{})});
+ const specialists=Object.freeze({...existingSpecialists,[definition.id]:profile});
+ return Object.freeze({
+  specialists,
+  isRegistered:id=>Object.hasOwn(specialists,id),
+  route:question=>simulateVueIntegration(input,question,routeExisting),
+  guide:(id,language='en')=>{
+   if(id!==definition.id)throw Error('Factory test guide only supports generated specialist');
+   const locale=FACTORY_LANGUAGES.includes(language)?language:'en';
+   return {domain:id,label:definition.labels[locale],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
+  }
+ });
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
