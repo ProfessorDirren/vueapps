@@ -71,3 +71,20 @@ test('vision API rejects invalid provider metadata instead of returning HTTP 200
   assert.equal(response.status,502,JSON.stringify(patch));
  }
 });
+
+test('vision API bounds oversized model-generated text fields',async()=>{
+ for(const patch of [
+  {summary:'x'.repeat(4001)},
+  {visibleObservations:[{...structured.visibleObservations[0],observation:'x'.repeat(1001)}]},
+  {limitations:['x'.repeat(1001)]},
+  {suggestedFollowUpQuestions:['x'.repeat(1001),'Normal question?']},
+  {emergencySignals:['x'.repeat(1001)]},
+  {breedAssessment:{...structured.breedAssessment,likelyBreed:'x'.repeat(201)}},
+  {ageAssessment:{...structured.ageAssessment,estimatedRange:'x'.repeat(201)}}
+ ]){
+  const malformed={...structured,...patch};
+  const fetcher=async()=>({ok:true,json:async()=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(malformed)}]}]})});
+  const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{configured:()=>true,spend:async()=>true,fetcher});
+  assert.equal(response.status,502,Object.keys(patch)[0]);
+ }
+});
