@@ -17,6 +17,10 @@
     .eyebrow { color: #70d6bb; letter-spacing: 3px; font-size: 13px; font-weight: bold; }
     h1 { font-size: clamp(42px, 7vw, 76px); letter-spacing: -2px; margin: 20px 0; }
     .hero { text-align: center; padding: 48px 16px 60px; border: 1px solid #29404a; border-radius: 24px; background: radial-gradient(ellipse at 50% 0%, #1b3c43 0%, #10242e 48%, #0b1720 100%); }
+    /* Keep the four media actions together on desktop, but wrap safely on narrow screens. */
+    #vue-router-photo-first { display:flex;justify-content:center;align-items:stretch;gap:12px;flex-wrap:nowrap; }
+    #vue-router-photo-first button { margin:0 !important;white-space:nowrap;flex:0 1 auto;padding:12px 15px !important; }
+    @media(max-width:800px) { #vue-router-photo-first { flex-wrap:wrap; } }
     /* Visible media icons remain intact when VUECORE updates translated button text. */
     #vue-router-photo-first button::before { display:inline-block;vertical-align:-.08em;margin-right:.55em;font-size:1.13em;line-height:1; }
     #vue-router-camera::before { content:"📷"; }
@@ -89,7 +93,7 @@
       <h1 class="hero-title" id="hero-title">THE PORTAL TO KNOWLEDGE</h1>
       <p class="hero-swedish" lang="en">NO MORE DAMN CLICKING AROUND!</p>
       <p class="hero-tagline">Stop Clicking Around. VUE Does It for You.</p>
-      <section id="vue-router" style="max-width:760px;margin:28px auto 0;text-align:start">
+      <section id="vue-router" style="max-width:960px;margin:28px auto 0;text-align:start">
         <div id="vue-router-photo-first" style="margin-bottom:24px">
           <button id="vue-router-camera" type="button" data-router="18" style="margin:8px;padding:12px 20px;border:1px solid #70d6bb;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;font-weight:bold;cursor:pointer"></button>
           <button id="vue-router-gallery" type="button" data-router="19" style="margin:8px;padding:12px 20px;border:1px solid #70d6bb;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;font-weight:bold;cursor:pointer"></button>
