@@ -77,5 +77,5 @@ test('native ANIVUE displays emergency triage before starting image analysis',as
  const visible=native.indexOf("if(urgent){$('answer').textContent=check.assessment.summary");
  const vision=native.indexOf('await flow.domain.analyzePhoto(');
  assert.ok(triage>=0&&visible>triage&&vision>visible,'emergency warning must precede photo analysis');
- assert.match(native,/if\(!imageData&&!selectedPhotoFile\)return;/);
+ assert.match(native,/if\(urgent\)\{[\s\S]*?return;\}const photoVersionAtSubmit=/);
 });
