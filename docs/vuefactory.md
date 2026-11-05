@@ -15,7 +15,7 @@ The example writes `vuefactory-output/generated/bookvue/` with a specialist prof
 node scripts/vuefactory.mjs path/to/definition.json another-output-directory
 ```
 
-The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `method`, `labels` for `en`, `es`, `sv`, `hi`, `zh-CN`, `ru`, `ar`, and optional HTTPS `sources`.
+The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `method`, `labels` for `en`, `es`, `sv`, `hi`, `zh-CN`, `ru`, `ar`, optional HTTPS `sources`, and optional `routingKeywords` (2–30 literal keywords). Routing candidates are generated for review, not activated.
 
 ## Not yet automatic
 
