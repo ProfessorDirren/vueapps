@@ -39,7 +39,7 @@ export function scaffoldVue(input){
   safety:{emergencyReviewRequired:true,sourceReviewRequired:true,apiReviewRequired:true},
   deploy:{automatic:false,approved:false}
  };
- const integrationFile=JSON.stringify(integration,null,2)+'\\n';
+ const integrationFile=JSON.stringify(integration,null,2)+'\n';
  const checklist=[
   '# '+d.id.toUpperCase()+' — release checklist','',
   '- [ ] Review specialist scope, method, emergency/safety boundaries and sources.',
