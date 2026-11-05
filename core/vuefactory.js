@@ -51,6 +51,28 @@ export function buildRoutingCandidates(input,existingKeywords=[]){
  const collisions=keywords.filter(x=>existing.has(x));
  return {specialist:d.id,keywords,collisions,reviewRequired:true,automaticRegistration:false};
 }
+/**
+ * Offline routing preview. Does not change VUECORE's live router.
+ * Unicode word boundaries avoid substring matches (e.g. ISBN vs ISBNs).
+ * Multi-word phrases are matched as literal sequences.
+ */
+export function previewVueRouting(input,question){
+ const candidate=buildRoutingCandidates(input);
+ if(typeof question!=='string'||question.length>3000)throw Error('Invalid preview question');
+ const q=question.toLocaleLowerCase('en');
+ const isWord=char=>char!==undefined&&/[\\p{L}\\p{N}]/u.test(char);
+ const matches=candidate.keywords.filter(keyword=>{
+  let pos=q.indexOf(keyword);
+  while(pos!==-1){
+   const before=pos===0?undefined:q[pos-1];
+   const after=q[pos+keyword.length];
+   if(!isWord(before)&&!isWord(after))return true;
+   pos=q.indexOf(keyword,pos+1);
+  }
+  return false;
+ });
+ return {specialist:candidate.specialist,matched:matches.length>0,keywords:matches,reviewRequired:true,liveRouterModified:false};
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
