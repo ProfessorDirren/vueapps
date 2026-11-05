@@ -7,6 +7,11 @@ test('video input shared limits and supported formats',()=>{
  for(const size of [0,-1,VIDEO_LIMIT_BYTES+1])assert.equal(isValidVideo({type:'video/mp4',size}),false);
  assert.equal(isValidVideo({type:'image/png',size:1024}),false);
  assert.equal(isValidVideo(null),false);
+ assert.equal(isValidVideo({type:'video/mp4',size:VIDEO_LIMIT_BYTES}),true);
+ assert.equal(isValidVideo({type:'video/mp4',size:NaN}),false);
+ assert.equal(isValidVideo({type:'video/mp4',size:Infinity}),false);
+ assert.equal(isValidVideo({type:'video/mp4',size:1.5}),false);
+ assert.equal(isValidVideo({type:'video/mp4',size:'1024'}),false);
 });
 test('video controls localized across all seven VUECORE languages',()=>{
  assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar'].sort());
