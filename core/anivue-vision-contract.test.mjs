@@ -30,20 +30,17 @@ const provider = async (_url,options) => {
 };
 const options={configured:()=>true,spend:async()=>true,fetcher:provider};
 
-test('VUECORE vision preserves horse colic emergency advice alongside supplementary observations',async()=>{
+test('VUECORE vision bypasses horse colic photo analysis in favor of emergency advice',async()=>{
  const response=await POST(request({language:'es',species:'horse',symptoms:['horseColic'],image}),options);
- assert.equal(response.status,200);
+ assert.equal(response.status,409);
  const result=await response.json();
  assert.match(result.emergencyAdvice,/veterinario/);
- assert.equal(result.verified,false);
- assert.equal(result.species.value,'horse');
- assert.equal(result.visibleObservations.length,1);
 });
 
-test('VUECORE vision preserves dog and cat breathing emergency advice',async()=>{
+test('VUECORE vision bypasses dog and cat breathing photo analysis',async()=>{
  for(const species of ['dog','cat']){
   const response=await POST(request({language:'en',species,symptoms:['breathing'],image}),options);
-  assert.equal(response.status,200);
+  assert.equal(response.status,409);
   assert.match((await response.json()).emergencyAdvice,/emergency veterinary care/);
  }
 });
