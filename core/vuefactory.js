@@ -43,7 +43,7 @@ export function buildRoutingCandidates(input,existingKeywords=[]){
  const keywords=raw.map(value=>{
   if(typeof value!=='string')throw Error('Invalid routing keyword');
   const normalized=value.trim().toLocaleLowerCase('en');
-  if(normalized.length<3||normalized.length>60||forbidden.test(normalized)||!/^[\p{L}\p{M}\p{N} -]+$/u.test(normalized))throw Error('Unsafe routing keyword');
+  if((normalized.length<3&&!/^[\p{Script=Han}]{2}$/u.test(normalized))||normalized.length>60||forbidden.test(normalized)||!/^[\p{L}\p{M}\p{N} -]+$/u.test(normalized))throw Error('Unsafe routing keyword');
   return normalized;
  });
  if(new Set(keywords).size!==keywords.length)throw Error('Duplicate routing keyword');
