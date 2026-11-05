@@ -60,7 +60,7 @@ export function previewVueRouting(input,question){
  const candidate=buildRoutingCandidates(input);
  if(typeof question!=='string'||question.length>3000)throw Error('Invalid preview question');
  const q=question.toLocaleLowerCase('en');
- const isWord=char=>char!==undefined&&/[\\p{L}\\p{N}]/u.test(char);
+ const isWord=char=>char!==undefined&&/[\p{L}\p{N}]/u.test(char);
  const matches=candidate.keywords.filter(keyword=>{
   let pos=q.indexOf(keyword);
   while(pos!==-1){
