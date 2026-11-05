@@ -20,3 +20,33 @@ function clearPhoto(){photo=null;$('vue-router-photo-preview').removeAttribute('
 async function choosePhoto(event){if(busy||loadingPhoto)return;const file=event.target.files?.[0];if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024){$('vue-router-status').textContent=t()[23];event.target.value='';return}let objectUrl;loadingPhoto=true;$('vue-router-send').disabled=true;try{objectUrl=URL.createObjectURL(file);const img=new Image();img.src=objectUrl;await img.decode();if(img.naturalWidth<128||img.naturalHeight<128||img.naturalWidth*img.naturalHeight>12000000)throw Error();const scale=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,step=Math.max(4,Math.floor(pixels.length/48000)*4),low=[255,255,255],high=[0,0,0];for(let i=0;i<pixels.length;i+=step)for(let c=0;c<3;c++){low[c]=Math.min(low[c],pixels[i+c]);high[c]=Math.max(high[c],pixels[i+c])}if(!high.some((v,i)=>v-low[i]>=12))throw Error();const data=canvas.toDataURL('image/jpeg',0.85);if(data.length>4*1024*1024)throw Error();photo=data;$('vue-router-photo-preview').src=data;$('vue-router-photo-panel').hidden=false;$('vue-router-photo-public').checked=false;$('vue-router-status').textContent='';render()}catch{$('vue-router-status').textContent=t()[23]}finally{if(objectUrl)URL.revokeObjectURL(objectUrl);loadingPhoto=false;$('vue-router-send').disabled=false}}
 for(const id of ['vue-router-camera-file','vue-router-gallery-file'])$(id).onchange=choosePhoto;
 $('vue-router-camera').onclick=()=>{if(!busy&&!loadingPhoto)$('vue-router-camera-file').click()};$('vue-router-gallery').onclick=()=>{if(!busy&&!loadingPhoto)$('vue-router-gallery-file').click()};$('vue-router-photo-remove').onclick=()=>{if(!busy&&!loadingPhoto)clearPhoto()};
+
+
+// Shared VUECORE video picker. Video remains local until an approved, tested API exists.
+let videoObjectUrl=null;
+function clearVideo(){
+  if(videoObjectUrl){URL.revokeObjectURL(videoObjectUrl);videoObjectUrl=null;}
+  $('vue-router-video-preview').removeAttribute('src');
+  $('vue-router-video-preview').load();
+  $('vue-router-video-panel').hidden=true;
+  for(const id of ['vue-router-video-record-file','vue-router-video-choose-file'])$(id).value='';
+}
+function chooseVideo(event){
+  if(busy)return;
+  const file=event.target.files?.[0];if(!file)return;
+  const allowed=['video/mp4','video/webm','video/quicktime'];
+  if(!allowed.includes(file.type)||file.size>50*1024*1024||file.size===0){
+    $('vue-router-status').textContent='Choose an MP4, WebM or MOV video under 50 MB.';
+    event.target.value='';return;
+  }
+  clearVideo();
+  videoObjectUrl=URL.createObjectURL(file);
+  $('vue-router-video-preview').src=videoObjectUrl;
+  $('vue-router-video-panel').hidden=false;
+  $('vue-router-status').textContent='Video selected for local preview. Video AI analysis is not yet supported.';
+}
+for(const id of ['vue-router-video-record-file','vue-router-video-choose-file'])$(id).addEventListener('change',chooseVideo);
+$('vue-router-video-record').onclick=()=>{if(!busy)$('vue-router-video-record-file').click()};
+$('vue-router-video-choose').onclick=()=>{if(!busy)$('vue-router-video-choose-file').click()};
+$('vue-router-video-remove').onclick=clearVideo;
+window.addEventListener('pagehide',clearVideo);
