@@ -8,3 +8,22 @@ test('metadata bounds reject oversized, corrupt and non-finite videos',()=>{
  for(const width of [0,-1,1.2,NaN,MAX_VIDEO_DIMENSION+1])assert.equal(validateVideoMetadata({duration:20,videoWidth:width,videoHeight:1080}).reason,'dimensions');
 });
 test('metadata probe fails closed for missing video',async()=>{assert.equal((await probeVideoMetadata(null)).reason,'unsupported');});
+
+test('metadata probe accepts already-loaded metadata without waiting',async()=>{
+ const video={duration:12,videoWidth:1280,videoHeight:720,readyState:1,addEventListener(){},removeEventListener(){}};
+ assert.equal((await probeVideoMetadata(video,{timeoutMs:20})).ok,true);
+});
+test('metadata probe times out safely and removes listeners',async()=>{
+ const listeners=new Map();
+ const video={readyState:0,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name)=>listeners.delete(name)};
+ assert.deepEqual(await probeVideoMetadata(video,{timeoutMs:1}),{ok:false,reason:'timeout'});
+ assert.equal(listeners.size,0);
+});
+test('metadata decode error rejects and cleans up',async()=>{
+ const listeners=new Map();
+ const video={readyState:0,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name)=>listeners.delete(name)};
+ const pending=probeVideoMetadata(video,{timeoutMs:100});
+ listeners.get('error')();
+ assert.deepEqual(await pending,{ok:false,reason:'decode'});
+ assert.equal(listeners.size,0);
+});
