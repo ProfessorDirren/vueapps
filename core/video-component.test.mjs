@@ -20,6 +20,7 @@ test('shared VUECORE video component mounts, translates and disposes without upl
   assert.equal(nodes['vue-router-video-choose'].textContent,'Välj en video');
   assert.equal(nodes['vue-router-video-panel'].hidden,true);
   dispose();
+  assert.doesNotThrow(dispose);
   assert.equal(nodes['vue-router-video-choose'].handlers.size,0);
   assert.equal(nodes['vue-router-video-record-file'].handlers.size,0);
  }finally{globalThis.window=oldWindow;}
