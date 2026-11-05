@@ -15,7 +15,7 @@ The example writes `vuefactory-output/generated/bookvue/` with a specialist prof
 node scripts/vuefactory.mjs path/to/definition.json another-output-directory
 ```
 
-The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `method`, `labels` for `en`, `es`, `sv`, `hi`, `zh-CN`, `ru`, `ar`, optional HTTPS `sources`, and optional `routingKeywords` (2–30 literal keywords). Routing candidates are generated for review, not activated.
+The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `method`, `labels` for `en`, `es`, `sv`, `hi`, `zh-CN`, `ru`, `ar`, optional HTTPS `sources`, and optional `routingKeywords` (2–30 literal keywords). Routing candidates are generated for review, not activated. The CLI also produces `existing-router-audit.json` by probing every proposed keyword against the actual current VUECORE router; ambiguous or non-ANYVUE results are flagged for review. This is a keyword-level heuristic, not a proof that all routing collisions are absent.
 
 ## Not yet automatic
 
