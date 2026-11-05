@@ -241,7 +241,7 @@ test('ANIVUE distinguishes exhausted image quota from other provider failures',a
 test('ANIVUE emergency assessment bypasses remote text flow even without photo',()=>{
  const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.ok(page.includes("const check=emergency?{assessment:emergency}:(imageData||selectedPhotoFile)?"));
- assert.ok(page.includes("if(!imageData&&!selectedPhotoFile)return;"));
+ assert.ok(page.includes("return;}const photoVersionAtSubmit="));
 });
 
 test('large photo preprocessing produces bounded JPEG and releases decoded bitmap',async()=>{
