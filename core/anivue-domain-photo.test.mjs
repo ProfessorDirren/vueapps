@@ -297,3 +297,13 @@ test('ANIVUE fallback decodes large images and revokes temporary object URLs',as
  assert.equal(await prepare({size:5*1024*1024,type:'image/png'}),'data:image/jpeg;base64,QUJD');
  assert.deepEqual(operations,['create','load blob:photo','revoke','draw']);
 });
+
+test('photo client preserves server emergency advice from HTTP 409',async()=>{
+ const domain=new AniVueDomain({fetcher:async()=>({ok:false,status:409,json:async()=>({error:'Emergency triage takes priority',emergencyAdvice:'Contact an emergency veterinarian now.'})})});
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='emergency_triage'&&/emergency veterinarian/.test(error.message));
+});
+
+test('native UI displays server emergency advice without replacing it with generic photo failure',()=>{
+ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(page,/if\(error\?\.code==='emergency_triage'\)\{\$\('answer'\)\.textContent=error\.message;/);
+});
