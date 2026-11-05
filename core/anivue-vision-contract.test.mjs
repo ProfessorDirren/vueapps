@@ -57,3 +57,17 @@ test('VUECORE vision rejects unsupported languages before provider call',async()
  assert.equal(response.status,400);
  assert.equal(calls,0);
 });
+
+test('vision API rejects invalid provider metadata instead of returning HTTP 200',async()=>{
+ for(const patch of [
+  {species:{value:'horse',confidence:'invalid'}},
+  {breedAssessment:{...structured.breedAssessment,alternatives:[42]}},
+  {breedAssessment:{...structured.breedAssessment,likelyBreed:42}},
+  {ageAssessment:{...structured.ageAssessment,estimatedRange:42}}
+ ]){
+  const malformed={...structured,...patch};
+  const fetcher=async()=>({ok:true,json:async()=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(malformed)}]}]})});
+  const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{configured:()=>true,spend:async()=>true,fetcher});
+  assert.equal(response.status,502,JSON.stringify(patch));
+ }
+});
