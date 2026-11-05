@@ -6,12 +6,14 @@
  */
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {resolve,join,dirname,relative,isAbsolute,sep} from 'node:path';
-import {scaffoldVue} from '../core/vuefactory.js';
+import {scaffoldVue,checkVueCollision} from '../core/vuefactory.js';
+import {SPECIALISTS} from '../core/specialists.js';
 const [definitionPath,outputArg='vuefactory-output']=process.argv.slice(2);
 if(!definitionPath){console.error('Usage: node scripts/vuefactory.mjs definition.json [output-directory]');process.exitCode=2;}
 else{
  try{
   const definition=JSON.parse(await readFile(resolve(definitionPath),'utf8'));
+  checkVueCollision(definition,Object.keys(SPECIALISTS));
   const {id,files}=scaffoldVue(definition);
   const root=resolve(outputArg);
   // Validate every generated destination before writing any file.
