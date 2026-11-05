@@ -6,7 +6,7 @@
  */
 import {readFile,mkdir,writeFile,lstat,unlink} from 'node:fs/promises';
 import {resolve,join,dirname,relative,isAbsolute,sep} from 'node:path';
-import {scaffoldVue,checkVueCollision} from '../core/vuefactory.js';
+import {scaffoldVue,checkVueCollision,simulateVueIntegration} from '../core/vuefactory.js';
 import {SPECIALISTS} from '../core/specialists.js';
 import {routeQuestion} from '../core/router.js';
 const [definitionPath,outputArg='vuefactory-output']=process.argv.slice(2);
@@ -20,6 +20,8 @@ else{
    const probes=definition.routingKeywords.map(keyword=>({keyword,existingRoute:routeQuestion(keyword)}));
    const conflicts=probes.filter(x=>x.existingRoute.clarify||x.existingRoute.domain!=='anyvue');
    files['generated/'+id+'/existing-router-audit.json']=JSON.stringify({specialist:id,probes,conflicts,reviewRequired:true,liveRouterModified:false},null,2)+'\n';
+   const dryRun=definition.routingKeywords.map(keyword=>({question:keyword,result:simulateVueIntegration(definition,keyword,routeQuestion)}));
+   files['generated/'+id+'/integration-dry-run.json']=JSON.stringify({specialist:id,cases:dryRun,reviewRequired:true,productionIntegrated:false},null,2)+'\n';
   }
   const root=resolve(outputArg);
   // Validate every generated destination before writing any file.
