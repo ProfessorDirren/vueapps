@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {mkdtemp,readFile,readdir,rm} from 'node:fs/promises';
+import {mkdtemp,readFile,readdir,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
@@ -102,4 +102,18 @@ test('factory routing preview does not alter existing VUECORE decisions',async()
  const after=cases.map(([q])=>routeQuestion(q));
  assert.deepEqual(after,before);
  for(let i=0;i<cases.length;i++)assert.equal(after[i].domain,cases[i][1]);
+});
+
+test('factory refuses existing draft before writing any additional output',async()=>{
+ const output=await mkdtemp(join(tmpdir(),'vuefactory-collision-'));
+ try{
+  const root=new URL('../',import.meta.url);
+  const directory=join(output,'generated','bookvue');
+  const {mkdir}=await import('node:fs/promises');
+  await mkdir(directory,{recursive:true});
+  await writeFile(join(directory,'routing-review.txt'),'KEEP THIS FILE');
+  assert.throws(()=>execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000,stdio:'pipe'}),/Command failed/);
+  assert.deepEqual(await readdir(directory),['routing-review.txt']);
+  assert.equal(await readFile(join(directory,'routing-review.txt'),'utf8'),'KEEP THIS FILE');
+ }finally{await rm(output,{recursive:true,force:true})}
 });
