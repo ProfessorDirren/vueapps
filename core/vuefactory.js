@@ -73,6 +73,20 @@ export function previewVueRouting(input,question){
  });
  return {specialist:candidate.specialist,matched:matches.length>0,keywords:matches,reviewRequired:true,liveRouterModified:false};
 }
+/**
+ * Dry-run integration against the real VUECORE router.
+ * Existing specialist decisions always win; new keywords only claim ANYVUE
+ * fallbacks. Never mutates the central registry or deploys.
+ */
+export function simulateVueIntegration(input,question,routeExisting){
+ const proposed=previewVueRouting(input,question);
+ if(typeof routeExisting!=='function')throw Error('Existing VUECORE router required');
+ const existing=routeExisting(question);
+ if(!existing||typeof existing!=='object'||typeof existing.domain!=='string'&&existing.clarify!==true)throw Error('Invalid existing VUECORE route');
+ if(existing.clarify||existing.domain!=='anyvue')
+  return {domain:existing.domain??null,clarify:!!existing.clarify,candidates:existing.candidates||[],source:'existing',proposedMatch:proposed.matched,reviewRequired:true};
+ return {domain:proposed.matched?proposed.specialist:existing.domain,clarify:false,source:proposed.matched?'factory-preview':'existing',proposedMatch:proposed.matched,reviewRequired:true};
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
