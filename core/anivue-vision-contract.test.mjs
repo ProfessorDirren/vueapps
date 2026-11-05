@@ -88,3 +88,20 @@ test('vision API bounds oversized model-generated text fields',async()=>{
   assert.equal(response.status,502,Object.keys(patch)[0]);
  }
 });
+
+test('emergency API returns localized advice in all seven supported languages without provider calls',async()=>{
+ const cases=[
+  ['en','emergency veterinary care'],['es','veterinario'],['sv','veterinär'],
+  ['hi','पशु'],['zh-CN','兽医'],['ru','ветеринар'],['ar','بيطري']
+ ];
+ for(const [language,phrase] of cases){
+  let calls=0;
+  const response=await POST(request({language,species:'horse',symptoms:['horseColic'],image}),{
+   configured:()=>{calls++;return true},spend:async()=>{calls++;return true},
+   fetcher:async()=>{calls++;throw Error('No model call expected')}
+  });
+  assert.equal(response.status,409,language);
+  assert.ok((await response.json()).emergencyAdvice.toLowerCase().includes(phrase),language);
+  assert.equal(calls,0,language);
+ }
+});
