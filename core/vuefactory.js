@@ -21,6 +21,16 @@ export function validateVueDefinition(value){
  }
  return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,labels[lang].trim()])),sources};
 }
+/**
+ * Fail closed on specialist ID collisions. Pass the existing registry's IDs
+ * from the caller; no network calls or production writes are performed.
+ */
+export function checkVueCollision(input,existingIds=[]){
+ const d=validateVueDefinition(input);
+ if(!Array.isArray(existingIds)||existingIds.some(id=>typeof id!=='string'))throw Error('Invalid existing specialist registry');
+ if(existingIds.includes(d.id))throw Error('Specialist already registered: '+d.id);
+ return d;
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
