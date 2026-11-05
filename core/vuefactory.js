@@ -130,6 +130,29 @@ export function createFactoryTestApi(registry){
   return Response.json({domain:route.domain,source:route.source,guide,reviewRequired:true,testOnly:true});
  };
 }
+/**
+ * Build a deterministic review-only change proposal for the real VUECORE
+ * registry. A human must supply localized questions before activation.
+ */
+export function buildVueCoreIntegrationProposal(input){
+ const d=validateVueDefinition(input);
+ const candidate=Array.isArray(input.routingKeywords)?buildRoutingCandidates(input):null;
+ const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
+ return {
+  specialist:d.id,
+  status:'blocked-pending-review',
+  edits:[
+   {file:'core/specialists.js',section:'SPECIALISTS',key:d.id,value:profile,action:'add'},
+   {file:'core/specialists.js',section:'questions',key:d.id,value:null,action:'add-seven-localized-question-arrays'},
+   {file:'core/router.js',section:'rules',key:d.id,value:candidate?.keywords||[],action:'review-and-add-pattern'},
+   {file:'apps/router-content.js',section:'localization',key:d.id,value:d.labels,action:'review-labels'},
+   {file:'api/vue-router.js',section:'dispatch',key:d.id,value:null,action:'review-api-routing'}
+  ],
+  blockers:['Seven localized specialist question arrays','Routing collision and precedence review','Domain safety and emergency review','API and end-to-end regression tests'],
+  productionReady:false,
+  automaticApply:false
+ };
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
@@ -150,6 +173,7 @@ export function scaffoldVue(input){
   deploy:{automatic:false,approved:false}
  };
  const integrationFile=JSON.stringify(integration,null,2)+'\n';
+ const changeProposal=JSON.stringify(buildVueCoreIntegrationProposal(input),null,2)+'\n';
  const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\n'
   +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\n';
  const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\n'
@@ -166,5 +190,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
 }
