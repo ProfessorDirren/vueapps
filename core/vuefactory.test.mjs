@@ -1,4 +1,8 @@
 import test from 'node:test';
+import {mkdtemp,readFile,readdir,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates} from './vuefactory.js';
 const definition={
@@ -51,4 +55,22 @@ test('routing candidates are literal, review-only and collision-aware',()=>{
  assert.deepEqual(JSON.parse(scaffoldVue(input).files['generated/bookvue/routing-candidates.json']).keywords,['isbn','book edition','författare']);
  assert.throws(()=>buildRoutingCandidates({...definition,routingKeywords:['book.*','isbn']}),/Unsafe/);
  assert.throws(()=>buildRoutingCandidates({...definition,routingKeywords:['ISBN','isbn']}),/Duplicate/);
+});
+
+test('BOOKVUE factory CLI produces valid review-only integration files end to end',async()=>{
+ const output=await mkdtemp(join(tmpdir(),'vuefactory-test-'));
+ try{
+  const root=new URL('../',import.meta.url);
+  execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000});
+  const directory=join(output,'generated','bookvue');
+  const files=await readdir(directory);
+  assert.equal(files.length,6);
+  const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
+  const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
+  assert.equal(plan.specialist,'bookvue');
+  assert.equal(plan.deploy.automatic,false);
+  assert.equal(routing.automaticRegistration,false);
+  assert.ok(routing.keywords.includes('isbn'));
+  assert.throws(()=>execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000,stdio:'pipe'}),/Command failed/);
+ }finally{await rm(output,{recursive:true,force:true})}
 });
