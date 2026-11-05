@@ -13,7 +13,12 @@ test('factory generates a deterministic reviewable profile and checklist',()=>{
  assert.deepEqual(a,b);
  assert.match(a.files['generated/bookvue/profile.js'],/Book identification/);
  assert.match(a.files['generated/bookvue/RELEASE-CHECKLIST.md'],/manual review required/);
- assert.equal(Object.keys(a.files).length,2);
+ assert.equal(Object.keys(a.files).length,3);
+ const plan=JSON.parse(a.files['generated/bookvue/integration-plan.json']);
+ assert.equal(plan.status,'review-required');
+ assert.equal(plan.deploy.automatic,false);
+ assert.equal(plan.routing.collisionReviewRequired,true);
+ assert.equal(plan.languages.length,7);
 });
 test('factory requires seven languages and substantive methods',()=>{
  assert.throws(()=>validateVueDefinition({...definition,labels:{en:'Books'}}),/Missing\/invalid label/);
