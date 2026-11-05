@@ -24,7 +24,7 @@ test('MARTIALARTSVUE isolated API routing and existing-specialist protection',as
   assert.equal(response.status,200);
   return response.json();
  };
- for(const [question,language] of [['kampsport','sv'],['artes marciales','es'],['武术','zh-CN'],['боевые искусства','ru'],['الفنون القتالية','ar'],['मार्शल आर्ट','hi']]){
+ for(const [question,language] of [['kampsport','sv'],['artes marciales','es'],['我想学武术','zh-CN'],['боевые искусства','ru'],['الفنون القتالية','ar'],['मार्शल आर्ट','hi']]){
   const result=await send(question,language);
   assert.equal(result.domain,'martialartsvue',question);
   assert.equal(result.testOnly,true);
