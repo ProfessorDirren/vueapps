@@ -29,3 +29,23 @@ test('component does not throw when optional DOM controls are missing',()=>{
  const root={documentElement:{lang:'en'},getElementById:id=>id==='vue-router-video-record'||id==='vue-router-video-choose'?node():null};
  assert.doesNotThrow(()=>mountVuecoreVideoInput({root,status:node()})());
 });
+
+test('removing a pending video invalidates its asynchronous metadata result',async()=>{
+ const ids=['vue-router-video-record','vue-router-video-choose','vue-router-video-preview','vue-router-video-panel','vue-router-video-notice','vue-router-video-record-file','vue-router-video-choose-file','vue-router-video-remove'];
+ const nodes=Object.fromEntries(ids.map(id=>[id,node()]));
+ const root={documentElement:{lang:'en'},getElementById:id=>nodes[id]};
+ const oldWindow=globalThis.window,oldURL=globalThis.URL;
+ let revoked=0;
+ globalThis.window={addEventListener(){},removeEventListener(){}};
+ globalThis.URL={createObjectURL:()=> 'blob:local-test',revokeObjectURL:()=>{revoked++;}};
+ try{
+  const status=node(),dispose=mountVuecoreVideoInput({root,status});
+  nodes['vue-router-video-choose-file'].files=[{type:'video/mp4',size:100}];
+  nodes['vue-router-video-choose-file'].fire('change');
+  assert.equal(nodes['vue-router-video-panel'].hidden,false);
+  nodes['vue-router-video-remove'].click();
+  assert.equal(nodes['vue-router-video-panel'].hidden,true);
+  assert.equal(revoked,1);
+  dispose();
+ }finally{globalThis.window=oldWindow;globalThis.URL=oldURL;}
+});
