@@ -27,3 +27,12 @@ test('metadata decode error rejects and cleans up',async()=>{
  assert.deepEqual(await pending,{ok:false,reason:'decode'});
  assert.equal(listeners.size,0);
 });
+
+test('metadata probe aborts immediately and releases event listeners',async()=>{
+ const listeners=new Map(),controller=new AbortController();
+ const video={readyState:0,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:(name)=>listeners.delete(name)};
+ const pending=probeVideoMetadata(video,{signal:controller.signal,timeoutMs:10000});
+ controller.abort();
+ assert.deepEqual(await pending,{ok:false,reason:'aborted'});
+ assert.equal(listeners.size,0);
+});
