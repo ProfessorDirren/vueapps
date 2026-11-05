@@ -8,6 +8,7 @@ import {readFile,mkdir,writeFile,lstat,unlink} from 'node:fs/promises';
 import {resolve,join,dirname,relative,isAbsolute,sep} from 'node:path';
 import {scaffoldVue,checkVueCollision} from '../core/vuefactory.js';
 import {SPECIALISTS} from '../core/specialists.js';
+import {routeQuestion} from '../core/router.js';
 const [definitionPath,outputArg='vuefactory-output']=process.argv.slice(2);
 if(!definitionPath){console.error('Usage: node scripts/vuefactory.mjs definition.json [output-directory]');process.exitCode=2;}
 else{
@@ -15,6 +16,11 @@ else{
   const definition=JSON.parse(await readFile(resolve(definitionPath),'utf8'));
   checkVueCollision(definition,Object.keys(SPECIALISTS));
   const {id,files}=scaffoldVue(definition);
+  if(Array.isArray(definition.routingKeywords)){
+   const probes=definition.routingKeywords.map(keyword=>({keyword,existingRoute:routeQuestion(keyword)}));
+   const conflicts=probes.filter(x=>x.existingRoute.clarify||x.existingRoute.domain!=='anyvue');
+   files['generated/'+id+'/existing-router-audit.json']=JSON.stringify({specialist:id,probes,conflicts,reviewRequired:true,liveRouterModified:false},null,2)+'\n';
+  }
   const root=resolve(outputArg);
   // Validate every generated destination before writing any file.
   const entries=Object.entries(files).map(([name,content])=>{
