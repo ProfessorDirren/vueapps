@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -41,4 +41,14 @@ test('factory rejects existing specialist names before writing files',()=>{
  assert.throws(()=>checkVueCollision({...definition,id:'anivue'},['anivue','anyvue']),/already registered/);
  assert.equal(checkVueCollision(definition,['anivue','anyvue']).id,'bookvue');
  assert.throws(()=>checkVueCollision(definition,'anivue'),/Invalid existing/);
+});
+
+test('routing candidates are literal, review-only and collision-aware',()=>{
+ const input={...definition,routingKeywords:['ISBN','book edition','författare']};
+ const result=buildRoutingCandidates(input,['isbn','vinyl']);
+ assert.deepEqual(result.collisions,['isbn']);
+ assert.equal(result.automaticRegistration,false);
+ assert.deepEqual(JSON.parse(scaffoldVue(input).files['generated/bookvue/routing-candidates.json']).keywords,['isbn','book edition','författare']);
+ assert.throws(()=>buildRoutingCandidates({...definition,routingKeywords:['book.*','isbn']}),/Unsafe/);
+ assert.throws(()=>buildRoutingCandidates({...definition,routingKeywords:['ISBN','isbn']}),/Duplicate/);
 });
