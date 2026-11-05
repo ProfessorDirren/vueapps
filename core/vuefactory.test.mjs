@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -141,4 +141,22 @@ test('dry-run integration routes new BOOKVUE queries while preserving existing s
  assert.equal(fallback.source,'existing');
  assert.equal(routeQuestion('ISBN?').domain,'anyvue');
  assert.throws(()=>simulateVueIntegration(input,'ISBN?',null),/router required/);
+});
+
+test('BOOKVUE registers only in an isolated VUECORE test registry',async()=>{
+ const {routeQuestion}=await import('./router.js');
+ const {SPECIALISTS,isRegisteredSpecialist}=await import('./specialists.js');
+ const input={...definition,routingKeywords:['ISBN','book edition','författare']};
+ const sandbox=createFactoryTestRegistry(input,SPECIALISTS,routeQuestion);
+ assert.equal(sandbox.isRegistered('bookvue'),true);
+ assert.equal(sandbox.isRegistered('anivue'),true);
+ assert.equal(isRegisteredSpecialist('bookvue'),false);
+ assert.equal(Object.hasOwn(SPECIALISTS,'bookvue'),false);
+ assert.equal(sandbox.route('ISBN?').domain,'bookvue');
+ assert.equal(sandbox.route('Marshall amplifier').domain,'musicgearvue');
+ assert.equal(routeQuestion('ISBN?').domain,'anyvue');
+ assert.equal(sandbox.guide('bookvue','sv').domain,'bookvue');
+ assert.equal(sandbox.guide('bookvue','xx').label,input.labels.en);
+ assert.throws(()=>sandbox.guide('anivue'),/only supports/);
+ assert.throws(()=>createFactoryTestRegistry({...input,id:'anivue'},SPECIALISTS,routeQuestion),/already registered/);
 });
