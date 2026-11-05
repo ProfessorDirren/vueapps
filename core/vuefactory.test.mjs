@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry,createFactoryTestApi} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -159,4 +159,24 @@ test('BOOKVUE registers only in an isolated VUECORE test registry',async()=>{
  assert.equal(sandbox.guide('bookvue','xx').label,input.labels.en);
  assert.throws(()=>sandbox.guide('anivue'),/only supports/);
  assert.throws(()=>createFactoryTestRegistry({...input,id:'anivue'},SPECIALISTS,routeQuestion),/already registered/);
+});
+
+test('isolated POST API routes BOOKVUE without touching the production API',async()=>{
+ const {routeQuestion}=await import('./router.js');
+ const {SPECIALISTS}=await import('./specialists.js');
+ const input={...definition,routingKeywords:['ISBN','book edition','författare']};
+ const POST=createFactoryTestApi(createFactoryTestRegistry(input,SPECIALISTS,routeQuestion));
+ const send=body=>POST(new Request('https://localhost/test-factory',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}));
+ const book=await send({question:'What is this ISBN?',language:'sv'});
+ assert.equal(book.status,200);
+ const payload=await book.json();
+ assert.equal(payload.domain,'bookvue');
+ assert.equal(payload.testOnly,true);
+ assert.equal(payload.guide.label,input.labels.sv);
+ const existing=await send({question:'Marshall amplifier',language:'en'});
+ assert.equal((await existing.json()).domain,'musicgearvue');
+ const bad=await send({question:'ISBN',language:'xx'});
+ assert.equal(bad.status,400);
+ const malformed=await POST(new Request('https://localhost/test-factory',{method:'POST',body:'{'}));
+ assert.equal(malformed.status,400);
 });
