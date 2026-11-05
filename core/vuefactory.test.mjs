@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -73,4 +73,15 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   assert.ok(routing.keywords.includes('isbn'));
   assert.throws(()=>execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000,stdio:'pipe'}),/Command failed/);
  }finally{await rm(output,{recursive:true,force:true})}
+});
+
+test('routing preview matches whole Unicode words and keeps live routing unchanged',()=>{
+ const input={...definition,routingKeywords:['ISBN','författare','edición de libro']};
+ assert.deepEqual(previewVueRouting(input,'Har boken en ISBN?').keywords,['isbn']);
+ assert.deepEqual(previewVueRouting(input,'Vem är författare till boken?').keywords,['författare']);
+ assert.deepEqual(previewVueRouting(input,'Busco una edición de libro').keywords,['edición de libro']);
+ assert.equal(previewVueRouting(input,'ISBNs').matched,false);
+ assert.equal(previewVueRouting(input,'something else').matched,false);
+ assert.equal(previewVueRouting(input,'ISBN').liveRouterModified,false);
+ assert.throws(()=>previewVueRouting(input,null),/Invalid preview/);
 });
