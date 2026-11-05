@@ -105,3 +105,27 @@ test('emergency API returns localized advice in all seven supported languages wi
   assert.equal(calls,0,language);
  }
 });
+
+test('vision API fails closed when runtime configuration is missing without spending quota',async()=>{
+ let charges=0,providerCalls=0;
+ const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{
+  configured:()=>false,
+  spend:async()=>{charges++;return true},
+  fetcher:async()=>{providerCalls++;throw Error('Provider must not run')}
+ });
+ assert.equal(response.status,503);
+ assert.equal(charges,0);
+ assert.equal(providerCalls,0);
+});
+
+test('vision API enforces denied quota before provider invocation',async()=>{
+ let charges=0,providerCalls=0;
+ const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{
+  configured:()=>true,
+  spend:async namespace=>{assert.equal(namespace,'anivue');charges++;return false},
+  fetcher:async()=>{providerCalls++;throw Error('Provider must not run')}
+ });
+ assert.equal(response.status,429);
+ assert.equal(charges,1);
+ assert.equal(providerCalls,0);
+});
