@@ -2,6 +2,7 @@ import {MEMORY_DOMAINS} from './memory.js';
 import {isRegisteredSpecialist} from './specialists.js';
 // Conservative topic routing. Historical answers are never used to classify a new topic.
 const rules=[
+ ['martialartsvue',6,/martial arts|kampsport|artes marciales|taekwondo|karate|judo|jiu[ -]?jitsu|muay thai|kickboxing|武术|боевые искусства|الفنون القتالية|मार्शल आर्ट/iu],
  ['estatevue',7,/dödsbo|arvskifte|inventera (?:hem|hus)|hela (?:hemmet|huset)|estate inventory|deceased estate|succession|遗产|наследств|تركة|विरासत/iu],
  ['medivue',6,/bipacksedel|läkemedel|medicin|biverkning|medication|medicine|leaflet|side effects|prospecto|medicamento|药品|药物|лекарств|دواء|दवा/iu],
  ['vinylvue',5,/vinyl|grammofon|skivor|skiva|(?<![\p{L}\p{N}_])lp(?![\p{L}\p{N}_])|discogs|runout|pressning|record collection|黑胶|винил|أسطوان|विनाइल/iu],

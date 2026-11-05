@@ -2,6 +2,11 @@
   "name": "vueapps",
   "private": true,
   "type": "module",
-  "engines": { "node": "24.x" },
-  "scripts": { "test": "node --test core/*.test.mjs" }
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "node --test core/*.test.mjs",
+    "factory:example": "node scripts/vuefactory.mjs examples/vuefactory-bookvue.json"
+  }
 }

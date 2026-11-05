@@ -1,0 +1,26 @@
+{
+  "id": "bookvue",
+  "scope": "Book identification, edition comparison and collection research",
+  "method": "Identify author, title, publisher, ISBN, edition, printing, condition and provenance. Distinguish observed details from assumptions, use verifiable catalogues, and never assert authenticity or market value without corroboration.",
+  "labels": {
+    "en": "Books",
+    "es": "Libros",
+    "sv": "Böcker",
+    "hi": "किताबें",
+    "zh-CN": "图书",
+    "ru": "Книги",
+    "ar": "كتب"
+  },
+  "sources": [
+    [
+      "Library of Congress",
+      "https://www.loc.gov/"
+    ]
+  ],
+  "routingKeywords": [
+    "ISBN",
+    "book edition",
+    "författare",
+    "edición de libro"
+  ]
+}
