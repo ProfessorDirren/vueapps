@@ -50,10 +50,10 @@ export function scaffoldVue(input){
   deploy:{automatic:false,approved:false}
  };
  const integrationFile=JSON.stringify(integration,null,2)+'\n';
- const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\\n'
-  +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\\n';
- const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\\n'
-  +'// '+d.id+': define specific patterns and priority; do not auto-route generic terms.\\n';
+ const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\n'
+  +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\n';
+ const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\n'
+  +'// '+d.id+': define specific patterns and priority; do not auto-route generic terms.\n';
  const checklist=[
   '# '+d.id.toUpperCase()+' — release checklist','',
   '- [ ] Review specialist scope, method, emergency/safety boundaries and sources.',
