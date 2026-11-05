@@ -6,7 +6,7 @@ const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
 
 test('ANIVUE emergency guidance is shown before supplementary requests',()=>{
  assert.match(page,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary/);
- assert.match(page,/if\(!imageData&&!selectedPhotoFile\)return/);
+ assert.match(page,/if\(urgent\)\{[\s\S]*?return;\}const photoVersionAtSubmit=/);
 });
 test('ANIVUE text-only follow-up cannot overwrite emergency safety guidance',()=>{
  assert.match(page,/\$\('answer'\)\.textContent=urgent\?check\.assessment\.summary\+'\\n\\n'\+d\.answer:d\.answer/);
