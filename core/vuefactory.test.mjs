@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -33,4 +33,10 @@ test('factory never writes, registers, deploys or calls an AI service',()=>{
  const a=scaffoldVue(definition);
  assert.ok(Object.keys(a.files).every(p=>p.startsWith('generated/')));
  assert.ok(!Object.keys(a.files).some(p=>p.includes('api/')));
+});
+
+test('factory rejects existing specialist names before writing files',()=>{
+ assert.throws(()=>checkVueCollision({...definition,id:'anivue'},['anivue','anyvue']),/already registered/);
+ assert.equal(checkVueCollision(definition,['anivue','anyvue']).id,'bookvue');
+ assert.throws(()=>checkVueCollision(definition,'anivue'),/Invalid existing/);
 });
