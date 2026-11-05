@@ -141,3 +141,15 @@ test('emergency symptom beyond the first twelve IDs blocks provider and quota',a
  assert.equal(response.status,409);
  assert.equal(calls,0);
 });
+
+test('emergency advice wins over malformed or absent photo without calling provider',async()=>{
+ for(const image of [undefined,'data:image/png;base64,not-an-image']){
+  let calls=0;
+  const response=await POST(request({species:'horse',language:'en',image,symptoms:['horseColic']}),{
+   configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('Must not call model')}
+  });
+  assert.equal(response.status,409);
+  assert.equal(typeof (await response.json()).emergencyAdvice,'string');
+  assert.equal(calls,0);
+ }
+});
