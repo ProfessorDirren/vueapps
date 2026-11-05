@@ -107,6 +107,29 @@ export function createFactoryTestRegistry(input,existingSpecialists,routeExistin
   }
  });
 }
+/**
+ * Fetch-compatible test-only API handler. No network calls, AI usage, or
+ * production registration. Explicitly limited to the factory sandbox.
+ */
+export function createFactoryTestApi(registry){
+ if(!registry||typeof registry.route!=='function'||typeof registry.isRegistered!=='function'||typeof registry.guide!=='function')throw Error('Invalid factory test registry');
+ return async function POST(request){
+  let body;
+  try{
+   if(!request||request.method!=='POST')return Response.json({error:'Method not allowed'},{status:405});
+   const raw=await request.text();
+   if(raw.length>10000)return Response.json({error:'Too large'},{status:413});
+   body=JSON.parse(raw);
+  }catch{return Response.json({error:'Invalid JSON'},{status:400})}
+  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
+  const route=registry.route(body.question);
+  if(route.clarify)return Response.json({domain:null,clarify:true,candidates:route.candidates||[],testOnly:true});
+  if(!registry.isRegistered(route.domain))return Response.json({error:'Unregistered specialist'},{status:422});
+  if(route.source!=='factory-preview')return Response.json({domain:route.domain,source:'existing',testOnly:true,answer:null});
+  const guide=registry.guide(route.domain,body.language);
+  return Response.json({domain:route.domain,source:route.source,guide,reviewRequired:true,testOnly:true});
+ };
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
