@@ -17,6 +17,10 @@ node scripts/vuefactory.mjs path/to/definition.json another-output-directory
 
 The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `method`, `labels` for `en`, `es`, `sv`, `hi`, `zh-CN`, `ru`, `ar`, optional HTTPS `sources`, and optional `routingKeywords` (2–30 literal keywords). Routing candidates are generated for review, not activated. The CLI also produces `existing-router-audit.json` by probing every proposed keyword against the actual current VUECORE router; ambiguous or non-ANYVUE results are flagged for review. This is a keyword-level heuristic, not a proof that all routing collisions are absent.
 
+## Dry-run integration
+
+`simulateVueIntegration(definition, question, routeQuestion)` exercises proposed BOOKVUE routing against the real VUECORE router without registering anything. Existing specialist decisions and clarifications take precedence; only ANYVUE fallbacks may be provisionally matched to the new specialist. This is a simulation, not a production integration or an end-to-end API test.
+
 ## Not yet automatic
 
 A human must review domain safety, routing collisions, translation quality, source trust, and test coverage. The factory currently **does not** edit the central VUECORE registry, API, or router; the integration plan names those required steps. A generated draft is **not** a production-ready specialist.
