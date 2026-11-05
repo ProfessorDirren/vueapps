@@ -13,7 +13,9 @@ test('factory generates a deterministic reviewable profile and checklist',()=>{
  assert.deepEqual(a,b);
  assert.match(a.files['generated/bookvue/profile.js'],/Book identification/);
  assert.match(a.files['generated/bookvue/RELEASE-CHECKLIST.md'],/manual review required/);
- assert.equal(Object.keys(a.files).length,3);
+ assert.equal(Object.keys(a.files).length,5);
+ assert.match(a.files['generated/bookvue/registry-snippet.txt'],/\"bookvue\":/);
+ assert.match(a.files['generated/bookvue/routing-review.txt'],/collision-tested/);
  const plan=JSON.parse(a.files['generated/bookvue/integration-plan.json']);
  assert.equal(plan.status,'review-required');
  assert.equal(plan.deploy.automatic,false);
