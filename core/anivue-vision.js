@@ -15,9 +15,10 @@ const schema={type:'object',additionalProperties:false,properties:{
 export async function POST(request,{fetcher=fetch,configured=ready,spend=budget}={}){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Image too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
  if(!b||!Object.hasOwn(LANGUAGES,b.language)||!['dog','cat','horse'].includes(b.species)||!validImage(b.image)||!usableImage(b.image))return json(400,{error:'Invalid image, species or language'});
- const description=typeof b.description==='string'?b.description.slice(0,500):'';
+ const triageDescription=typeof b.description==='string'?b.description.slice(0,2000):'';
+ const description=triageDescription.slice(0,500);
  const symptoms=Array.isArray(b.symptoms)?b.symptoms.filter(x=>typeof x==='string').slice(0,12):[];
- const emergency=new AniVueDomain().emergencyCheck({species:b.species,symptoms,description,language:b.language});
+ const emergency=new AniVueDomain().emergencyCheck({species:b.species,symptoms,description:triageDescription,language:b.language});
  if(emergency)return json(409,{error:'Emergency triage takes priority over photo analysis',emergencyAdvice:emergency.summary});
  if(!configured())return json(503,{error:'Image analysis not configured'});
  if(!await spend('anivue'))return json(429,{error:'Daily analysis budget unavailable'});
