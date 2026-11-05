@@ -52,3 +52,9 @@ test('common inflected dog, cat and horse phrases select ANIVUE',()=>{
   assert.equal(routeQuestion(question).domain,'anivue',question);
  }
 });
+
+test('native ANIVUE emergency returns before photo analysis regardless of selected image',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(html,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary;[\s\S]*?return;\}const photoVersionAtSubmit=/);
+});
