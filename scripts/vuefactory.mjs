@@ -4,7 +4,7 @@
  * Usage: node scripts/vuefactory.mjs path/to/definition.json [output-directory]
  * Does not register specialists, contact APIs or deploy.
  */
-import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {readFile,mkdir,writeFile,lstat,unlink} from 'node:fs/promises';
 import {resolve,join,dirname,relative,isAbsolute,sep} from 'node:path';
 import {scaffoldVue,checkVueCollision} from '../core/vuefactory.js';
 import {SPECIALISTS} from '../core/specialists.js';
@@ -23,11 +23,22 @@ else{
    if(!rel||rel==='..'||rel.startsWith('..'+sep)||isAbsolute(rel))throw Error('Unsafe output path');
    return {target,content};
   });
+  // Preflight every destination so a rerun fails before writing a partial draft.
   for(const {target} of entries){
-   // No clobbering existing specialist drafts.
-   await mkdir(dirname(target),{recursive:true});
+   try{await lstat(target);throw Error('Output already exists: '+target)}
+   catch(error){if(error.code!=='ENOENT')throw error}
   }
-  for(const {target,content} of entries)await writeFile(target,content,{flag:'wx'});
+  const created=[];
+  try{
+   for(const {target,content} of entries){
+    await mkdir(dirname(target),{recursive:true});
+    await writeFile(target,content,{flag:'wx'});
+    created.push(target);
+   }
+  }catch(error){
+   await Promise.all(created.map(target=>unlink(target).catch(()=>{})));
+   throw error;
+  }
   console.log('VUEFACTORY created '+id+' draft in '+root+' (NOT registered or deployed)');
  }catch(error){console.error('VUEFACTORY failed: '+error.message);process.exitCode=1;}
 }
