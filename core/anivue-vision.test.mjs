@@ -96,3 +96,20 @@ test('rejects unsupported HEIC and HEIF uploads without charging model budget',a
   assert.equal(calls,0,format);
  }
 });
+
+test('server refuses emergency photo analysis before quota or external model calls',async()=>{
+ const header=Buffer.from([137,80,78,71,13,10,26,10]);
+ const ihdr=Buffer.alloc(13);ihdr.writeUInt32BE(128,0);ihdr.writeUInt32BE(128,4);ihdr[8]=8;ihdr[9]=2;
+ const raw=Buffer.alloc(128*(128*3+1));
+ const chunk=(type,data)=>{const len=Buffer.alloc(4);len.writeUInt32BE(data.length);return Buffer.concat([len,Buffer.from(type),data,Buffer.alloc(4)])};
+ const image='data:image/png;base64,'+Buffer.concat([header,chunk('IHDR',ihdr),chunk('IDAT',deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]).toString('base64');
+ for(const [species,symptoms] of [['horse',['horseColic']],['dog',['breathing']],['cat',['collapse']]]){
+  let calls=0;
+  const response=await POST(request({species,language:'en',image,symptoms,description:'Emergency symptoms observed'}),{
+   configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('Must not call model')}
+  });
+  assert.equal(response.status,409,species);
+  assert.match((await response.json()).emergencyAdvice,/emergency/i);
+  assert.equal(calls,0,species);
+ }
+});
