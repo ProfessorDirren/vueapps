@@ -1,0 +1,43 @@
+{
+  "id": "martialartsvue",
+  "scope": "Martial arts styles, technique education, training plans, competition rules, history, and safe practice",
+  "method": "Identify the martial art, ruleset, skill level, training goal, physical limitations, and whether the question concerns sport or self-defense. Explain techniques at an educational level without coaching injury, choking, joint damage, or street violence. Prioritize qualified in-person instruction, protective equipment, consent, controlled sparring, and stopping when pain, dizziness, or concussion symptoms occur. Distinguish federation rules and historical claims from verified sources; do not diagnose injuries or promise effectiveness.",
+  "labels": {
+    "en": "Martial Arts",
+    "es": "Artes marciales",
+    "sv": "Kampsport",
+    "hi": "मार्शल आर्ट",
+    "zh-CN": "武术",
+    "ru": "Боевые искусства",
+    "ar": "الفنون القتالية"
+  },
+  "sources": [
+    [
+      "International Judo Federation",
+      "https://www.ijf.org/"
+    ],
+    [
+      "World Taekwondo",
+      "https://www.worldtaekwondo.org/"
+    ],
+    [
+      "United World Wrestling",
+      "https://uww.org/"
+    ]
+  ],
+  "routingKeywords": [
+    "martial arts",
+    "kampsport",
+    "artes marciales",
+    "taekwondo",
+    "karate",
+    "judo",
+    "jiu jitsu",
+    "muay thai",
+    "kickboxing",
+    "武术",
+    "боевые искусства",
+    "الفنون القتالية",
+    "मार्शल आर्ट"
+  ]
+}
