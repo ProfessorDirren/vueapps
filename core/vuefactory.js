@@ -66,7 +66,7 @@ export function previewVueRouting(input,question){
   while(pos!==-1){
    const before=pos===0?undefined:q[pos-1];
    const after=q[pos+keyword.length];
-   if(!isWord(before)&&!isWord(after))return true;
+   if((/^[\p{Script=Han}]+$/u.test(keyword))||(!isWord(before)&&!isWord(after)))return true;
    pos=q.indexOf(keyword,pos+1);
   }
   return false;
