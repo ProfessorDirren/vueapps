@@ -31,7 +31,8 @@ export function mountVuecoreVideoInput({root=document,status=document.getElement
  const openRecord=()=>{if(!isBusy())recordFile.click();},openChoose=()=>{if(!isBusy())chooseFile.click();},onRemove=()=>{if(!isBusy())clear();};
  recordFile.addEventListener('change',onChoose);chooseFile.addEventListener('change',onChoose);
  record.addEventListener('click',openRecord);choose.addEventListener('click',openChoose);remove.addEventListener('click',onRemove);
- const observer=new MutationObserver(translate);observer.observe(root.documentElement,{attributes:true,attributeFilter:['lang']});
+ const observer=typeof MutationObserver==='function'?new MutationObserver(translate):null;
+ observer?.observe(root.documentElement,{attributes:true,attributeFilter:['lang']});
  window.addEventListener('pagehide',clear);translate();
- return ()=>{clear();observer.disconnect();window.removeEventListener('pagehide',clear);recordFile.removeEventListener('change',onChoose);chooseFile.removeEventListener('change',onChoose);record.removeEventListener('click',openRecord);choose.removeEventListener('click',openChoose);remove.removeEventListener('click',onRemove);};
+ return ()=>{clear();observer?.disconnect();window.removeEventListener('pagehide',clear);recordFile.removeEventListener('change',onChoose);chooseFile.removeEventListener('change',onChoose);record.removeEventListener('click',openRecord);choose.removeEventListener('click',openChoose);remove.removeEventListener('click',onRemove);};
 }
