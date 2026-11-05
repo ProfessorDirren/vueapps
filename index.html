@@ -17,6 +17,9 @@
     .eyebrow { color: #70d6bb; letter-spacing: 3px; font-size: 13px; font-weight: bold; }
     h1 { font-size: clamp(42px, 7vw, 76px); letter-spacing: -2px; margin: 20px 0; }
     .hero { text-align: center; padding: 48px 16px 60px; border: 1px solid #29404a; border-radius: 24px; background: radial-gradient(ellipse at 50% 0%, #1b3c43 0%, #10242e 48%, #0b1720 100%); }
+    /* Gold-rimmed media actions: keep VUECORE button behavior and turquoise fill. */
+    #vue-router-photo-first button { border:2px solid #f7c55b !important; box-shadow:0 0 0 1px #a86d16,0 0 11px #f5ba4159,inset 0 1px 0 #fff0ad88; transition:box-shadow .2s ease,filter .2s ease; }
+    #vue-router-photo-first button:hover,#vue-router-photo-first button:focus-visible { box-shadow:0 0 0 1px #ffdc7a,0 0 17px #ffcb7188,inset 0 1px 0 #fff2b7; }
     .hero-mark { position:relative;display:table;max-width:100%;margin:0 auto 18px;padding:0 .08em;font-size:clamp(42px,8vw,86px);font-weight:900;letter-spacing:.075em;line-height:1.2;color:#ffd56c;background:linear-gradient(165deg,#fff6c5 5%,#ffe18a 22%,#b96b08 44%,#fff1a5 58%,#d78c16 77%,#fff1af 95%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 0 #7b4106) drop-shadow(0 5px 5px #0008) drop-shadow(0 0 11px #ffb72c45); }
     .hero-mark::before,.hero-mark::after { content:"✦";position:absolute;z-index:1;color:#fff4b9;-webkit-text-fill-color:#fff4b9;font-size:clamp(18px,2.5vw,30px);line-height:1;text-shadow:0 0 8px #fff,0 0 18px #ffc03b;animation:vue-gold-sparkle 4s ease-in-out infinite; }
     .hero-mark::before { left:-.25em;top:.04em; }
