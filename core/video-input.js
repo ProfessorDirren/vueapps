@@ -11,6 +11,7 @@ export const VIDEO_LABELS=Object.freeze({
  ru:['Записать видео','Выбрать видео','Удалить видео','Только предпросмотр. Анализ видео с ИИ пока недоступен.','Выберите MP4, WebM или MOV до 50 МБ.','Видео выбрано для локального просмотра. Анализ ИИ пока недоступен.'],
  ar:['تسجيل فيديو','اختيار فيديو','إزالة الفيديو','معاينة فقط. تحليل الفيديو بالذكاء الاصطناعي غير متاح بعد.','اختر فيديو MP4 أو WebM أو MOV بحجم لا يتجاوز 50 ميغابايت.','تم اختيار الفيديو للمعاينة المحلية. تحليل الذكاء الاصطناعي غير متاح بعد.']
 });
+export function videoBlocksSubmission(videoSelected){return videoSelected===true;}
 export function isValidVideo(file){return !!file&&VIDEO_MIME_TYPES.includes(file.type)&&Number.isSafeInteger(file.size)&&file.size>0&&file.size<=VIDEO_LIMIT_BYTES;}
 export function mountVuecoreVideoInput({root=document,status=document.getElementById('vue-router-status'),isBusy=()=>false}={}){
  const get=id=>root.getElementById(id);
