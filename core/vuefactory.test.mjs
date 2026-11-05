@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -120,4 +120,21 @@ test('factory refuses existing draft before writing any additional output',async
   assert.deepEqual(await readdir(directory),['routing-review.txt']);
   assert.equal(await readFile(join(directory,'routing-review.txt'),'utf8'),'KEEP THIS FILE');
  }finally{await rm(output,{recursive:true,force:true})}
+});
+
+test('dry-run integration routes new BOOKVUE queries while preserving existing specialists',async()=>{
+ const {routeQuestion}=await import('./router.js');
+ const input={...definition,routingKeywords:['ISBN','book edition','författare']};
+ const book=simulateVueIntegration(input,'ISBN?',routeQuestion);
+ assert.deepEqual({domain:book.domain,source:book.source},{domain:'bookvue',source:'factory-preview'});
+ const old=routeQuestion('Marshall amplifier');
+ const preserved=simulateVueIntegration(input,'Marshall amplifier ISBN',routeQuestion);
+ assert.equal(preserved.domain,routeQuestion('Marshall amplifier ISBN').domain);
+ assert.equal(preserved.source,'existing');
+ assert.equal(old.domain,'musicgearvue');
+ const fallback=simulateVueIntegration(input,'Tell me a joke',routeQuestion);
+ assert.equal(fallback.domain,'anyvue');
+ assert.equal(fallback.source,'existing');
+ assert.equal(routeQuestion('ISBN?').domain,'anyvue');
+ assert.throws(()=>simulateVueIntegration(input,'ISBN?',null),/router required/);
 });
