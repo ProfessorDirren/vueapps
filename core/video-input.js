@@ -1,3 +1,4 @@
+import {probeVideoMetadata} from './video-metadata.js';
 import {VIDEO_POLICY} from './video-policy.js';
 // Shared VUECORE video input component; specialist UIs inherit this behavior.
 // Privacy-first: files stay on the user's device. No backend video analysis is enabled.
@@ -20,11 +21,11 @@ export function mountVuecoreVideoInput({root=document,status=document.getElement
  if(!record||!choose)return ()=>{};
  const preview=get('vue-router-video-preview'),panel=get('vue-router-video-panel'),notice=get('vue-router-video-notice');
  const recordFile=get('vue-router-video-record-file'),chooseFile=get('vue-router-video-choose-file'),remove=get('vue-router-video-remove');
- let url=null;
+ let url=null,selection=0;
  const labels=()=>VIDEO_LABELS[root.documentElement?.lang]||VIDEO_LABELS.en;
  const translate=()=>{const l=labels();record.textContent=l[0];choose.textContent=l[1];remove.textContent=l[2];notice.textContent=l[3];};
- const clear=()=>{if(url){URL.revokeObjectURL(url);url=null;}preview.pause();preview.removeAttribute('src');preview.load();panel.hidden=true;recordFile.value='';chooseFile.value='';};
- const onChoose=event=>{if(isBusy())return;const file=event.target.files?.[0];if(!file)return;if(!isValidVideo(file)){status.textContent=labels()[4];event.target.value='';return;}clear();url=URL.createObjectURL(file);preview.src=url;panel.hidden=false;status.textContent=labels()[5];};
+ const clear=()=>{selection++;if(url){URL.revokeObjectURL(url);url=null;}preview.pause();preview.removeAttribute('src');preview.load();panel.hidden=true;recordFile.value='';chooseFile.value='';};
+ const onChoose=async event=>{if(isBusy())return;const file=event.target.files?.[0];if(!file)return;if(!isValidVideo(file)){status.textContent=labels()[4];event.target.value='';return;}clear();url=URL.createObjectURL(file);preview.src=url;panel.hidden=false;status.textContent=labels()[5];const current=selection;const result=await probeVideoMetadata(preview);if(current!==selection)return;if(!result.ok){clear();status.textContent=labels()[4];}};
  const openRecord=()=>{if(!isBusy())recordFile.click();},openChoose=()=>{if(!isBusy())chooseFile.click();},onRemove=()=>{if(!isBusy())clear();};
  recordFile.addEventListener('change',onChoose);chooseFile.addEventListener('change',onChoose);
  record.addEventListener('click',openRecord);choose.addEventListener('click',openChoose);remove.addEventListener('click',onRemove);
