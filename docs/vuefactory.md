@@ -21,6 +21,10 @@ The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `metho
 
 `simulateVueIntegration(definition, question, routeQuestion)` exercises proposed BOOKVUE routing against the real VUECORE router without registering anything. Existing specialist decisions and clarifications take precedence; only ANYVUE fallbacks may be provisionally matched to the new specialist. The CLI also writes `integration-dry-run.json`, recording the proposed outcome for each candidate keyword. This is a simulation, not a production integration or an end-to-end API test.
 
+## Isolated test registration
+
+`createFactoryTestRegistry(definition, SPECIALISTS, routeQuestion)` builds an in-memory overlay that exposes `isRegistered`, `route`, and `guide` for a proposed specialist. It can test BOOKVUE without mutating the actual specialist registry, memory domains, API, or production router. This is **not** persistent registration or a live API endpoint.
+
 ## Not yet automatic
 
 A human must review domain safety, routing collisions, translation quality, source trust, and test coverage. The factory currently **does not** edit the central VUECORE registry, API, or router; the integration plan names those required steps. A generated draft is **not** a production-ready specialist.
