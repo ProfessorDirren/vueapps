@@ -23,7 +23,7 @@ The input needs `id` (lowercase, ending in `vue`), `scope`, a substantive `metho
 
 ## Isolated test registration
 
-`createFactoryTestRegistry(definition, SPECIALISTS, routeQuestion)` builds an in-memory overlay that exposes `isRegistered`, `route`, and `guide` for a proposed specialist. It can test BOOKVUE without mutating the actual specialist registry, memory domains, API, or production router. This is **not** persistent registration or a live API endpoint.
+`createFactoryTestRegistry(definition, SPECIALISTS, routeQuestion)` builds an in-memory overlay that exposes `isRegistered`, `route`, and `guide` for a proposed specialist. It can test BOOKVUE without mutating the actual specialist registry, memory domains, API, or production router. The `createFactoryTestApi(registry)` helper additionally provides a Fetch-compatible `POST(Request)` test handler for real Request/Response contract tests, including language validation and malformed JSON. It is **not** persistent registration or a live API endpoint, and does not invoke the production follow-up/AI pipeline.
 
 ## Not yet automatic
 
