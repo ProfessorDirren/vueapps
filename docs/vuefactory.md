@@ -9,7 +9,7 @@ npm test
 npm run factory:example
 ```
 
-The example writes `vuefactory-output/generated/bookvue/` with a specialist profile, all seven labels, a machine-readable integration plan, and a release checklist. Existing generated files are not overwritten. To generate another VUE:
+The example writes `vuefactory-output/generated/bookvue/` with a specialist profile, all seven labels, a machine-readable integration plan, reviewable registry/routing snippets, and a release checklist. Existing generated files are not overwritten. To generate another VUE:
 
 ```sh
 node scripts/vuefactory.mjs path/to/definition.json another-output-directory
