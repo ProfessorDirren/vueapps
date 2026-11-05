@@ -31,6 +31,26 @@ export function checkVueCollision(input,existingIds=[]){
  if(existingIds.includes(d.id))throw Error('Specialist already registered: '+d.id);
  return d;
 }
+/**
+ * Generate safe, literal-keyword routing candidates without executable regex.
+ * A reviewer must check semantic collisions before merging into VUECORE.
+ */
+export function buildRoutingCandidates(input,existingKeywords=[]){
+ const d=checkVueCollision(input,[]);
+ const raw=input.routingKeywords;
+ if(!Array.isArray(raw)||raw.length<2||raw.length>30)throw Error('Provide 2–30 routing keywords');
+ if(!Array.isArray(existingKeywords)||existingKeywords.some(x=>typeof x!=='string'))throw Error('Invalid existing routing keywords');
+ const keywords=raw.map(value=>{
+  if(typeof value!=='string')throw Error('Invalid routing keyword');
+  const normalized=value.trim().toLocaleLowerCase('en');
+  if(normalized.length<3||normalized.length>60||forbidden.test(normalized)||/[\\\\\[\]{}()*+?|^$]/.test(normalized))throw Error('Unsafe routing keyword');
+  return normalized;
+ });
+ if(new Set(keywords).size!==keywords.length)throw Error('Duplicate routing keyword');
+ const existing=new Set(existingKeywords.map(x=>x.trim().toLocaleLowerCase('en')));
+ const collisions=keywords.filter(x=>existing.has(x));
+ return {specialist:d.id,keywords,collisions,reviewRequired:true,automaticRegistration:false};
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
