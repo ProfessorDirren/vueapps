@@ -11,5 +11,16 @@
     "ru": "Книги",
     "ar": "كتب"
   },
-  "sources": [["Library of Congress", "https://www.loc.gov/"]]
+  "sources": [
+    [
+      "Library of Congress",
+      "https://www.loc.gov/"
+    ]
+  ],
+  "routingKeywords": [
+    "ISBN",
+    "book edition",
+    "författare",
+    "edición de libro"
+  ]
 }
