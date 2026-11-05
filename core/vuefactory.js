@@ -50,6 +50,10 @@ export function scaffoldVue(input){
   deploy:{automatic:false,approved:false}
  };
  const integrationFile=JSON.stringify(integration,null,2)+'\n';
+ const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\\n'
+  +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\\n';
+ const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\\n'
+  +'// '+d.id+': define specific patterns and priority; do not auto-route generic terms.\\n';
  const checklist=[
   '# '+d.id.toUpperCase()+' — release checklist','',
   '- [ ] Review specialist scope, method, emergency/safety boundaries and sources.',
@@ -62,5 +66,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet}};
 }
