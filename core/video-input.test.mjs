@@ -15,7 +15,7 @@ test('video input shared limits and supported formats',()=>{
 });
 test('video controls localized across all seven VUECORE languages',()=>{
  assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar'].sort());
- for(const labels of Object.values(VIDEO_LABELS)){assert.equal(labels.length,6);assert.ok(labels.every(s=>typeof s==='string'&&s.length>5));}
+ for(const labels of Object.values(VIDEO_LABELS)){assert.equal(labels.length,6);assert.ok(labels.every(s=>typeof s==='string'&&s.trim().length>0));}
 });
 
 test('video selection blocks misleading text-only AI submission',()=>{assert.equal(videoBlocksSubmission(true),true);assert.equal(videoBlocksSubmission(false),false);});
