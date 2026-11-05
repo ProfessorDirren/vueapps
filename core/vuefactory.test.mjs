@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
-import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry,createFactoryTestApi} from './vuefactory.js';
+import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry,createFactoryTestApi,buildVueCoreIntegrationProposal} from './vuefactory.js';
 const definition={
  id:'bookvue',
  scope:'Book identification, edition comparison and collection research',
@@ -17,7 +17,7 @@ test('factory generates a deterministic reviewable profile and checklist',()=>{
  assert.deepEqual(a,b);
  assert.match(a.files['generated/bookvue/profile.js'],/Book identification/);
  assert.match(a.files['generated/bookvue/RELEASE-CHECKLIST.md'],/manual review required/);
- assert.equal(Object.keys(a.files).length,5);
+ assert.equal(Object.keys(a.files).length,6);
  assert.match(a.files['generated/bookvue/registry-snippet.txt'],/\"bookvue\":/);
  assert.match(a.files['generated/bookvue/routing-review.txt'],/collision-tested/);
  const plan=JSON.parse(a.files['generated/bookvue/integration-plan.json']);
@@ -64,7 +64,7 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000});
   const directory=join(output,'generated','bookvue');
   const files=await readdir(directory);
-  assert.equal(files.length,8);
+  assert.equal(files.length,9);
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
   const audit=JSON.parse(await readFile(join(directory,'existing-router-audit.json'),'utf8'));
@@ -179,4 +179,16 @@ test('isolated POST API routes BOOKVUE without touching the production API',asyn
  assert.equal(bad.status,400);
  const malformed=await POST(new Request('https://localhost/test-factory',{method:'POST',body:'{'}));
  assert.equal(malformed.status,400);
+});
+
+test('VUECORE change proposal enumerates real integration points and blocks unreviewed releases',()=>{
+ const input={...definition,routingKeywords:['ISBN','book edition']};
+ const proposal=buildVueCoreIntegrationProposal(input);
+ assert.equal(proposal.productionReady,false);
+ assert.equal(proposal.automaticApply,false);
+ assert.deepEqual(proposal.edits.map(x=>x.file),['core/specialists.js','core/specialists.js','core/router.js','apps/router-content.js','api/vue-router.js']);
+ assert.equal(proposal.edits[1].value,null);
+ assert.deepEqual(proposal.edits[2].value,['isbn','book edition']);
+ const file=JSON.parse(scaffoldVue(input).files['generated/bookvue/vuecore-change-proposal.json']);
+ assert.deepEqual(file,proposal);
 });
