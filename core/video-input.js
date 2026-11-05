@@ -1,7 +1,8 @@
+import {VIDEO_POLICY} from './video-policy.js';
 // Shared VUECORE video input component; specialist UIs inherit this behavior.
 // Privacy-first: files stay on the user's device. No backend video analysis is enabled.
-export const VIDEO_LIMIT_BYTES=50*1024*1024;
-export const VIDEO_MIME_TYPES=Object.freeze(['video/mp4','video/webm','video/quicktime']);
+export const VIDEO_LIMIT_BYTES=VIDEO_POLICY.maxBytes;
+export const VIDEO_MIME_TYPES=VIDEO_POLICY.acceptedMimeTypes;
 export const VIDEO_LABELS=Object.freeze({
  en:['Record a Video','Choose a Video','Remove video','Video preview only. AI video analysis is not yet available.','Choose an MP4, WebM or MOV video up to 50 MB.','Video selected for local preview. Video AI analysis is not yet supported.'],
  es:['Grabar un vídeo','Elegir un vídeo','Quitar vídeo','Solo vista previa. El análisis de vídeo con IA aún no está disponible.','Elige un vídeo MP4, WebM o MOV de hasta 50 MB.','Vídeo seleccionado para vista previa local. El análisis con IA aún no está disponible.'],
