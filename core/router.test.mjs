@@ -40,3 +40,21 @@ test('router API rejects unsupported languages and preserves MEDIVUE local guida
  response=await POST(req({question:'My guitar amplifier',language:'xx'}));
  assert.equal(response.status,400);
 });
+
+test('horse inflections route to ANIVUE across Swedish, English and Spanish',()=>{
+ for(const question of ['Hästen har kolik','Mina hästar är sjuka','The mare is ill','The foal needs help','My horses are sick','La yegua está enferma','El potro tiene dolor']){
+  assert.equal(routeQuestion(question).domain,'anivue',question);
+ }
+});
+
+test('common inflected dog, cat and horse phrases select ANIVUE',()=>{
+ for(const question of ['Hunden är sjuk','Hundarna hostar','Katten är sjuk','Katterna kräks','Hästarna är sjuka','Hästens ben är svullet','Dogs are sick','Cats are sick']){
+  assert.equal(routeQuestion(question).domain,'anivue',question);
+ }
+});
+
+test('native ANIVUE emergency returns before photo analysis regardless of selected image',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const html=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(html,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary;[\s\S]*?return;\}const photoVersionAtSubmit=/);
+});

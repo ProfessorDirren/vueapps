@@ -61,15 +61,18 @@ export class AniVueDomain extends VueDomain {
  async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
   if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
-  if(typeof image!=='string'||!image.startsWith('data:image/'))throw new VueCoreError('invalid_image','Image required');
-  const response=await this.fetcher('/api/vue-router',{
+  if(typeof image!=='string'||!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)||image.length>4200000)throw new VueCoreError('invalid_image','Supported JPEG, PNG or WebP image required (max 3 MB after conversion)');
+  let response;
+  try{response=await this.fetcher('/api/vue-router',{
    method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({action:'anivue_analyze',image,species,description,symptoms,language}),
    signal:AbortSignal.timeout(90000)
-  });
-  const data=await response.json();
-  if(!response.ok)throw new VueCoreError('image_analysis_unavailable',data.error||'Image analysis unavailable');
-  if(!data||typeof data.summary!=='string'||!Array.isArray(data.visibleObservations))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
+  })}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis service unavailable')}
+  let data;
+  try{data=await response.json()}catch{throw new VueCoreError('image_analysis_unavailable','Image analysis returned an unreadable response')}
+  if(response.status===409&&typeof data?.emergencyAdvice==='string'&&data.emergencyAdvice.trim())throw new VueCoreError('emergency_triage',data.emergencyAdvice);
+  if(!response.ok)throw new VueCoreError(response.status===429?'image_analysis_limit':'image_analysis_unavailable',typeof data?.error==='string'&&data.error.trim()?data.error:'Image analysis unavailable');
+  if(!data||typeof data.summary!=='string'||!data.summary.trim()||!Array.isArray(data.visibleObservations)||data.visibleObservations.length<1||data.visibleObservations.length>10||!data.visibleObservations.every(item=>item&&typeof item.observation==='string'&&item.observation.trim()&&['normal','attention','urgent'].includes(item.significance)&&['low','medium','high'].includes(item.confidence))||!Array.isArray(data.limitations)||!data.limitations.every(item=>typeof item==='string')||!Array.isArray(data.suggestedFollowUpQuestions)||!data.suggestedFollowUpQuestions.every(item=>typeof item==='string')||!Array.isArray(data.emergencySignals)||!data.emergencySignals.every(item=>typeof item==='string')||!(data.emergencyAdvice===undefined||data.emergencyAdvice===null||typeof data.emergencyAdvice==='string')||!data.species||typeof data.species!=='object'||!['low','medium','high'].includes(data.species.confidence)||data.species.value!==species||!data.breedAssessment||typeof data.breedAssessment!=='object'||!['low','medium','high'].includes(data.breedAssessment.confidence)||!Array.isArray(data.breedAssessment.alternatives)||!data.breedAssessment.alternatives.every(item=>typeof item==='string')||!(data.breedAssessment.likelyBreed===null||typeof data.breedAssessment.likelyBreed==='string')||!data.ageAssessment||typeof data.ageAssessment!=='object'||!(data.ageAssessment.estimatedRange===null||typeof data.ageAssessment.estimatedRange==='string')||!['low','medium','high'].includes(data.ageAssessment.confidence))throw new VueCoreError('invalid_analysis','Invalid image analysis response');
   return data;
  }
  emergencyCheck({category='',species='',symptoms=[],description='',language='en'}={}){

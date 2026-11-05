@@ -1,6 +1,7 @@
 import { VueDomain, VueCoreError } from './index.js';
-import { SPECIALISTS } from './specialists.js';
+import { SPECIALISTS, isRegisteredSpecialist } from './specialists.js';
 import { AniVueDomain } from './anivue.js';
+import { createInformationalVueClass } from './specialist-factory.js';
 
 /**
  * Shared specialist registry. Every VUE domain is a VueDomain descendant.
@@ -10,36 +11,16 @@ import { AniVueDomain } from './anivue.js';
  */
 export class SpecialistVueDomain extends VueDomain {
   constructor(id, {fetcher = fetch} = {}) {
-    if (!Object.hasOwn(SPECIALISTS,id)) throw new VueCoreError('unknown_specialist','Unknown VUE specialist');
+    if (!isRegisteredSpecialist(id)) throw new VueCoreError('unknown_specialist','Unknown VUE specialist');
     super({id,name:id.toUpperCase(),capabilities:{imageAnalysis:false,videoAnalysis:false}});
     this.profile=SPECIALISTS[id];
     this.fetcher=fetcher;
+    // Reuse the same validated VUECORE assessment contract as newly configured VUEs.
+    const DomainClass=createInformationalVueClass({id,method:this.profile.method});
+    this.adapter=new DomainClass({fetcher});
   }
-  async assess({description,language='en'} = {}) {
-    if(typeof description!=='string'||description.trim().length<3||description.length>2000)
-      throw new VueCoreError('invalid_question','Enter a question of 3–2000 characters');
-    if(!['en','sv','es','hi','zh-CN','ru','ar'].includes(language))
-      throw new VueCoreError('invalid_language','Unsupported language');
-    let response;
-    try { response=await this.fetcher('/api/vue-router',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      signal:AbortSignal.timeout(30000),
-      body:JSON.stringify({question:description.trim(),language,previous:this.id,newCase:true})
-    }); } catch(error) {
-      throw new VueCoreError(error?.name==='TimeoutError'||error?.name==='AbortError'?'service_timeout':'service_unavailable','Specialist routing unavailable');
-    }
-    if(!response)
-      throw new VueCoreError('invalid_response','Specialist router returned no response');
-    if(!response.ok)throw new VueCoreError('service_unavailable','Specialist routing unavailable');
-    if(typeof response.json !== 'function')
-      throw new VueCoreError('invalid_response','Specialist router returned no readable response');
-    let data;
-    try { data=await response.json(); } catch {
-      throw new VueCoreError('invalid_response','Specialist response could not be read');
-    }
-    if(!data||typeof data!=='object'||data.domain!==this.id||typeof data.answer!=='string'||!data.answer.trim())
-      throw new VueCoreError('specialist_mismatch','No matching specialist answer available');
-    return {domain:this.id,answer:data.answer,kind:data.kind||'unverified',sub_specialist:data.sub_specialist||null};
+  async assess(context) {
+    return this.adapter.assess(context);
   }
 }
 
@@ -79,4 +60,18 @@ export function createSpecialistDomain(id, options) {
   if (id === 'anivue') return new AniVueDomain(options);
   if (id === 'anyvue') return new AnyVueDomain(options);
   return new SpecialistVueDomain(id, options);
+}
+
+/**
+ * Create a VUECORE-derived informational adapter from a specialist definition.
+ * This is deliberately not an automatic public router/UI registration: those
+ * require reviewed server routing, policy and frontend configuration.
+ */
+export function createConfiguredSpecialistDomain(definition, options) {
+ const DomainClass=createInformationalVueClass(definition);
+ return new DomainClass(options);
+}
+
+export function listSpecialistDefinitions() {
+ return Object.freeze(Object.entries(SPECIALISTS).map(([id,profile])=>Object.freeze({id,scope:profile.scope,method:profile.method})));
 }

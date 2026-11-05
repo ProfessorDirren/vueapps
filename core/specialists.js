@@ -33,3 +33,8 @@ export function specialistGuide(domain,language='en'){
  if(!SPECIALISTS[domain]||!questions[domain])throw new Error('No interactive guide for this domain');
  const locale=GUIDE_LABELS[language]?language:'en';return {labels:GUIDE_LABELS[locale],questions:questions[domain][locale],sources:SPECIALISTS[domain].sources||[]};
 }
+
+/** Single registration gate shared by routing and domain creation. */
+export function isRegisteredSpecialist(id){
+ return typeof id==='string'&&Object.hasOwn(SPECIALISTS,id);
+}

@@ -30,20 +30,17 @@ const provider = async (_url,options) => {
 };
 const options={configured:()=>true,spend:async()=>true,fetcher:provider};
 
-test('VUECORE vision preserves horse colic emergency advice alongside supplementary observations',async()=>{
+test('VUECORE vision bypasses horse colic photo analysis in favor of emergency advice',async()=>{
  const response=await POST(request({language:'es',species:'horse',symptoms:['horseColic'],image}),options);
- assert.equal(response.status,200);
+ assert.equal(response.status,409);
  const result=await response.json();
  assert.match(result.emergencyAdvice,/veterinario/);
- assert.equal(result.verified,false);
- assert.equal(result.species.value,'horse');
- assert.equal(result.visibleObservations.length,1);
 });
 
-test('VUECORE vision preserves dog and cat breathing emergency advice',async()=>{
+test('VUECORE vision bypasses dog and cat breathing photo analysis',async()=>{
  for(const species of ['dog','cat']){
   const response=await POST(request({language:'en',species,symptoms:['breathing'],image}),options);
-  assert.equal(response.status,200);
+  assert.equal(response.status,409);
   assert.match((await response.json()).emergencyAdvice,/emergency veterinary care/);
  }
 });
@@ -59,4 +56,76 @@ test('VUECORE vision rejects unsupported languages before provider call',async()
  const response=await POST(request({language:'fr',species:'horse',image}),{configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('must not call')}});
  assert.equal(response.status,400);
  assert.equal(calls,0);
+});
+
+test('vision API rejects invalid provider metadata instead of returning HTTP 200',async()=>{
+ for(const patch of [
+  {species:{value:'horse',confidence:'invalid'}},
+  {breedAssessment:{...structured.breedAssessment,alternatives:[42]}},
+  {breedAssessment:{...structured.breedAssessment,likelyBreed:42}},
+  {ageAssessment:{...structured.ageAssessment,estimatedRange:42}}
+ ]){
+  const malformed={...structured,...patch};
+  const fetcher=async()=>({ok:true,json:async()=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(malformed)}]}]})});
+  const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{configured:()=>true,spend:async()=>true,fetcher});
+  assert.equal(response.status,502,JSON.stringify(patch));
+ }
+});
+
+test('vision API bounds oversized model-generated text fields',async()=>{
+ for(const patch of [
+  {summary:'x'.repeat(4001)},
+  {visibleObservations:[{...structured.visibleObservations[0],observation:'x'.repeat(1001)}]},
+  {limitations:['x'.repeat(1001)]},
+  {suggestedFollowUpQuestions:['x'.repeat(1001),'Normal question?']},
+  {emergencySignals:['x'.repeat(1001)]},
+  {breedAssessment:{...structured.breedAssessment,likelyBreed:'x'.repeat(201)}},
+  {ageAssessment:{...structured.ageAssessment,estimatedRange:'x'.repeat(201)}}
+ ]){
+  const malformed={...structured,...patch};
+  const fetcher=async()=>({ok:true,json:async()=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(malformed)}]}]})});
+  const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{configured:()=>true,spend:async()=>true,fetcher});
+  assert.equal(response.status,502,Object.keys(patch)[0]);
+ }
+});
+
+test('emergency API returns localized advice in all seven supported languages without provider calls',async()=>{
+ const cases=[
+  ['en','emergency veterinary care'],['es','veterinario'],['sv','veterinär'],
+  ['hi','पशु'],['zh-CN','兽医'],['ru','ветеринар'],['ar','بيطري']
+ ];
+ for(const [language,phrase] of cases){
+  let calls=0;
+  const response=await POST(request({language,species:'horse',symptoms:['horseColic'],image}),{
+   configured:()=>{calls++;return true},spend:async()=>{calls++;return true},
+   fetcher:async()=>{calls++;throw Error('No model call expected')}
+  });
+  assert.equal(response.status,409,language);
+  assert.ok((await response.json()).emergencyAdvice.toLowerCase().includes(phrase),language);
+  assert.equal(calls,0,language);
+ }
+});
+
+test('vision API fails closed when runtime configuration is missing without spending quota',async()=>{
+ let charges=0,providerCalls=0;
+ const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{
+  configured:()=>false,
+  spend:async()=>{charges++;return true},
+  fetcher:async()=>{providerCalls++;throw Error('Provider must not run')}
+ });
+ assert.equal(response.status,503);
+ assert.equal(charges,0);
+ assert.equal(providerCalls,0);
+});
+
+test('vision API enforces denied quota before provider invocation',async()=>{
+ let charges=0,providerCalls=0;
+ const response=await POST(request({language:'en',species:'horse',symptoms:['horseOther'],image}),{
+  configured:()=>true,
+  spend:async namespace=>{assert.equal(namespace,'anivue');charges++;return false},
+  fetcher:async()=>{providerCalls++;throw Error('Provider must not run')}
+ });
+ assert.equal(response.status,429);
+ assert.equal(charges,1);
+ assert.equal(providerCalls,0);
 });

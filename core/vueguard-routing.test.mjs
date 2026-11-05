@@ -39,16 +39,43 @@ test('VUECORE distinguishes specialist priorities when one topic is higher risk'
 test('VUECORE leaves unclear questions in the safe generic specialist',()=>{
   assert.deepEqual(routeQuestion('Could you help me?',null),{domain:'anyvue',clarify:false});
 });
-test('VUEGUARD prevents accidental removal of the legacy ANIVUE domain dependency without migration',async()=>{
-  const {readFile}=await import('node:fs/promises');
-  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
-  assert.match(source,/www\\.anivueapp\\.se|www\.anivueapp\.se/);
+test('ANIVUE workspace remains native and has no external fallback',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ const portal=await readFile(new URL('../index.html',import.meta.url),'utf8');
+ const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ assert.match(source,/workspace:route\.domain==='anivue'\?'\.\/anivue-core\.html'/);
+ for(const file of [source,portal,native])assert.doesNotMatch(file,/anivue(?:app)?\.se|legacy_workspace/);
+ assert.match(portal,/href="\.\/anivue-core\.html"/);
 });
 
-// Keep VUECORE as the primary animal workspace without deleting the legacy fallback.
-test('VUECORE owns the animal workspace while retaining the legacy fallback',async()=>{
-  const {readFile}=await import('node:fs/promises');
-  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
-  assert.match(source,/workspace:route\.domain==='anivue'\?'\.\/anivue-core\.html'/);
-  assert.match(source,/legacy_workspace:'https:\/\/www\.anivueapp\.se'/);
+test('runtime files never link to retired standalone ANIVUE',async()=>{
+ const {readdir,readFile}=await import('node:fs/promises');
+ const {join,relative,sep}=await import('node:path');
+ const root=new URL('../',import.meta.url).pathname;
+ const excluded=new Set(['docs','node_modules','.git','.vercel']);
+ async function scan(directory){
+  for(const entry of await readdir(directory,{withFileTypes:true})){
+   const path=join(directory,entry.name);
+   if(entry.isDirectory()){
+    if(!excluded.has(entry.name))await scan(path);
+    continue;
+   }
+   if(!entry.isFile()||!(/\\.(?:html|js|mjs|json)$/.test(entry.name))||entry.name.endsWith('.test.mjs'))continue;
+   const content=await readFile(path,'utf8');
+   assert.doesNotMatch(content,/anivue(?:app)?\\.se|legacy_workspace\\s*:/,relative(root,path).split(sep).join('/'));
+  }
+ }
+ await scan(root);
+});
+
+
+test('native ANIVUE displays emergency triage before starting image analysis',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
+ const triage=native.indexOf("const emergency=flow.domain.emergencyCheck(context)");
+ const visible=native.indexOf("if(urgent){$('answer').textContent=check.assessment.summary");
+ const vision=native.indexOf('await flow.domain.analyzePhoto(');
+ assert.ok(triage>=0&&visible>triage&&vision>visible,'emergency warning must precede photo analysis');
+ assert.match(native,/if\(urgent\)\{[\s\S]*?return;\}const photoVersionAtSubmit=/);
 });

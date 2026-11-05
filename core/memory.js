@@ -1,6 +1,7 @@
 /** CORE-VUE memory v1. Injected storage only: no implicit network, images or credentials. */
+import {SPECIALISTS} from './specialists.js';
 export const MEMORY_VERSION=1;
-export const MEMORY_DOMAINS=['anyvue','anivue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue'];
+export const MEMORY_DOMAINS=Object.freeze(Object.keys(SPECIALISTS).sort());
 export const MEMORY_LIMITS=Object.freeze({cases:50,turns:100,bytes:1000000,question:3000,answer:8000,context:4000});
 const id=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 const text=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
