@@ -21,12 +21,13 @@ export function mountVuecoreVideoInput({root=document,status=document.getElement
  if(!record||!choose)return ()=>{};
  const preview=get('vue-router-video-preview'),panel=get('vue-router-video-panel'),notice=get('vue-router-video-notice');
  const recordFile=get('vue-router-video-record-file'),chooseFile=get('vue-router-video-choose-file'),remove=get('vue-router-video-remove');
+ if(!preview||!panel||!notice||!recordFile||!chooseFile||!remove)return ()=>{};
  let url=null,selection=0;
  const labels=()=>VIDEO_LABELS[root.documentElement?.lang]||VIDEO_LABELS.en;
  const metadataError=()=>({en:'Video cannot be previewed. Use a playable video up to 120 seconds and 3840 pixels per dimension.',sv:'Videon kan inte förhandsvisas. Välj en spelbar video på högst 120 sekunder och 3840 pixlar per dimension.',es:'No se puede previsualizar el vídeo. Elige uno reproducible de hasta 120 segundos y 3840 píxeles por dimensión.',hi:'वीडियो का पूर्वावलोकन नहीं हो सका। 120 सेकंड और 3840 पिक्सेल प्रति आयाम तक का वीडियो चुनें।','zh-CN':'无法预览视频。请选择不超过120秒、单边不超过3840像素的可播放视频。',ru:'Не удалось открыть видео. Выберите воспроизводимый файл до 120 секунд и 3840 пикселей по каждой стороне.',ar:'تعذرت معاينة الفيديو. اختر فيديو قابلاً للتشغيل لا يتجاوز 120 ثانية و3840 بكسل لكل بُعد.'})[root.documentElement?.lang]||'Video cannot be previewed.';
  const translate=()=>{const l=labels();record.textContent=l[0];choose.textContent=l[1];remove.textContent=l[2];notice.textContent=l[3];};
  const clear=()=>{selection++;if(url){URL.revokeObjectURL(url);url=null;}preview.pause();preview.removeAttribute('src');preview.load();panel.hidden=true;recordFile.value='';chooseFile.value='';};
- const onChoose=async event=>{if(isBusy())return;const file=event.target.files?.[0];if(!file)return;if(!isValidVideo(file)){clear();status.textContent=labels()[4];return;}clear();url=URL.createObjectURL(file);preview.src=url;panel.hidden=false;status.textContent=labels()[5];const current=selection;const result=await probeVideoMetadata(preview);if(current!==selection)return;if(!result.ok){clear();status.textContent=metadataError();}};
+ const onChoose=async event=>{if(isBusy())return;const file=event.target.files?.[0];if(!file)return;if(!isValidVideo(file)){clear();status.textContent=labels()[4];return;}clear();url=URL.createObjectURL(file);preview.src=url;panel.hidden=false;status.textContent=labels()[5];const current=selection;let result;try{result=await probeVideoMetadata(preview);}catch{result={ok:false};}if(current!==selection)return;if(!result.ok){clear();status.textContent=metadataError();}};
  const openRecord=()=>{if(!isBusy())recordFile.click();},openChoose=()=>{if(!isBusy())chooseFile.click();},onRemove=()=>{if(!isBusy())clear();};
  recordFile.addEventListener('change',onChoose);chooseFile.addEventListener('change',onChoose);
  record.addEventListener('click',openRecord);choose.addEventListener('click',openChoose);remove.addEventListener('click',onRemove);
