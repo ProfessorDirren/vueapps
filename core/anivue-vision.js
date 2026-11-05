@@ -17,8 +17,9 @@ export async function POST(request,{fetcher=fetch,configured=ready,spend=budget}
  if(!b||!Object.hasOwn(LANGUAGES,b.language)||!['dog','cat','horse'].includes(b.species)||!validImage(b.image)||!usableImage(b.image))return json(400,{error:'Invalid image, species or language'});
  const triageDescription=typeof b.description==='string'?b.description.slice(0,2000):'';
  const description=triageDescription.slice(0,500);
- const symptoms=Array.isArray(b.symptoms)?b.symptoms.filter(x=>typeof x==='string').slice(0,12):[];
- const emergency=new AniVueDomain().emergencyCheck({species:b.species,symptoms,description:triageDescription,language:b.language});
+ const triageSymptoms=Array.isArray(b.symptoms)?b.symptoms.filter(x=>typeof x==='string'):[];
+ const symptoms=triageSymptoms.slice(0,12);
+ const emergency=new AniVueDomain().emergencyCheck({species:b.species,symptoms:triageSymptoms,description:triageDescription,language:b.language});
  if(emergency)return json(409,{error:'Emergency triage takes priority over photo analysis',emergencyAdvice:emergency.summary});
  if(!configured())return json(503,{error:'Image analysis not configured'});
  if(!await spend('anivue'))return json(429,{error:'Daily analysis budget unavailable'});
