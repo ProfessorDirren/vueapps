@@ -85,3 +85,21 @@ test('routing preview matches whole Unicode words and keeps live routing unchang
  assert.equal(previewVueRouting(input,'ISBN').liveRouterModified,false);
  assert.throws(()=>previewVueRouting(input,null),/Invalid preview/);
 });
+
+test('factory routing preview does not alter existing VUECORE decisions',async()=>{
+ const {routeQuestion}=await import('./router.js');
+ const cases=[
+  ['Min hund har svårt att andas','anivue'],
+  ['My motorcycle has brake problems','motovue'],
+  ['Identify this vinyl pressing','vinylvue'],
+  ['Medicine side effects','medivue'],
+  ['Marshall guitar amplifier','musicgearvue'],
+  ['What is the ISBN?','anyvue']
+ ];
+ const before=cases.map(([q])=>routeQuestion(q));
+ const input={...definition,routingKeywords:['ISBN','book edition','författare']};
+ assert.equal(previewVueRouting(input,'What is the ISBN?').matched,true);
+ const after=cases.map(([q])=>routeQuestion(q));
+ assert.deepEqual(after,before);
+ for(let i=0;i<cases.length;i++)assert.equal(after[i].domain,cases[i][1]);
+});
