@@ -221,9 +221,9 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   .replace('const questions={','const questions={\n '+id+':'+JSON.stringify(plan.questions)+',');
  const guardedPattern=plan.routingKeywords.map(keyword=>{
   const literal=escapeRegex(keyword);
-  return /^[\\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
+  return /^[\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
  }).join('|');
- const patchedRouter=router.replace('const rules=[',"const rules=[\\n ['"+id+"',3,/"+guardedPattern+"/iu],");
+ const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+guardedPattern+"/iu],");
  return Object.freeze({
   specialist:id,
   files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
