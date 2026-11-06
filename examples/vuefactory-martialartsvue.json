@@ -39,5 +39,42 @@
     "боевые искусства",
     "الفنون القتالية",
     "मार्शल आर्ट"
-  ]
+  ],
+  "questions": {
+    "en": [
+      "Which martial art and ruleset are you training in?",
+      "What is your experience level and training goal?",
+      "Are there injuries or safety limits to consider?"
+    ],
+    "es": [
+      "¿Qué arte marcial y reglamento practicas?",
+      "¿Cuál es tu nivel de experiencia y objetivo?",
+      "¿Hay lesiones o límites de seguridad que considerar?"
+    ],
+    "sv": [
+      "Vilken kampsport och vilket regelverk tränar du?",
+      "Vilken erfarenhet och vilket träningsmål har du?",
+      "Finns skador eller säkerhetsbegränsningar att ta hänsyn till?"
+    ],
+    "hi": [
+      "आप कौन सी मार्शल आर्ट और नियमों के तहत अभ्यास करते हैं?",
+      "आपका अनुभव स्तर और प्रशिक्षण लक्ष्य क्या है?",
+      "क्या कोई चोट या सुरक्षा संबंधी सीमा है?"
+    ],
+    "zh-CN": [
+      "你练习哪种武术，采用什么比赛规则？",
+      "你的经验水平和训练目标是什么？",
+      "是否有伤病或需要注意的安全限制？"
+    ],
+    "ru": [
+      "Каким боевым искусством и по каким правилам вы занимаетесь?",
+      "Каков ваш опыт и цель тренировок?",
+      "Есть ли травмы или ограничения безопасности?"
+    ],
+    "ar": [
+      "ما فنون القتال والقواعد التي تتدرب وفقها؟",
+      "ما مستوى خبرتك وهدفك من التدريب؟",
+      "هل توجد إصابات أو قيود سلامة يجب مراعاتها؟"
+    ]
+  }
 }

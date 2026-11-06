@@ -6,7 +6,7 @@
  */
 import {readFile,mkdir,writeFile,lstat,unlink} from 'node:fs/promises';
 import {resolve,join,dirname,relative,isAbsolute,sep} from 'node:path';
-import {scaffoldVue,checkVueCollision,simulateVueIntegration} from '../core/vuefactory.js';
+import {scaffoldVue,checkVueCollision,simulateVueIntegration,previewVueCoreSourcePatch} from '../core/vuefactory.js';
 import {SPECIALISTS} from '../core/specialists.js';
 import {routeQuestion} from '../core/router.js';
 const [definitionPath,outputArg='vuefactory-output']=process.argv.slice(2);
@@ -22,6 +22,22 @@ else{
    files['generated/'+id+'/existing-router-audit.json']=JSON.stringify({specialist:id,probes,conflicts,reviewRequired:true,liveRouterModified:false},null,2)+'\n';
    const dryRun=definition.routingKeywords.map(keyword=>({question:keyword,result:simulateVueIntegration(definition,keyword,routeQuestion)}));
    files['generated/'+id+'/integration-dry-run.json']=JSON.stringify({specialist:id,cases:dryRun,reviewRequired:true,productionIntegrated:false},null,2)+'\n';
+  }
+  // Optional, strictly review-only VUECORE source patch preview.
+  // Draft definitions without localized questions keep the original scaffold flow.
+  if(definition.questions!==undefined){
+   const sourceFiles={
+    'core/specialists.js':await readFile(resolve('core/specialists.js'),'utf8'),
+    'core/router.js':await readFile(resolve('core/router.js'),'utf8')
+   };
+   const patch=previewVueCoreSourcePatch(definition,sourceFiles,Object.keys(SPECIALISTS));
+   for(const [name,content] of Object.entries(patch.files)){
+    files['generated/'+id+'/vuecore-patch/'+name]=content;
+   }
+   files['generated/'+id+'/vuecore-patch/REVIEW.json']=JSON.stringify({
+    specialist:id,reviewRequired:true,automaticApply:false,productionReady:false,
+    incomplete:patch.incomplete
+   },null,2)+'\n';
   }
   const root=resolve(outputArg);
   // Validate every generated destination before writing any file.

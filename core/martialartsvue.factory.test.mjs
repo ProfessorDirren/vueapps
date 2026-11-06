@@ -29,6 +29,7 @@ test('MARTIALARTSVUE isolated API routing and existing-specialist protection',as
   assert.equal(result.domain,'martialartsvue',question);
   assert.equal(result.testOnly,true);
   assert.equal(result.guide.label,definition.labels[language]);
+  assert.deepEqual(result.guide.questions,definition.questions[language]);
  }
 
 

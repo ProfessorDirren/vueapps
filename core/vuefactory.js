@@ -2,6 +2,7 @@
  * VUEFACTORY v1 — deterministic, offline specialist scaffolding.
  * Generates a reviewable domain profile; never registers, deploys, or calls AI.
  */
+import {obviousIdentifier} from './memory.js';
 export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
@@ -92,7 +93,8 @@ export function simulateVueIntegration(input,question,routeExisting){
  * The real VUECORE registry and router remain unchanged.
  */
 export function createFactoryTestRegistry(input,existingSpecialists,routeExisting){
- const definition=checkVueCollision(input,Object.keys(existingSpecialists||{}));
+ const activation=validateVueActivation(input,Object.keys(existingSpecialists||{}));
+ const definition=activation.definition;
  if(typeof routeExisting!=='function')throw Error('Existing VUECORE router required');
  const profile=Object.freeze({scope:definition.scope,method:definition.method,...(definition.sources.length?{sources:definition.sources}:{})});
  const specialists=Object.freeze({...existingSpecialists,[definition.id]:profile});
@@ -103,7 +105,7 @@ export function createFactoryTestRegistry(input,existingSpecialists,routeExistin
   guide:(id,language='en')=>{
    if(id!==definition.id)throw Error('Factory test guide only supports generated specialist');
    const locale=FACTORY_LANGUAGES.includes(language)?language:'en';
-   return {domain:id,label:definition.labels[locale],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
+   return {domain:id,label:definition.labels[locale],questions:[...activation.questions[locale]],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
   }
  });
 }
@@ -121,7 +123,7 @@ export function createFactoryTestApi(registry){
    if(raw.length>10000)return Response.json({error:'Too large'},{status:413});
    body=JSON.parse(raw);
   }catch{return Response.json({error:'Invalid JSON'},{status:400})}
-  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
+  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
   const route=registry.route(body.question);
   if(route.clarify)return Response.json({domain:null,clarify:true,candidates:route.candidates||[],testOnly:true});
   if(!registry.isRegistered(route.domain))return Response.json({error:'Unregistered specialist'},{status:422});
@@ -152,6 +154,106 @@ export function buildVueCoreIntegrationProposal(input){
   productionReady:false,
   automaticApply:false
  };
+}
+/**
+ * Validate all localized follow-up prompts before preparing a real integration.
+ * Existing drafts remain supported; activation must explicitly opt into this gate.
+ */
+export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
+ const definition=checkVueCollision(input,existingIds);
+ const routing=buildRoutingCandidates(input,existingKeywords);
+ if(routing.collisions.length)throw Error('Routing keyword collision: '+routing.collisions.join(', '));
+ const questions=input.questions;
+ if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
+ const localized={};
+ for(const language of FACTORY_LANGUAGES){
+  const items=questions[language];
+  if(!Array.isArray(items)||items.length!==3)throw Error('Exactly three questions required: '+language);
+  if(items.some(q=>typeof q!=='string'||q.trim().length<12||q.length>240||forbidden.test(q)))throw Error('Invalid specialist questions: '+language);
+  if(new Set(items.map(q=>q.trim().toLocaleLowerCase(language))).size!==3)throw Error('Duplicate specialist questions: '+language);
+  localized[language]=items.map(q=>q.trim());
+ }
+ return Object.freeze({definition,routing,questions:Object.freeze(localized),requiresSafetyReview:true,automaticDeployment:false});
+}
+/**
+ * Produce a complete, reviewable activation manifest without mutating VUECORE.
+ * A separate reviewed integration step must apply it; deployment is never implicit.
+ */
+export function prepareVueActivation(input,existingIds=[],existingKeywords=[]){
+ const {definition,routing,questions}=validateVueActivation(input,existingIds,existingKeywords);
+ const profile={scope:definition.scope,method:definition.method,...(definition.sources.length?{sources:definition.sources}:{})};
+ return {
+  specialist:definition.id,
+  profile,
+  labels:definition.labels,
+  questions,
+  routingKeywords:routing.keywords,
+  edits:[
+   {file:'core/specialists.js',section:'SPECIALISTS',key:definition.id,value:profile},
+   {file:'core/specialists.js',section:'questions',key:definition.id,value:questions},
+   {file:'core/router.js',section:'rules',key:definition.id,value:routing.keywords},
+   {file:'apps/router-content.js',section:'localization',key:definition.id,value:definition.labels,action:'review-ui-labels'},
+   {file:'api/vue-router.js',section:'dispatch',key:definition.id,value:null,action:'review-api-dispatch'}
+  ],
+  safetyReviewRequired:true,
+  routingPrecedenceReviewRequired:true,
+  automaticApply:false,
+  productionReady:false
+ };
+}
+/**
+ * Review-only source patch for VUECORE declarations.
+ * Never writes files, merges, deploys, or bypasses safety review.
+ */
+export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKeywords=[]){
+ const plan=prepareVueActivation(input,existingIds,existingKeywords);
+ const specialists=files?.['core/specialists.js'];
+ const router=files?.['core/router.js'];
+ if(typeof specialists!=='string'||typeof router!=='string')throw Error('Both VUECORE source files required');
+ const anchors=[[specialists,'export const SPECIALISTS=Object.freeze({'],[specialists,'const questions={'],[router,'const rules=[']];
+ for(const [source,anchor] of anchors)if(source.split(anchor).length!==2)throw Error('Unexpected VUECORE source layout: '+anchor);
+ const id=plan.specialist;
+ if(new RegExp('(?:^|[,{\\s])(?:[\\x27\\x22])?'+id+'(?:[\\x27\\x22])?\\s*:','m').test(specialists)||new RegExp('\\[\\s*[\\x27\\x22]'+id+'[\\x27\\x22]\\s*,').test(router))throw Error('Specialist already in source');
+ const escapeRegex=value=>Array.from(value).map(char=>'.*+?^${}()|[]\\'.includes(char)?'\\'+char:char).join('');
+ const pattern=plan.routingKeywords.map(escapeRegex).join('|');
+ const patchedSpecialists=specialists
+  .replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n '+id+':'+JSON.stringify(plan.profile)+',')
+  .replace('const questions={','const questions={\n '+id+':'+JSON.stringify(plan.questions)+',');
+ const guardedPattern=plan.routingKeywords.map(keyword=>{
+  const literal=escapeRegex(keyword);
+  return /^[\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
+ }).join('|');
+ const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+guardedPattern+"/iu],");
+ const apiSource=files?.['api/vue-router.js'];
+ if(apiSource!==undefined&&(typeof apiSource!=='string'||apiSource.split('export async function POST(request)').length!==2||!apiSource.includes('isRegisteredSpecialist(route.domain)')))throw Error('Invalid API dispatch source');
+ const apiPreview=typeof apiSource==='string'?Object.freeze({
+  file:'api/vue-router.js',
+  sourceVerified:true,
+  registeredSpecialistGatePresent:true,
+  proposedSpecialist:id,
+  action:'review-generic-dispatch-and-domain-safety',
+  automaticApply:false
+ }):null;
+ const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
+ const uiPatch=files?.['apps/router-content.js'];
+ if(uiPatch!==undefined&&(typeof uiPatch!=='string'||uiPatch.split('export const ROUTER_TEXT=').length!==2))throw Error('Invalid UI source');
+ const uiPreview=typeof uiPatch==='string'?{
+  file:'apps/router-content.js',
+  labels:uiLabels,
+  sourceVerified:true,
+  action:'review-specialist-card-localization',
+  automaticApply:false
+ }:null;
+ return Object.freeze({
+  specialist:id,
+  files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
+  uiPreview,
+  apiPreview,
+  reviewRequired:true,
+  incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
+  automaticApply:false,
+  productionReady:false
+ });
 }
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
