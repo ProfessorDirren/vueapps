@@ -146,3 +146,23 @@ test('activation rejects duplicate specialist IDs and keyword collisions',()=>{
  assert.throws(()=>validateVueActivation({...definition,id:'anivue'},Object.keys(SPECIALISTS)),/Specialist already registered/);
  assert.throws(()=>validateVueActivation(definition,Object.keys(SPECIALISTS),['study planning']),/Routing keyword collision/);
 });
+
+test('review-only patch adds all seven questions without changing live VUECORE files',async()=>{
+ const originals={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8')
+ };
+ const patch=previewVueCoreSourcePatch(definition,originals,Object.keys(SPECIALISTS));
+ const specialistPatch=patch.files['core/specialists.js'];
+ const routerPatch=patch.files['core/router.js'];
+ assert.match(specialistPatch,/learningvue:/);
+ for(const language of FACTORY_LANGUAGES){
+  assert.ok(specialistPatch.includes(JSON.stringify(language)),'missing '+language+' questions');
+  assert.ok(specialistPatch.includes(JSON.stringify(definition.questions[language][0])),'missing '+language+' prompt');
+ }
+ assert.match(routerPatch,/\['learningvue',3,/);
+ assert.equal(patch.automaticApply,false);
+ assert.equal(patch.productionReady,false);
+ assert.equal(await readFile(new URL('./specialists.js',import.meta.url),'utf8'),originals['core/specialists.js']);
+ assert.equal(await readFile(new URL('./router.js',import.meta.url),'utf8'),originals['core/router.js']);
+});
