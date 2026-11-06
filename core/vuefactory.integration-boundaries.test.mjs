@@ -176,6 +176,6 @@ test('source patch rejects duplicate specialist declarations despite alternate f
   {...originals,'core/specialists.js':originals['core/specialists.js'].replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\nlearningvue : {scope:"duplicate"},')},
   {...originals,'core/router.js':originals['core/router.js'].replace('const rules=[','const rules=[\n [ "learningvue" , 3, /duplicate/iu ],')}
  ];
- cases.push({...originals,'core/specialists.js':originals['core/specialists.js'].replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\\n \\"learningvue\\" : {scope:\\"duplicate\\"},')});
+ cases.push({...originals,'core/specialists.js':originals['core/specialists.js'].replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n "learningvue" : {scope:"duplicate"},')});
  for(const files of cases)assert.throws(()=>previewVueCoreSourcePatch(definition,files,Object.keys(SPECIALISTS)),/Specialist already in source/);
 });
