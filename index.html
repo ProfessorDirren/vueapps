@@ -261,6 +261,7 @@ function setLanguage(lang){
  document.querySelector("#app-medivue p").textContent=mediTranslations[lang]||mediTranslations.en;
  document.querySelector("#app-foodvue p").textContent=foodReviewTranslations[lang]||foodReviewTranslations.en;
  picker.value=lang;
+ document.dispatchEvent(new CustomEvent("vueapps:languagechange",{detail:{language:lang}}));
  try{localStorage.setItem("vueapps-language-v2",lang)}catch{}
 }
 let initial="en";try{initial=localStorage.getItem("vueapps-language-v2")||"en"}catch{}
