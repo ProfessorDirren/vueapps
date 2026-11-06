@@ -94,3 +94,20 @@ test('VUEFACTORY sandbox API rejects personal identifiers in all seven languages
   assert.equal(response.status,400,'sandbox privacy for '+language);
  }
 });
+
+test('factory sandbox never intercepts emergency animal routing in any supported language',async()=>{
+ const sandbox=createFactoryTestApi(createFactoryTestRegistry(definition,SPECIALISTS,routeQuestion));
+ for(const language of FACTORY_LANGUAGES){
+  const request=new Request('https://localhost/factory-preview',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({language,question:'My dog cannot breathe and needs urgent help with study planning'})
+  });
+  const response=await sandbox(request);
+  assert.equal(response.status,200,'emergency route for '+language);
+  const body=await response.json();
+  assert.equal(body.domain,'anivue','ANIVUE precedence for '+language);
+  assert.equal(body.source,'existing');
+  assert.equal(body.testOnly,true);
+  assert.equal(body.answer,null);
+ }
+});
