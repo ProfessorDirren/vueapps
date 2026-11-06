@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {validateVueActivation,previewVueCoreSourcePatch,FACTORY_LANGUAGES} from './vuefactory.js';
+import {validateVueActivation,previewVueCoreSourcePatch,simulateVueIntegration,FACTORY_LANGUAGES} from './vuefactory.js';
 import {SPECIALISTS} from './specialists.js';
 import {routeQuestion} from './router.js';
 
@@ -34,4 +34,21 @@ test('review-only patch accepts actual VUECORE source and leaves repository stat
  assert.match(patch.files['core/router.js'],/\['trainingvue',3,/);
  assert.equal(routeQuestion('practice footwork').domain,'anyvue');
  assert.throws(()=>previewVueCoreSourcePatch(definition,patch.files,Object.keys(SPECIALISTS)),/already in source/);
+});
+
+test('existing VUECORE specialist routing always takes precedence over factory preview',()=>{
+ const existing=routeQuestion('My dog has trouble breathing');
+ assert.equal(existing.domain,'anivue');
+ const result=simulateVueIntegration(definition,'My dog has trouble breathing',routeQuestion);
+ assert.equal(result.domain,'anivue');
+ assert.equal(result.source,'existing');
+ assert.equal(result.reviewRequired,true);
+});
+test('factory preview cannot override an existing martial arts route',()=>{
+ const question='I practice judo and training stance';
+ const existing=routeQuestion(question);
+ assert.equal(existing.domain,'martialartsvue');
+ const result=simulateVueIntegration(definition,question,routeQuestion);
+ assert.equal(result.domain,'martialartsvue');
+ assert.equal(result.source,'existing');
 });
