@@ -93,7 +93,8 @@ export function simulateVueIntegration(input,question,routeExisting){
  * The real VUECORE registry and router remain unchanged.
  */
 export function createFactoryTestRegistry(input,existingSpecialists,routeExisting){
- const definition=checkVueCollision(input,Object.keys(existingSpecialists||{}));
+ const activation=validateVueActivation(input,Object.keys(existingSpecialists||{}));
+ const definition=activation.definition;
  if(typeof routeExisting!=='function')throw Error('Existing VUECORE router required');
  const profile=Object.freeze({scope:definition.scope,method:definition.method,...(definition.sources.length?{sources:definition.sources}:{})});
  const specialists=Object.freeze({...existingSpecialists,[definition.id]:profile});
@@ -104,7 +105,7 @@ export function createFactoryTestRegistry(input,existingSpecialists,routeExistin
   guide:(id,language='en')=>{
    if(id!==definition.id)throw Error('Factory test guide only supports generated specialist');
    const locale=FACTORY_LANGUAGES.includes(language)?language:'en';
-   return {domain:id,label:definition.labels[locale],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
+   return {domain:id,label:definition.labels[locale],questions:[...activation.questions[locale]],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
   }
  });
 }
