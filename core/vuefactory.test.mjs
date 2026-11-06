@@ -10,6 +10,7 @@ const definition={
  scope:'Book identification, edition comparison and collection research',
  method:'Identify author, title, publisher, ISBN, edition, printing, condition and provenance. Distinguish observed details from assumptions, use verifiable catalogues, and never assert authenticity or market value without corroboration.',
  labels:Object.fromEntries(FACTORY_LANGUAGES.map(l=>[l,'Books'])),
+ questions:Object.fromEntries(FACTORY_LANGUAGES.map(l=>[l,['Which book are you researching?','What edition or printing do you have?','Which details can you verify from the book?']])),
  sources:[['Library of Congress','https://www.loc.gov/']]
 };
 test('factory generates a deterministic reviewable profile and checklist',()=>{
