@@ -54,7 +54,7 @@ test('factory preview cannot override an existing martial arts route',()=>{
 });
 
 test('factory never hijacks ambiguous existing VUECORE routing',()=>{
- const question='My dog needs medicine for training stance';
+ const question='My dog rides a motorcycle with training stance';
  const existing=routeQuestion(question);
  assert.equal(existing.clarify,true);
  const result=simulateVueIntegration(definition,question,routeQuestion);
