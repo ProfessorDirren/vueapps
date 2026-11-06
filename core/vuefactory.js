@@ -224,6 +224,16 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   return /^[\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
  }).join('|');
  const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+guardedPattern+"/iu],");
+ const apiSource=files?.['api/vue-router.js'];
+ if(apiSource!==undefined&&(typeof apiSource!=='string'||apiSource.split('export async function POST(request)').length!==2||!apiSource.includes('isRegisteredSpecialist(route.domain)')))throw Error('Invalid API dispatch source');
+ const apiPreview=typeof apiSource==='string'?Object.freeze({
+  file:'api/vue-router.js',
+  sourceVerified:true,
+  registeredSpecialistGatePresent:true,
+  proposedSpecialist:id,
+  action:'review-generic-dispatch-and-domain-safety',
+  automaticApply:false
+ }):null;
  const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
  const uiPatch=files?.['apps/router-content.js'];
  if(uiPatch!==undefined&&(typeof uiPatch!=='string'||uiPatch.split('export const ROUTER_TEXT=').length!==2))throw Error('Invalid UI source');
@@ -238,6 +248,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   specialist:id,
   files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
   uiPreview,
+  apiPreview,
   reviewRequired:true,
   incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
   automaticApply:false,
