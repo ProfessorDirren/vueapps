@@ -224,9 +224,20 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   return /^[\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
  }).join('|');
  const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+guardedPattern+"/iu],");
+ const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
+ const uiPatch=files?.['apps/router-content.js'];
+ if(uiPatch!==undefined&&typeof uiPatch!=='string')throw Error('Invalid UI source');
+ const uiPreview=typeof uiPatch==='string'?{
+  file:'apps/router-content.js',
+  labels:uiLabels,
+  sourceVerified:uiPatch.includes('export const ROUTER_TEXT='),
+  action:'review-specialist-card-localization',
+  automaticApply:false
+ }:null;
  return Object.freeze({
   specialist:id,
   files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
+  uiPreview,
   reviewRequired:true,
   incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
   automaticApply:false,
