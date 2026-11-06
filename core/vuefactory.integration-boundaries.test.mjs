@@ -230,3 +230,23 @@ test('sandbox API serves validated specialist questions in each requested langua
   assert.equal(body.testOnly,true);
  }
 });
+
+test('generated router uses Unicode boundaries and preserves Han keyword matches',async()=>{
+ const sources={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8')
+ };
+ const patch=previewVueCoreSourcePatch(definition,sources,Object.keys(SPECIALISTS));
+ const generated=patch.files['core/router.js'];
+ const match=/\['learningvue',3,\/(.*?)\/iu\]/.exec(generated);
+ assert.ok(match,'factory routing rule exists');
+ const rule=new RegExp(match[1],'iu');
+ assert.equal(rule.test('I need study planning'),true);
+ assert.equal(rule.test('restudy planning'),false);
+ assert.equal(rule.test('learning methods'),true);
+ const han={...definition,routingKeywords:['study planning','学习方法']};
+ const hanPatch=previewVueCoreSourcePatch(han,sources,Object.keys(SPECIALISTS));
+ const hanMatch=/\['learningvue',3,\/(.*?)\/iu\]/.exec(hanPatch.files['core/router.js']);
+ assert.ok(hanMatch);
+ assert.equal(new RegExp(hanMatch[1],'iu').test('我想了解学习方法'),true);
+});
