@@ -33,6 +33,6 @@ export function mountVuecoreVideoInput({root=document,status=document.getElement
  record.addEventListener('click',openRecord);choose.addEventListener('click',openChoose);remove.addEventListener('click',onRemove);
  const observer=typeof MutationObserver==='function'?new MutationObserver(translate):null;
  observer?.observe(root.documentElement,{attributes:true,attributeFilter:['lang']});
- window.addEventListener('pagehide',clear);translate();
- return ()=>{if(disposed)return;disposed=true;clear();observer?.disconnect();window.removeEventListener('pagehide',clear);recordFile.removeEventListener('change',onChoose);chooseFile.removeEventListener('change',onChoose);record.removeEventListener('click',openRecord);choose.removeEventListener('click',openChoose);remove.removeEventListener('click',onRemove);};
+ window.addEventListener('pagehide',clear);root.addEventListener('vueapps:languagechange',translate);translate();
+ return ()=>{if(disposed)return;disposed=true;clear();observer?.disconnect();window.removeEventListener('pagehide',clear);root.removeEventListener('vueapps:languagechange',translate);recordFile.removeEventListener('change',onChoose);chooseFile.removeEventListener('change',onChoose);record.removeEventListener('click',openRecord);choose.removeEventListener('click',openChoose);remove.removeEventListener('click',onRemove);};
 }
