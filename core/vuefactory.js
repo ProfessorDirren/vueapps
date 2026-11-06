@@ -153,6 +153,26 @@ export function buildVueCoreIntegrationProposal(input){
   automaticApply:false
  };
 }
+/**
+ * Validate all localized follow-up prompts before preparing a real integration.
+ * Existing drafts remain supported; activation must explicitly opt into this gate.
+ */
+export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
+ const definition=checkVueCollision(input,existingIds);
+ const routing=buildRoutingCandidates(input,existingKeywords);
+ if(routing.collisions.length)throw Error('Routing keyword collision: '+routing.collisions.join(', '));
+ const questions=input.questions;
+ if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
+ const localized={};
+ for(const language of FACTORY_LANGUAGES){
+  const items=questions[language];
+  if(!Array.isArray(items)||items.length!==3)throw Error('Exactly three questions required: '+language);
+  if(items.some(q=>typeof q!=='string'||q.trim().length<12||q.length>240||forbidden.test(q)))throw Error('Invalid specialist questions: '+language);
+  if(new Set(items.map(q=>q.trim().toLocaleLowerCase(language))).size!==3)throw Error('Duplicate specialist questions: '+language);
+  localized[language]=items.map(q=>q.trim());
+ }
+ return Object.freeze({definition,routing,questions:Object.freeze(localized),requiresSafetyReview:true,automaticDeployment:false});
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
