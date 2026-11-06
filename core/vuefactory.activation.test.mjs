@@ -28,7 +28,7 @@ test('activation manifest includes real VUECORE edit targets but never applies t
  assert.equal(plan.specialist,'trainingvue');
  assert.equal(plan.automaticApply,false);
  assert.equal(plan.productionReady,false);
- assert.deepEqual(plan.edits.map(e=>e.file),['core/specialists.js','core/specialists.js','core/router.js']);
+ assert.deepEqual(plan.edits.map(e=>e.file),['core/specialists.js','core/specialists.js','core/router.js','apps/router-content.js','api/vue-router.js']);
  assert.deepEqual(plan.edits[1].value,questions);
 });
 
