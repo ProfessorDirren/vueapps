@@ -197,6 +197,34 @@ export function prepareVueActivation(input,existingIds=[],existingKeywords=[]){
   productionReady:false
  };
 }
+/**
+ * Review-only source patch for VUECORE declarations.
+ * Never writes files, merges, deploys, or bypasses safety review.
+ */
+export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKeywords=[]){
+ const plan=prepareVueActivation(input,existingIds,existingKeywords);
+ const specialists=files?.['core/specialists.js'];
+ const router=files?.['core/router.js'];
+ if(typeof specialists!=='string'||typeof router!=='string')throw Error('Both VUECORE source files required');
+ const anchors=[[specialists,'export const SPECIALISTS=Object.freeze({'],[specialists,'const questions={'],[router,'const rules=[']];
+ for(const [source,anchor] of anchors)if(source.split(anchor).length!==2)throw Error('Unexpected VUECORE source layout: '+anchor);
+ const id=plan.specialist;
+ if(specialists.includes(' '+id+':')||router.includes("['"+id+"',"))throw Error('Specialist already in source');
+ const escapeRegex=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\export function scaffoldVue(input){');
+ const pattern=plan.routingKeywords.map(escapeRegex).join('|');
+ const patchedSpecialists=specialists
+  .replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n '+id+':'+JSON.stringify(plan.profile)+',')
+  .replace('const questions={','const questions={\n '+id+':'+JSON.stringify(plan.questions)+',');
+ const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+pattern+"/iu],");
+ return Object.freeze({
+  specialist:id,
+  files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
+  reviewRequired:true,
+  incomplete:['Memory domain and API consistency','UI card and translated labels','Routing precedence and emergency safety','End-to-end tests'],
+  automaticApply:false,
+  productionReady:false
+ });
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
