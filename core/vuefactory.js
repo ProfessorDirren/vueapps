@@ -226,11 +226,11 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
  const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+guardedPattern+"/iu],");
  const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
  const uiPatch=files?.['apps/router-content.js'];
- if(uiPatch!==undefined&&typeof uiPatch!=='string')throw Error('Invalid UI source');
+ if(uiPatch!==undefined&&(typeof uiPatch!=='string'||uiPatch.split('export const ROUTER_TEXT=').length!==2))throw Error('Invalid UI source');
  const uiPreview=typeof uiPatch==='string'?{
   file:'apps/router-content.js',
   labels:uiLabels,
-  sourceVerified:uiPatch.includes('export const ROUTER_TEXT='),
+  sourceVerified:true,
   action:'review-specialist-card-localization',
   automaticApply:false
  }:null;
