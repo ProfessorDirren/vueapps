@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateVueActivation,FACTORY_LANGUAGES} from './vuefactory.js';
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(l=>[l,'Martial arts '+l]));
-const questions=Object.fromEntries(FACTORY_LANGUAGES.map(l=>[l,'Which martial art do you practice?','What is your training experience?','What would you like to improve?']));
+const questions=Object.fromEntries(FACTORY_LANGUAGES.map(l=>[l,'Which martial art do you practice?','What is your training experience so far?','What would you like to improve in training?']));
 const valid={id:'trainingvue',scope:'Educational martial arts training advice',method:'Provide educational guidance about martial arts training with safe practice, supervision, appropriate equipment, and careful attention to injury prevention.',labels,routingKeywords:['training techniques','martial training'],questions};
 test('activation requires seven languages and produces no deployment',()=>{
  const result=validateVueActivation(valid);
