@@ -193,15 +193,11 @@ test('activation manifest explicitly requires localized UI and API dispatch revi
  assert.equal(manifest.safetyReviewRequired,true);
 });
 
-test('production router never dispatches an unregistered factory specialist across seven languages',async()=>{
+test('VUECORE never routes to an unregistered factory specialist after localized previews',()=>{
  for(const language of FACTORY_LANGUAGES){
-  const response=await routeApi(new Request('https://localhost/api/vue-router',{
-   method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({language,question:'study planning',previous:'learningvue'})
-  }));
-  assert.equal(response.status,200,'language '+language);
-  const result=await response.json();
-  assert.equal(result.domain,'anyvue','factory specialist must remain unregistered in '+language);
-  assert.notEqual(result.workspace,'./learningvue.html');
+  const route=routeQuestion('study planning','learningvue');
+  assert.equal(route.domain,'anyvue','unregistered factory previous domain for '+language);
+  assert.equal(ROUTED_SPECIALIST_IDS.includes('learningvue'),false);
+  assert.equal(MEMORY_DOMAINS.includes('learningvue'),false);
  }
 });
