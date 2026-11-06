@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {SPECIALISTS} from './specialists.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {ROUTED_SPECIALIST_IDS,routeQuestion} from './router.js';
-import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,previewVueCoreSourcePatch} from './vuefactory.js';
+import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,validateVueActivation,previewVueCoreSourcePatch} from './vuefactory.js';
 import {POST as routeApi} from '../api/vue-router.js';
 
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,'Education '+lang]));
@@ -133,4 +133,16 @@ test('factory sandbox does not create or register specialists in real VUECORE',a
  assert.equal(result.guide.label,'Education es');
  assert.equal(Object.hasOwn(SPECIALISTS,'learningvue'),false);
  assert.equal(MEMORY_DOMAINS.includes('learningvue'),false);
+});
+
+test('activation fails closed if any of seven localized question sets is missing',()=>{
+ for(const language of FACTORY_LANGUAGES){
+  const incomplete={...definition,questions:{...definition.questions}};
+  delete incomplete.questions[language];
+  assert.throws(()=>validateVueActivation(incomplete,Object.keys(SPECIALISTS)),new RegExp('Exactly three questions required: '+language.replace('-','\\-')));
+ }
+});
+test('activation rejects duplicate specialist IDs and keyword collisions',()=>{
+ assert.throws(()=>validateVueActivation({...definition,id:'anivue'},Object.keys(SPECIALISTS)),/Specialist already registered/);
+ assert.throws(()=>validateVueActivation(definition,Object.keys(SPECIALISTS),['study planning']),/Routing keyword collision/);
 });
