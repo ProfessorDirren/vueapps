@@ -2,6 +2,7 @@
  * VUEFACTORY v1 — deterministic, offline specialist scaffolding.
  * Generates a reviewable domain profile; never registers, deploys, or calls AI.
  */
+import {obviousIdentifier} from './memory.js';
 export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
