@@ -47,3 +47,10 @@ test('review-only patch includes profile, questions and routing without mutating
 test('source patch fails closed on unexpected source layout',()=>{
  assert.throws(()=>previewVueCoreSourcePatch(valid,{'core/specialists.js':'unknown','core/router.js':'const rules=['}),/Unexpected VUECORE/);
 });
+
+test('routing patch escapes regex metacharacters in literal keywords',()=>{
+ const source={'core/specialists.js':'export const SPECIALISTS=Object.freeze({\n});\nconst questions={\n};','core/router.js':'const rules=[\n];'};
+ const special={...valid,routingKeywords:['c++ training','a.b training']};
+ // Literal keyword validation rejects punctuation rather than creating an unsafe regex.
+ assert.throws(()=>previewVueCoreSourcePatch(special,source),/Unsafe routing keyword/);
+});
