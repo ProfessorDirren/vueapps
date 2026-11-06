@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {SPECIALISTS} from './specialists.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {ROUTED_SPECIALIST_IDS,routeQuestion} from './router.js';
-import {FACTORY_LANGUAGES,previewVueCoreSourcePatch} from './vuefactory.js';
+import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,previewVueCoreSourcePatch} from './vuefactory.js';
 import {POST as routeApi} from '../api/vue-router.js';
 
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,'Education '+lang]));
@@ -80,5 +80,17 @@ test('all seven languages retain localized MEDIVUE API response',async()=>{
   assert.equal(body.kind,'local_guidance');
   assert.equal(typeof body.answer,'string');
   assert.ok(body.answer.length>20);
+ }
+});
+
+test('VUEFACTORY sandbox API rejects personal identifiers in all seven languages',async()=>{
+ const sandbox=createFactoryTestApi(createFactoryTestRegistry(definition,SPECIALISTS,routeQuestion));
+ for(const language of FACTORY_LANGUAGES){
+  const request=new Request('https://localhost/factory-preview',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({language,question:'study planning: email me at person@example.com'})
+  });
+  const response=await sandbox(request);
+  assert.equal(response.status,400,'sandbox privacy for '+language);
  }
 });
