@@ -52,3 +52,20 @@ test('factory preview cannot override an existing martial arts route',()=>{
  assert.equal(result.domain,'martialartsvue');
  assert.equal(result.source,'existing');
 });
+
+test('factory never hijacks ambiguous existing VUECORE routing',()=>{
+ const question='My dog needs medicine for training stance';
+ const existing=routeQuestion(question);
+ assert.equal(existing.clarify,true);
+ const result=simulateVueIntegration(definition,question,routeQuestion);
+ assert.equal(result.clarify,true);
+ assert.equal(result.source,'existing');
+ assert.equal(result.domain,null);
+});
+test('factory can propose only an ANYVUE fallback without registering it',()=>{
+ const result=simulateVueIntegration(definition,'practice footwork',routeQuestion);
+ assert.equal(result.domain,'trainingvue');
+ assert.equal(result.source,'factory-preview');
+ assert.equal(result.reviewRequired,true);
+ assert.equal(Object.hasOwn(SPECIALISTS,'trainingvue'),false);
+});
