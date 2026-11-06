@@ -39,12 +39,12 @@ test('review-only generated specialist is absent from real memory and router',as
 test('production API rejects an unregistered proposed specialist as previous domain',async()=>{
  const request=new Request('https://localhost/api/vue-router',{
   method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({language:'en',question:'study planning',previous:'learningvue'})
+  body:JSON.stringify({language:'en',question:'medication leaflet',previous:'learningvue'})
  });
  const response=await routeApi(request);
  assert.equal(response.status,200);
  const result=await response.json();
- assert.notEqual(result.domain,'learningvue');
+ assert.equal(result.domain,'medivue');
 });
 test('production API rejects unsupported language before routing',async()=>{
  const request=new Request('https://localhost/api/vue-router',{
