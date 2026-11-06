@@ -264,4 +264,6 @@ test('factory UI preview validates real localization source without writing it',
  assert.equal(Object.hasOwn(patch.files,'apps/router-content.js'),false);
  assert.equal(await readFile(new URL('../apps/router-content.js',import.meta.url),'utf8'),originals['apps/router-content.js']);
  assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':42},Object.keys(SPECIALISTS)),/Invalid UI source/);
+ assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':'export const OTHER_TEXT={}'},Object.keys(SPECIALISTS)),/Invalid UI source/);
+ assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':originals['apps/router-content.js']+'\nexport const ROUTER_TEXT={}'},Object.keys(SPECIALISTS)),/Invalid UI source/);
 });
