@@ -166,3 +166,15 @@ test('review-only patch adds all seven questions without changing live VUECORE f
  assert.equal(await readFile(new URL('./specialists.js',import.meta.url),'utf8'),originals['core/specialists.js']);
  assert.equal(await readFile(new URL('./router.js',import.meta.url),'utf8'),originals['core/router.js']);
 });
+
+test('source patch rejects duplicate specialist declarations despite alternate formatting',async()=>{
+ const originals={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8')
+ };
+ const cases=[
+  {...originals,'core/specialists.js':originals['core/specialists.js'].replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\nlearningvue : {scope:"duplicate"},')},
+  {...originals,'core/router.js':originals['core/router.js'].replace('const rules=[','const rules=[\n [ "learningvue" , 3, /duplicate/iu ],')}
+ ];
+ for(const files of cases)assert.throws(()=>previewVueCoreSourcePatch(definition,files,Object.keys(SPECIALISTS)),/Specialist already in source/);
+});
