@@ -267,3 +267,20 @@ test('factory UI preview validates real localization source without writing it',
  assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':'export const OTHER_TEXT={}'},Object.keys(SPECIALISTS)),/Invalid UI source/);
  assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':originals['apps/router-content.js']+'\nexport const ROUTER_TEXT={}'},Object.keys(SPECIALISTS)),/Invalid UI source/);
 });
+
+test('factory API integration preview verifies the real registration gate without modifying dispatch',async()=>{
+ const originals={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8'),
+  'api/vue-router.js':await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8')
+ };
+ const patch=previewVueCoreSourcePatch(definition,originals,Object.keys(SPECIALISTS));
+ assert.equal(patch.apiPreview.sourceVerified,true);
+ assert.equal(patch.apiPreview.registeredSpecialistGatePresent,true);
+ assert.equal(patch.apiPreview.proposedSpecialist,'learningvue');
+ assert.equal(patch.apiPreview.automaticApply,false);
+ assert.equal(Object.hasOwn(patch.files,'api/vue-router.js'),false);
+ assert.equal(await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8'),originals['api/vue-router.js']);
+ assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'api/vue-router.js':originals['api/vue-router.js'].replace('isRegisteredSpecialist(route.domain)','true')},Object.keys(SPECIALISTS)),/Invalid API dispatch source/);
+ assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'api/vue-router.js':'export async function POST(request) {}'},Object.keys(SPECIALISTS)),/Invalid API dispatch source/);
+});
