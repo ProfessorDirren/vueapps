@@ -36,3 +36,11 @@ A human must review domain safety, routing collisions, translation quality, sour
 ## Next milestone
 
 Produce a reviewable integration patch for the central registry, memory domains, router, API, and localized UI, then test the complete route end-to-end. Keep manual approval for high-stakes domain safety and production release.
+
+## Activation validation (PR #117)
+
+`validateVueActivation(definition, existingIds, existingKeywords)` adds a stricter **opt-in** gate for candidates intended for VUECORE registration. It requires exactly three distinct, nonempty localized follow-up questions in each of the seven supported languages, checks for existing specialist IDs, and rejects exact routing keyword collisions. It is intentionally stricter than the draft generator, which remains backward-compatible.
+
+`prepareVueActivation(definition, existingIds, existingKeywords)` returns a structured, reviewable manifest containing the profile, all seven labels and question arrays, and proposed registry/router edits. It **does not edit source files, register a specialist, update UI cards, run production API tests, merge, or deploy**. Exact keyword collision detection does not prove that different keywords are semantically distinct or that existing routing precedence is safe.
+
+Before any apply workflow is introduced, require code-review of domain safety (including emergency-first behavior), route precedence, localized content, UI/API integration, and complete regression tests. No paid APIs or automatic deployment are authorized.
