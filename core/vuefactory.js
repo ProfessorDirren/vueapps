@@ -210,7 +210,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
  const anchors=[[specialists,'export const SPECIALISTS=Object.freeze({'],[specialists,'const questions={'],[router,'const rules=[']];
  for(const [source,anchor] of anchors)if(source.split(anchor).length!==2)throw Error('Unexpected VUECORE source layout: '+anchor);
  const id=plan.specialist;
- if(new RegExp('(?:^|[,{\\s])'+id+'\\s*:','m').test(specialists)||new RegExp(String.raw`\\[\\s*['"]`+id+String.raw`['"]\\s*,`).test(router))throw Error('Specialist already in source');
+ if(new RegExp('(?:^|[,{\\s])'+id+'\\s*:','m').test(specialists)||new RegExp('\\[\\s*[\\x27\\x22]'+id+'[\\x27\\x22]\\s*,').test(router))throw Error('Specialist already in source');
  const escapeRegex=value=>Array.from(value).map(char=>'.*+?^${}()|[]\\'.includes(char)?'\\'+char:char).join('');
  const pattern=plan.routingKeywords.map(escapeRegex).join('|');
  const patchedSpecialists=specialists
