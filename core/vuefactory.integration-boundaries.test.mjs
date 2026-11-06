@@ -5,6 +5,7 @@ import {SPECIALISTS} from './specialists.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {ROUTED_SPECIALIST_IDS,routeQuestion} from './router.js';
 import {FACTORY_LANGUAGES,previewVueCoreSourcePatch} from './vuefactory.js';
+import {POST as routeApi} from '../api/vue-router.js';
 
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,'Education '+lang]));
 const questions=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,[
@@ -33,4 +34,24 @@ test('review-only generated specialist is absent from real memory and router',as
  assert.equal(MEMORY_DOMAINS.includes('learningvue'),false);
  assert.equal(ROUTED_SPECIALIST_IDS.includes('learningvue'),false);
  assert.equal(routeQuestion('study planning').domain,'anyvue');
+});
+
+test('production API rejects an unregistered proposed specialist as previous domain',async()=>{
+ const request=new Request('https://localhost/api/vue-router',{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({language:'en',question:'study planning',previous:'learningvue'})
+ });
+ const response=await routeApi(request);
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.notEqual(result.domain,'learningvue');
+});
+test('production API rejects unsupported language before routing',async()=>{
+ const request=new Request('https://localhost/api/vue-router',{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({language:'xx',question:'study planning'})
+ });
+ const response=await routeApi(request);
+ assert.equal(response.status,400);
+ assert.equal((await response.json()).error,'Invalid language');
 });
