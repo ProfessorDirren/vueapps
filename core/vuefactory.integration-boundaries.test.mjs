@@ -214,3 +214,19 @@ test('factory patch explicitly blocks release until API UI safety and approval a
  assert.equal(patch.productionReady,false);
  assert.equal(patch.automaticApply,false);
 });
+
+test('sandbox API serves validated specialist questions in each requested language',async()=>{
+ const sandbox=createFactoryTestApi(createFactoryTestRegistry(definition,SPECIALISTS,routeQuestion));
+ for(const language of FACTORY_LANGUAGES){
+  const response=await sandbox(new Request('https://localhost/factory-preview',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({language,question:'study planning'})
+  }));
+  assert.equal(response.status,200,'language '+language);
+  const body=await response.json();
+  assert.equal(body.domain,'learningvue');
+  assert.deepEqual(body.guide.questions,questions[language]);
+  assert.equal(body.guide.label,labels[language]);
+  assert.equal(body.testOnly,true);
+ }
+});
