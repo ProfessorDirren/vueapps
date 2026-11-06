@@ -250,3 +250,18 @@ test('generated router uses Unicode boundaries and preserves Han keyword matches
  assert.ok(hanMatch);
  assert.equal(new RegExp(hanMatch[1],'iu').test('我想了解学习方法'),true);
 });
+
+test('factory UI preview validates real localization source without writing it',async()=>{
+ const originals={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8'),
+  'apps/router-content.js':await readFile(new URL('../apps/router-content.js',import.meta.url),'utf8')
+ };
+ const patch=previewVueCoreSourcePatch(definition,originals,Object.keys(SPECIALISTS));
+ assert.equal(patch.uiPreview.sourceVerified,true);
+ assert.equal(patch.uiPreview.automaticApply,false);
+ assert.deepEqual(patch.uiPreview.labels,labels);
+ assert.equal(Object.hasOwn(patch.files,'apps/router-content.js'),false);
+ assert.equal(await readFile(new URL('../apps/router-content.js',import.meta.url),'utf8'),originals['apps/router-content.js']);
+ assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'apps/router-content.js':42},Object.keys(SPECIALISTS)),/Invalid UI source/);
+});
