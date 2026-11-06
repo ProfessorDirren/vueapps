@@ -55,3 +55,30 @@ test('production API rejects unsupported language before routing',async()=>{
  assert.equal(response.status,400);
  assert.equal((await response.json()).error,'Invalid language');
 });
+
+test('all seven supported languages preserve API validation and private-data rejection',async()=>{
+ for(const language of FACTORY_LANGUAGES){
+  const request=new Request('https://localhost/api/vue-router',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({language,question:'Contact me at person@example.com about study planning'})
+  });
+  const response=await routeApi(request);
+  assert.equal(response.status,400,'private identifier rejected for '+language);
+  assert.equal((await response.json()).error,'Invalid public question');
+ }
+});
+test('all seven languages retain localized MEDIVUE API response',async()=>{
+ for(const language of FACTORY_LANGUAGES){
+  const request=new Request('https://localhost/api/vue-router',{
+   method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({language,question:'medication leaflet'})
+  });
+  const response=await routeApi(request);
+  assert.equal(response.status,200,'language '+language);
+  const body=await response.json();
+  assert.equal(body.domain,'medivue');
+  assert.equal(body.kind,'local_guidance');
+  assert.equal(typeof body.answer,'string');
+  assert.ok(body.answer.length>20);
+ }
+});
