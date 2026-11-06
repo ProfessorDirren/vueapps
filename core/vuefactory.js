@@ -219,7 +219,11 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
  const patchedSpecialists=specialists
   .replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n '+id+':'+JSON.stringify(plan.profile)+',')
   .replace('const questions={','const questions={\n '+id+':'+JSON.stringify(plan.questions)+',');
- const patchedRouter=router.replace('const rules=[',"const rules=[\n ['"+id+"',3,/"+pattern+"/iu],");
+ const guardedPattern=plan.routingKeywords.map(keyword=>{
+  const literal=escapeRegex(keyword);
+  return /^[\\p{Script=Han}]+$/u.test(keyword)?literal:'(?<![\\p{L}\\p{N}])(?:'+literal+')(?![\\p{L}\\p{N}])';
+ }).join('|');
+ const patchedRouter=router.replace('const rules=[',"const rules=[\\n ['"+id+"',3,/"+guardedPattern+"/iu],");
  return Object.freeze({
   specialist:id,
   files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
