@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {SPECIALISTS} from './specialists.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {ROUTED_SPECIALIST_IDS,routeQuestion} from './router.js';
-import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,validateVueActivation,previewVueCoreSourcePatch} from './vuefactory.js';
+import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,validateVueActivation,prepareVueActivation,previewVueCoreSourcePatch} from './vuefactory.js';
 import {POST as routeApi} from '../api/vue-router.js';
 
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,'Education '+lang]));
@@ -178,4 +178,17 @@ test('source patch rejects duplicate specialist declarations despite alternate f
  ];
  cases.push({...originals,'core/specialists.js':originals['core/specialists.js'].replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n "learningvue" : {scope:"duplicate"},')});
  for(const files of cases)assert.throws(()=>previewVueCoreSourcePatch(definition,files,Object.keys(SPECIALISTS)),/Specialist already in source/);
+});
+
+test('activation manifest explicitly requires localized UI and API dispatch review',()=>{
+ const manifest=prepareVueActivation(definition,Object.keys(SPECIALISTS));
+ const ui=manifest.edits.find(edit=>edit.file==='apps/router-content.js');
+ const api=manifest.edits.find(edit=>edit.file==='api/vue-router.js');
+ assert.ok(ui,'UI integration must not be omitted');
+ assert.ok(api,'API integration must not be omitted');
+ assert.deepEqual(ui.value,labels);
+ assert.equal(api.action,'review-api-dispatch');
+ assert.equal(manifest.automaticApply,false);
+ assert.equal(manifest.productionReady,false);
+ assert.equal(manifest.safetyReviewRequired,true);
 });
