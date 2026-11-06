@@ -173,6 +173,30 @@ export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
  }
  return Object.freeze({definition,routing,questions:Object.freeze(localized),requiresSafetyReview:true,automaticDeployment:false});
 }
+/**
+ * Produce a complete, reviewable activation manifest without mutating VUECORE.
+ * A separate reviewed integration step must apply it; deployment is never implicit.
+ */
+export function prepareVueActivation(input,existingIds=[],existingKeywords=[]){
+ const {definition,routing,questions}=validateVueActivation(input,existingIds,existingKeywords);
+ const profile={scope:definition.scope,method:definition.method,...(definition.sources.length?{sources:definition.sources}:{})};
+ return {
+  specialist:definition.id,
+  profile,
+  labels:definition.labels,
+  questions,
+  routingKeywords:routing.keywords,
+  edits:[
+   {file:'core/specialists.js',section:'SPECIALISTS',key:definition.id,value:profile},
+   {file:'core/specialists.js',section:'questions',key:definition.id,value:questions},
+   {file:'core/router.js',section:'rules',key:definition.id,value:routing.keywords}
+  ],
+  safetyReviewRequired:true,
+  routingPrecedenceReviewRequired:true,
+  automaticApply:false,
+  productionReady:false
+ };
+}
 export function scaffoldVue(input){
  const d=validateVueDefinition(input);
  const profile={scope:d.scope,method:d.method,...(d.sources.length?{sources:d.sources}:{})};
