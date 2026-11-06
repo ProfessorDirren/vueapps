@@ -121,7 +121,7 @@ export function createFactoryTestApi(registry){
    if(raw.length>10000)return Response.json({error:'Too large'},{status:413});
    body=JSON.parse(raw);
   }catch{return Response.json({error:'Invalid JSON'},{status:400})}
-  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
+  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
   const route=registry.route(body.question);
   if(route.clarify)return Response.json({domain:null,clarify:true,candidates:route.candidates||[],testOnly:true});
   if(!registry.isRegistered(route.domain))return Response.json({error:'Unregistered specialist'},{status:422});
