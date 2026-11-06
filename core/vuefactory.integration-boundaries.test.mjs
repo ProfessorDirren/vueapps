@@ -201,3 +201,16 @@ test('VUECORE never routes to an unregistered factory specialist after localized
   assert.equal(MEMORY_DOMAINS.includes('learningvue'),false);
  }
 });
+
+test('factory patch explicitly blocks release until API UI safety and approval are complete',async()=>{
+ const sources={
+  'core/specialists.js':await readFile(new URL('./specialists.js',import.meta.url),'utf8'),
+  'core/router.js':await readFile(new URL('./router.js',import.meta.url),'utf8')
+ };
+ const patch=previewVueCoreSourcePatch(definition,sources,Object.keys(SPECIALISTS));
+ const blockers=patch.incomplete.join(' ');
+ for(const required of ['API dispatch','UI card','emergency safety','end-to-end','Human approval'])
+  assert.ok(blockers.includes(required),'missing release blocker: '+required);
+ assert.equal(patch.productionReady,false);
+ assert.equal(patch.automaticApply,false);
+});
