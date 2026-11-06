@@ -89,6 +89,27 @@ export function simulateVueIntegration(input,question,routeExisting){
  return {domain:proposed.matched?proposed.specialist:existing.domain,clarify:false,source:proposed.matched?'factory-preview':'existing',proposedMatch:proposed.matched,reviewRequired:true};
 }
 /**
+ * Evaluate a proposed specialist against real routing decisions before review.
+ * Existing domains and clarification always take precedence over new matches.
+ * This report never registers a specialist or changes the live router.
+ */
+export function auditVueRoutingPrecedence(input,questions,routeExisting){
+ if(!Array.isArray(questions)||questions.length<1||questions.length>100)throw Error('Provide 1–100 review questions');
+ if(typeof routeExisting!=='function')throw Error('Existing VUECORE router required');
+ const cases=questions.map(question=>{
+  if(typeof question!=='string'||question.length<3||question.length>3000||obviousIdentifier(question))throw Error('Invalid public review question');
+  const existing=routeExisting(question);
+  const proposed=simulateVueIntegration(input,question,routeExisting);
+  const matched=previewVueRouting(input,question);
+  const protectedRoute=existing.clarify===true||(existing.domain&&existing.domain!=='anyvue');
+  return Object.freeze({question,existingDomain:existing.domain??null,proposedDomain:proposed.domain??null,
+   matched:matched.matched,protectedRoute:!!protectedRoute,existingPreserved:!protectedRoute||proposed.domain===existing.domain});
+ });
+ return Object.freeze({specialist:validateVueDefinition(input).id,cases,
+  precedencePreserved:cases.every(item=>item.existingPreserved),
+  reviewRequired:true,automaticApply:false,productionReady:false});
+}
+/**
  * Isolated, in-memory specialist registration for integration tests.
  * The real VUECORE registry and router remain unchanged.
  */
