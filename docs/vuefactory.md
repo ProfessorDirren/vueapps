@@ -44,3 +44,9 @@ Produce a reviewable integration patch for the central registry, memory domains,
 `prepareVueActivation(definition, existingIds, existingKeywords)` returns a structured, reviewable manifest containing the profile, all seven labels and question arrays, and proposed registry/router edits. It **does not edit source files, register a specialist, update UI cards, run production API tests, merge, or deploy**. Exact keyword collision detection does not prove that different keywords are semantically distinct or that existing routing precedence is safe.
 
 Before any apply workflow is introduced, require code-review of domain safety (including emergency-first behavior), route precedence, localized content, UI/API integration, and complete regression tests. No paid APIs or automatic deployment are authorized.
+
+## Real-source routing regression coverage
+
+`core/vuefactory.real-source.test.mjs` exercises the review-only source patch against the actual checked-in `core/specialists.js` and `core/router.js`, without writing to either file. It checks non-mutation, duplicate registration protection, existing ANIVUE and MARTIALARTSVUE precedence, preservation of ambiguous existing routes, and provisional matching only on ANYVUE fallback. The tests run via `npm test`.
+
+**Release gate:** Passing these unit/regression tests does not certify production API dispatch, memory-domain registration, UI localization, semantic routing collisions, or emergency-first behavior. This PR remains a draft until those integration requirements are implemented and tested. Do not treat a generated source preview as an applied patch or deploy it automatically.
