@@ -223,7 +223,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   specialist:id,
   files:Object.freeze({'core/specialists.js':patchedSpecialists,'core/router.js':patchedRouter}),
   reviewRequired:true,
-  incomplete:['Memory domain and API consistency','UI card and translated labels','Routing precedence and emergency safety','End-to-end tests'],
+  incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
   automaticApply:false,
   productionReady:false
  });
