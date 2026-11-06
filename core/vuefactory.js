@@ -190,7 +190,9 @@ export function prepareVueActivation(input,existingIds=[],existingKeywords=[]){
   edits:[
    {file:'core/specialists.js',section:'SPECIALISTS',key:definition.id,value:profile},
    {file:'core/specialists.js',section:'questions',key:definition.id,value:questions},
-   {file:'core/router.js',section:'rules',key:definition.id,value:routing.keywords}
+   {file:'core/router.js',section:'rules',key:definition.id,value:routing.keywords},
+   {file:'apps/router-content.js',section:'localization',key:definition.id,value:definition.labels,action:'review-ui-labels'},
+   {file:'api/vue-router.js',section:'dispatch',key:definition.id,value:null,action:'review-api-dispatch'}
   ],
   safetyReviewRequired:true,
   routingPrecedenceReviewRequired:true,
