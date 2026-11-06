@@ -210,7 +210,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
  for(const [source,anchor] of anchors)if(source.split(anchor).length!==2)throw Error('Unexpected VUECORE source layout: '+anchor);
  const id=plan.specialist;
  if(specialists.includes(' '+id+':')||router.includes("['"+id+"',"))throw Error('Specialist already in source');
- const escapeRegex=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\export function scaffoldVue(input){');
+ const escapeRegex=value=>Array.from(value).map(char=>'.*+?^${}()|[]\\'.includes(char)?'\\'+char:char).join('');
  const pattern=plan.routingKeywords.map(escapeRegex).join('|');
  const patchedSpecialists=specialists
   .replace('export const SPECIALISTS=Object.freeze({','export const SPECIALISTS=Object.freeze({\n '+id+':'+JSON.stringify(plan.profile)+',')
