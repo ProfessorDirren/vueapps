@@ -111,3 +111,26 @@ test('factory sandbox never intercepts emergency animal routing in any supported
   assert.equal(body.answer,null);
  }
 });
+
+test('factory sandbox does not create or register specialists in real VUECORE',async()=>{
+ const before=Object.keys(SPECIALISTS).sort();
+ const memoryBefore=[...MEMORY_DOMAINS];
+ const registry=createFactoryTestRegistry(definition,SPECIALISTS,routeQuestion);
+ assert.equal(registry.isRegistered('learningvue'),true);
+ assert.equal(Object.hasOwn(SPECIALISTS,'learningvue'),false);
+ assert.deepEqual(Object.keys(SPECIALISTS).sort(),before);
+ assert.deepEqual([...MEMORY_DOMAINS],memoryBefore);
+ const sandbox=createFactoryTestApi(registry);
+ const response=await sandbox(new Request('https://localhost/factory-preview',{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({language:'es',question:'study planning'})
+ }));
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.equal(result.domain,'learningvue');
+ assert.equal(result.testOnly,true);
+ assert.equal(result.reviewRequired,true);
+ assert.equal(result.guide.label,'Education es');
+ assert.equal(Object.hasOwn(SPECIALISTS,'learningvue'),false);
+ assert.equal(MEMORY_DOMAINS.includes('learningvue'),false);
+});
