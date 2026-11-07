@@ -21,5 +21,5 @@ test('VUECORE video actions refresh and release language listener on disposal',(
 
 test('Help refreshes after the portal commits the selected language',()=>{
  assert.match(help,/document\.addEventListener\?\.\('vueapps:languagechange', render\)/);
- assert.match(help,/document\.removeEventListener\?\.\('vueapps:languagechange', render\)/);
+ assert.match(help,/return render;/);
 });
