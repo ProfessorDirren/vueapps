@@ -8,7 +8,7 @@ for (const page of pages) test(`${page} loads shared analytics`, () => {
 });
 test('analytics uses bounded events without collecting user content', () => {
   const script = read('analytics.js');
-  for (const name of ['assessment_started','assessment_completed','specialist_action']) assert.ok(script.includes(name));
+  for (const name of ['assessment_started','assessment_completed','assessment_failed','specialist_action']) assert.ok(script.includes(name));
   assert.match(script,/disable_session_recording: true/);
   assert.match(script,/autocapture: false/);
   assert.match(script,/person_profiles: 'never'/);
@@ -20,7 +20,7 @@ test('assessment API tracking covers specialist endpoints without reading payloa
  for (const endpoint of ['vue-router','antiqvue','vinylvue','musicgearvue','wardrobevue','medivue','foodvue']) assert.ok(script.includes("'"+endpoint+"'"));
  assert.match(script,/url\.origin === location\.origin/);
  assert.match(script,/method !== 'POST'/);
- assert.match(script,/if \(response\.ok\)/);
+ assert.match(script,/response\.ok\?'assessment_completed':'assessment_failed'/);
  assert.doesNotMatch(script,/response\.json\(|response\.text\(|init\.body/);
  for (const file of ['apps/router.js','apps/antiqvue.js']) assert.doesNotMatch(read(file),/name:'assessment_(started|completed)'/);
 });
