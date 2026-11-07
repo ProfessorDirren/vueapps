@@ -72,3 +72,10 @@ test('MARTIALARTSVUE card and action have seven language variants and update wit
  assert.match(portal,/querySelector\("#app-martialartsvue p"\)\.textContent=martial\[0\]/);
  assert.match(portal,/querySelector\("#app-martialartsvue a"\)\.textContent=martial\[1\]/);
 });
+
+test('HOMEVUE and shared tool action links use the selected language',()=>{
+ assert.match(portal,/const toolLinkVerbs=/);
+ assert.match(portal,/sv:"Öppna"/);
+ assert.match(portal,/es:"Abrir"/);
+ assert.match(portal,/toolLinkVerbs\[lang\]\|\|toolLinkVerbs\.en/);
+});
