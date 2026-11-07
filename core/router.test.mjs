@@ -97,7 +97,7 @@ test('all routed VUE specialists inherit the selected language across seven lang
   for(const [language,name] of Object.entries(names)){
    expectedLanguage=name;
    for(const [domain,question] of examples){
-    const r=await POST(req({question,language,previous:domain==='anivue'?'armvue':'anivue'}));
+    const r=await POST(req({question,language,previous:domain==='anyvue'?null:domain==='anivue'?'armvue':'anivue'}));
     assert.equal(r.status,200,domain+' '+language);
     const d=await r.json();assert.equal(d.domain,domain,question+' '+language);
    }
