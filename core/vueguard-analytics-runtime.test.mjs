@@ -51,5 +51,5 @@ test('VUEGUARD: a failed HTTP response cannot be counted as completed',async()=>
   const env=boot({fetchResponse:{ok:false,status:500}});
   env.document.head.script.onload();
   await env.window.fetch('/api/vue-router',{method:'POST'});
-  assert.deepEqual(env.captures.map(e=>e.name),['$pageview','assessment_started']);
+  assert.deepEqual(env.captures.map(e=>e.name),['$pageview','assessment_started','assessment_failed']);
 });
