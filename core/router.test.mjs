@@ -105,3 +105,5 @@ test('all routed VUE specialists inherit the selected language across seven lang
   assert.equal(checked,examples.length*Object.keys(names).length);
  }finally{globalThis.fetch=old;process.env=saved}
 });
+
+test('Swedish pistol troubleshooting routes to ARMVUE despite a prior ANIVUE case',()=>{assert.equal(routeQuestion('min pistol funkar inte','anivue').domain,'armvue');assert.equal(routeQuestion('min pistol funkar inte').domain,'armvue')});
