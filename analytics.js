@@ -29,15 +29,18 @@
     const label = endpoint === 'vue-router' ? 'VUECORE' : endpoint.toUpperCase();
     document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:'assessment_started',specialist:label}}));
     return nativeFetch(input, init).then(response => {
-      if (response.ok) document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:'assessment_completed',specialist:label}}));
+      document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:response.ok?'assessment_completed':'assessment_failed',specialist:label}}));
       return response;
+    }, error => {
+      document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:'assessment_failed',specialist:label}}));
+      throw error;
     });
   };
   const pending = [];
   let client = null;
   document.addEventListener('vueapps:analytics', (event) => {
     const {name, specialist, action} = event.detail || {};
-    if (!['assessment_started', 'assessment_completed', 'specialist_action'].includes(name)) return;
+    if (!['assessment_started', 'assessment_completed', 'assessment_failed', 'specialist_action'].includes(name)) return;
     if (typeof specialist !== 'string' || !/^[A-Z-]{2,32}$/.test(specialist)) return;
     const payload = {vue_app: specialist, $current_url: location.origin + location.pathname};
     if (name === 'specialist_action' && actionIds.has(action)) payload.action = action;
