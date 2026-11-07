@@ -70,3 +70,11 @@ test('caliber question switches from ANIVUE to ARMVUE while genuine follow-ups r
  assert.equal(routeQuestion('min 308 kostar 500 kr','anivue').domain,'anivue');
  assert.equal(routeQuestion('308 kronor','anivue').domain,'anivue');
 });
+
+test('ARMVUE handoff preserves Swedish UI language in provider instructions',async()=>{
+ const saved={...process.env},old=globalThis.fetch;
+ Object.assign(process.env,{UPSTASH_REDIS_REST_URL:'https://redis.test',UPSTASH_REDIS_REST_TOKEN:'test',OPENAI_API_KEY:'test'});
+ let observed=false;
+ globalThis.fetch=async(url,options)=>{if(url==='https://redis.test')return Response.json({result:1});const b=JSON.parse(options.body);observed=true;assert.match(b.instructions,/MANDATORY OUTPUT LANGUAGE: Swedish/);assert.match(b.instructions,/handoff MUST NOT reset/);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Kontakta en behörig vapensmed för kontroll.'}]}]})};
+ try{const r=await POST(req({question:'min 308 klickar',language:'sv',previous:'anivue',history:[{question:'min hund är sjuk',answer:'Hundens symtom'}]}));assert.equal(r.status,200);const d=await r.json();assert.equal(d.domain,'armvue');assert.match(d.answer,/Kontakta/);assert.equal(observed,true)}finally{globalThis.fetch=old;process.env=saved}
+});
