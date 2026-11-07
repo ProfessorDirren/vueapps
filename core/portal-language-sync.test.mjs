@@ -60,3 +60,15 @@ test('Help actually changes EN → SV → ES after the portal event', async()=>{
   else globalThis.document=originalDocument;
  }
 });
+
+test('MARTIALARTSVUE card and action have seven language variants and update with portal selection',()=>{
+ const languages=['en','sv','es','hi','zh-CN','ru','ar'];
+ const section=portal.match(/const martialTranslations=([\\s\\S]*?);\\s*const mediTranslations=/)?.[1];
+ assert.ok(section,'MARTIALARTSVUE translation dictionary exists');
+ for(const language of languages){
+  const key=language.includes('-')?JSON.stringify(language):language;
+  assert.ok(section.includes(key+':'),'missing MARTIALARTSVUE locale '+language);
+ }
+ assert.match(portal,/querySelector\\("#app-martialartsvue p"\\)\\.textContent=martial\\[0\\]/);
+ assert.match(portal,/querySelector\\("#app-martialartsvue a"\\)\\.textContent=martial\\[1\\]/);
+});
