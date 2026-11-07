@@ -296,7 +296,7 @@ function setLanguage(lang){
 const VUE_LANGUAGE_KEY="vue-language";
 let initialLanguage="en";try{const saved=localStorage.getItem(VUE_LANGUAGE_KEY);if(Object.hasOwn(translations,saved))initialLanguage=saved}catch{}
 setLanguage(initialLanguage);
-picker.addEventListener("change",()=>{setLanguage(picker.value);try{localStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
+picker.addEventListener("change",event=>{setLanguage(picker.value);if(event.detail?.automatic)return;try{localStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
 </script>
 </body>
 </html>

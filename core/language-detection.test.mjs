@@ -13,3 +13,10 @@ test('VUECORE detects supported non-Latin scripts',()=>{
 test('ambiguous short inputs do not override explicit language',()=>{
  for(const value of ['308 klickar','Testing testing','ok','1234567890','Gandalf','Min 308'])assert.equal(detect(value),null);
 });
+
+test('stray Devanagari or other foreign-script letters cannot hijack Swedish input',()=>{
+ assert.equal(detect('Min hund är sjuk och behöver hjälp अ'),null);
+ assert.equal(detect('Jag behöver hjälp med hunden अ'),null);
+ assert.equal(detect('Min hund är sjuk och behöver hjälp'),'sv');
+ assert.equal(detect('मेरा कुत्ता बीमार है'),'hi');
+});
