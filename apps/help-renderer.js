@@ -45,6 +45,7 @@ export function mountVueHelp({ host, help, language = () => 'en', languageContro
     trigger.setAttribute('aria-expanded', String(!panel.hidden));
   });
   languageControl?.addEventListener('change', render);
+  document.addEventListener?.('vueapps:languagechange', render);
   render();
   return render;
 }
