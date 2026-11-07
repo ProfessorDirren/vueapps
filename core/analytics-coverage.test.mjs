@@ -8,7 +8,7 @@ for (const page of pages) test(`${page} loads shared analytics`, () => {
 });
 test('analytics uses bounded events without collecting user content', () => {
   const script = read('analytics.js');
-  for (const name of ['assessment_started','assessment_completed','specialist_action']) assert.ok(script.includes(name));
+  for (const name of ['assessment_started','assessment_completed','assessment_failed','specialist_action']) assert.ok(script.includes(name));
   assert.match(script,/disable_session_recording: true/);
   assert.match(script,/autocapture: false/);
   assert.match(script,/person_profiles: 'never'/);
