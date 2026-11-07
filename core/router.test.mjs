@@ -78,3 +78,30 @@ test('ARMVUE handoff preserves Swedish UI language in provider instructions',asy
  globalThis.fetch=async(url,options)=>{if(url==='https://redis.test')return Response.json({result:1});const b=JSON.parse(options.body);observed=true;assert.match(b.instructions,/MANDATORY OUTPUT LANGUAGE: Swedish/);assert.match(b.instructions,/handoff MUST NOT reset/);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Kontakta en behörig vapensmed för kontroll.'}]}]})};
  try{const r=await POST(req({question:'min 308 klickar',language:'sv',previous:'anivue',history:[{question:'min hund är sjuk',answer:'Hundens symtom'}]}));assert.equal(r.status,200);const d=await r.json();assert.equal(d.domain,'armvue');assert.match(d.answer,/Kontakta/);assert.equal(observed,true)}finally{globalThis.fetch=old;process.env=saved}
 });
+
+test('all routed VUE specialists inherit the selected language across seven languages',async()=>{
+ const examples=[['martialartsvue','karate'],['estatevue','dödsbo'],['vinylvue','vinyl'],['musicgearvue','Marshall amplifier'],['wardrobevue','klänning'],['anivue','min hund är trött'],['motovue','bil starter'],['foodvue','E330'],['plantvue','krukväxt'],['antiqvue','antik byrå'],['armvue','min 308 klickar'],['homevue','luftfilter'],['slumpvue','överraska mig'],['anyvue','testing testing']];
+ const names={en:'English',sv:'Swedish',es:'Spanish',hi:'Hindi','zh-CN':'Simplified Chinese',ru:'Russian',ar:'Arabic'};
+ const saved={...process.env},old=globalThis.fetch;
+ Object.assign(process.env,{UPSTASH_REDIS_REST_URL:'https://redis.test',UPSTASH_REDIS_REST_TOKEN:'test',OPENAI_API_KEY:'test'});
+ let expectedLanguage,checked=0;
+ globalThis.fetch=async(url,options)=>{
+  if(url==='https://redis.test')return Response.json({result:1});
+  const body=JSON.parse(options.body);
+  assert.match(body.instructions,new RegExp('MANDATORY OUTPUT LANGUAGE: '+expectedLanguage));
+  assert.match(body.instructions,/specialist handoff MUST NOT reset it/);
+  checked++;
+  return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Localized response placeholder'}]}]});
+ };
+ try{
+  for(const [language,name] of Object.entries(names)){
+   expectedLanguage=name;
+   for(const [domain,question] of examples){
+    const r=await POST(req({question,language,previous:domain==='anyvue'?null:domain==='anivue'?'armvue':'anivue'}));
+    assert.equal(r.status,200,domain+' '+language);
+    const d=await r.json();assert.equal(d.domain,domain,question+' '+language);
+   }
+  }
+  assert.equal(checked,examples.length*Object.keys(names).length);
+ }finally{globalThis.fetch=old;process.env=saved}
+});
