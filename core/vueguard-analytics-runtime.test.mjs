@@ -17,7 +17,7 @@ function boot({dnt=null,gpc=false,hostname='www.vueapps.se',fetchResponse={ok:tr
     referrer:'',
     title:'VUEAPPS',
   };
-  const location={hostname,origin:'https://www.vueapps.se',pathname:'/'};
+  const location={hostname,origin:'https://www.vueapps.se',pathname:'/',href:'https://www.vueapps.se/'};
   const navigator={doNotTrack:dnt,globalPrivacyControl:gpc};
   const window={fetch:(...args)=>{requests.push(args);return Promise.resolve(fetchResponse)},
     posthog:{init(_key,options){options.loaded({capture:(name,properties)=>captures.push({name,properties})})}}};
