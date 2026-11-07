@@ -13,7 +13,7 @@ const rules=[
  ['foodvue',5,/e[- ]?nummer|\be\d{3,4}[a-z]?\b|ingredien|livsmedel|recept|matlagning|recipe|food|additive|receta|alimento|食品|食谱|пищ|рецепт|طعام|وصفة|भोजन/iu],
  ['plantvue',5,/växt|blomma|krukväxt|vattna|plant|flower|watering|planta|植物|цвет|растен|نبات|पौधा/iu],
  ['antiqvue',4,/antik|antique|möbel|byrå|\bstol\b|smycke|jewell?ery|furniture|armoire|antigüedad|古董|家具|антик|мебел|تحف|पुरावस्तु/iu],
- ['armvue',4,/vapenvård|vapen|firearm|equipment maintenance|utrustningsvård|hunting rifle|skjutvapen|arma|枪械|оруж|سلاح/iu],
+ ['armvue',5,/vapenvård|vapen|firearm|equipment maintenance|utrustningsvård|hunting rifle|skjutvapen|(?:^|[^\p{L}\p{N}])\.?308(?:[\s'’]*(?:a|an))?(?=$|[^\p{L}\p{N}])|arma|枪械|оруж|سلاح/iu],
  ['homevue',4,/husunderhåll|hemunderhåll|luftfilter|ventilation|rökdetektor|brandvarnare|home maintenance|air filter|smoke detector|mantenimiento del hogar|家居维护|обслуживание дома|صيانة المنزل/iu],
  ['slumpvue',4,/överraska mig|slump|surprise me|random idea|bored|uttråkad|sorpréndeme|随机|удиви|فاجئني/iu]
 ];
