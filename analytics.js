@@ -4,7 +4,7 @@
   if (navigator.doNotTrack === '1' || navigator.globalPrivacyControl === true) return;
 
   const specialist = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/,'').toUpperCase();
-  const app = specialist === 'INDEX' ? 'VUEAPPS' : specialist;
+  const app = specialist === 'INDEX' ? 'VUEAPPS' : specialist === 'ANIVUE-CORE' ? 'ANIVUE' : specialist;
   const actionIds = new Set(['analyze','observe','prepare','identify','review','ingredient-read','ingredient-scan','ingredient-research','go','again','send']);
   if (app !== 'VUEAPPS') document.addEventListener('click', (event) => {
     const button = event.target?.closest?.('button');
