@@ -20,3 +20,20 @@ test('stray Devanagari or other foreign-script letters cannot hijack Swedish inp
  assert.equal(detect('Min hund är sjuk och behöver hjälp'),'sv');
  assert.equal(detect('मेरा कुत्ता बीमार है'),'hi');
 });
+
+test('Swedish input never becomes Hindi, even when typing word by word',()=>{
+ const parts=['Min','hund','är','sjuk'];
+ for(let i=1;i<=parts.length;i++){
+  const result=detect(parts.slice(0,i).join(' '));
+  assert.ok(result===null||result==='sv',`Unexpected ${result} for ${parts.slice(0,i).join(' ')}`);
+ }
+ assert.equal(detect(parts.join(' ')),'sv');
+});
+test('mixed Latin text with stray non-Latin characters cannot trigger script language',()=>{
+ for(const fragment of ['अ','م','中','Ж']){
+  assert.notEqual(detect('Min hund är sjuk '+fragment),'hi');
+  assert.notEqual(detect('Min hund är sjuk '+fragment),'ar');
+  assert.notEqual(detect('Min hund är sjuk '+fragment),'zh-CN');
+  assert.notEqual(detect('Min hund är sjuk '+fragment),'ru');
+ }
+});
