@@ -23,3 +23,40 @@ test('Help refreshes after the portal commits the selected language',()=>{
  assert.match(help,/document\.addEventListener\?\.\('vueapps:languagechange', render\)/);
  assert.match(help,/return render;/);
 });
+
+test('Help actually changes EN → SV → ES after the portal event', async()=>{
+ const originalDocument=globalThis.document;
+ const listeners=new Map();
+ const element=tag=>({
+  tagName:tag,hidden:false,children:[],attributes:{},
+  append(...nodes){this.children.push(...nodes);},
+  replaceChildren(...nodes){this.children=nodes;},
+  setAttribute(name,value){this.attributes[name]=value;},
+  addEventListener(name,handler){this.events??={};this.events[name]=handler;},
+  focus(){}
+ });
+ const host=element('div');host.id='vuecore-help';
+ const picker={value:'en',addEventListener(){},removeEventListener(){}};
+ globalThis.document={
+  createElement:element,
+  addEventListener(name,handler){listeners.set(name,handler);},
+  removeEventListener(name){listeners.delete(name);}
+ };
+ try{
+  const {mountVueHelp}=await import('../apps/help-renderer.js');
+  const help={getHelp(lang){return {button:{en:'Help',sv:'Hjälp',es:'Ayuda'}[lang],language:lang,direction:'ltr',title:lang,close:'Close',topics:[]};}};
+  const refresh=mountVueHelp({host,help,language:()=>picker.value,languageControl:picker});
+  assert.equal(typeof refresh,'function');
+  assert.equal(host.children[0].textContent,'Help');
+  picker.value='sv';
+  listeners.get('vueapps:languagechange')();
+  assert.equal(host.children[0].textContent,'Hjälp');
+  picker.value='es';
+  listeners.get('vueapps:languagechange')();
+  assert.equal(host.children[0].textContent,'Ayuda');
+  assert.equal(host.children[1].lang,'es');
+ }finally{
+  if(originalDocument===undefined)delete globalThis.document;
+  else globalThis.document=originalDocument;
+ }
+});
