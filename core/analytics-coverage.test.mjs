@@ -14,3 +14,13 @@ test('analytics uses bounded events without collecting user content', () => {
   assert.match(script,/person_profiles: 'never'/);
   assert.doesNotMatch(script,/capture\([^\n]*(question|description|image|answer)/i);
 });
+
+test('assessment API tracking covers specialist endpoints without reading payloads', () => {
+ const script = read('analytics.js');
+ for (const endpoint of ['vue-router','antiqvue','vinylvue','musicgearvue','wardrobevue','medivue','foodvue']) assert.ok(script.includes("'"+endpoint+"'"));
+ assert.match(script,/url\.origin === location\.origin/);
+ assert.match(script,/method !== 'POST'/);
+ assert.match(script,/if \(response\.ok\)/);
+ assert.doesNotMatch(script,/response\.json\(|response\.text\(|init\.body/);
+ for (const file of ['apps/router.js','apps/antiqvue.js']) assert.doesNotMatch(read(file),/name:'assessment_(started|completed)'/);
+});
