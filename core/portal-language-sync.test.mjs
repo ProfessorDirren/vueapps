@@ -79,3 +79,12 @@ test('HOMEVUE and shared tool action links use the selected language',()=>{
  assert.match(portal,/es:"Abrir"/);
  assert.match(portal,/toolLinkVerbs\[lang\]\|\|toolLinkVerbs\.en/);
 });
+
+test('Language picker and category accessibility labels follow the chosen language',()=>{
+ assert.match(portal,/const accessibilityLabels=/);
+ assert.match(portal,/sv:\["Välj språk"/);
+ assert.match(portal,/es:\["Seleccionar idioma"/);
+ assert.match(portal,/picker\.setAttribute\("aria-label",a11y\[0\]\)/);
+ assert.match(portal,/querySelector\("#app-armvue \.subcategories"\)\.setAttribute\("aria-label",a11y\[1\]\)/);
+ assert.match(portal,/querySelector\("#app-foodvue \.subcategories"\)\.setAttribute\("aria-label",a11y\[2\]\)/);
+});
