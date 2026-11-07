@@ -236,6 +236,15 @@ const vinylTranslations={"en": "Identify vinyl records, compare pressings and re
 const communityTranslations={"en": ["Help choose the next VUE.", "Paid members can propose new VUEs and vote. The backlog is ranked by votes; the team reviews feasibility before scheduling builds.", "Community backlog →"], "sv": ["Välj nästa VUE.", "Betalande medlemmar kan föreslå nya VUEs och rösta. Backloggen sorteras efter röster; teamet bedömer genomförbarheten innan bygget planeras.", "Gemensam backlogg →"], "es": ["Elige el próximo VUE.", "Los miembros de pago pueden proponer y votar. La lista se ordena por votos; el equipo revisa la viabilidad antes de programar.", "Lista de la comunidad →"], "hi": ["अगला VUE चुनें।", "भुगतान करने वाले सदस्य प्रस्ताव और वोट दे सकते हैं। सूची वोट के अनुसार है; टीम निर्माण से पहले व्यवहार्यता जाँचती है।", "सामुदायिक सूची →"], "zh-CN": ["选择下一个 VUE。", "付费会员可提出新 VUE 并投票。清单按票数排序；团队评估可行性后安排开发。", "社区待办清单 →"], "ru": ["Выберите следующий VUE.", "Платные участники предлагают новые VUE и голосуют. Список сортируется по голосам; команда проверяет реализуемость перед планированием.", "Список сообщества →"], "ar": ["اختر VUE التالي.", "يمكن للأعضاء المشتركين اقتراح VUE والتصويت. ترتب القائمة بالأصوات ويراجع الفريق الجدوى قبل جدولة البناء.", "قائمة المجتمع →"]};
 const possessionsTranslations={"en": ["Inventory a whole home, room by room. Plan what to keep, sell, donate or recycle.", "Catalogue clothes, shoes, bags and accessories. Track wear and prepare sale drafts."], "sv": ["Inventera ett helt hem, rum för rum. Planera vad som ska behållas, säljas, skänkas eller återvinnas.", "Inventera kläder, skor, väskor och accessoarer. Registrera användning och förbered annonsutkast."], "es": ["Inventaría una casa por habitaciones. Planifica conservar, vender, donar o reciclar.", "Cataloga ropa, zapatos, bolsos y accesorios. Registra usos y prepara borradores de venta."], "hi": ["कमरे दर कमरे घर की सूची बनाएँ। रखने, बेचने, दान या पुनर्चक्रण की योजना बनाएँ।", "कपड़े, जूते, बैग और सहायक वस्तुएँ दर्ज करें। उपयोग और बिक्री मसौदे तैयार करें।"], "zh-CN": ["逐房间整理整个家的物品，计划保留、出售、捐赠或回收。", "整理衣物、鞋子、包袋和配饰，记录使用并准备出售草稿。"], "ru": ["Список всего дома по комнатам. Планируйте оставить, продать, пожертвовать или переработать.", "Каталог одежды, обуви, сумок и аксессуаров. Записывайте использование и готовьте объявления."], "ar": ["احصر المنزل غرفة بغرفة وخطط للاحتفاظ أو البيع أو التبرع أو التدوير.", "سجل الملابس والأحذية والحقائب والملحقات والاستخدام وحضر مسودات بيع."]};
 const picker=document.getElementById("language");
+const accessibilityLabels={
+ en:["Select language","ARMVUE categories","FOODVUE categories","Gray brain with pink neon orbit"],
+ sv:["Välj språk","ARMVUE-kategorier","FOODVUE-kategorier","Grå hjärna med rosa neonring"],
+ es:["Seleccionar idioma","Categorías de ARMVUE","Categorías de FOODVUE","Cerebro gris con órbita de neón rosa"],
+ hi:["भाषा चुनें","ARMVUE श्रेणियाँ","FOODVUE श्रेणियाँ","गुलाबी नियॉन कक्षा वाला धूसर मस्तिष्क"],
+ "zh-CN":["选择语言","ARMVUE 类别","FOODVUE 类别","带粉色霓虹环的灰色大脑"],
+ ru:["Выбрать язык","Категории ARMVUE","Категории FOODVUE","Серый мозг с розовой неоновой орбитой"],
+ ar:["اختر اللغة","فئات ARMVUE","فئات FOODVUE","دماغ رمادي تحيط به حلقة نيون وردية"]
+};
 const toolLinkVerbs={en:"Open",sv:"Öppna",es:"Abrir",hi:"खोलें", "zh-CN":"打开",ru:"Открыть",ar:"افتح"};
 const martialTranslations={
  en:["Martial arts, training methods, rules, styles and safer practice. Ask VUECORE in your own language.","Ask MARTIALARTSVUE via VUECORE →"],
@@ -252,6 +261,12 @@ function setLanguage(lang){
  renderVueNames(document,lang);
  ["estatevue","wardrobevue"].forEach((id,i)=>document.querySelector("#app-"+id+" p").textContent=(possessionsTranslations[lang]||possessionsTranslations.en)[i]);
  localizeLanguagePicker(picker,lang);
+ const a11y=accessibilityLabels[lang]||accessibilityLabels.en;
+ picker.setAttribute("aria-label",a11y[0]);
+ document.querySelector("#app-armvue .subcategories").setAttribute("aria-label",a11y[1]);
+ document.querySelector("#app-foodvue .subcategories").setAttribute("aria-label",a11y[2]);
+ document.querySelector(".vue-brain").setAttribute("aria-label",a11y[3]);
+
  document.querySelector("#app-vinylvue p").textContent=vinylTranslations[lang]||vinylTranslations.en;
  ["community-title","community-description","community-link"].forEach((id,i)=>document.getElementById(id).textContent=(communityTranslations[lang]||communityTranslations.en)[i]);
  document.querySelector("#app-antiqvue p").textContent=antiqTranslations[lang]||antiqTranslations.en;
