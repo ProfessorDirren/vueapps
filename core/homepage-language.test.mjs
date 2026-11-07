@@ -11,11 +11,11 @@ test("homepage retains all seven language choices and descriptive labels",()=>{
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
 });
-test("English default and saved explicit selection remain intact",()=>{
+test("English is the default on every page load, regardless of old storage",()=>{
  assert.match(html,/<html lang="en">/);
- assert.match(html,/let initial="en"/);
- assert.match(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
- assert.match(html,/localStorage\.setItem\("vueapps-language-v2",lang\)/);
+ assert.match(html,/setLanguage\("en"\)/);
+ assert.doesNotMatch(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
+ assert.doesNotMatch(html,/localStorage\.setItem\("vueapps-language-v2"/);
  assert.match(html,/lang==="ar"\?"rtl":"ltr"/);
 });
 test("homepage hero and navigation retain brand and product promises",()=>{
