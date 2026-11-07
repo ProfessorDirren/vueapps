@@ -9,10 +9,11 @@ export function detectInputLanguage(value){
  if(typeof value!=='string')return null;
  const text=value.trim();if(text.length<8)return null;
  const letters=[...text].filter(c=>/\p{L}/u.test(c));if(letters.length<6)return null;
- if(/[\u0600-\u06ff]/u.test(text))return 'ar';
- if(/[\u0900-\u097f]/u.test(text))return 'hi';
- if(/[\u4e00-\u9fff]/u.test(text))return 'zh-CN';
- if(/[\u0400-\u04ff]/u.test(text))return 'ru';
+ // A stray character from another script must never override the user's language.
+ const scripts=[['ar',/[\u0600-\u06ff]/u],['hi',/[\u0900-\u097f]/u],['zh-CN',/[\u4e00-\u9fff]/u],['ru',/[\u0400-\u04ff]/u]];
+ const counts=scripts.map(([lang,re])=>({lang,count:letters.filter(c=>re.test(c)).length})).sort((a,b)=>b.count-a.count);
+ if(counts[0].count>=4&&counts[0].count/letters.length>=0.6&&counts[0].count>counts[1].count)return counts[0].lang;
+ if(counts[0].count>0)return null;
  const words=(text.toLocaleLowerCase().match(/[\p{L}]+/gu)||[]);
  if(words.length<3)return null;
  const scores=Object.fromEntries(Object.entries(WORDS).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0)+(UNIQUE[lang].includes(w)?2:0),0)]));
