@@ -6,7 +6,8 @@ import {routingFields} from '../core/router.js';
 import {readFavorite,rememberFavorite,favoriteCommand} from '../core/favorites.js';
 import {ROUTER_TEXT} from './router-content.js';
 const $=id=>document.getElementById(id),panel=$('vue-router'),input=$('vue-router-question');
-let busy=false,active=null,photo=null,loadingPhoto=false;const memories=new Map();let storage=null;let favoritesStorage=null;try{favoritesStorage=localStorage}catch{}try{storage=sessionStorage;const saved=JSON.parse(storage.getItem('vue-core-router-active-v1')||'null');if(saved&&saved.domain!=='medivue'){const m=new VueMemory({domain:saved.domain,storage});if(m.db.cases.some(c=>c.id===saved.id)){m.switch(saved.id);active={domain:saved.domain,memory:m,caseId:saved.id};memories.set(saved.domain,m)}}}catch{}
+let busy=false,active=null,photo=null,loadingPhoto=false;const memories=new Map();let storage=null;let favoritesStorage=null;try{favoritesStorage=localStorage}catch{}// Keep stored assessments available, but never reopen one on a fresh page load.
+try{storage=sessionStorage}catch{}
 const favorite=readFavorite(favoritesStorage).favorite;if(favorite&&active?.domain!==favorite){const m=new VueMemory({domain:favorite,storage});memories.set(favorite,m);active={domain:favorite,memory:m,caseId:null}}
 const t=()=>ROUTER_TEXT[document.documentElement.lang]||ROUTER_TEXT.en;
 const provenanceLabel={en:'AI assessment · Not independently verified',es:'Evaluación de IA · Sin verificación independiente',sv:'AI-bedömning · Inte oberoende verifierad',hi:'AI आकलन · स्वतंत्र रूप से सत्यापित नहीं', 'zh-CN':'AI 评估 · 未经独立核实',ru:'Оценка ИИ · Независимо не проверено',ar:'تقييم بالذكاء الاصطناعي · غير متحقق منه بشكل مستقل'};
@@ -21,7 +22,7 @@ const requestedLanguage=document.documentElement.lang;const newCase=!!photo||/ny
 input.addEventListener('input',event=>{if(!event.isComposing&&!busy)syncInputLanguage(input.value)});
 input.addEventListener('compositionend',()=>{if(!busy)syncInputLanguage(input.value)});
 input.onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.ctrlKey&&!event.altKey&&!event.metaKey&&!event.isComposing){event.preventDefault();event.stopPropagation();if(!event.repeat)void submit()}};$('vue-router-send').onclick=event=>{event.preventDefault();void submit()};
-new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});document.addEventListener('vueapps:languagechange',render);render();const previous=active?.caseId?active.memory.active()?.turns.at(-1):null;if(previous)reply(previous.question,previous.answer,active.domain,previous.kind,false,'und');input.focus({preventScroll:true});
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});document.addEventListener('vueapps:languagechange',render);render();input.focus({preventScroll:true});
 window.addEventListener('pageshow',()=>window.scrollTo({top:0,left:0,behavior:'instant'}));
 
 function clearPhoto(){photo=null;$('vue-router-photo-preview').removeAttribute('src');$('vue-router-photo-panel').hidden=true;$('vue-router-photo-public').checked=false;for(const id of ['vue-router-camera-file','vue-router-gallery-file'])$(id).value='';render()}
