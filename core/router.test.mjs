@@ -65,5 +65,8 @@ test('caliber question switches from ANIVUE to ARMVUE while genuine follow-ups r
  for(const q of ["min .308'a klickar",'Min .308 klickar','My .308 rifle clicks'])assert.equal(routeQuestion(q,'anivue').domain,'armvue',q);
  assert.equal(routeQuestion('Hur länge har den varit sjuk?','anivue').domain,'anivue');
  assert.equal(routeQuestion('Min hund är sjuk','armvue').domain,'anivue');
+ assert.equal(routeQuestion('min 308 klickar','anivue').domain,'armvue');
+ assert.equal(routeQuestion('308 klickar','anivue').domain,'armvue');
+ assert.equal(routeQuestion('min 308 kostar 500 kr','anivue').domain,'anivue');
  assert.equal(routeQuestion('308 kronor','anivue').domain,'anivue');
 });
