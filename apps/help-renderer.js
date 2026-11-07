@@ -47,8 +47,5 @@ export function mountVueHelp({ host, help, language = () => 'en', languageContro
   languageControl?.addEventListener('change', render);
   document.addEventListener?.('vueapps:languagechange', render);
   render();
-  return () => {
-    languageControl?.removeEventListener?.('change', render);
-    document.removeEventListener?.('vueapps:languagechange', render);
-  };
+  return render;
 }
