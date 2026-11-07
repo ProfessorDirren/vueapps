@@ -88,3 +88,9 @@ test('Language picker and category accessibility labels follow the chosen langua
  assert.match(portal,/querySelector\("#app-armvue \.subcategories"\)\.setAttribute\("aria-label",a11y\[1\]\)/);
  assert.match(portal,/querySelector\("#app-foodvue \.subcategories"\)\.setAttribute\("aria-label",a11y\[2\]\)/);
 });
+
+test('Portal always starts in English without restoring a stored language',()=>{
+ assert.match(portal,/setLanguage\("en"\);/);
+ assert.doesNotMatch(portal,/localStorage\.getItem\("vueapps-language-v2"\)/);
+ assert.doesNotMatch(portal,/localStorage\.setItem\("vueapps-language-v2"/);
+});
