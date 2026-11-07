@@ -11,6 +11,28 @@
     if (!button || !actionIds.has(button.id) || button.disabled) return;
     document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail: {name:'specialist_action',specialist:app,action:button.id}}));
   }, true);
+  // Observe only explicit first-party assessment endpoints; never inspect request bodies or responses.
+  const assessmentEndpoints = new Set(['vue-router','antiqvue','vinylvue','musicgearvue','wardrobevue','medivue','foodvue','anivue','anyvue','motovue','estatevue','homevue','plantvue','armvue','slumpvue']);
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function(input, init) {
+    let endpoint = '';
+    try {
+      const url = new URL(typeof input === 'string' ? input : input.url, location.href);
+      if (url.origin === location.origin && url.pathname.startsWith('/api/')) {
+        const segment = url.pathname.slice(5).split('/')[0];
+        if (assessmentEndpoints.has(segment)) endpoint = segment;
+      }
+    } catch {}
+    if (!endpoint) return nativeFetch(input, init);
+    const method = String(init?.method || (typeof input !== 'string' && input?.method) || 'GET').toUpperCase();
+    if (method !== 'POST') return nativeFetch(input, init);
+    const label = endpoint === 'vue-router' ? 'VUECORE' : endpoint.toUpperCase();
+    document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:'assessment_started',specialist:label}}));
+    return nativeFetch(input, init).then(response => {
+      if (response.ok) document.dispatchEvent(new CustomEvent('vueapps:analytics', {detail:{name:'assessment_completed',specialist:label}}));
+      return response;
+    });
+  };
   const pending = [];
   let client = null;
   document.addEventListener('vueapps:analytics', (event) => {
