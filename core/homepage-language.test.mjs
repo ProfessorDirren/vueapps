@@ -13,7 +13,8 @@ test("homepage retains all seven language choices and descriptive labels",()=>{
 });
 test("English is the default only when no valid shared language is saved",()=>{
  assert.match(html,/<html lang="en">/);
- assert.match(html,/let initialLanguage="en"/);\n assert.match(html,/setLanguage\(initialLanguage\)/);
+ assert.match(html,/let initialLanguage="en"/);
+ assert.match(html,/setLanguage\(initialLanguage\)/);
  assert.doesNotMatch(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(html,/localStorage\.setItem\("vueapps-language-v2"/);
  assert.match(html,/lang==="ar"\?"rtl":"ltr"/);
