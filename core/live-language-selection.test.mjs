@@ -6,7 +6,7 @@ test('VUECORE detects language during typing without waiting for submission',()=
 });
 test('typing and submit use the same shared language picker and change event',()=>{
  assert.match(router,/function syncInputLanguage\(question\)/);
- assert.match(router,/languagePicker\.dispatchEvent\(new Event\('change',\{bubbles:true\}\)\)/);
+ assert.match(router,/languagePicker\.dispatchEvent\(new CustomEvent\('change',\{bubbles:true,detail:\{automatic:true\}\}\)\)/);
  assert.match(router,/syncInputLanguage\(question\);/);
  assert.match(router,/if\(!detectedLanguage\|\|detectedLanguage===document\.documentElement\.lang\)return/);
 });
