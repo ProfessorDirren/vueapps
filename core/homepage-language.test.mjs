@@ -11,10 +11,10 @@ test("homepage retains all seven language choices and descriptive labels",()=>{
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
 });
-test("English is the default only when no valid shared language is saved",()=>{
+test("English is the default on every new portal load",()=>{
  assert.match(html,/<html lang="en">/);
- assert.match(html,/let initialLanguage="en"/);
- assert.match(html,/setLanguage\(initialLanguage\)/);
+ assert.match(html,/setLanguage\("en"\)/);
+ assert.doesNotMatch(html,/setLanguage\(initialLanguage\)/);
  assert.doesNotMatch(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(html,/localStorage\.setItem\("vueapps-language-v2"/);
  assert.match(html,/lang==="ar"\?"rtl":"ltr"/);
