@@ -58,3 +58,12 @@ test('native ANIVUE emergency returns before photo analysis regardless of select
  const html=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.match(html,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary;[\s\S]*?return;\}const photoVersionAtSubmit=/);
 });
+
+// A new explicit firearm-caliber topic must not inherit the previous animal specialist.
+test('caliber question switches from ANIVUE to ARMVUE while genuine follow-ups remain',()=>{
+ assert.equal(routeQuestion('Min hund är sjuk').domain,'anivue');
+ for(const q of ["min .308'a klickar",'Min .308 klickar','My .308 rifle clicks'])assert.equal(routeQuestion(q,'anivue').domain,'armvue',q);
+ assert.equal(routeQuestion('Hur länge har den varit sjuk?','anivue').domain,'anivue');
+ assert.equal(routeQuestion('Min hund är sjuk','armvue').domain,'anivue');
+ assert.equal(routeQuestion('308 kronor','anivue').domain,'anivue');
+});
