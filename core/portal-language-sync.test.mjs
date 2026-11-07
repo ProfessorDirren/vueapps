@@ -90,7 +90,8 @@ test('Language picker and category accessibility labels follow the chosen langua
 });
 
 test('Portal defaults to English but inherits valid shared language',()=>{
- assert.match(portal,/let initialLanguage="en"/);\n assert.match(portal,/setLanguage\(initialLanguage\)/);
+ assert.match(portal,/let initialLanguage="en"/);
+ assert.match(portal,/setLanguage\(initialLanguage\)/);
  assert.doesNotMatch(portal,/localStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(portal,/localStorage\.setItem\("vueapps-language-v2"/);
 });
