@@ -57,7 +57,7 @@ function showReport(data,action){
  $('sources').append(Object.assign(document.createElement('p'),{textContent:EXTRA[language][7],className:'subtle'}));
 }
 async function analyze(action){
- if(!image||busy)return;busy=true;for(const id of ['analyze','observe','photo','market','currency','prepare','description'])$(id).disabled=true;picker.disabled=true;if(action==='value')$('notice').textContent=EXTRA[language][9];else status(12);
+ if(!image||busy)return;busy=true;document.dispatchEvent(new CustomEvent('vueapps:analytics',{detail:{name:'assessment_started',specialist:'ANTIQVUE'}}));for(const id of ['analyze','observe','photo','market','currency','prepare','description'])$(id).disabled=true;picker.disabled=true;if(action==='value')$('notice').textContent=EXTRA[language][9];else status(12);
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),60000);
  try{const r=await fetch('/api/antiqvue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image,description:$('description').value,language,action,market:$('market').value,currency:$('currency').value}),signal:controller.signal});if(r.status===503){output(brief());status(10);return}if(!r.ok)throw Error('analysis');const data=await r.json();if(typeof data.analysis!=='string'||!data.analysis.trim())throw Error('response');showReport(data,action);$('notice').textContent=''}catch{status(11)}finally{clearTimeout(timer);busy=false;for(const id of ['photo','market','currency','prepare','description'])$(id).disabled=false;$('analyze').disabled=!image;$('observe').disabled=!image;picker.disabled=false}
 }
