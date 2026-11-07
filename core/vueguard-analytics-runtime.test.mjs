@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 
 const source=readFileSync(new URL('../analytics.js',import.meta.url),'utf8');
 
-function boot({dnt=null,gpc=false,hostname='www.vueapps.se'}={}){
+function boot({dnt=null,gpc=false,hostname='www.vueapps.se',fetchResponse={ok:true}}={}){
   const listeners=new Map();
   const captures=[];
   const requests=[];
@@ -13,12 +13,13 @@ function boot({dnt=null,gpc=false,hostname='www.vueapps.se'}={}){
     addEventListener(name,callback){listeners.set(name,callback)},
     dispatchEvent(event){listeners.get(event.type)?.(event)},
     head:{appendChild(script){this.script=script}},
+    createElement(){return {}},
     referrer:'',
     title:'VUEAPPS',
   };
   const location={hostname,origin:'https://www.vueapps.se',pathname:'/'};
   const navigator={doNotTrack:dnt,globalPrivacyControl:gpc};
-  const window={fetch:(...args)=>{requests.push(args);return Promise.resolve({ok:true})},
+  const window={fetch:(...args)=>{requests.push(args);return Promise.resolve(fetchResponse)},
     posthog:{init(_key,options){options.loaded({capture:(name,properties)=>captures.push({name,properties})})}}};
   class CustomEvent{constructor(type,{detail}){this.type=type;this.detail=detail}}
   runInNewContext(source,{document,location,navigator,window,CustomEvent,URL,Set});
@@ -47,8 +48,8 @@ test('VUEGUARD: non-assessment POSTs do not generate lifecycle events',async()=>
   assert.deepEqual(env.captures.map(e=>e.name),['$pageview']);
 });
 test('VUEGUARD: a failed HTTP response cannot be counted as completed',async()=>{
-  const env=boot();
-  env.window.fetch=()=>Promise.resolve({ok:false,status:500});
-  // Existing wrapped fetch captured the original at initialization; verify the response branch in source.
-  assert.match(source,/if \(response\.ok\).*assessment_completed/);
+  const env=boot({fetchResponse:{ok:false,status:500}});
+  env.document.head.script.onload();
+  await env.window.fetch('/api/vue-router',{method:'POST'});
+  assert.deepEqual(env.captures.map(e=>e.name),['$pageview','assessment_started']);
 });
