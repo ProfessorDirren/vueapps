@@ -89,8 +89,21 @@ test('Language picker and category accessibility labels follow the chosen langua
  assert.match(portal,/querySelector\("#app-foodvue \.subcategories"\)\.setAttribute\("aria-label",a11y\[2\]\)/);
 });
 
-test('Portal always starts in English without restoring a stored language',()=>{
- assert.match(portal,/setLanguage\("en"\);/);
+test('Portal defaults to English but inherits valid shared language',()=>{
+ assert.match(portal,/let initialLanguage="en"/);
+ assert.match(portal,/setLanguage\(initialLanguage\)/);
  assert.doesNotMatch(portal,/localStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(portal,/localStorage\.setItem\("vueapps-language-v2"/);
+});
+
+test('VUECORE portal inherits the saved language and saves explicit changes',()=>{
+ assert.match(portal,/localStorage\.getItem\(VUE_LANGUAGE_KEY\)/);
+ assert.match(portal,/setLanguage\(initialLanguage\)/);
+ assert.match(portal,/localStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
+ assert.match(portal,/let initialLanguage="en"/);
+});
+test('planner specialists inherit the shared language rather than stale per-VUE settings',()=>{
+ const tools=readFileSync(new URL('../apps/tools.js',import.meta.url),'utf8');
+ assert.match(tools,/localStorage\.getItem\('vue-language'\)\|\|localStorage\.getItem\(storageKey\+'-language'\)/);
+ assert.match(tools,/localStorage\.setItem\('vue-language',language\)/);
 });
