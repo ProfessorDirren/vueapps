@@ -38,7 +38,7 @@ test('VUEGUARD: pageview and lifecycle events carry only safe metadata',async()=
   assert.equal(env.captures[0].name,'$pageview');
   await env.window.fetch('/api/vue-router',{method:'POST',body:'PRIVATE HEALTH QUESTION'});
   assert.deepEqual(env.captures.map(e=>e.name),['$pageview','assessment_started','assessment_completed']);
-  for(const event of env.captures) assert.doesNotMatch(JSON.stringify(event),'PRIVATE HEALTH QUESTION');
+  for(const event of env.captures) assert.doesNotMatch(JSON.stringify(event),/PRIVATE HEALTH QUESTION/);
 });
 test('VUEGUARD: non-assessment POSTs do not generate lifecycle events',async()=>{
   const env=boot();
