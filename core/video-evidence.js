@@ -6,6 +6,7 @@ export function prepareVideoEvidence(frames,{consent=false}={}){
  if(!Array.isArray(frames)||frames.length!==VIDEO_SAMPLE_COUNT)return {ok:false,reason:'invalid_frame_count'};
  let previous=-1;
  const images=[];
+ let totalBytes=0;
  for(const frame of frames){
   if(!frame||!Number.isFinite(frame.time)||frame.time<=previous||frame.time<0||frame.time>120)return {ok:false,reason:'invalid_frame_time'};
   if(typeof frame.image!=='string'||!frame.image.startsWith(IMAGE_PREFIX)||frame.image.length>700000||frame.image.length<IMAGE_PREFIX.length+16)return {ok:false,reason:'invalid_frame_image'};
@@ -14,6 +15,8 @@ export function prepareVideoEvidence(frames,{consent=false}={}){
   // JPEG magic bytes must be present; syntactically valid base64 alone is insufficient.
   const header=payload.slice(0,8);
   if(!header.startsWith('/9j/'))return {ok:false,reason:'invalid_frame_image'};
+  totalBytes+=frame.image.length;
+  if(totalBytes>1800000)return {ok:false,reason:'evidence_too_large'};
   previous=frame.time;
   images.push(frame.image);
  }
