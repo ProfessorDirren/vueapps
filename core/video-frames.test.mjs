@@ -43,3 +43,20 @@ test('aborted video extraction fails before capturing any frames',async()=>{
  try{await assert.rejects(captureVideoFrames(video,{signal:controller.signal}),/Cancelled/)}
  finally{globalThis.document=oldDocument}
 });
+
+test('seek failure rejects promptly and removes video listeners',async()=>{
+ const oldDocument=globalThis.document;
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage:()=>{}})})};
+ const listeners=new Map();
+ const video={
+  duration:12,videoWidth:640,videoHeight:480,
+  addEventListener:(name,fn)=>{if(!listeners.has(name))listeners.set(name,new Set());listeners.get(name).add(fn)},
+  removeEventListener:(name,fn)=>listeners.get(name)?.delete(fn),
+  set currentTime(_value){throw new Error('Video seek failed')}
+ };
+ try{
+  await assert.rejects(captureVideoFrames(video),/Video seek failed/);
+  assert.equal(listeners.get('seeked')?.size,0);
+  assert.equal(listeners.get('error')?.size,0);
+ }finally{globalThis.document=oldDocument}
+});
