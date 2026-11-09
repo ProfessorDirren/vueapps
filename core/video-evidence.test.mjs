@@ -12,3 +12,9 @@ test('reject malformed, excessive, and out-of-order evidence',()=>{
   assert.equal(prepareVideoEvidence(candidate,{consent:true}).ok,false);
  }
 });
+
+test('reject aggregate evidence exceeding 1.8 MB even when each frame is individually allowed',()=>{
+ const oversized='data:image/jpeg;base64,/9j/'+'A'.repeat(640000);
+ const largeFrames=frames.map(frame=>({...frame,image:oversized}));
+ assert.deepEqual(prepareVideoEvidence(largeFrames,{consent:true}),{ok:false,reason:'evidence_too_large'});
+});
