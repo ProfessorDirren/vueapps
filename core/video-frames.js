@@ -7,6 +7,7 @@ export function videoSampleTimes(duration,count=VIDEO_SAMPLE_COUNT){
  return Array.from({length:count},(_,i)=>Number((duration*(i+1)/(count+1)).toFixed(3)));
 }
 export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}={}){
+ if(signal?.aborted)throw new Error('Cancelled');
  const duration=video?.duration;
  const times=videoSampleTimes(duration,count);
  if(!Number.isSafeInteger(video.videoWidth)||!Number.isSafeInteger(video.videoHeight)||video.videoWidth<128||video.videoHeight<128)throw new Error('Invalid video dimensions');
@@ -27,7 +28,7 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
    video.addEventListener('seeked',done,{once:true});
    video.addEventListener('error',fail,{once:true});
    signal?.addEventListener('abort',fail,{once:true});
-   video.currentTime=time;
+   try{video.currentTime=time}catch(error){cleanup();reject(error)}
   });
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const frame=canvas.toDataURL('image/jpeg',0.65);
