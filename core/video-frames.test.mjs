@@ -37,6 +37,9 @@ test('captures exactly three local frames without network or upload',async()=>{
 });
 test('aborted video extraction fails before capturing any frames',async()=>{
  const controller=new AbortController();controller.abort();
+ const oldDocument=globalThis.document;
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage:()=>{throw Error('Must not draw')}})})};
  const video={duration:20,videoWidth:1920,videoHeight:1080};
- await assert.rejects(captureVideoFrames(video,{signal:controller.signal}),/Cancelled|document is not defined/);
+ try{await assert.rejects(captureVideoFrames(video,{signal:controller.signal}),/Cancelled/)}
+ finally{globalThis.document=oldDocument}
 });
