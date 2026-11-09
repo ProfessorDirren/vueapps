@@ -30,6 +30,7 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
    signal?.addEventListener('abort',fail,{once:true});
    try{video.currentTime=time}catch(error){cleanup();reject(error)}
   });
+  if(signal?.aborted)throw new Error('Cancelled');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const frame=canvas.toDataURL('image/jpeg',0.65);
   if(frame.length>700000)throw new Error('Frame too large');
