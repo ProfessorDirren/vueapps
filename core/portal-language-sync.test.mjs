@@ -12,7 +12,7 @@ test('portal announces language changes after synchronizing the selected languag
  assert.match(portal,/document\.documentElement\.lang=lang/);
 });
 test('VUECORE router explicitly refreshes when portal language changes',()=>{
- assert.match(router,/document\.addEventListener\('vueapps:languagechange',render\)/);
+ assert.match(router,/document\.addEventListener\('vueapps:languagechange',event=>/);
 });
 test('VUECORE video actions refresh and release language listener on disposal',()=>{
  assert.match(video,/root\.addEventListener\?\.\('vueapps:languagechange',translate\)/);
