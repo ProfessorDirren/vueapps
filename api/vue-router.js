@@ -12,7 +12,7 @@ const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'n
 export async function POST(request){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
  // Video must never be silently treated as a text/image assessment before the shared video pipeline is ready.
- if(b?.video!==undefined||b?.video_public!==undefined||b?.video_url!==undefined)return json(415,{error:'Video analysis is not yet supported. No video was processed.'});
+ if(b?.video!==undefined||b?.video_public!==undefined||b?.video_url!==undefined||b?.video_frames!==undefined||b?.video_evidence!==undefined)return json(415,{error:'Video analysis is not yet supported. No video was processed.'});
  if(b?.action==='anivue_analyze')return analyzeAnimal(new Request('https://localhost/api/anivue-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}));
  if(!b||!ROUTER_TEXT[b.language])return json(400,{error:'Invalid language'});
  if(b.image!==undefined&&(!validImage(b.image)||!usableImage(b.image)||b.image_public!==true))return json(400,{error:'A valid public image and confirmation are required'});
