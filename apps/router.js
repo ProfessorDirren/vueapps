@@ -22,7 +22,7 @@ const requestedLanguage=document.documentElement.lang;const newCase=!!photo||/ny
 input.addEventListener('input',event=>{if(!event.isComposing&&!busy)syncInputLanguage(input.value)});
 input.addEventListener('compositionend',()=>{if(!busy)syncInputLanguage(input.value)});
 input.onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.ctrlKey&&!event.altKey&&!event.metaKey&&!event.isComposing){event.preventDefault();event.stopPropagation();if(!event.repeat)void submit()}};$('vue-router-send').onclick=event=>{event.preventDefault();void submit()};
-new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});document.addEventListener('vueapps:languagechange',render);render();input.focus({preventScroll:true});
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});document.addEventListener('vueapps:languagechange',event=>{if(!event.detail?.automatic){$('vue-router-replies').replaceChildren();$('vue-router-hint-other').textContent='';$('vue-router-status').textContent='';}render()});render();input.focus({preventScroll:true});
 window.addEventListener('pageshow',()=>window.scrollTo({top:0,left:0,behavior:'instant'}));
 
 function clearPhoto(){photo=null;$('vue-router-photo-preview').removeAttribute('src');$('vue-router-photo-panel').hidden=true;$('vue-router-photo-public').checked=false;for(const id of ['vue-router-camera-file','vue-router-gallery-file'])$(id).value='';render()}
