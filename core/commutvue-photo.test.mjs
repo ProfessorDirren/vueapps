@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPhotoEvidencePipeline} from './photo-evidence.js';
-import {createTimetablePhotoPipeline,validateTimetableEvidence} from './commutvue-photo.js';
+import {createTimetablePhotoPipeline,createModelTimetablePipeline,validateTimetableEvidence} from './commutvue-photo.js';
 const image='data:image/png;base64,AAAA';
 const evidence={station:'Jordbro',city:'Stockholm',departures:[{line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:42:00+01:00'}]};
 test('Simula photo pipeline can serve unrelated specialist extractors',async()=>{
@@ -51,4 +51,19 @@ test('timetable evidence rejects timezone ambiguity and impossible dates',()=>{
  assert.equal(validateTimetableEvidence(depart('2026-11-10T25:42:00+01:00')),false);
  assert.equal(validateTimetableEvidence(depart('2026-11-10T08:61:00+01:00')),false);
  assert.equal(validateTimetableEvidence(depart('2024-02-29T08:42:00+01:00')),true);
+});
+
+test('COMMUTVUE inherits CORE model budget gate and never invents a missing timetable date',async()=>{
+ let calls=0;
+ const blocked=createModelTimetablePipeline({allow:async()=>false,validateImage:()=>true,run:async()=>{calls++;return evidence}});
+ assert.equal((await blocked.analyze({image})).status,'unavailable');
+ assert.equal(calls,0);
+ const incomplete=createModelTimetablePipeline({allow:async()=>true,validateImage:()=>true,run:async({schema,name})=>{
+  calls++;assert.equal(name,'commutvue_timetable');assert.equal(schema.properties.departures.type,'array');
+  return {...evidence,departures:[{line:'43',destination:'Stockholm City',scheduled:null}]};
+ }});
+ const result=await incomplete.analyze({image});
+ assert.equal(result.status,'needs_clarification');
+ assert.equal(result.verified,false);
+ assert.equal(calls,1);
 });
