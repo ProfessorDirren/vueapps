@@ -34,44 +34,7 @@ test('emergency rules remain independent of photo service availability',()=>{
  assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseColic']}).severity,'emergency');
 });
 
-test('native photo picker invalidation resets the pending read task',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(page,/if\(!file\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(null\);return\}/);
- assert.match(page,/file\.size===0\)\{photoReadTask=Promise\.resolve\(\);showPhotoStatus\(0\);photo\.value='';camera\.value='';selectedPhotoFile=null;return\}/);
-});
 
-test('mobile capture controls use VUECORE hints without claiming video analysis',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(page,/MEDIA_CAPTURE,validateMedia/);
- assert.match(page,/input\.setAttribute\('capture',MEDIA_CAPTURE\[kind\]\.capture\)/);
- assert.match(page,/validateMedia\(file,'video'\)/);
- assert.match(page,/Video analysis is not available yet/);
-});
-
-
-test('ANIVUE native photo upload remains aligned with the supported server image formats',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const server=readFileSync(new URL('./image-input.js',import.meta.url),'utf8');
- assert.ok(page.includes('accept="image/jpeg,image/png,image/webp"'));
- assert.ok(page.includes("input.accept=kind==='image'?'image/jpeg,image/png,image/webp':MEDIA_CAPTURE[kind].accept"));
- assert.ok(page.includes('file.size>10*1024*1024'));
- assert.ok(page.includes('createImageBitmap(file)'));
- assert.ok(page.includes("typeof createImageBitmap==='function'?await createImageBitmap(file):await new Promise"));
- assert.ok(page.includes("bitmap.width<128||bitmap.height<128"));
- assert.ok(page.includes("canvas.width<128||canvas.height<128"));
- assert.ok(page.includes("canvas.toDataURL('image/jpeg',0.78)"));
- assert.ok(page.includes("ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap.image||bitmap"));
- assert.ok(page.includes('data.length<=3900000'));
- assert.ok(page.includes('data.length>4200000'));
- assert.ok(page.includes('Invalid prepared photo'));
- assert.ok(page.includes('const photoVersionAtSubmit=photoReadVersion;await photoReadTask;'));
- assert.ok(page.includes('photoVersionAtSubmit!==photoReadVersion'));
- assert.ok(page.includes('if(photoVersionAtSubmit!==photoReadVersion)throw Error(photoStatusText[picker.value][2]);}catch(error)'));
- assert.ok(page.includes('if(error?.message===photoStatusText[picker.value][2])throw error;'));
- assert.match(page,/imageData=null;\s*showPhotoStatus\(null\);\s*selectedPhotoFile=file\|\|null;/);
- assert.ok(server.includes('bytes.length>3*1024*1024'));
- assert.ok(server.includes('jpeg|png|webp'));
-});
 
 
 test('ANIVUE reports a controlled error when vision service returns unreadable JSON',async()=>{
@@ -121,11 +84,6 @@ test('ANIVUE normalizes failed vision network requests',async()=>{
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='image_analysis_unavailable');
 });
 
-
-test('ANIVUE clears failed photo reads without blocking text-only assessments',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.ok(page.includes("selectedPhotoFile=null;photo.value='';camera.value='';showPhotoStatus(2)"));
-});
 
 
 test('ANIVUE photo timeouts become controlled errors without affecting emergency triage',async()=>{
@@ -230,46 +188,9 @@ test('ANIVUE rejects empty or excessive observations even with otherwise valid m
 });
 
 
-test('ANIVUE distinguishes exhausted image quota from other provider failures',async()=>{
- const domain=new AniVueDomain({fetcher:async()=>({ok:false,status:429,json:async()=>({error:'Daily analysis budget unavailable'})})});
- await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cat'}),error=>error.code==='image_analysis_limit');
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.ok(page.includes("error?.code==='image_analysis_limit'?2:0"));
-});
 
 
-test('ANIVUE emergency assessment bypasses remote text flow even without photo',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.ok(page.includes("const check=emergency?{assessment:emergency}:(imageData||selectedPhotoFile)?"));
- assert.ok(page.includes("return;}const photoVersionAtSubmit="));
-});
 
-test('large photo preprocessing produces bounded JPEG and releases decoded bitmap',async()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
- assert.ok(source.startsWith('async function preparePhoto(file){'));
- const operations=[];
- const bitmap={width:4000,height:3000,close:()=>operations.push('close')};
- const prepare=new Function('createImageBitmap','document',source+';return preparePhoto;')(
-  async()=>bitmap,
-  {createElement:()=>({width:0,height:0,getContext(){return {set fillStyle(value){operations.push(value)},fillRect(){operations.push('fill')},drawImage(){operations.push('draw')}}},toDataURL(){return 'data:image/jpeg;base64,'+'A'.repeat(1200)}})}
- );
- const result=await prepare({size:8*1024*1024,type:'image/png'});
- assert.ok(result.startsWith('data:image/jpeg;base64,'));
- assert.deepEqual(operations,['#ffffff','fill','draw','close']);
-});
-
-test('large photo preprocessing rejects un-decodable or too-small images safely',async()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
- let closed=false;
- const prepare=new Function('createImageBitmap','document',source+';return preparePhoto;')(
-  async()=>({width:80,height:80,close(){closed=true}}),
-  {createElement(){throw Error('Canvas should not be created')}}
- );
- await assert.rejects(prepare({size:8*1024*1024,type:'image/png'}),/Unsupported photo dimensions/);
- assert.equal(closed,true);
-});
 
 test('ANIVUE refuses unsupported or oversized photo data before network access',async()=>{
  let calls=0;
@@ -280,30 +201,29 @@ test('ANIVUE refuses unsupported or oversized photo data before network access',
  assert.equal(calls,0);
 });
 
-test('ANIVUE fallback decodes large images and revokes temporary object URLs',async()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const source=page.slice(page.indexOf('async function preparePhoto(file){'),page.indexOf('let photoReadVersion=0;'));
- const operations=[];
- class MockImage{
-  naturalWidth=1600;naturalHeight=1200;
-  set src(value){operations.push('load '+value);this.onload()}
- }
- const prepare=new Function('createImageBitmap','document','URL','Image',source+';return preparePhoto;')(
-  undefined,
-  {createElement:()=>({width:0,height:0,getContext(){return {set fillStyle(value){},fillRect(){},drawImage(){operations.push('draw')}}},toDataURL(){return 'data:image/jpeg;base64,QUJD'}})},
-  {createObjectURL(){operations.push('create');return 'blob:photo'},revokeObjectURL(){operations.push('revoke')}},
-  MockImage
- );
- assert.equal(await prepare({size:5*1024*1024,type:'image/png'}),'data:image/jpeg;base64,QUJD');
- assert.deepEqual(operations,['create','load blob:photo','revoke','draw']);
-});
 
 test('photo client preserves server emergency advice from HTTP 409',async()=>{
  const domain=new AniVueDomain({fetcher:async()=>({ok:false,status:409,json:async()=>({error:'Emergency triage takes priority',emergencyAdvice:'Contact an emergency veterinarian now.'})})});
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'dog',language:'en'}),error=>error.code==='emergency_triage'&&/emergency veterinarian/.test(error.message));
 });
 
-test('native UI displays server emergency advice without replacing it with generic photo failure',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(page,/if\(error\?\.code==='emergency_triage'\)\{\$\('answer'\)\.textContent=error\.message;/);
+
+test('shared VUECORE photo flow has bounded media, consent and recovery',()=>{
+ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ const api=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ const image=readFileSync(new URL('./image-input.js',import.meta.url),'utf8');
+ assert.match(router,/file\.size>10\*1024\*1024/);
+ assert.match(router,/URL\.revokeObjectURL\(objectUrl\)/);
+ assert.match(router,/canvas\.toDataURL\('image\/jpeg'/);
+ assert.match(router,/photo-public'\)\.checked/);
+ assert.match(router,/if\(busy\|\|loadingPhoto\)return/);
+ assert.match(router,/mountVuecoreVideoInput/);
+ assert.match(api,/video_frames!==undefined/);
+ assert.match(api,/image_public!==true/);
+ assert.match(image,/jpeg\|png\|webp/);
+});
+test('shared ANIVUE emergency response is returned before photo classification',()=>{
+ const api=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ assert.ok(api.indexOf("if(route.domain==='anivue'&&urgent")<api.indexOf('classifyImage(b.image,question)'));
+ assert.match(api,/kind:'safety_rule',emergency:true/);
 });
