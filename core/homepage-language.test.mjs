@@ -45,3 +45,14 @@ test("all standalone specialist interfaces share one explicit language key",()=>
  const help=readFileSync(new URL('../apps/anyvue-help.js',import.meta.url),'utf8');
  assert.match(help,/sessionStorage\.getItem\('vue-language'\)/);
 });
+
+test("newly added languages keep specialist navigation inside localized VUECORE",()=>{
+ assert.match(html,/extendedOnlyLanguages=new Set\(\["el","tr","fa","fr"\]\)/);
+ assert.match(html,/specialistPageDomains\.has\(domain\)/);
+ assert.match(html,/location\.assign\("\.\/\?vue="\+encodeURIComponent\(domain\)\+"#vue-router"\)/);
+ assert.match(html,/if\(!extendedOnlyLanguages\.has\(language\)\)return/);
+});
+test("ANYVUE preview keeps its heading before the follow-up widget",()=>{
+ const page=readFileSync(new URL("../anyvue.html",import.meta.url),"utf8");
+ assert.match(page,/<section class="hero">[\s\S]*?<h1>ANYVUE<\/h1>[\s\S]*?<\/section>/);
+});
