@@ -300,9 +300,9 @@ function setLanguage(lang){
 const VUE_LANGUAGE_KEY="vue-language";
 const supportedLanguages=new Set([...picker.options].map(option=>option.value));
 let initialLanguage="en";
-try{const saved=localStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
+try{const saved=sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
 setLanguage(initialLanguage);
-picker.addEventListener("change",event=>{setLanguage(picker.value);if(event.detail?.automatic)return;try{localStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
+picker.addEventListener("change",event=>{setLanguage(picker.value);if(event.detail?.automatic)return;try{sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
 </script>
 </body>
 </html>
