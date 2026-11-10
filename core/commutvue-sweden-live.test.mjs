@@ -74,3 +74,22 @@ test('stop resolver accepts only a unique exact station group with child stop ID
  ]})})});
  await assert.rejects(ambiguous('Jordbro'),/uniquely/);
 });
+
+test('departures are sorted by expected time and far-future times are excluded',async()=>{
+ const late={...departure,trip:{trip_id:'late',start_date:'2026-11-10'},realtime:'2026-11-10T10:26:00'};
+ const early={...departure,trip:{trip_id:'early',start_date:'2026-11-10'},realtime:'2026-11-10T10:03:00'};
+ const far={...departure,trip:{trip_id:'far',start_date:'2026-11-10'},realtime:'2026-11-10T15:03:00'};
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,maxTrips:8,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   seen.push(url);
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   return {ok:true,text:async()=>JSON.stringify(tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:[late,far,early]})};
+  }
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.departures.map(d=>d.id),['early|2026-11-10|stop1','late|2026-11-10|stop1']);
+});
