@@ -90,7 +90,7 @@ test('specialist click handler actually routes new languages without interceptin
   let listener;
   let destination=null;
   let prevented=false;
-  const location={href:'https://vueapps.test/',origin:'https://vueapps.test/',assign:url=>{destination=url}};
+  const location={href:'https://vueapps.test/',origin:'https://vueapps.test',assign:url=>{destination=url}};
   const link={href:'https://vueapps.test/foodvue.html',target:''};
   const document={addEventListener:(name,callback)=>{assert.equal(name,'click');listener=callback}};
   runInNewContext(handler,{document,picker:{value:language},location,URL,encodeURIComponent,Set});
