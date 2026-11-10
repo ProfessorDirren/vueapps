@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read = path => readFileSync(new URL('../'+path, import.meta.url), 'utf8');
-const pages = ['index','anyvue','armvue','foodvue','homevue','medivue','vinylvue','plantvue','motovue','estatevue','wardrobevue','musicgearvue','slumpvue','anivue-core','antiqvue'];
+const pages = ['index','anyvue','armvue','foodvue','homevue','medivue','vinylvue','plantvue','motovue','estatevue','wardrobevue','musicgearvue','slumpvue','antiqvue'];
 for (const page of pages) test(`${page} loads shared analytics`, () => {
   assert.match(read(`${page}.html`), /<script src="\.\/analytics\.js" defer><\/script>/);
 });
@@ -23,4 +23,10 @@ test('assessment API tracking covers specialist endpoints without reading payloa
  assert.match(script,/response\.ok\?'assessment_completed':'assessment_failed'/);
  assert.doesNotMatch(script,/response\.json\(|response\.text\(|init\.body/);
  for (const file of ['apps/router.js','apps/antiqvue.js']) assert.doesNotMatch(read(file),/name:'assessment_(started|completed)'/);
+});
+
+test('ANIVUE uses shared VUECORE analytics through the portal',()=>{
+ const html=read('index.html');
+ assert.match(html,/href="\.\/\?vue=anivue#vue-router"/);
+ assert.match(html,/<script src="\.\/analytics\.js" defer><\/script>/);
 });
