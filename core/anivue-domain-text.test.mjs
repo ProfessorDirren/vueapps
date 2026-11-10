@@ -27,11 +27,6 @@ test('invalid text inputs never call the backend',async()=>{
  assert.equal(calls,0);
 });
 
-test('native page delegates both text and photo to VUECORE domain',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(page,/await flow\.run\(context\)/);
- assert.match(page,/flow\.domain\.analyzePhoto\(/);
-});
 
 test('registry forwards injected fetcher to ANIVUE specialist adapter',async()=>{
  let calls=0;
@@ -139,24 +134,12 @@ test('English contracted cannot-breathe emergencies never wait for AI',async()=>
  assert.equal(calls,0);
 });
 
-test('native ANIVUE inline module JavaScript remains syntactically valid',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const match=page.match(/<script type="module">([\s\S]*?)<\/script>/);
- assert.ok(match,'native ANIVUE inline module exists');
- const script=match[1].replace(/^import .*;$/gm,'');
- assert.doesNotThrow(()=>new Function(script));
-});
 
-test('native ANIVUE translations have one label per symptom in all seven languages',()=>{
- const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
- const begin=page.indexOf('const symptoms=');
- const end=page.indexOf('function updateSymptoms()');
- assert.ok(begin>=0&&end>begin,'symptom dictionaries are present');
- const dictionarySource=page.slice(begin,end);
- const dictionaries=new Function(dictionarySource+';return {symptoms,horseTranslations,companionTranslations};')();
- for(const language of ['en','es','sv','hi','zh-CN','ru','ar']){
-  assert.equal(dictionaries.horseTranslations[language]?.length,dictionaries.symptoms.horse.length,'horse '+language);
-  assert.equal(dictionaries.companionTranslations[language]?.length,dictionaries.symptoms.dog.length,'dog '+language);
-  assert.equal(dictionaries.companionTranslations[language]?.length,dictionaries.symptoms.cat.length,'cat '+language);
- }
+
+test('ANIVUE uses VUECORE domain and shared portal rather than its own HTML module',()=>{
+ const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ assert.match(portal,/href="\.\/\?vue=anivue#vue-router"/);
+ assert.match(router,/requestedSpecialist==='anivue'/);
+ assert.ok(createSpecialistDomain('anivue') instanceof VueDomain);
 });

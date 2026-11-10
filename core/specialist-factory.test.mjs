@@ -88,7 +88,7 @@ test('portal uses VUECORE manifest without replacing localized cards',()=>{
  assert.match(html,/\[\.\.\.listSpecialistDefinitions\(\)\]\.sort\(/);
  assert.match(html,/appGrid\.append\(card\)/);
  assert.match(html,/id="app-anivue"/);
- assert.match(html,/href="\.\/anivue-core\.html"/);
+ assert.match(html,/href="\.\/\?vue=anivue#vue-router"/);
 });
 
 test('new portal VUE cards are noninteractive until workspace review',()=>{

@@ -21,6 +21,7 @@ export async function POST(request){
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
+ if(route.domain==='anivue'&&urgent)return json(200,{domain:'anivue',answer:urgent,kind:'safety_rule',emergency:true,workspace:'./?vue=anivue#vue-router',image_analyzed:false});
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
@@ -28,6 +29,6 @@ export async function POST(request){
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);
  const r=await followup(new Request('https://localhost/api/vue-followup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:route.domain,sub_specialist:focused,specialist_path:branch.path,question,language:b.language,history:current?b.history:[],fields:{...(current&&b.fields||{}),...routingFields(route.domain,question)},...(b.image?{image:b.image,image_public:true}:{})})}));
- const d=await r.json();return json(r.status,{...d,...(d.kind==='ai_unverified'?{verified:false,evidence_status:'not_live_verified',followup_scheduled:false}:{}),domain:route.domain,sub_specialist:focused,specialist_path:branch.path,lineage:branch.lineage.map(n=>n.path),image_analyzed:!!b.image&&d.kind==='ai_unverified',workspace:route.domain==='anivue'?'./anivue-core.html':'./'+route.domain+'.html'});
+ const d=await r.json();return json(r.status,{...d,...(d.kind==='ai_unverified'?{verified:false,evidence_status:'not_live_verified',followup_scheduled:false}:{}),domain:route.domain,sub_specialist:focused,specialist_path:branch.path,lineage:branch.lineage.map(n=>n.path),image_analyzed:!!b.image&&d.kind==='ai_unverified',workspace:'./?vue='+encodeURIComponent(route.domain)+'#vue-router'});
 }
 export default async function handler(req,res){if(req.method!=='POST')return res.status(405).json({error:'POST required'});const r=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':req.headers['content-type']||''},body:typeof req.body==='string'?req.body:JSON.stringify(req.body)}));return res.status(r.status).json(await r.json());}
