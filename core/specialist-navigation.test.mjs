@@ -7,8 +7,10 @@ test('all standalone VUEs inherit VUECORE navigation',()=>{
  assert.match(module,/PortalVueHelp/);
  assert.match(module,/mountVueHelp/);
  assert.match(module,/home\.href='\.\/'/);
- assert.match(module,/gap:18px/);
- assert.match(module,/#16b8b0/);
+ const css=readFileSync(new URL('./navigation.css',import.meta.url),'utf8');
+ assert.match(css,/gap:18px/);
+ assert.match(css,/#16b8b0/);
+ assert.match(module,/core\/navigation\.css/);
  for(const domain of pages){
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
   assert.match(html,/src="\.\/apps\/specialist-navigation\.js"/,domain);
