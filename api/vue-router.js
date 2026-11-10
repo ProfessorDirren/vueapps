@@ -1,3 +1,5 @@
+import {createTrafiklabSwedenLive} from '../core/commutvue-sweden-live.js';
+import {queryCommute} from '../core/commutvue.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
 import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
@@ -43,7 +45,13 @@ export async function POST(request){
     if(result.status==='extracted_unverified')photoEvidence=result.evidence;
    }catch{photoStatus='unavailable';}
   }
-  const journey=parseCommuteQuestion(question);return json(200,{photo_status:photoStatus,photo_evidence:photoEvidence,image_analyzed:photoStatus==='extracted_unverified'||photoStatus==='needs_clarification',domain:'commutvue',answer:journey.needsClarification?({sv:'Ange avreseort, destination och stad så kan COMMUTVUE identifiera rätt trafiksystem.',fr:'Indiquez la gare de départ, la destination et la ville.',es:'Indica el origen, destino y ciudad.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Δώστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Kalkış istasyonu, varış noktası ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.',en:'Please specify departure station, destination and city.'}[b.language]||'Please specify departure station, destination and city.'):COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:'local_guidance',verified:false,evidence_status:journey.needsClarification?'needs_stations':'live_unavailable',clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});}
+  const journey=parseCommuteQuestion(question);
+  let live=null;
+  if(!journey.needsClarification&&journey.region==='stockholm'&&process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED==='true'&&process.env.TRAFIKLAB_API_KEY){
+   try{live=await queryCommute({provider:'stockholm',from:journey.from,to:journey.to,adapter:createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})});}catch{live=null;}
+  }
+  const verified=live?.status==='ok';
+  return json(200,{photo_status:photoStatus,photo_evidence:photoEvidence,image_analyzed:photoStatus==='extracted_unverified'||photoStatus==='needs_clarification',domain:'commutvue',answer:journey.needsClarification?({sv:'Ange avreseort, destination och stad så kan COMMUTVUE identifiera rätt trafiksystem.',fr:'Indiquez la gare de départ, la destination et la ville.',es:'Indica el origen, destino y ciudad.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Δώστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Kalkış istasyonu, varış noktası ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.',en:'Please specify departure station, destination and city.'}[b.language]||'Please specify departure station, destination and city.' ):verified?live.departures.map(d=>`${d.line} ${d.destination}: ${d.delayMinutes===null?'?':d.delayMinutes+' min'} (${d.scheduled} → ${d.expected||'?'})`).join('\n'):COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});}
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);
