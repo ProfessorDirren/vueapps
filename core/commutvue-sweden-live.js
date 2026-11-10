@@ -44,16 +44,18 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const [originResult,destinationResult]=await Promise.all([resolveStop(from),resolveStop(to)]);
   const origin=typeof originResult==='string'?originResult:originResult?.id;
   const destination=typeof destinationResult==='string'?destinationResult:destinationResult?.id;
+  const originStops=Array.isArray(originResult?.stopIds)?originResult.stopIds:[];
   const destinationStops=Array.isArray(destinationResult?.stopIds)?destinationResult.stopIds:[];
-  if(!area(origin)||!area(destination)||origin===destination||!destinationStops.length)return {provider,status:'unavailable',departures:[]};
+  if(!area(origin)||!area(destination)||origin===destination||!originStops.length||!destinationStops.length)return {provider,status:'unavailable',departures:[]};
   const board=await get('departures/'+origin);
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',departures:[]};
+  const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
   const departures=[];const ids=[];const seen=new Set();let tripRequests=0;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
-   if(typeof tripId!=='string'||!tripId||!date(startDate)||!d.is_realtime||!d.stop?.id)continue;
+   if(typeof tripId!=='string'||!tripId||!date(startDate)||d.is_realtime!==true||!originStopIds.has(d.stop?.id))continue;
    const id=tripId+'|'+startDate+'|'+d.stop.id;
    if(seen.has(id))continue;seen.add(id);
    if(tripRequests>=maxTrips)break;
