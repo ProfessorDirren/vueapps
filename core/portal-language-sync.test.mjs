@@ -112,3 +112,11 @@ test('VUECORE propagates and persists automatic Swedish language switching after
  assert.match(router,/languagePicker\.dispatchEvent\(new CustomEvent\('change',\{bubbles:true,detail:\{automatic:true\}\}\)\)/);
  assert.match(router,/if\(!event\.detail\?\.automatic\)\{/);
 });
+
+test('all specialist VUEs inherit shared VUECORE language change events',()=>{
+ const specialists=['anyvue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue'];
+ for(const name of specialists)assert.ok(portal.includes('app-'+name),name+' must remain on the shared VUECORE portal');
+ assert.match(portal,/document\.dispatchEvent\(new CustomEvent\("vueapps:languagechange"/);
+ assert.match(router,/detectInputLanguage\(question\)/);
+ assert.match(router,/document\.addEventListener\('vueapps:languagechange'/);
+});
