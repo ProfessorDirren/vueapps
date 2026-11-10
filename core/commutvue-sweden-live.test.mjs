@@ -172,3 +172,13 @@ test('an incomplete route label is skipped without hiding other verified departu
  assert.deepEqual(result.departures.map(d=>d.id),['valid|2026-11-10|stop1']);
  assert.deepEqual(requestedTrips,['valid']);
 });
+
+test('ambiguous autumn clock-change timestamps cannot be represented as verified realtime',async()=>{
+ const ambiguous={...departure,scheduled:'2026-10-25T02:30:00',realtime:'2026-10-25T02:35:00'};
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:()=>Date.parse('2026-10-25T00:30:00Z'),
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async()=>({ok:true,text:async()=>JSON.stringify({...board,timestamp:'2026-10-25T02:30:00',departures:[ambiguous]})})
+ });
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
+});
