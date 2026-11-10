@@ -17,3 +17,10 @@ test('unknown geography and missing stops require clarification',()=>{
  assert.equal(parseCommuteQuestion('RER B delayed?').needsClarification,true);
  assert.equal(parseCommuteQuestion('Train from Jordbro to Gare du Nord?').region,null);
 });
+
+test('Unicode city names are detected as complete words',()=>{
+ assert.equal(parseCommuteQuestion('Train from Gare du Nord to Châtelet delayed?').to,'Châtelet');
+ assert.equal(parseCommuteQuestion('Train from Jordbro to Stockholm City delayed?').region,'stockholm');
+ assert.equal(parseCommuteQuestion('Train from Jordbro to Stockholm City delayed?').to,'Stockholm City');
+ assert.equal(parseCommuteQuestion('Train from Jordbro to Gare du Nord?').needsClarification,true);
+});
