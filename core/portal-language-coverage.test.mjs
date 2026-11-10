@@ -56,3 +56,10 @@ test('AI service error messages are localized for all newly supported languages'
  }
  assert.ok(routerSource.includes('Object.assign(unavailable,'));
 });
+
+test('specialist links match literal .html suffixes',()=>{
+ const slash=String.fromCharCode(92);
+ assert.ok(portal.includes('replace(/'+slash+'.html$/,""'+')'));
+ assert.ok(!portal.includes('replace(/'+slash+slash+'.html$/,""'+')'));
+ assert.equal(new RegExp(slash+'.html$').test('foodvue.html'),true);
+});
