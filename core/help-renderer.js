@@ -1,5 +1,5 @@
 /** Framework-neutral accessible renderer for all inherited VUECORE Help subclasses. */
-export function mountVueHelp({ host, help, language = () => 'en', languageControl }) {
+export function mountVueHelp({ host, help, language = () => 'en', languageControl, home = false }) {
   if (!host || !help) return () => {};
   const trigger = document.createElement('button');
   trigger.type = 'button';
@@ -12,6 +12,14 @@ export function mountVueHelp({ host, help, language = () => 'en', languageContro
   trigger.setAttribute('aria-controls', panelId);
   trigger.setAttribute('aria-expanded', 'false');
   host.append(trigger, panel);
+  if (home) {
+    const link = document.createElement('a');
+    link.href = './';
+    link.className = 'vuecore-home-link';
+    link.textContent = 'HOME';
+    link.setAttribute('aria-label', 'Home');
+    trigger.after(link);
+  }
   const render = () => {
     const copy = help.getHelp(language());
     trigger.textContent = copy.button;
