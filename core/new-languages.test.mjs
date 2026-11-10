@@ -97,3 +97,11 @@ test('new language animal breathing emergencies are triaged at the router bounda
   assert.equal(routingFields('anivue',question).selected,'["breathing"]',question);
  }
 });
+
+test('ANIVUE portal entry uses shared VUECORE UI',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ assert.ok(html.includes('href="./?vue=anivue#vue-router"'));
+ assert.ok(router.includes("requestedSpecialist==='anivue'"));
+ assert.ok(router.includes("active={domain:'anivue',memory:m,caseId:null}"));
+});
