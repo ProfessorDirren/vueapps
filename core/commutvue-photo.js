@@ -1,5 +1,6 @@
 import {usableImage} from './image-input.js';
 import {createPhotoEvidencePipeline} from './photo-evidence.js';
+import {createVisionExtractor} from './vision-extractor.js';
 /**
  * COMMUTVUE only defines the transit-specific evidence contract.
  * Reading timetable text from a photograph does not establish live status.
@@ -21,4 +22,26 @@ export function validateTimetableEvidence(e){
 }
 export function createTimetablePhotoPipeline({extract,validateImage=usableImage}){
  return createPhotoEvidencePipeline({extract,validate:validateTimetableEvidence,validateImage});
+}
+
+/** Domain-only extraction schema. The CORE transport owns the model call. */
+export const TIMETABLE_SCHEMA=Object.freeze({
+ type:'object',properties:{
+  station:{type:['string','null']},city:{type:['string','null']},
+  departures:{type:'array',items:{type:'object',properties:{
+   line:{type:'string'},destination:{type:'string'},scheduled:{type:['string','null']}
+  },required:['line','destination','scheduled'],additionalProperties:false}}
+ },required:['station','city','departures'],additionalProperties:false
+});
+/**
+ * A timetable photo rarely contains a full date and UTC offset. Never infer
+ * those from the device clock or a city name: ask for clarification instead.
+ * A real-time provider must independently verify any later departure.
+ */
+export function createModelTimetablePipeline({run,allow,validateImage=usableImage}){
+ const extract=createVisionExtractor({
+  run:args=>run({...args,schema:TIMETABLE_SCHEMA,instructions:'Transcribe ONLY visible public transport timetable text. If the photo does not show an explicit calendar date and timezone offset, use null for scheduled. Do not infer any city, station, date, timezone, destination or live delay. Do not return passenger identifiers.',name:'commutvue_timetable'}),
+  allow,parse:x=>x
+ });
+ return createTimetablePhotoPipeline({extract,validateImage});
 }
