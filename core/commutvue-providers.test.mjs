@@ -30,7 +30,7 @@ test('Paris cannot claim live traffic without verified route mapping',async()=>{
 
 test('Stockholm route proof must bind origin, destination and actual board departure IDs',async()=>{
  const departure={id:'journey-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z',expected:'2026-11-10T08:07:00Z'};
- const base={apiKey:'fixture-key',resolveStop:async name=>name==='Jordbro'?'740000001':'740000002',
+ const base={apiKey:'fixture-key',now:()=>Date.parse('2026-11-10T07:59:00Z'),resolveStop:async name=>name==='Jordbro'?'740000001':'740000002',
   fetcher:async()=>({ok:true,json:async()=>({departures:[departure]})})};
  const proof={verified:true,originId:'740000001',destinationId:'740000002',departureIds:['journey-1'],updatedAt:'2026-11-10T07:58:00Z'};
  const valid=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:createTrafiklabAdapter({...base,verifyJourney:async()=>proof})});
@@ -40,7 +40,9 @@ test('Stockholm route proof must bind origin, destination and actual board depar
  for(const bad of [
   {...proof,verified:false},{...proof,destinationId:'740000003'},
   {...proof,departureIds:['not-on-board']},{...proof,departureIds:['journey-1','journey-1']},
-  {...proof,updatedAt:'invalid'}
+  {...proof,updatedAt:'invalid'},
+  {...proof,updatedAt:'2026-11-10T07:56:00Z'},
+  {...proof,updatedAt:'2026-11-10T08:00:00Z'}
  ]){
   const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:createTrafiklabAdapter({...base,verifyJourney:async()=>bad})});
   assert.equal(result.status,'unavailable');
