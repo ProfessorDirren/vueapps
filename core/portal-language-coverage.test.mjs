@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {ROUTER_TEXT} from '../apps/router-content.js';
+import {isRegisteredSpecialist} from './specialists.js';
 
 const languages=['en','es','sv','hi','zh-CN','ru','ar','el','tr','fa','fr'];
 const routerSource=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
@@ -36,4 +37,15 @@ test('direct ANYVUE visits preserve newer languages via VUECORE',()=>{
  for(const language of ['fr','el','tr','fa'])assert.ok(anyvue.includes("'"+language+"'"),language);
  assert.ok(anyvue.includes("location.replace('./?vue=anyvue#vue-router')"));
  assert.ok(anyvue.includes("sessionStorage.getItem('vue-language')"));
+});
+
+test('VUECORE deep links resolve registered specialists without losing the chosen language',()=>{
+ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ for(const domain of ['anyvue','antiqvue','foodvue','musicgearvue','vinylvue','wardrobevue']){
+  assert.equal(isRegisteredSpecialist(domain),true,domain);
+ }
+ assert.ok(router.includes("new URLSearchParams(location.search).get('vue')"));
+ assert.ok(router.includes('isRegisteredSpecialist(requestedSpecialist)'));
+ assert.ok(portal.includes('sessionStorage.getItem(VUE_LANGUAGE_KEY)'));
+ assert.ok(portal.includes('sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)'));
 });
