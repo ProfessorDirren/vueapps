@@ -1,16 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-
-const page=readFileSync(new URL('../anivue-core.html',import.meta.url),'utf8');
-
-test('ANIVUE emergency guidance is shown before supplementary requests',()=>{
- assert.match(page,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary/);
- assert.match(page,/if\(urgent\)\{[\s\S]*?return;\}const photoVersionAtSubmit=/);
+import {urgentFollowup} from '../api/vue-followup.js';
+const source=readFileSync(new URL('../api/vue-router.js',import.meta.url),'utf8');
+test('ANIVUE emergency guidance precedes shared photo classification',()=>{
+ const emergency=source.indexOf("if(route.domain==='anivue'&&urgent)return json(200");
+ const classify=source.indexOf('classifyImage(b.image,question)');
+ assert.ok(emergency>=0&&classify>emergency);
+ assert.match(source,/emergency:true/);
+ assert.match(source,/image_analyzed:false/);
 });
-test('ANIVUE text-only follow-up cannot overwrite emergency safety guidance',()=>{
- assert.match(page,/\$\('answer'\)\.textContent=urgent\?check\.assessment\.summary\+'\\n\\n'\+d\.answer:d\.answer/);
-});
-test('ANIVUE photo response retains emergency guidance',()=>{
- assert.match(page,/\[urgent&&check\.assessment\.summary,aiWarning,d\.emergencyAdvice/);
+test('ANIVUE horse colic remains urgent in shared VUECORE',()=>{
+ assert.ok(urgentFollowup('anivue','My horse has colic',{},'en'));
+ assert.ok(urgentFollowup('anivue','Min häst har kolik',{},'sv'));
 });
