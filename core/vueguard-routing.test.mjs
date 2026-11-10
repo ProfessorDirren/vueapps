@@ -46,7 +46,7 @@ test('ANIVUE workspace remains native and has no external fallback',async()=>{
  const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.match(source,/workspace:'\.\/\?vue='/);
  for(const file of [source,portal,native])assert.doesNotMatch(file,/anivue(?:app)?\.se|legacy_workspace/);
- assert.match(portal,/href="\\.\\/\\?vue=anivue#vue-router"/);
+ assert.match(portal,/href="\.\/\?vue=anivue#vue-router"/);
 });
 
 test('runtime files never link to retired standalone ANIVUE',async()=>{
