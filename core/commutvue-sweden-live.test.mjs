@@ -37,7 +37,7 @@ test('network errors and oversized payloads fail closed',async()=>{
 
 test('the source URL never includes a secret and limits trip lookups to eight',async()=>{
  const seen=[];
- const many={...board,departures:Array.from({length:30},(_,i)=>({...departure,trip:{trip_id:'t'+i,start_date:'2026-11-10'}}))};
+ const many={...board,departures:Array.from({length:30},(_,i)=>({...departure,trip:{trip_id:'unmatched'+i,start_date:'2026-11-10'}}))};
  const adapter=createVerifiedSwedenAdapter({apiKey:'private-key',now:clock,maxTrips:8,
   resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
   fetcher:async url=>{seen.push(url);return {ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:many)};}
