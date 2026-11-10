@@ -134,3 +134,22 @@ test('Trafiklab response size cap is measured in UTF-8 bytes and prechecks Conte
  await assert.rejects(resolver('Stockholm'),/too large/);
  assert.equal(reads,0);
 });
+
+test('expired, cancelled and far-future departures never consume a Trips API request',async()=>{
+ const invalid=[
+  {...departure,trip:{trip_id:'old',start_date:'2026-11-10'},realtime:'2026-11-10T09:30:00'},
+  {...departure,trip:{trip_id:'cancelled',start_date:'2026-11-10'},canceled:true},
+  {...departure,trip:{trip_id:'far',start_date:'2026-11-10'},realtime:'2026-11-10T16:00:00'}
+ ];
+ const requests=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   requests.push(url);
+   return {ok:true,text:async()=>JSON.stringify({...board,departures:invalid})};
+  }
+ });
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
+ assert.equal(requests.filter(url=>url.includes('/trips/')).length,0);
+});
