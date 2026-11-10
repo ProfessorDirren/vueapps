@@ -63,3 +63,10 @@ test('specialist links match literal .html suffixes',()=>{
  assert.ok(!portal.includes('replace(/'+slash+slash+'.html$/,""'+')'));
  assert.equal(new RegExp(slash+'.html$').test('foodvue.html'),true);
 });
+
+test('Persian and Arabic use RTL while French, Greek and Turkish remain LTR',()=>{
+ assert.ok(portal.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(portal.includes('document.documentElement.lang=lang'));
+ assert.ok(portal.includes('setLanguage(initialLanguage)'));
+ assert.ok(portal.includes('let initialLanguage="en"'));
+});
