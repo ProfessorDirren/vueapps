@@ -1,3 +1,4 @@
+import {prioritizedCommuteRegions} from './commutvue-priority.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 import {createProviderRegistry} from './provider-registry.js';
 /**
@@ -25,6 +26,7 @@ export const COMMUT_PROVIDERS=Object.freeze({
  paris:{country:'FR',timezone:'Europe/Paris',source:'Île-de-France Mobilités PRIM',docs:'https://prim.iledefrance-mobilites.fr/',credential:'IDFM_API_KEY'},
  santiago:{country:'CL',timezone:'America/Santiago',source:'Red Movilidad / Metro de Santiago',docs:'https://www.red.cl/',credential:null}
 });
+export const COMMUT_ROLLOUT=Object.freeze(prioritizedCommuteRegions(COMMUT_PROVIDERS));
 export function commuteLocale(locale){return COMMUT_LOCALES.includes(locale)?locale:'en'}
 export function normalizeDeparture(raw){
  if(!raw||typeof raw!=='object')throw new TypeError('Invalid departure');
