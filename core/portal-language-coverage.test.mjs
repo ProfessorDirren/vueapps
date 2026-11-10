@@ -70,3 +70,12 @@ test('Persian and Arabic use RTL while French, Greek and Turkish remain LTR',()=
  assert.ok(portal.includes('setLanguage(initialLanguage)'));
  assert.ok(portal.includes('let initialLanguage="en"'));
 });
+
+test('all standalone specialists preserve four new languages on direct visits',()=>{
+ for(const domain of ['anyvue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue']){
+  const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
+  assert.ok(html.includes("sessionStorage.getItem('vue-language')"),domain);
+  assert.ok(html.includes("location.replace('./?vue="+domain+"#vue-router')"),domain);
+  for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
+ }
+});
