@@ -155,6 +155,7 @@ test('expired, cancelled and far-future departures never consume a Trips API req
 });
 
 test('an incomplete route label is skipped without hiding other verified departures',async()=>{
+ const requestedTrips=[];
  const incomplete={...departure,trip:{trip_id:'missing',start_date:'2026-11-10'},route:{}};
  const complete={...departure,trip:{trip_id:'valid',start_date:'2026-11-10'}};
  const adapter=createVerifiedSwedenAdapter({
@@ -162,10 +163,12 @@ test('an incomplete route label is skipped without hiding other verified departu
   resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
   fetcher:async url=>{
    const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   if(tripId)requestedTrips.push(tripId);
    return {ok:true,text:async()=>JSON.stringify(tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:[incomplete,complete]})};
   }
  });
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
  assert.equal(result.status,'ok');
  assert.deepEqual(result.departures.map(d=>d.id),['valid|2026-11-10|stop1']);
+ assert.deepEqual(requestedTrips,['valid']);
 });
