@@ -19,7 +19,7 @@ export function createProviderRegistry({providers,normalize}){
   if(!adapter)return {status:'unavailable',provider:region,departures:[]};
   try{
    const raw=await adapter({provider:region,from:from.trim(),to:to.trim()});
-   if(!raw||raw.provider!==region||raw.status==='unavailable')return {status:'unavailable',provider:region,departures:[]};
+   if(!raw||raw.provider!==region||raw.status!=='ok')return {status:'unavailable',provider:region,departures:[]};
    return normalize(raw);
   }catch{return {status:'unavailable',provider:region,departures:[]};}
  }
