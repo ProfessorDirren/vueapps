@@ -1,3 +1,4 @@
+import {createProviderRegistry} from './provider-registry.js';
 /**
  * COMMUTVUE: provider-neutral realtime transport contracts.
  * No fabricated departures: unknown and unavailable are explicit states.
@@ -36,10 +37,10 @@ export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,
  if(!sourceUrl||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('Source and timestamp required');
  return {status:'ok',provider,sourceUrl,updatedAt:new Date(updatedAt).toISOString(),departures:(departures||[]).map(normalizeDeparture)};
 }
+/** COMMUTVUE configures CORE's generic provider lifecycle, never duplicates it. */
+export function createCommuteRegistry(){return createProviderRegistry({providers:COMMUT_PROVIDERS,normalize:normalizeTrafficResult});}
 export async function queryCommute({provider,from,to,adapter}){
- if(!COMMUT_PROVIDERS[provider])throw new TypeError('Unsupported region');
- if(!from||!to) return {status:'needs_stations',provider,departures:[]};
- if(typeof adapter!=='function')return {status:'unavailable',provider,departures:[]};
- try{return normalizeTrafficResult(await adapter({provider,from,to}));}
- catch{return {status:'unavailable',provider,departures:[]};}
+ const registry=createCommuteRegistry();
+ if(typeof adapter==='function')registry.register(provider,adapter);
+ return registry.query({region:provider,from,to});
 }
