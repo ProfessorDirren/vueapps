@@ -63,3 +63,22 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(now()).toISOString(),journeyEvidence:{verified:true,originId:origin,destinationId:destination,departureIds:ids},departures};
  };
 }
+
+/** Official stop lookup. Ambiguous names fail closed instead of picking a random stop. */
+export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
+ if(!apiKey||typeof fetcher!=='function')throw new TypeError('Trafiklab key and fetcher required');
+ return async name=>{
+  if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Invalid stop name');
+  const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
+  url.searchParams.set('key',apiKey);
+  const response=await fetcher(url.toString(),{headers:{accept:'application/json'}});
+  if(!response.ok)throw Error('Stop lookup unavailable');
+  const payload=await response.json();
+  const exact=(payload.stop_groups||[]).filter(s=>area(s.id)&&s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'));
+  if(exact.length!==1)throw Error('Stop not uniquely identified');
+  return exact[0].id;
+}
+/** Fully configured Sweden adapter using one server-only Trafiklab key. */
+export function createTrafiklabSwedenLive({apiKey,fetcher=fetch,now,maxTrips}={}){
+ return createVerifiedSwedenAdapter({apiKey,fetcher,now,maxTrips,resolveStop:createTrafiklabStopResolver({apiKey,fetcher})});
+}
