@@ -85,3 +85,9 @@ test('shared ANIVUE horse emergencies remain urgent without standalone page',asy
  }
  assert.ok(urgentFollowup('anivue','horseHighFever',{selected:'horseHighFever'},'sv'));
 });
+
+test('retired ANIVUE URL redirects to shared portal without recreating the page',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const config=JSON.parse(await readFile(new URL('../vercel.json',import.meta.url),'utf8'));
+ assert.ok(config.redirects.some(r=>r.source==='/anivue-core.html'&&r.destination==='/?vue=anivue'&&r.permanent===true));
+});
