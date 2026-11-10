@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {ROUTER_TEXT} from '../apps/router-content.js';
 import {UI,DOMAINS} from '../apps/content.js';
 import {detectInputLanguage} from './language-detection.js';
+import {routeQuestion} from './router.js';
 const languages=['el','tr','fa','fr'];
 test('four new languages have complete VUECORE interface strings',()=>{
  for(const lang of languages){assert.equal(ROUTER_TEXT[lang].length,27,lang);assert.ok(ROUTER_TEXT[lang].every(s=>typeof s==='string'&&s.length>0),lang)}
@@ -42,4 +43,14 @@ test('four languages translate every shared planner UI label and all domain cate
    assert.notEqual(config.locales[lang].title,config.locales.en.title,domain+' '+lang);
   }
  }
+});
+
+test('specialist routing recognizes new language animal, plant, food and medical terms',()=>{
+ const samples=[
+  ['Mon chien est malade','anivue'],['Köpek hasta','anivue'],['Ο σκύλος είναι άρρωστος','anivue'],['سگ من بیمار است','anivue'],
+  ['Ma plante a des feuilles jaunes','plantvue'],['Bitki yaprakları sarardı','plantvue'],['Το φυτό μου χρειάζεται νερό','plantvue'],['گیاه من زرد شده','plantvue'],
+  ['Recette de cuisine','foodvue'],['Yemek tarifi','foodvue'],['Συνταγή φαγητού','foodvue'],['دستور غذا','foodvue'],
+  ['Effets secondaires du médicament','medivue'],['İlaç yan etki','medivue'],['Παρενέργειες φάρμακο','medivue'],['عوارض جانبی دارو','medivue']
+ ];
+ for(const [question,domain] of samples){assert.equal(routeQuestion(question).domain,domain,question)}
 });
