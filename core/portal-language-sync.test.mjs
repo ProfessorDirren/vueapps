@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 
 const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
-const help=readFileSync(new URL('../apps/help-renderer.js',import.meta.url),'utf8');
+const help=readFileSync(new URL('./help-renderer.js',import.meta.url),'utf8');
 const video=readFileSync(new URL('./video-input.js',import.meta.url),'utf8');
 
 test('portal announces language changes after synchronizing the selected language',()=>{
@@ -29,6 +29,7 @@ test('Help actually changes EN → SV → ES after the portal event', async()=>{
  const listeners=new Map();
  const element=tag=>({
   tagName:tag,hidden:false,children:[],attributes:{},
+  querySelector(){return null;},
   append(...nodes){this.children.push(...nodes);},
   replaceChildren(...nodes){this.children=nodes;},
   setAttribute(name,value){this.attributes[name]=value;},
