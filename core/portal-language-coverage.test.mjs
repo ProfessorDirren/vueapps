@@ -100,3 +100,16 @@ test('specialist click handler actually routes new languages without interceptin
   assert.equal(prevented,language!=='en',language);
  }
 });
+
+test('direct specialist redirects execute for each newer language, not English',()=>{
+ for(const domain of ['anyvue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue']){
+  const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
+  const script=html.match(/<script>([\s\S]*?sessionStorage\.getItem\('vue-language'\)[\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script,domain+' redirect script');
+  for(const language of ['fr','el','tr','fa','en']){
+   let destination=null;
+   runInNewContext(script,{sessionStorage:{getItem:()=>language},location:{replace:value=>{destination=value}}});
+   assert.equal(destination,language==='en'?null:'./?vue='+domain+'#vue-router',domain+' '+language);
+  }
+ }
+});
