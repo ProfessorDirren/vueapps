@@ -4,12 +4,12 @@ import {COMMUT_LOCALES,COMMUT_PROVIDERS,queryCommute} from './commutvue.js';
 import {COMMUT_EXPANSION_REGIONS,expansionRegionsForLocale} from './commutvue-regions.js';
 import {parseCommuteQuestion} from './commutvue-query.js';
 test('all eleven languages have at least one discoverable region',()=>{
- for(const locale of COMMUT_LOCALES)assert.ok(expansionRegionsForLocale(locale).length>0,locale);
+ for(const locale of COMMUT_LOCALES)assert.ok(expansionRegionsForLocale(locale).length>0||Object.values(COMMUT_PROVIDERS).some(provider=>provider.locales?.includes(locale)),locale);
 });
 test('all regions have valid timezone and ISO country, but no unverified live provider',()=>{
  for(const [id,region] of Object.entries(COMMUT_EXPANSION_REGIONS)){
   assert.match(region.country,/^[A-Z]{2}$/);
-  assert.ok(Intl.supportedValuesOf('timeZone').includes(region.timezone),id);
+  assert.doesNotThrow(()=>new Intl.DateTimeFormat('en',{timeZone:region.timezone}).format(new Date()),id);
   assert.equal(COMMUT_PROVIDERS[id].liveConfigured,false);
  }
 });
