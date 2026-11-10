@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {ROUTER_TEXT} from '../apps/router-content.js';
 import {UI,DOMAINS} from '../apps/content.js';
 import {detectInputLanguage} from './language-detection.js';
-import {routeQuestion} from './router.js';
+import {routeQuestion,routingFields} from './router.js';
 import {urgentFollowup,POST as followupPOST} from '../api/vue-followup.js';
 const languages=['el','tr','fa','fr'];
 test('four new languages have complete VUECORE interface strings',()=>{
@@ -87,5 +87,13 @@ test('new languages are accepted by the followup API validation',async()=>{
   const request=new Request('https://example.test/api/vue-followup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({domain:'anivue',question:'My dog is sick and needs help',language:lang})});
   const response=await followupPOST(request);
   assert.notEqual(response.status,400,lang+' must not fail language validation');
+ }
+});
+
+test('new language animal breathing emergencies are triaged at the router boundary',()=>{
+ const samples=['Mon chien ne peut pas respirer','Köpek nefes alamıyor','Ο σκύλος δεν μπορεί να αναπνεύσει','سگ نمی‌تواند نفس بکشد'];
+ for(const question of samples){
+  assert.equal(routeQuestion(question).domain,'anivue',question);
+  assert.equal(routingFields('anivue',question).selected,'["breathing"]',question);
  }
 });
