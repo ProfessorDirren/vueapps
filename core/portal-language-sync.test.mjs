@@ -102,3 +102,11 @@ test('planner specialists ignore stale per-VUE language settings',()=>{
  assert.match(tools,/sessionStorage\.getItem\('vue-language'\)/);
  assert.doesNotMatch(tools,/sessionStorage\.getItem\(storageKey\+'-language'\)/);
 });
+
+test('VUECORE propagates and persists automatic Swedish language switching after Spanish selection',()=>{
+ assert.match(portal,/function setLanguage\(lang,\{automatic=false\}=\{\}\)/);
+ assert.match(portal,/new CustomEvent\("vueapps:languagechange",\{detail:\{language:lang,automatic\}\}\)/);
+ assert.match(portal,/picker\.addEventListener\("change",event=>\{setLanguage\(picker\.value,\{automatic:event\.detail\?\.automatic===true\}\);try\{sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)\}/);
+ assert.match(router,/languagePicker\.dispatchEvent\(new CustomEvent\('change',\{bubbles:true,detail:\{automatic:true\}\}\)\)/);
+ assert.match(router,/if\(!event\.detail\?\.automatic\)\{/);
+});
