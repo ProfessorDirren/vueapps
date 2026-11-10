@@ -115,3 +115,22 @@ test('official Trafiklab Stop Lookup meta-stop contract preserves numeric child 
  });
  assert.deepEqual(await resolver('Stockholm'),{id:'740098000',stopIds:['1','1617','12275']});
 });
+
+test('Trafiklab response size cap is measured in UTF-8 bytes and prechecks Content-Length',async()=>{
+ const resolveStop=async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']};
+ let reads=0;
+ const oversizedHeader=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async()=>({
+  ok:true,headers:{get:()=> '350001'},text:async()=>{reads++;return JSON.stringify(board)}
+ })});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversizedHeader})).status,'unavailable');
+ assert.equal(reads,0);
+ const oversizedUtf8=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async()=>({
+  ok:true,text:async()=> 'å'.repeat(175001)
+ })});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversizedUtf8})).status,'unavailable');
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,headers:{get:()=> '350001'},text:async()=>{reads++;return '{}'}
+ })});
+ await assert.rejects(resolver('Stockholm'),/too large/);
+ assert.equal(reads,0);
+});
