@@ -11,6 +11,7 @@ test('verified Swedish realtime delay requires origin-before-destination trip ca
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make()});
  assert.equal(result.status,'ok');assert.equal(result.departures[0].delayMinutes,7);
  assert.equal(result.sourceUrl.includes('key='),false);
+ assert.equal(result.updatedAt,'2026-11-10T08:58:00.000Z');
 });
 test('wrong route order, absent realtime or stale provider evidence never claims delay',async()=>{
  for(const adapter of [
@@ -44,4 +45,13 @@ test('the source URL never includes a secret and limits trip lookups to eight',a
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
  assert.equal(result.status,'unavailable'); // Trip identifiers in details do not match, so none are verified.
  assert.equal(seen.filter(url=>url.includes('/trips/')).length,8);
+});
+
+test('stale departed trips and unsafe quota overrides fail closed',async()=>{
+ const departed={...departure,realtime:'2026-11-10T09:40:00'};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[departed]})});
+ assert.equal(result.status,'unavailable');
+ for(const maxTrips of [0,9,100,-1,1.5]){
+  assert.throws(()=>createVerifiedSwedenAdapter({apiKey:'fixture',resolveStop:async()=>({id:'740000001',stopIds:['stop1']}),maxTrips}),/required/);
+ }
 });
