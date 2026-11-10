@@ -86,7 +86,7 @@
   <script type="module" src="./apps/help.js"></script>
 </head>
 <body>
-  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option></select><div class="logo">VUEAPPS</div><div class="vue-brain" role="img" aria-label="Gray brain with pink neon orbit"><img class="vue-brain-core" src="./assets/vue-brain-realistic.webp" alt="" aria-hidden="true"><span class="vue-brain-glint" aria-hidden="true"></span></div><div id="vuecore-help"></div></header>
+  <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option><option value="el">Ελληνικά (Greek)</option><option value="tr">Türkçe (Turkish)</option><option value="fa">فارسی (Persian)</option><option value="fr">Français (French)</option></select><div class="logo">VUEAPPS</div><div class="vue-brain" role="img" aria-label="Gray brain with pink neon orbit"><img class="vue-brain-core" src="./assets/vue-brain-realistic.webp" alt="" aria-hidden="true"><span class="vue-brain-glint" aria-hidden="true"></span></div><div id="vuecore-help"></div></header>
   <main>
     <section class="hero" aria-labelledby="hero-title">
       <p class="hero-mark">VUEAPPS.se</p>
@@ -245,7 +245,7 @@ const accessibilityLabels={
  ru:["Выбрать язык","Категории ARMVUE","Категории FOODVUE","Серый мозг с розовой неоновой орбитой"],
  ar:["اختر اللغة","فئات ARMVUE","فئات FOODVUE","دماغ رمادي تحيط به حلقة نيون وردية"]
 };
-const toolLinkVerbs={en:"Open",sv:"Öppna",es:"Abrir",hi:"खोलें", "zh-CN":"打开",ru:"Открыть",ar:"افتح"};
+const toolLinkVerbs={el:"Άνοιγμα",tr:"Aç",fa:"باز کردن",fr:"Ouvrir",en:"Open",sv:"Öppna",es:"Abrir",hi:"खोलें", "zh-CN":"打开",ru:"Открыть",ar:"افتح"};
 const martialTranslations={
  en:["Martial arts, training methods, rules, styles and safer practice. Ask VUECORE in your own language.","Ask MARTIALARTSVUE via VUECORE →"],
  sv:["Kampsport, träningsmetoder, regler, stilar och säkrare träning. Fråga VUECORE på ditt eget språk.","Fråga MARTIALARTSVUE via VUECORE →"],
@@ -273,14 +273,14 @@ function setLanguage(lang){
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
- document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+ document.documentElement.lang=lang;document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr";
  document.querySelector(".hero-swedish").lang=lang;
  const slump=slumpTranslations[lang]||slumpTranslations.en;
  ["slump-description","slump-status","slump-link"].forEach((id,i)=>{(()=>{const el=document.getElementById(id);if(el)el.textContent=slump[i]})()});
  const names=['homevue','plantvue','armvue','foodvue'];
  names.forEach(id=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=(toolLinkVerbs[lang]||toolLinkVerbs.en)+' '+id.toUpperCase()+' →'});
- document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=DOMAINS.armvue.locales[lang].types[i]);
- const food=DOMAINS.foodvue.locales[lang].types;
+ document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=(DOMAINS.armvue.locales[lang]||DOMAINS.armvue.locales.en).types[i]);
+ const food=(DOMAINS.foodvue.locales[lang]||DOMAINS.foodvue.locales.en).types;
  document.querySelectorAll('#app-foodvue .subcategories li').forEach((el,i)=>el.textContent=food[[0,2,3,4][i]]);
  document.querySelector('#app-foodvue .nested').textContent=food.slice(0,2).join(' · ');
  const martial=martialTranslations[lang]||martialTranslations.en;
