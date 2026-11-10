@@ -5,7 +5,7 @@ export const COMMUT_REGION_HINTS=Object.freeze({
  santiago:/(?:^|[^\p{L}\p{N}])(?:chile|santiago(?: de chile)?|providencia|maipú|maipu|puente alto|las condes|estación central|estacion central|plaza de armas|baquedano|tobalaba|pajaritos|los héroes|los heroes|metro de santiago|red movilidad)(?=$|[^\p{L}\p{N}])/iu,
  paris:/(?:^|[^\p{L}\p{N}])(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)(?=$|[^\p{L}\p{N}])/iu
 });
-const escapeRegex=value=>value.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\const PATTERNS=[');
+const escapeRegex=value=>value.replace(/[^\p{L}\p{N}]/gu,ch=>'\\'+ch);
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
