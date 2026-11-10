@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 import {ROUTER_TEXT} from '../apps/router-content.js';
 import {isRegisteredSpecialist} from './specialists.js';
 
@@ -77,5 +78,25 @@ test('all standalone specialists preserve four new languages on direct visits',(
   assert.ok(html.includes("sessionStorage.getItem('vue-language')"),domain);
   assert.ok(html.includes("location.replace('./?vue="+domain+"#vue-router')"),domain);
   for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
+ }
+});
+
+test('specialist click handler actually routes new languages without intercepting English',()=>{
+ const start=portal.indexOf('const extendedOnlyLanguages=');
+ const end=portal.indexOf('const VUE_LANGUAGE_KEY=',start);
+ assert.ok(start>=0&&end>start);
+ const handler=portal.slice(start,end);
+ for(const language of ['fr','el','tr','fa','en']){
+  let listener;
+  let destination=null;
+  let prevented=false;
+  const location={href:'https://vueapps.test/',origin:'https://vueapps.test/',assign:url=>{destination=url}};
+  const link={href:'https://vueapps.test/foodvue.html',target:''};
+  const document={addEventListener:(name,callback)=>{assert.equal(name,'click');listener=callback}};
+  runInNewContext(handler,{document,picker:{value:language},location,URL,encodeURIComponent,Set});
+  assert.equal(typeof listener,'function');
+  listener({target:{closest:()=>link},defaultPrevented:false,button:0,metaKey:false,ctrlKey:false,shiftKey:false,altKey:false,preventDefault:()=>{prevented=true}});
+  assert.equal(destination,language==='en'?null:'./?vue=foodvue#vue-router',language);
+  assert.equal(prevented,language!=='en',language);
  }
 });
