@@ -120,3 +120,10 @@ test('all specialist VUEs inherit shared VUECORE language change events',()=>{
  assert.match(router,/detectInputLanguage\(question\)/);
  assert.match(router,/document\.addEventListener\('vueapps:languagechange'/);
 });
+
+test('planner VUEs inherit VUECORE automatic language and manual override semantics',()=>{
+ const tools=readFileSync(new URL('../apps/tools.js',import.meta.url),'utf8');
+ assert.match(tools,/sessionStorage\.getItem\('vue-auto-language'\)\|\|sessionStorage\.getItem\('vue-language'\)/);
+ assert.match(tools,/sessionStorage\.removeItem\('vue-auto-language'\)/);
+ assert.match(tools,/sessionStorage\.setItem\('vue-language',language\)/);
+});
