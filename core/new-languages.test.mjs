@@ -54,3 +54,20 @@ test('specialist routing recognizes new language animal, plant, food and medical
  ];
  for(const [question,domain] of samples){assert.equal(routeQuestion(question).domain,domain,question)}
 });
+
+test('all portal specialist translation groups include the four new languages',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const groups=['slumpTranslations','antiqTranslations','musicTranslations','vinylTranslations','communityTranslations','possessionsTranslations','martialTranslations','mediTranslations','foodReviewTranslations'];
+ for(const name of groups){
+  const marker='const '+name+'=';
+  const begin=html.indexOf(marker);
+  assert.ok(begin>=0,'missing '+name);
+  const source=html.slice(begin+marker.length);
+  const end=source.indexOf('};');
+  assert.ok(end>=0,name+' has no closing object');
+  const block=source.slice(0,end+1);
+  for(const lang of languages)assert.ok(block.includes(JSON.stringify(lang)+':'),name+' missing '+lang);
+ }
+ assert.ok(html.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(html.includes('setLanguage("en")'));
+});
