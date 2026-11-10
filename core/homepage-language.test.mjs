@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-test("homepage retains all seven language choices and descriptive labels",()=>{
+test("homepage retains all eleven language choices and descriptive labels",()=>{
  const expected=[
   ['en','English'],['es','Español'],['sv','Svenska'],['hi','हिन्दी (Hindi)'],
-  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)']
+  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)'],['el','Ελληνικά (Greek)'],['tr','Türkçe (Turkish)'],['fa','فارسی (Persian)'],['fr','Français (French)']
  ];
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
@@ -17,7 +17,7 @@ test("English is the default on every new portal load",()=>{
  assert.doesNotMatch(html,/setLanguage\(initialLanguage\)/);
  assert.doesNotMatch(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(html,/localStorage\.setItem\("vueapps-language-v2"/);
- assert.match(html,/lang==="ar"\?"rtl":"ltr"/);
+ assert.match(html,/\["ar","fa"\]\.includes\(lang\)\?"rtl":"ltr"/);
 });
 test("homepage hero and navigation retain brand and product promises",()=>{
  assert.match(html,/VUEAPPS\.se/);
