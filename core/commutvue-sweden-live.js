@@ -37,10 +37,14 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  }
  return async({provider,from,to})=>{
   if(provider!=='stockholm')throw Error('Unexpected region');
-  const [origin,destination]=await Promise.all([resolveStop(from),resolveStop(to)]);
-  if(!area(origin)||!area(destination)||origin===destination)return {provider,status:'unavailable',departures:[]};
+  const [originResult,destinationResult]=await Promise.all([resolveStop(from),resolveStop(to)]);
+  const origin=typeof originResult==='string'?originResult:originResult?.id;
+  const destination=typeof destinationResult==='string'?destinationResult:destinationResult?.id;
+  const destinationStops=Array.isArray(destinationResult?.stopIds)?destinationResult.stopIds:[];
+  if(!area(origin)||!area(destination)||origin===destination||!destinationStops.length)return {provider,status:'unavailable',departures:[]};
   const board=await get('departures/'+origin);
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',departures:[]};
+  const destinationStopIds=new Set(destinationStops);
   const departures=[];const ids=[];const seen=new Set();let tripRequests=0;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
@@ -53,8 +57,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const details=await get('trips/'+encodeURIComponent(tripId)+'/'+startDate);
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
-   const i=calls.findIndex(c=>c.stop?.id===d.stop.id&&c.stop?.area_id===origin);
-   const j=calls.findIndex((c,k)=>k>i&&c.stop?.area_id===destination);
+   const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
+   const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||!calls[i].is_realtime||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
    if(!Number.isFinite(scheduled)||!Number.isFinite(expected))continue;
@@ -78,7 +82,9 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const payload=await response.json();
   const exact=(payload.stop_groups||[]).filter(s=>area(s.id)&&s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'));
   if(exact.length!==1)throw Error('Stop not uniquely identified');
-  return exact[0].id;
+  const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
+  if(!stopIds.length)throw Error('No verified child stop ids');
+  return {id:exact[0].id,stopIds};
 }
 /** Fully configured Sweden adapter using one server-only Trafiklab key. */
 export function createTrafiklabSwedenLive({apiKey,fetcher=fetch,now,maxTrips}={}){
