@@ -21,3 +21,12 @@ test('new languages are wired to output instructions and Persian RTL',()=>{
  for(const lang of languages){assert.match(vision,new RegExp(lang+':'));assert.match(followup,new RegExp("'"+lang+"':"));assert.match(html,new RegExp('value="'+lang+'"'))}
  assert.ok(html.includes('["ar","fa"].includes(lang)'));
 });
+
+test('all four new languages have complete translated portal hero content',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const marker='const translations=';
+ const begin=html.indexOf(marker)+marker.length;
+ const end=html.indexOf(';',begin);
+ const translations=JSON.parse(html.slice(begin,end));
+ for(const lang of languages){assert.equal(translations[lang].length,translations.en.length,lang);assert.notEqual(translations[lang][0],translations.en[0],lang)}
+});
