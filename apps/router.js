@@ -9,6 +9,15 @@ const $=id=>document.getElementById(id),panel=$('vue-router'),input=$('vue-route
 let busy=false,active=null,photo=null,loadingPhoto=false;const memories=new Map();let storage=null;let favoritesStorage=null;try{favoritesStorage=localStorage}catch{}// Keep stored assessments available, but never reopen one on a fresh page load.
 try{storage=sessionStorage}catch{}
 const favorite=readFavorite(favoritesStorage).favorite;if(favorite&&active?.domain!==favorite){const m=new VueMemory({domain:favorite,storage});memories.set(favorite,m);active={domain:favorite,memory:m,caseId:null}}
+
+// A specialist deep link selects a VUECORE domain without starting a separate UI.
+const requestedSpecialist=new URLSearchParams(location.search).get('vue');
+if(requestedSpecialist==='anivue'){
+ const m=memories.get('anivue')||new VueMemory({domain:'anivue',storage});
+ memories.set('anivue',m);
+ active={domain:'anivue',memory:m,caseId:null};
+ window.addEventListener('load',()=>input?.focus({preventScroll:true}),{once:true});
+}
 const t=()=>ROUTER_TEXT[document.documentElement.lang]||ROUTER_TEXT.en;
 const provenanceLabel={en:'AI assessment · Not independently verified',es:'Evaluación de IA · Sin verificación independiente',sv:'AI-bedömning · Inte oberoende verifierad',hi:'AI आकलन · स्वतंत्र रूप से सत्यापित नहीं', 'zh-CN':'AI 评估 · 未经独立核实',ru:'Оценка ИИ · Независимо не проверено',ar:'تقييم بالذكاء الاصطناعي · غير متحقق منه بشكل مستقل'};
 
