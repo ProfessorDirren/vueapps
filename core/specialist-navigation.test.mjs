@@ -25,6 +25,9 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(portal,/href="\.\/core\/navigation\.css"/);
  assert.doesNotMatch(portal,/#vuecore-help \{ margin-top/, "shared portal styles belong to CORE");
  assert.match(css,/\.vuecore-help-panel\[hidden\]/);
+ const anyvue=readFileSync(new URL('../anyvue.html',import.meta.url),'utf8');
+ assert.doesNotMatch(anyvue,/<style>\.vuecore-help-trigger/, 'ANYVUE must inherit CORE help styles');
+ assert.doesNotMatch(anyvue,/src="\.\/apps\/anyvue-help\.js"/, 'ANYVUE must not mount help twice');
  assert.match(specialistBootstrap,/core\/specialist-navigation\.js/);
  for(const domain of pages){
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
