@@ -19,3 +19,11 @@ test('CORE never leaks failures or accepts unregistered provider output',async()
  assert.equal(result.status,'unavailable');
  assert.equal(JSON.stringify(result).includes('private upstream error'),false);
 });
+
+test('CORE rejects unknown and incomplete upstream statuses',async()=>{
+ const registry=createProviderRegistry({providers:{regionA:{}},normalize:x=>x});
+ for(const status of ['partial','pending','stale','error',undefined]){
+  registry.register('regionA',async()=>({provider:'regionA',status}));
+  assert.equal((await registry.query({region:'regionA',from:'A',to:'B'})).status,'unavailable');
+ }
+});
