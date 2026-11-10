@@ -21,7 +21,7 @@ export const COMMUT_MESSAGES=Object.freeze({
  fa:['داده زنده حمل‌ونقل در دسترس نیست.','حرکت تأییدشده‌ای یافت نشد.','منبع','به‌روزرسانی','برنامه‌ریزی‌شده','پیش‌بینی‌شده','لغوشده','تأخیر']
 });
 export const COMMUT_PROVIDERS=Object.freeze({
- ...Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,{country:region.country,timezone:region.timezone,source:null,docs:null,credential:null,liveConfigured:false}]))),
+ ...Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,{country:region.country,timezone:region.timezone,source:null,docs:null,credential:null,liveConfigured:false}])),
  stockholm:{country:'SE',timezone:'Europe/Stockholm',source:'Trafiklab',docs:'https://www.trafiklab.se/api/our-apis/trafiklab-realtime-apis/',credential:'TRAFIKLAB_API_KEY'},
  paris:{country:'FR',timezone:'Europe/Paris',source:'Île-de-France Mobilités PRIM',docs:'https://prim.iledefrance-mobilites.fr/',credential:'IDFM_API_KEY'},
  santiago:{country:'CL',timezone:'America/Santiago',source:'Red Movilidad / Metro de Santiago',docs:'https://www.red.cl/',credential:null}
