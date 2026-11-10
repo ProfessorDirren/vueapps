@@ -31,10 +31,11 @@ export function normalizeDeparture(raw){
  if(raw.expected&&!Number.isFinite(expected))throw new TypeError('Invalid expected timestamp');
  return Object.freeze({line:String(raw.line||''),destination:String(raw.destination||''),scheduled:new Date(scheduled).toISOString(),expected:Number.isFinite(expected)?new Date(expected).toISOString():null,delayMinutes:Number.isFinite(expected)?Math.max(0,Math.round((expected-scheduled)/60000)):null,cancelled:raw.cancelled===true});
 }
-export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,status='ok'}){
+export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,journeyVerified=false,status='ok'}){
  if(!COMMUT_PROVIDERS[provider])throw new TypeError('Unknown provider');
  if(status!=='ok')return {status:'unavailable',provider,departures:[]};
  if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('HTTPS source and timestamp required');
+ if(journeyVerified!==true)throw new TypeError('Journey destination not verified');
  if(!Array.isArray(departures)||departures.length===0)throw new TypeError('No verified journey departures');
  return {status:'ok',provider,sourceUrl,updatedAt:new Date(updatedAt).toISOString(),departures:(departures||[]).map(normalizeDeparture)};
 }
