@@ -1,7 +1,7 @@
 import {validImage,ready,budget} from '../api/vue-followup.js';
 import {usableImage} from './image-input.js';
 import {AniVueDomain} from './anivue.js';
-const LANGUAGES={en:'English',es:'Spanish',sv:'Swedish',hi:'Hindi','zh-CN':'Simplified Chinese',ru:'Russian',ar:'Arabic'};
+const LANGUAGES={en:'English',es:'Spanish',sv:'Swedish',hi:'Hindi','zh-CN':'Simplified Chinese',ru:'Russian',ar:'Arabic',el:'Greek',tr:'Turkish',fa:'Persian (Farsi)',fr:'French'};
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const confidence={type:'string',enum:['low','medium','high']};
 const nullable={type:['string','null']};
