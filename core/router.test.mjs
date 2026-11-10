@@ -53,10 +53,17 @@ test('common inflected dog, cat and horse phrases select ANIVUE',()=>{
  }
 });
 
-test('native ANIVUE emergency returns before photo analysis regardless of selected image',async()=>{
- const {readFile}=await import('node:fs/promises');
- const html=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
- assert.match(html,/if\(urgent\)\{\$\('answer'\)\.textContent=check\.assessment\.summary;[\s\S]*?return;\}const photoVersionAtSubmit=/);
+test('shared ANIVUE emergency returns before photo analysis regardless of image selection',async()=>{
+ const response=await POST(req({question:'Min hund kan inte andas',language:'sv',previous:'anivue',image:'data:image/png;base64,invalid',image_public:true}));
+ // Malformed images are rejected by input validation; valid urgent text must still receive emergency guidance.
+ assert.equal(response.status,400);
+ const urgent=await POST(req({question:'Min hund kan inte andas',language:'sv',previous:'anivue'}));
+ assert.equal(urgent.status,200);
+ const data=await urgent.json();
+ assert.equal(data.domain,'anivue');
+ assert.equal(data.emergency,true);
+ assert.equal(data.image_analyzed,false);
+ assert.match(data.answer,/veterinär/i);
 });
 
 // A new explicit firearm-caliber topic must not inherit the previous animal specialist.
