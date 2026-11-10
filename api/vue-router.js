@@ -21,6 +21,7 @@ export async function POST(request){
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
+ if(route.domain==='anivue'&&urgent)return json(200,{domain:'anivue',answer:urgent,kind:'safety_rule',emergency:true,workspace:'./?vue=anivue#vue-router',image_analyzed:false});
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
