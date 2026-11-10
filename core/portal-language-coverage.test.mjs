@@ -96,7 +96,7 @@ test('specialist click handler actually routes new languages without interceptin
   runInNewContext(handler,{document,picker:{value:language},location,URL,encodeURIComponent,Set});
   assert.equal(typeof listener,'function');
   listener({target:{closest:()=>link},defaultPrevented:false,button:0,metaKey:false,ctrlKey:false,shiftKey:false,altKey:false,preventDefault:()=>{prevented=true}});
-  assert.equal(destination,language==='en'?null:'./?vue=foodvue#vue-router',language);
+  assert.equal(destination,language==='en'?null:'./?vue=foodvue#vue-router',language+' diagnostics '+JSON.stringify({origin:new URL(link.href,location.href).origin,locationOrigin:location.origin,path:new URL(link.href,location.href).pathname,prevented,handler:handler.slice(0,200)}));
   assert.equal(prevented,language!=='en',language);
  }
 });
