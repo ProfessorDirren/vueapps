@@ -73,6 +73,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   }
   if(!departures.length)return {provider,status:'unavailable',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
+  // Evidence IDs must follow the same order as the departures presented to callers.
+  ids.splice(0,ids.length,...departures.map(d=>d.id));
   return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin,destinationId:destination,departureIds:ids},departures};
  };
 }
