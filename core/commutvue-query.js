@@ -9,6 +9,13 @@ const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
+ /(.+?)\s+से\s+(.+?)\s+तक(?=[?.!,।]|$)/iu,
+ /从\s*(.+?)\s*到\s*(.+?)(?=[?.!,。！？]|$)/iu,
+ /из\s+(.+?)\s+до\s+(.+?)(?=[?.!,]|$)/iu,
+ /من\s+(.+?)\s+(?:إلى|الى)\s+(.+?)(?=[?.!,؟]|$)/iu,
+ /από\s+(.+?)\s+(?:προς|σε)\s+(.+?)(?=[?.!,;]|$)/iu,
+ /از\s+(.+?)\s+به\s+(.+?)(?=[?.!,؟]|$)/iu,
+ /(.+?)\s+konumundan\s+(.+?)\s+konumuna(?=[?.!,]|$)/iu,
  /(?:desde|de)\s+(.+?)\s+(?:a|hacia)\s+(.+?)(?=\s+(?:con retraso|atrasad[oa]s?|demorad[oa]s?|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
  /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|hasta)\s+(.+?)(?=\s+(?:försenad(?:e|t)?|delayed|late|en retard|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
  /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
