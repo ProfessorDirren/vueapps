@@ -3,7 +3,7 @@ import {COMMUT_PROVIDERS} from './commutvue.js';
  * Provider boundary. No API key ever reaches a browser.
  * Server-only transport is injected so tests can use fixtures without network calls.
  */
-export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop}={}){
+export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop,verifyJourney}={}){
  if(!apiKey||typeof resolveStop!=='function')throw new Error('Trafiklab server key and stop resolver required');
  return async ({provider,from,to})=>{
   if(provider!=='stockholm')throw new Error('Wrong provider');
@@ -17,8 +17,17 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop}={}){
   // A station board does not by itself prove that a service calls at the requested destination.
   // Require explicit route verification before showing a departure as belonging to this journey.
   if(!Array.isArray(payload.departures))throw new Error('Invalid provider response');
-  // Provider responded, but journey matching is not yet implemented: never report success.
-  return {provider,status:'unavailable',departures:[]};
+  // Verification must come from an independent, provider-backed route check.
+  // A station board, even with a matching destination label, is not route proof.
+  if(typeof verifyJourney!=='function')return {provider,status:'unavailable',departures:[]};
+  const proof=await verifyJourney({originId:String(fromId),destinationId:String(toId),departures:payload.departures});
+  if(!proof||proof.verified!==true||proof.originId!==String(fromId)||proof.destinationId!==String(toId)||!Array.isArray(proof.departureIds)||!proof.departureIds.length)return {provider,status:'unavailable',departures:[]};
+  const ids=new Set(proof.departureIds);
+  if(ids.size!==proof.departureIds.length||[...ids].some(id=>typeof id!=='string'||!id.trim()))return {provider,status:'unavailable',departures:[]};
+  const matched=payload.departures.filter(d=>d&&typeof d.id==='string'&&ids.has(d.id));
+  if(matched.length!==ids.size||matched.some(d=>typeof d.line!=='string'||!d.line.trim()||typeof d.destination!=='string'||!d.destination.trim()))return {provider,status:'unavailable',departures:[]};
+  if(typeof proof.updatedAt!=='string'||!Number.isFinite(Date.parse(proof.updatedAt)))return {provider,status:'unavailable',departures:[]};
+  return {provider,status:'ok',sourceUrl:'https://realtime-api.trafiklab.se/v1/departures/'+fromId,updatedAt:proof.updatedAt,journeyEvidence:{verified:true,originId:String(fromId),destinationId:String(toId),departureIds:[...ids]},departures:matched};
  };
 }
 /**
