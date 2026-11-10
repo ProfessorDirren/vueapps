@@ -53,3 +53,14 @@ test('native-script route questions preserve the origin and destination',()=>{
   assert.equal(result.needsClarification,false,text);
  }
 });
+
+test('incidental country references do not override identified journey endpoints',()=>{
+ const q=parseCommuteQuestion('I speak Spanish and live in Chile. Train from Jordbro to Stockholm City?');
+ assert.equal(q.region,'stockholm');
+ assert.equal(q.needsClarification,false);
+});
+test('two different endpoint regions always require clarification',()=>{
+ const q=parseCommuteQuestion('Train from Baquedano to Gare du Nord?');
+ assert.equal(q.region,null);
+ assert.equal(q.needsClarification,true);
+});
