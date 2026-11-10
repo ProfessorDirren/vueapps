@@ -7,7 +7,15 @@ Status: migration plan, NOT a decommission authorization.
 - `core/specialists.js` already defines ANIVUE's specialist scope and method.
 - `core/router.js` provides conservative animal routing and breathing context.
 - The current `api/vue-router.js` ANIVUE workspace points to the VUECORE-native `./?vue=anivue#vue-router` route. The former external-workspace dependency in this route has been removed; this does **not** prove that the standalone ANIVUE service, DNS, redirects, or all features have been retired.
-- The standalone ANIVUE repository, its API, image workflow, and operational ownership have not yet been audited here. Do not assume feature parity.
+- The standalone `ProfessorDirren/anivue` repository has now been inspected at its `main` branch. It is a separate React/Vite application with its own language context, image API (`/api/analyze-animal`), dog/cat/horse symptom flows, emergency triage, and optional video placeholder. Its production Vercel project is separate from `vueapps` and remains active. This inspection does not establish feature parity.
+
+## Verified legacy separation (2026-11-10)
+- Vercel `vueapps` project: `prj_8TuPgI5wxbTD02QfZlHXMObZhlfn`, owns `vueapps.se` and `www.vueapps.se`.
+- Vercel `anivue` project: `prj_EiYfH63DOQG32Y9tjNr8Uakffpzp`, owns `anivueapp.se` and `www.anivueapp.se` and has a production deployment.
+- Vercel returned no managed `anivue.se` domain. Do not confuse this with the existing `anivueapp.se` domain.
+- Existing VUECORE router uses an internal ANIVUE workspace path; this does not stop the separate project from running.
+- Legacy repository uses seven languages, while VUECORE supports eleven. Test emergency routing, species-specific symptom mapping, image validation, language fallback, memory/consent and veterinary navigation against the legacy implementation before retiring it.
+- A Vercel preview deployment request for commit `47369cc` was rejected by the free-tier 100 API deployments/day limit. No production change was made.
 
 ## Target ownership
 VUECORE owns routing, language, shared safety rules, specialist tree, observability, common image intake and model gateway. ANIVUE is a veterinary specialist module owned and invoked by VUECORE. Preserve species-specific dog/cat/horse logic, emergency-first guidance, photo analysis and veterinarian-finding capabilities as explicit module contracts.
