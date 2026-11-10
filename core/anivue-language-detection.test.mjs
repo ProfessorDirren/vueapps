@@ -9,6 +9,6 @@ test('ANIVUE uses shared VUECORE language detection',()=>{
  assert.equal(detectInputLanguage('Mi perro está enfermo'),'es');
 });
 test('ANIVUE deep link selects shared VUECORE rather than a separate language picker',()=>{
- assert.match(router,/requestedSpecialist==='anivue'/);
- assert.match(router,/active=\{domain:'anivue',memory:m,caseId:null\}/);
+ assert.match(router,/isRegisteredSpecialist\(requestedSpecialist\)/);
+ assert.match(router,/active=\{domain:requestedSpecialist,memory:m,caseId:null\}/);
 });
