@@ -67,11 +67,12 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
-   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000)continue;
+   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000||expected>now()+4*60*60*1000)continue;
    departures.push({id,line:String(d.route?.designation||d.route?.name||''),destination:String(d.route?.direction||d.route?.destination?.name||''),scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:d.canceled===true});
    ids.push(id);
   }
   if(!departures.length)return {provider,status:'unavailable',departures:[]};
+  departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
   return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin,destinationId:destination,departureIds:ids},departures};
  };
 }
