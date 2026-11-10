@@ -8,6 +8,7 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  const renderer=readFileSync(new URL('./help-renderer.js',import.meta.url),'utf8');
  const specialistBootstrap=readFileSync(new URL('../apps/specialist-navigation.js',import.meta.url),'utf8');
  const portalBootstrap=readFileSync(new URL('../apps/help.js',import.meta.url),'utf8');
+ const portalNav=readFileSync(new URL('./portal-navigation.js',import.meta.url),'utf8');
  const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.match(coreNav,/PortalVueHelp/);
  assert.match(coreNav,/mountVueHelp/);
@@ -18,7 +19,9 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(renderer,/vuecore-home-link/);
  assert.match(coreNav,/home:true/);
  assert.match(coreNav,/AnyVueHelp/);
- assert.match(portalBootstrap,/home: true/);
+ assert.match(portalBootstrap,/core\/portal-navigation\.js/);
+ assert.match(portalNav,/home: true/);
+ assert.match(portalNav,/mountVueHelp/);
  assert.match(portal,/href="\.\/core\/navigation\.css"/);
  assert.match(specialistBootstrap,/core\/specialist-navigation\.js/);
  for(const domain of pages){
