@@ -53,7 +53,7 @@ test('VUECORE vision does not invent emergency advice for routine symptoms',asyn
 
 test('VUECORE vision rejects unsupported languages before provider call',async()=>{
  let calls=0;
- const response=await POST(request({language:'fr',species:'horse',image}),{configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('must not call')}});
+ const response=await POST(request({language:'xx',species:'horse',image}),{configured:()=>{calls++;return true},spend:async()=>{calls++;return true},fetcher:async()=>{calls++;throw Error('must not call')}});
  assert.equal(response.status,400);
  assert.equal(calls,0);
 });
