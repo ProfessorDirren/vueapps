@@ -21,6 +21,7 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(css,/#16b8b0/);
  assert.match(renderer,/home = false/);
  assert.match(renderer,/vuecore-home-link/);
+ assert.match(renderer,/host\.querySelector\('\.vuecore-help-trigger'\)/, 'CORE help must avoid duplicate mounts');
  assert.match(coreNav,/home:true/);
  assert.match(coreNav,/AnyVueHelp/);
  assert.match(coreNav,/document\.documentElement\.lang\|\|'en'/,'CORE must honor page language');
