@@ -47,4 +47,8 @@ test('timetable evidence rejects timezone ambiguity and impossible dates',()=>{
  assert.equal(validateTimetableEvidence(depart('2026-11-10T08:42:00')),false);
  assert.equal(validateTimetableEvidence(depart('2026-11-10T08:42:00+01:00')),true);
  assert.equal(validateTimetableEvidence(depart('tomorrow')),false);
+ assert.equal(validateTimetableEvidence(depart('2026-02-30T08:42:00+01:00')),false);
+ assert.equal(validateTimetableEvidence(depart('2026-11-10T25:42:00+01:00')),false);
+ assert.equal(validateTimetableEvidence(depart('2026-11-10T08:61:00+01:00')),false);
+ assert.equal(validateTimetableEvidence(depart('2024-02-29T08:42:00+01:00')),true);
 });
