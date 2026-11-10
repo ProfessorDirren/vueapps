@@ -23,6 +23,8 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(portalNav,/home: true/);
  assert.match(portalNav,/mountVueHelp/);
  assert.match(portal,/href="\.\/core\/navigation\.css"/);
+ assert.doesNotMatch(portal,/#vuecore-help \{ margin-top/, "shared portal styles belong to CORE");
+ assert.match(css,/\.vuecore-help-panel\[hidden\]/);
  assert.match(specialistBootstrap,/core\/specialist-navigation\.js/);
  for(const domain of pages){
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
