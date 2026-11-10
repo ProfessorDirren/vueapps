@@ -32,3 +32,12 @@ test('production photo pipeline rejects malformed image before extraction',async
  assert.equal(result.status,'invalid_image');
  assert.equal(called,false);
 });
+
+test('shared CORE image gate exception cannot trigger specialist extraction',async()=>{
+ let called=false;
+ const pipeline=createTimetablePhotoPipeline({validateImage:()=>{throw Error('corrupt image')},extract:async()=>{called=true;return evidence}});
+ const result=await pipeline.analyze({image});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.verified,false);
+ assert.equal(called,false);
+});
