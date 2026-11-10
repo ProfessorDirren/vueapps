@@ -11,3 +11,14 @@ test('COMMUTVUE does not generate invented live train delays',async()=>{
  assert.equal(data.evidence_status,'live_unavailable');
  assert.match(data.answer,/inte tillgänglig/);
 });
+
+test('COMMUTVUE asks for missing stations in the requested language',async()=>{
+ const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'RER B delayed?',language:'fr'})});
+ const response=await POST(request);
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.domain,'commutvue');
+ assert.equal(data.clarify,true);
+ assert.equal(data.evidence_status,'needs_stations');
+ assert.match(data.answer,/gare de départ/);
+});
