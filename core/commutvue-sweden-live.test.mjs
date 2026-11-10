@@ -16,6 +16,7 @@ test('wrong route order, absent realtime or stale provider evidence never claims
  for(const adapter of [
   make(board,{...details,calls:[...details.calls].reverse()}),
   make({...board,departures:[{...departure,is_realtime:false}]}),
+  make({...board,departures:[{...departure,stop:{id:'wrong-origin-stop'}}]}),
   make({...board,timestamp:'2026-11-10T09:50:00'}),
   make(board,{...details,timestamp:'2026-11-10T09:50:00'})
  ]){
@@ -29,4 +30,16 @@ test('network errors and oversized payloads fail closed',async()=>{
  assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:failing})).status,'unavailable');
  const oversized=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>({ok:true,text:async()=> ' '.repeat(350001)})});
  assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversized})).status,'unavailable');
+});
+
+test('the source URL never includes a secret and limits trip lookups to eight',async()=>{
+ const seen=[];
+ const many={...board,departures:Array.from({length:30},(_,i)=>({...departure,trip:{trip_id:'t'+i,start_date:'2026-11-10'}}))};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'private-key',now:clock,maxTrips:8,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{seen.push(url);return {ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:many)};}
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'unavailable'); // Trip identifiers in details do not match, so none are verified.
+ assert.equal(seen.filter(url=>url.includes('/trips/')).length,8);
 });
