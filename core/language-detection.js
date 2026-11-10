@@ -23,6 +23,10 @@ export function detectInputLanguage(value){
  const words=(text.toLocaleLowerCase().match(/[\p{L}]+/gu)||[]);
  if(words.length<3)return null;
  const scores=Object.fromEntries(Object.entries(WORDS).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0)+(UNIQUE[lang].includes(w)?2:0),0)]));
+ // A genuinely multilingual question must not hijack the user's current UI language.
+ // Two independently evidenced Latin languages are enough to make selection ambiguous.
+ const supported=Object.values(scores).filter(score=>score>=3);
+ if(supported.length>1)return null;
  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
  return sorted[0][1]>=3&&sorted[0][1]>=sorted[1][1]+2?sorted[0][0]:null;
 }
