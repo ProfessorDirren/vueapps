@@ -19,6 +19,7 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(renderer,/vuecore-home-link/);
  assert.match(coreNav,/home:true/);
  assert.match(coreNav,/AnyVueHelp/);
+ assert.match(coreNav,/document\.documentElement\.lang\|\|'en'/,'CORE must honor page language');
  assert.match(portalBootstrap,/core\/portal-navigation\.js/);
  assert.match(portalNav,/home: true/);
  assert.match(portalNav,/mountVueHelp/);
