@@ -56,7 +56,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
-   if(typeof tripId!=='string'||!tripId||!date(startDate)||d.is_realtime!==true||!originStopIds.has(d.stop?.id))continue;
+   if(typeof tripId!=='string'||!tripId||!date(startDate)||d.is_realtime!==true||!originStopIds.has(d.stop?.id)||d.canceled===true)continue;
+   // Reject stale/far-future departures before spending a Trips API request.
+   const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
+   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000||expected>now()+4*60*60*1000)continue;
    const id=tripId+'|'+startDate+'|'+d.stop.id;
    if(seen.has(id))continue;seen.add(id);
    if(tripRequests>=maxTrips)break;
@@ -67,8 +70,6 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
-   const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
-   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000||expected>now()+4*60*60*1000)continue;
    departures.push({id,line:String(d.route?.designation||d.route?.name||''),destination:String(d.route?.direction||d.route?.destination?.name||''),scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:d.canceled===true});
    ids.push(id);
   }
