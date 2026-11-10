@@ -1,11 +1,11 @@
-/** Deterministic extraction only; never guess a station or region. */
+/** Deterministic extraction; never guess a station, route or region. */
 export const COMMUT_REGION_HINTS=Object.freeze({
- stockholm:/\b(?:stockholm|jordbro|handen|haninge|södertälje|uppsala|märsta|solna|sundbyberg|t-centralen|stockholm city|sl pendeltåg)\b/iu,
- paris:/\b(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)\b/iu
+ stockholm:/(?:^|[^\p{L}\p{N}])(?:stockholm|jordbro|handen|haninge|södertälje|uppsala|märsta|solna|sundbyberg|t-centralen|stockholm city|sl pendeltåg)(?=$|[^\p{L}\p{N}])/iu,
+ paris:/(?:^|[^\p{L}\p{N}])(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)(?=$|[^\p{L}\p{N}])/iu
 });
 const PATTERNS=[
- /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|a|hasta)\s+(.+?)(?:\s+(?:försenad|försenade|delayed|late|en retard|retrasad[oa]s?)\b|[?.!,]|$)/iu,
- /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?:[?.!,]|$)/iu
+ /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|hasta)\s+(.+?)(?=\s+(?:försenad(?:e|t)?|delayed|late|en retard|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
+ /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
 ];
 const clean=s=>s.trim().replace(/^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').trim();
 export function parseCommuteQuestion(question){
