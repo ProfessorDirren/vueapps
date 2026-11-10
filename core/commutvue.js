@@ -34,7 +34,8 @@ export function normalizeDeparture(raw){
 export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,status='ok'}){
  if(!COMMUT_PROVIDERS[provider])throw new TypeError('Unknown provider');
  if(status!=='ok')return {status:'unavailable',provider,departures:[]};
- if(!sourceUrl||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('Source and timestamp required');
+ if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('HTTPS source and timestamp required');
+ if(!Array.isArray(departures)||departures.length===0)throw new TypeError('No verified journey departures');
  return {status:'ok',provider,sourceUrl,updatedAt:new Date(updatedAt).toISOString(),departures:(departures||[]).map(normalizeDeparture)};
 }
 /** COMMUTVUE configures CORE's generic provider lifecycle, never duplicates it. */
