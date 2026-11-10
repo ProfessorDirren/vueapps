@@ -24,3 +24,13 @@ test('Unicode city names are detected as complete words',()=>{
  assert.equal(parseCommuteQuestion('Train from Jordbro to Stockholm City delayed?').to,'Stockholm City');
  assert.equal(parseCommuteQuestion('Train from Jordbro to Gare du Nord?').needsClarification,true);
 });
+
+test('Chile Santiago Spanish transit journey resolves without guessing live status',()=>{
+ const q=parseCommuteQuestion('Metro de Santiago desde Baquedano a Tobalaba');
+ assert.deepEqual(q,{region:'santiago',from:'Baquedano',to:'Tobalaba',needsClarification:false});
+});
+test('Chile geography is not confused with Stockholm or Paris',()=>{
+ assert.equal(parseCommuteQuestion('Bus de Maipú a Plaza de Armas').region,'santiago');
+ assert.equal(parseCommuteQuestion('Metro de Santiago desde Baquedano a Gare du Nord').needsClarification,true);
+ assert.equal(parseCommuteQuestion('Bus de una parada a otra').needsClarification,true);
+});
