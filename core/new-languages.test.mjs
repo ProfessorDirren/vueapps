@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {ROUTER_TEXT} from '../apps/router-content.js';
+import {UI,DOMAINS} from '../apps/content.js';
 import {detectInputLanguage} from './language-detection.js';
 const languages=['el','tr','fa','fr'];
 test('four new languages have complete VUECORE interface strings',()=>{
@@ -29,4 +30,16 @@ test('all four new languages have complete translated portal hero content',()=>{
  const end=html.indexOf(';\nconst ',begin);
  const translations=JSON.parse(html.slice(begin,end));
  for(const lang of languages){assert.equal(translations[lang].length,translations.en.length,lang);assert.notEqual(translations[lang][0],translations.en[0],lang)}
+});
+
+test('four languages translate every shared planner UI label and all domain categories',()=>{
+ for(const lang of languages){
+  assert.deepEqual(Object.keys(UI[lang]).sort(),Object.keys(UI.en).sort(),lang);
+  assert.notEqual(UI[lang].language,UI.en.language,lang);
+  for(const [domain,config] of Object.entries(DOMAINS)){
+   assert.ok(config.locales[lang],domain+' '+lang);
+   assert.equal(config.locales[lang].types.length,config.locales.en.types.length,domain+' '+lang);
+   assert.notEqual(config.locales[lang].title,config.locales.en.title,domain+' '+lang);
+  }
+ }
 });
