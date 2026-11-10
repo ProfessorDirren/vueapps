@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createTrafiklabAdapter,createParisAdapter} from './commutvue-providers.js';
+import {createTrafiklabAdapter,createParisAdapter,createSantiagoAdapter} from './commutvue-providers.js';
 import {queryCommute} from './commutvue.js';
 test('Stockholm adapter never claims a journey from an unverified station board',async()=>{
  let requests=0;
@@ -71,4 +71,11 @@ test('fresh route proof does not excuse a stale station board',async()=>{
   const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
   assert.equal(result.status,'unavailable');
  }
+});
+
+test('Chile adapter never fabricates Metro or Red Movilidad live arrivals',async()=>{
+ const adapter=createSantiagoAdapter();
+ const result=await queryCommute({provider:'santiago',from:'Baquedano',to:'Tobalaba',adapter});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
 });
