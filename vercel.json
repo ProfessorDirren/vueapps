@@ -36,5 +36,12 @@
       "source": "/api/v1/:path*",
       "destination": "/api/core-api?path=:path*"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/anivue-core.html",
+      "destination": "/?vue=anivue",
+      "permanent": true
+    }
   ]
 }
