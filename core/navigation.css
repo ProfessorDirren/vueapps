@@ -1,5 +1,5 @@
 /* VUECORE-owned HOME / HELP design inherited by portal and all specialists. */
-#vuecore-help,#vuecore-navigation{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+#vuecore-help,#vuecore-navigation,#vuecore-specialist-help,#anyvue-help{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 #vuecore-navigation{padding:12px 5%;background:#0b1720}
 #vuecore-help .vuecore-help-trigger,#vuecore-help .vuecore-home-link,
 #vuecore-navigation .vuecore-help-trigger,#vuecore-navigation .vuecore-home-link{
