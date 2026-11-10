@@ -5,6 +5,7 @@ import {ROUTER_TEXT} from '../apps/router-content.js';
 import {UI,DOMAINS} from '../apps/content.js';
 import {detectInputLanguage} from './language-detection.js';
 import {routeQuestion} from './router.js';
+import {urgentFollowup,POST as followupPOST} from '../api/vue-followup.js';
 const languages=['el','tr','fa','fr'];
 test('four new languages have complete VUECORE interface strings',()=>{
  for(const lang of languages){assert.equal(ROUTER_TEXT[lang].length,27,lang);assert.ok(ROUTER_TEXT[lang].every(s=>typeof s==='string'&&s.length>0),lang)}
@@ -70,4 +71,21 @@ test('all portal specialist translation groups include the four new languages',(
  }
  assert.ok(html.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
  assert.ok(html.includes('setLanguage("en")'));
+});
+
+test('new language urgent followup warnings never silently fall back to English',()=>{
+ for(const lang of languages){
+  const warning=urgentFollowup('anivue','', {emergencyCaution:'true'},lang);
+  assert.ok(warning && warning.length>20,lang);
+  assert.notEqual(warning,urgentFollowup('anivue','',{emergencyCaution:'true'},'en'),lang);
+  const brakes=urgentFollowup('motovue','',{symptom:'brakes'},lang);
+  assert.ok(brakes && brakes.length>20,lang);
+ }
+});
+test('new languages are accepted by the followup API validation',async()=>{
+ for(const lang of languages){
+  const request=new Request('https://example.test/api/vue-followup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({domain:'anivue',question:'My dog is sick and needs help',language:lang})});
+  const response=await followupPOST(request);
+  assert.notEqual(response.status,400,lang+' must not fail language validation');
+ }
 });
