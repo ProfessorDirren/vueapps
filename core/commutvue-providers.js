@@ -8,7 +8,7 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop,verifyJ
  return async ({provider,from,to})=>{
   if(provider!=='stockholm')throw new Error('Wrong provider');
   const [fromId,toId]=await Promise.all([resolveStop(from),resolveStop(to)]);
-  if(!/^740\d{6}$/.test(String(fromId))||!/^740\d{6}$/.test(String(toId)))throw new Error('Stop not verified');
+  if(!/^740\d{6}$/.test(String(fromId))||!/^740\d{6}$/.test(String(toId))||String(fromId)===String(toId))throw new Error('Stop not verified');
   const url=new URL('https://realtime-api.trafiklab.se/v1/departures/'+fromId);
   url.searchParams.set('key',apiKey);
   const response=await fetcher(url.toString(),{headers:{accept:'application/json'}});
@@ -16,7 +16,10 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop,verifyJ
   const payload=await response.json();
   // A station board does not by itself prove that a service calls at the requested destination.
   // Require explicit route verification before showing a departure as belonging to this journey.
-  if(!Array.isArray(payload.departures))throw new Error('Invalid provider response');
+  if(!Array.isArray(payload.departures)||payload.departures.length>500)throw new Error('Invalid provider response');
+  // Duplicate service IDs make a single route proof ambiguous.
+  const boardIds=payload.departures.map(d=>d?.id).filter(id=>typeof id==='string');
+  if(new Set(boardIds).size!==boardIds.length)throw new Error('Ambiguous provider departure IDs');
   // Verification must come from an independent, provider-backed route check.
   // A station board, even with a matching destination label, is not route proof.
   if(typeof verifyJourney!=='function')return {provider,status:'unavailable',departures:[]};
@@ -30,6 +33,12 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop,verifyJ
   // A verified historical route is not live evidence. Reject stale/future snapshots.
   const age=now()-Date.parse(proof.updatedAt);
   if(!Number.isFinite(age)||age<0||age>120000)return {provider,status:'unavailable',departures:[]};
+  // If the station board supplies its own observation time, it must be fresh too.
+  if(payload.updatedAt!==undefined){
+   if(typeof payload.updatedAt!=='string'||!Number.isFinite(Date.parse(payload.updatedAt)))return {provider,status:'unavailable',departures:[]};
+   const boardAge=now()-Date.parse(payload.updatedAt);
+   if(!Number.isFinite(boardAge)||boardAge<0||boardAge>120000)return {provider,status:'unavailable',departures:[]};
+  }
   return {provider,status:'ok',sourceUrl:'https://realtime-api.trafiklab.se/v1/departures/'+fromId,updatedAt:proof.updatedAt,journeyEvidence:{verified:true,originId:String(fromId),destinationId:String(toId),departureIds:[...ids]},departures:matched};
  };
 }
