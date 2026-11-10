@@ -9,6 +9,8 @@ test('COMMUTVUE does not generate invented live train delays',async()=>{
  assert.equal(data.domain,'commutvue');
  assert.equal(data.verified,false);
  assert.equal(data.evidence_status,'live_unavailable');
+ assert.equal(data.photo_status,'not_supplied');
+ assert.equal(data.photo_evidence,null);
  assert.match(data.answer,/inte tillgänglig/);
 });
 
