@@ -34,3 +34,22 @@ test('Chile geography is not confused with Stockholm or Paris',()=>{
  assert.equal(parseCommuteQuestion('Metro de Santiago desde Baquedano a Gare du Nord').needsClarification,true);
  assert.equal(parseCommuteQuestion('Bus de una parada a otra').needsClarification,true);
 });
+
+test('native-script route questions preserve the origin and destination',()=>{
+ const cases=[
+  ['मुंबई से दादर तक','mumbai','मुंबई','दादर'],
+  ['从北京到西直门','beijing','北京','西直门'],
+  ['из Москва до Комсомольская','moscow','Москва','Комсомольская'],
+  ['من دبي إلى BurJuman','dubai','دبي','BurJuman'],
+  ['από Αθήνα προς Σύνταγμα','athens','Αθήνα','Σύνταγμα'],
+  ['از تهران به تجریش','tehran','تهران','تجریش'],
+  ['İstanbul konumundan Taksim konumuna','istanbul','İstanbul','Taksim']
+ ];
+ for(const [text,region,from,to] of cases){
+  const result=parseCommuteQuestion(text);
+  assert.equal(result.region,region,text);
+  assert.equal(result.from,from,text);
+  assert.equal(result.to,to,text);
+  assert.equal(result.needsClarification,false,text);
+ }
+});
