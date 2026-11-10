@@ -35,8 +35,9 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const url=new URL(path,ROOT);url.searchParams.set('key',apiKey);
   const res=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
   if(!res.ok)throw Error('Trafiklab unavailable');
+  if(Number(res.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
   const body=await res.text();
-  if(body.length>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
+  if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
   return JSON.parse(body);
  }
  return async({provider,from,to})=>{
@@ -88,8 +89,9 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   url.searchParams.set('key',apiKey);
   const response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
   if(!response.ok)throw Error('Stop lookup unavailable');
+  if(Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
   const body=await response.text();
-  if(body.length>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
+  if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
   const payload=JSON.parse(body);
   const exact=(payload.stop_groups||[]).filter(s=>area(s.id)&&s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'));
   if(exact.length!==1)throw Error('Stop not uniquely identified');
