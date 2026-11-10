@@ -77,3 +77,11 @@ test('shared ANIVUE stops emergency cases before image analysis',async()=>{
  assert.ok(urgent>=0&&image>urgent,'emergency guidance must precede image routing');
  assert.match(source,/image_analyzed:false/);
 });
+
+test('shared ANIVUE horse emergencies remain urgent without standalone page',async()=>{
+ const {urgentFollowup}=await import('../api/vue-followup.js');
+ for(const question of ['My horse has colic','Min häst har kolik','My horse has choke','My horse has dystocia','Min häst har 39,6 grader feber']){
+  assert.ok(urgentFollowup('anivue',question,{},'en'),question);
+ }
+ assert.ok(urgentFollowup('anivue','horseHighFever',{selected:'horseHighFever'},'sv'));
+});
