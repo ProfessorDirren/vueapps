@@ -14,6 +14,8 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  assert.match(coreNav,/mountVueHelp/);
  assert.match(coreNav,/core\/navigation\.css/);
  assert.match(css,/gap:18px/);
+ assert.match(css,/#vuecore-specialist-help/);
+ assert.match(css,/#anyvue-help/);
  assert.match(css,/#16b8b0/);
  assert.match(renderer,/home = false/);
  assert.match(renderer,/vuecore-home-link/);
