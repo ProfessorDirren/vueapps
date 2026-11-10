@@ -25,7 +25,8 @@ test('results require source provenance and timestamp',()=>{
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',departures:[]}));
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[]}));
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'http://example.org',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z'}]}));
- const result=normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]});
+ assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]}));
+ const result=normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyVerified:true,departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]});
  assert.equal(result.status,'ok');
 });
 test('missing provider, stations or data never invents a departure',async()=>{
