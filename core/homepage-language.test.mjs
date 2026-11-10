@@ -35,3 +35,13 @@ test("FOODVUE and other standalone tools use the same explicit portal language",
  assert.doesNotMatch(tools,/localStorage\.getItem\(storageKey\+'-language'\)/);
  assert.doesNotMatch(tools,/localStorage\.setItem\(storageKey\+'-language'/);
 });
+
+test("all standalone specialist interfaces share one explicit language key",()=>{
+ const files=['antiqvue','musicgearvue','vinylvue','possessions','vue-backlog','medivue','tools'];
+ for(const file of files){const code=readFileSync(new URL('../apps/'+file+'.js',import.meta.url),'utf8');
+  assert.match(code,/localStorage\.getItem\('vue-language'\)/,file);
+  assert.match(code,/localStorage\.setItem\('vue-language',language\)/,file);
+ }
+ const help=readFileSync(new URL('../apps/anyvue-help.js',import.meta.url),'utf8');
+ assert.match(help,/localStorage\.getItem\('vue-language'\)/);
+});
