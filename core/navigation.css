@@ -1,6 +1,7 @@
 /* VUECORE-owned HOME / HELP design inherited by portal and all specialists. */
 #vuecore-help,#vuecore-navigation,#vuecore-specialist-help,#anyvue-help{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 #vuecore-navigation{padding:12px 5%;background:#0b1720}
+#vuecore-specialist-help,#vuecore-navigation #anyvue-help{position:relative}
 #vuecore-help .vuecore-help-trigger,#vuecore-help .vuecore-home-link,
 #vuecore-navigation .vuecore-help-trigger,#vuecore-navigation .vuecore-home-link{
  display:inline-flex;align-items:center;justify-content:center;min-height:40px;
@@ -14,7 +15,7 @@
 #vuecore-help .vuecore-help-trigger:focus-visible,#vuecore-help .vuecore-home-link:focus-visible,
 #vuecore-navigation .vuecore-help-trigger:focus-visible,#vuecore-navigation .vuecore-home-link:focus-visible{outline:3px solid #f4cf72;outline-offset:3px}
 #vuecore-help .vuecore-help-panel,#vuecore-navigation .vuecore-help-panel{padding:16px;background:#142630;color:#f4f7f8;border:1px solid #36525a;border-radius:12px}
-#vuecore-navigation .vuecore-help-panel{position:absolute;z-index:30;max-width:min(680px,90vw);margin-top:8px;box-shadow:0 12px 30px #0008}
+#vuecore-navigation .vuecore-help-panel{position:absolute;top:100%;left:0;z-index:30;width:min(680px,90vw);max-width:90vw;margin-top:8px;box-shadow:0 12px 30px #0008}
 .vuecore-help-panel[hidden]{display:none}
 
 /* Shared HELP panel and controls: no page-local duplicates. */
