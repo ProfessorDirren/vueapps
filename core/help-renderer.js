@@ -1,6 +1,8 @@
 /** Framework-neutral accessible renderer for all inherited VUECORE Help subclasses. */
 export function mountVueHelp({ host, help, language = () => 'en', languageControl, home = false }) {
   if (!host || !help) return () => {};
+  // Shared CORE renderer must not create duplicate controls on repeat initialization.
+  if (host.querySelector('.vuecore-help-trigger')) return () => {};
   const trigger = document.createElement('button');
   trigger.type = 'button';
   trigger.className = 'vuecore-help-trigger';
