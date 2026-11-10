@@ -16,6 +16,8 @@ test('wrong route order, absent realtime or stale provider evidence never claims
  for(const adapter of [
   make(board,{...details,calls:[...details.calls].reverse()}),
   make({...board,departures:[{...departure,is_realtime:false}]}),
+  make({...board,departures:[{...departure,canceled:true}]}),
+  make(board,{...details,calls:[details.calls[0],{...details.calls[1],canceled:true}]}),
   make({...board,departures:[{...departure,stop:{id:'wrong-origin-stop'}}]}),
   make({...board,timestamp:'2026-11-10T09:50:00'}),
   make(board,{...details,timestamp:'2026-11-10T09:50:00'})
