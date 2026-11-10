@@ -37,3 +37,10 @@ test('mixed Latin text with stray non-Latin characters cannot trigger script lan
   assert.notEqual(detect('Min hund är sjuk '+fragment),'ru');
  }
 });
+
+test('mixed Spanish Swedish English question preserves currently selected UI language',()=>{
+ assert.equal(detect('Mi perro esta enfermo, vad skall jag göra? Do you have a solution?'),null);
+ assert.equal(detect('Mi perro está enfermo, vad skall jag göra? Do you have a solution?'),null);
+ assert.equal(detect('Min hund är sjuk och behöver hjälp'), 'sv');
+ assert.equal(detect('Mi perro está enfermo y necesito ayuda'), 'es');
+});
