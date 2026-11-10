@@ -35,5 +35,6 @@ test('VUECORE owns shared help renderer, navigation and styling',()=>{
  for(const domain of pages){
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
   assert.match(html,/src="\.\/apps\/specialist-navigation\.js"/,domain);
+  assert.doesNotMatch(html,/<style>\.vuecore-help-trigger/,domain+' must not duplicate CORE help CSS');
  }
 });
