@@ -11,7 +11,7 @@ if(anchor&&!document.getElementById('vuecore-navigation')){
  nav.append(host);
  if(anchor.tagName==='HEADER')anchor.insertAdjacentElement('afterend',nav);else anchor.prepend(nav);
  const picker=document.getElementById('language');
- const getLanguage=()=>picker?.value||(()=>{try{return sessionStorage.getItem('vue-language')||'en'}catch{return 'en'}})();
+ const getLanguage=()=>picker?.value||(()=>{try{return sessionStorage.getItem('vue-language')}catch{return null}})()||document.documentElement.lang||'en';
  mountVueHelp({host,help:host.id==='anyvue-help'?new AnyVueHelp():new PortalVueHelp(),language:getLanguage,languageControl:picker,home:true});
  const stylesheet=document.createElement('link');
  stylesheet.rel='stylesheet';stylesheet.href='./core/navigation.css';
