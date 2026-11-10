@@ -30,7 +30,7 @@ function swedishTime(value){
 }
 const fresh=(t,now)=>Number.isFinite(swedishTime(t))&&now-swedishTime(t)>=0&&now-swedishTime(t)<=120000;
 export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,now=()=>Date.now(),maxTrips=8}={}){
- if(!apiKey||typeof fetcher!=='function'||typeof resolveStop!=='function'||typeof now!=='function')throw new TypeError('Server-only Trafiklab credentials, fetcher and stop lookup required');
+ if(!apiKey||typeof fetcher!=='function'||typeof resolveStop!=='function'||typeof now!=='function'||!Number.isInteger(maxTrips)||maxTrips<1||maxTrips>8)throw new TypeError('Server-only Trafiklab credentials, fetcher and stop lookup required');
  async function get(path){
   const url=new URL(path,ROOT);url.searchParams.set('key',apiKey);
   const res=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
@@ -67,12 +67,12 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
-   if(!Number.isFinite(scheduled)||!Number.isFinite(expected))continue;
+   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000)continue;
    departures.push({id,line:String(d.route?.designation||d.route?.name||''),destination:String(d.route?.direction||d.route?.destination?.name||''),scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:d.canceled===true});
    ids.push(id);
   }
   if(!departures.length)return {provider,status:'unavailable',departures:[]};
-  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(now()).toISOString(),journeyEvidence:{verified:true,originId:origin,destinationId:destination,departureIds:ids},departures};
+  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin,destinationId:destination,departureIds:ids},departures};
  };
 }
 
