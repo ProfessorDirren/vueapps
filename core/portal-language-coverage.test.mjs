@@ -52,7 +52,7 @@ test('VUECORE deep links resolve registered specialists without losing the chose
 
 test('AI service error messages are localized for all newly supported languages',()=>{
  for(const language of ['fr','el','tr','fa']){
-  assert.match(routerSource,new RegExp(language+':\\\\{429:'));
+  assert.ok(routerSource.includes(language+':{429:'),language);
  }
  assert.ok(routerSource.includes('Object.assign(unavailable,'));
 });
