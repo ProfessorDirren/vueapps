@@ -1,4 +1,4 @@
-import {COMMUT_PROVIDERS,normalizeTrafficResult} from './commutvue.js';
+import {COMMUT_PROVIDERS} from './commutvue.js';
 /**
  * Provider boundary. No API key ever reaches a browser.
  * Server-only transport is injected so tests can use fixtures without network calls.
@@ -17,7 +17,7 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop}={}){
   // A station board does not by itself prove that a service calls at the requested destination.
   // Require explicit route verification before showing a departure as belonging to this journey.
   if(!Array.isArray(payload.departures))throw new Error('Invalid provider response');
-  return normalizeTrafficResult({provider,sourceUrl:COMMUT_PROVIDERS.stockholm.docs,updatedAt:payload.timestamp||new Date().toISOString(),departures:[]});
+  // Provider responded, but journey matching is not yet implemented: never report success.\n  return {provider,status:'unavailable',departures:[]};
  };
 }
 /**
