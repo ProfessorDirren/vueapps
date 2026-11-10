@@ -94,6 +94,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
   if(!stopIds.length)throw Error('No verified child stop ids');
   return {id:exact[0].id,stopIds};
+ };
 }
 /** Fully configured Sweden adapter using one server-only Trafiklab key. */
 export function createTrafiklabSwedenLive({apiKey,fetcher=fetch,now,maxTrips}={}){
