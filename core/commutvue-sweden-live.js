@@ -65,7 +65,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const calls=details.calls;
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
-   if(i<0||j<=i||!calls[i].is_realtime||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
+   if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
    if(!Number.isFinite(scheduled)||!Number.isFinite(expected))continue;
    departures.push({id,line:String(d.route?.designation||d.route?.name||''),destination:String(d.route?.direction||d.route?.destination?.name||''),scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:d.canceled===true});
