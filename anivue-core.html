@@ -1,6 +1,47 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ANIVUE · VUECORE preview</title>
-<style>body{font:16px/1.5 system-ui,sans-serif;max-width:760px;margin:auto;padding:22px;background:#0b1720;color:#f4f7f8}button,select,textarea{font:inherit;padding:12px;border-radius:8px}textarea{box-sizing:border-box;width:100%;min-height:120px}button{cursor:pointer;background:#70d6bb;color:#071920;border:0}section{padding:16px;border:1px solid #456;border-radius:12px;margin:18px 0}a{color:#70d6bb}#answer{white-space:pre-wrap}label{display:block;margin:12px 0} .vuecore-help-trigger,.vuecore-help-panel button{background:#142630;color:#f4f7f8;border:1px solid #36525a;border-radius:8px;padding:8px 12px;cursor:pointer}.vuecore-help-panel{margin-top:10px;padding:16px;border:1px solid #36525a;border-radius:12px;background:#142630}.vuecore-help-panel[hidden]{display:none}</style><script src="./analytics.js" defer></script><script type="module" src="./apps/anivue-help.js"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ANIVUE | VUEAPPS</title>
+
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}
+body{max-width:1040px;margin:auto;padding:32px clamp(16px,5vw,56px) 80px;background:#0b1720;color:#f4f7f8;font-size:16px;line-height:1.55;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 50% 0%,#1c3a42 0%,transparent 60%)}
+a{color:#70d6bb}
+body>a:first-of-type{display:inline-flex;padding:8px 0;margin-bottom:12px;text-decoration:none;font-weight:700}
+h1{margin:0;font-size:clamp(32px,5vw,52px);letter-spacing:.06em;line-height:1.2;color:#ffe39a;text-shadow:0 2px 10px #e7a63b38}
+#preview{color:#b9cbd0;font-size:15px;margin:12px 0 24px}
+#anivue-help{margin:20px 0 12px}
+label{display:block;margin:0;font-weight:650;color:#e4f1f0}
+select,textarea,button,input{font:inherit}
+select,textarea{display:block;width:100%;background:#142630;color:#f4f7f8;border:1px solid #45636a;border-radius:12px;padding:13px 15px;min-height:52px;outline-offset:3px}
+select:focus-visible,textarea:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f4c96e}
+textarea{min-height:155px;resize:vertical;margin-top:10px}
+button{cursor:pointer;border-radius:12px;background:#70d6bb;color:#09212a;border:2px solid #f5c45c;padding:13px 20px;font-weight:800;box-shadow:0 0 0 1px #a56e20,0 0 13px #f5ba412c}
+button:hover{background:#98e8d5}
+button:disabled{opacity:.65;cursor:wait}
+section{padding:22px;border:1px solid #36525a;border-radius:18px;margin:20px 0;background:#142630}
+#result{border-color:#bd852a;box-shadow:0 0 15px #bd852a25}
+#answer{white-space:pre-wrap}
+#immediate-triage:not([hidden]){background:#40252a;color:#ffe5dc;border:1px solid #ed9b86;border-radius:12px;padding:16px;font-weight:700}
+#safety{color:#d5e1e1}
+#vetlink{font-weight:750;text-decoration:none}
+#vetlink:hover{text-decoration:underline}
+#ask{background:linear-gradient(140deg,#18353c,#10242e);border:1px solid #bd852a;border-radius:20px;padding:24px;box-shadow:0 0 18px #bd852a19}
+#ask button{display:block;width:100%;margin-top:16px}
+#language,#species,#symptom{margin-top:8px}
+body>label{display:inline-block;vertical-align:top;width:calc(33.333% - 14px);margin:0 16px 20px 0}
+body>label:nth-of-type(3){margin-right:0}
+body>section:first-of-type{clear:both}
+#photo,#camera,#video{display:block;width:100%;max-width:100%;margin-top:10px;font-size:14px;color:#bcd4d6;cursor:pointer}
+input[type=file]::file-selector-button{background:#0e3339;border:1px solid #e6b75b;color:#b5f4e5;border-radius:10px;padding:11px 14px;margin-right:12px;font:inherit;font-weight:750;cursor:pointer}
+input[type=file]::file-selector-button:hover{background:#1b4a4c}
+section label[for=photo],#cameraLabel,#videoLabel{display:block;background:#0e2029;border:1px solid #36525a;border-radius:12px;padding:16px;margin:0 0 12px}
+#photoStatus,#videoStatus{color:#b7e5d9}
+.vuecore-help-trigger,.vuecore-help-panel button{background:#142630;color:#f4f7f8;border:1px solid #36525a;border-radius:9px;padding:9px 14px;box-shadow:none}
+.vuecore-help-panel{margin-top:10px;padding:16px;border:1px solid #36525a;border-radius:12px;background:#142630}
+.vuecore-help-panel[hidden],[hidden]{display:none!important}
+@media(max-width:720px){body{padding:22px 16px 60px}body>label{display:block;width:100%;margin:0 0 16px}section,#ask{padding:17px}h1{letter-spacing:.02em}}
+</style><script src="./analytics.js" defer></script><script type="module" src="./apps/anivue-help.js"></script></head>
 <body><a href="./">← VUEAPPS</a><h1>ANIVUE · VUECORE</h1><div id="anivue-help"></div><p id="preview"></p>
 <label>Language <select id="language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी</option><option value="zh-CN">简体中文</option><option value="ru">Русский</option><option value="ar">العربية</option></select></label>
 <label for="species">Animal <select id="species"><option value="dog">Dog</option><option value="cat">Cat</option><option value="horse">Horse</option></select></label><label for="symptom">Symptom <select id="symptom"></select></label>
