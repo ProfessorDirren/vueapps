@@ -1,7 +1,7 @@
 import {TEXT,CATEGORIES} from './medivue-content.js';
 import {localizeLanguagePicker} from './content.js';
 const $=id=>document.getElementById(id),fields=['name','strength','form','country','leaflet'];let language='en',busy=false,imageReady=false,version=0,selection=null,reportText='';
-try{const saved=localStorage.getItem('vue-language');if(TEXT[saved])language=saved}catch{}
+try{const saved=sessionStorage.getItem('vue-language');if(TEXT[saved])language=saved}catch{}
 const t=i=>TEXT[language][i],ctx=$('canvas').getContext('2d');
 const identified=s=>/(?:\b(?:19|20)?\d{6}[-+ ]?\d{4}\b|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b(?:patient|personnummer|personal identity|social security|patientnamn|receptnummer)\s*[:#]|\b(?:\+46|0046)[\s\d()-]{7,})/i.test(s);
 function invalidate(){reportText='';$('report').replaceChildren();$('download').hidden=true}
@@ -26,7 +26,7 @@ function show(result){invalidate();const host=$('report');function paragraph(tex
 }
 $('review').onclick=async()=>{if(busy)return;if(!$('confirmed').checked||fields.slice(0,4).some(k=>!$(k).value.trim())){notice(16);return}const result=await request({action:'review',...Object.fromEntries(fields.map(k=>[k,$(k).value.trim()])),identityConfirmed:true});if(result)show(result)};
 for(const k of fields)$(k).oninput=()=>{invalidate();$('confirmed').checked=false;$('privacy').checked=false;$('notice').textContent=''};
-$('language').onchange=()=>{if(busy||!TEXT[$('language').value])return;language=$('language').value;try{localStorage.setItem('vue-language',language)}catch{}invalidate();$('notice').textContent='';render()};
+$('language').onchange=()=>{if(busy||!TEXT[$('language').value])return;language=$('language').value;try{sessionStorage.setItem('vue-language',language)}catch{}invalidate();$('notice').textContent='';render()};
 $('clear').onclick=()=>{if(busy)return;++version;selection=null;imageReady=false;ctx.clearRect(0,0,$('canvas').width,$('canvas').height);$('canvas').width=1;$('canvas').height=1;$('canvas').hidden=true;for(const k of fields)$(k).value=k==='country'?'Sweden':'';$('photo').value='';$('privacy').checked=false;$('confirmed').checked=false;$('identify').disabled=true;invalidate();$('notice').textContent='';render()};
 $('download').onclick=()=>{if(!reportText)return;const url=URL.createObjectURL(new Blob([reportText],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='medivue-leaflet-review.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 render();

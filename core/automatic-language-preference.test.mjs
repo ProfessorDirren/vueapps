@@ -4,5 +4,5 @@ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
 test('automatic language changes are not persisted as manual preferences',()=>{
  assert.match(router,/detail:\{automatic:true\}/);
  assert.match(html,/if\(event\.detail\?\.automatic\)return/);
- assert.match(html,/localStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
+ assert.match(html,/sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
 });
