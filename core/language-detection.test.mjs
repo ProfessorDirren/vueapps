@@ -54,3 +54,9 @@ test('language detection remains conservative for multilingual user input',()=>{
  ];
  for(const question of mixed)assert.equal(detect(question),null,question);
 });
+
+test('shared words alone must not masquerade as a second language',()=>{
+ assert.equal(detect('My dog is sick and I need help with my dog'), 'en');
+ assert.equal(detect('Min hund är sjuk och behöver hjälp med min hund'), 'sv');
+ assert.equal(detect('Mi perro está enfermo y necesito ayuda para mi perro'), 'es');
+});
