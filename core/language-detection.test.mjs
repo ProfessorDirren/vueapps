@@ -44,3 +44,13 @@ test('mixed Spanish Swedish English question preserves currently selected UI lan
  assert.equal(detect('Min hund är sjuk och behöver hjälp'), 'sv');
  assert.equal(detect('Mi perro está enfermo y necesito ayuda'), 'es');
 });
+
+test('language detection remains conservative for multilingual user input',()=>{
+ const mixed=[
+  'Hola necesito ayuda, min hund är sjuk och behöver hjälp',
+  'My dog is sick and I need help, mi perro está enfermo y necesito ayuda',
+  'Jag behöver hjälp med min hund, my dog is sick and I need help',
+  'Mi perro está enfermo, vad skall jag göra? Do you have a solution?'
+ ];
+ for(const question of mixed)assert.equal(detect(question),null,question);
+});
