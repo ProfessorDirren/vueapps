@@ -49,3 +49,10 @@ test('VUECORE deep links resolve registered specialists without losing the chose
  assert.ok(portal.includes('sessionStorage.getItem(VUE_LANGUAGE_KEY)'));
  assert.ok(portal.includes('sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)'));
 });
+
+test('AI service error messages are localized for all newly supported languages',()=>{
+ for(const language of ['fr','el','tr','fa']){
+  assert.match(routerSource,new RegExp(language+':\\\\{429:'));
+ }
+ assert.ok(routerSource.includes('Object.assign(unavailable,'));
+});
