@@ -17,7 +17,8 @@ export function createTrafiklabAdapter({apiKey,fetcher=fetch,resolveStop}={}){
   // A station board does not by itself prove that a service calls at the requested destination.
   // Require explicit route verification before showing a departure as belonging to this journey.
   if(!Array.isArray(payload.departures))throw new Error('Invalid provider response');
-  // Provider responded, but journey matching is not yet implemented: never report success.\n  return {provider,status:'unavailable',departures:[]};
+  // Provider responded, but journey matching is not yet implemented: never report success.
+  return {provider,status:'unavailable',departures:[]};
  };
 }
 /**
