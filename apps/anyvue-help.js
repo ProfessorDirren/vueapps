@@ -2,7 +2,7 @@ import { AnyVueHelp } from '../core/anyvue-help.js';
 import { mountVueHelp } from './help-renderer.js';
 
 const getLanguage = () => {
-  try { return localStorage.getItem('vueapps-language-v2') || 'en'; }
+  try { return localStorage.getItem('vue-language') || 'en'; }
   catch { return 'en'; }
 };
 mountVueHelp({

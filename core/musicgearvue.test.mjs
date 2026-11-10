@@ -6,7 +6,7 @@ test('music and antiques have separate seven-language pages, client routes and p
  const [portal,anti,music,client]=await Promise.all(['index.html','apps/antiqvue.js','musicgearvue.html','apps/musicgearvue.js'].map(read));
  for(const language of ['en','es','sv','hi','zh-CN','ru','ar'])assert.ok(music.includes(`value="${language}"`));
  assert.doesNotMatch(anti,/vintage instruments|vintageinstrument|instrumentos vintage|винтажные инструменты/);
- assert.match(client,/fetch\('\/api\/musicgearvue'/);assert.match(client,/musicgearvue-language/);assert.match(client,/DJ/);
+ assert.match(client,/fetch\('\/api\/musicgearvue'/);assert.match(client,/localStorage\.getItem\('vue-language'\)/);assert.match(client,/DJ/);
  const positions=['app-motovue','app-musicgearvue','app-plantvue'].map(id=>portal.indexOf(`id="${id}"`));assert.ok(positions.every(n=>n>=0));assert.deepEqual(positions,[...positions].sort((a,b)=>a-b));
 });
 test('music endpoint handles a photo with a music-specific prompt and the shared spending budget',async()=>{

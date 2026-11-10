@@ -70,7 +70,7 @@ test('all portal specialist translation groups include the four new languages',(
   for(const lang of languages)assert.ok(block.includes(JSON.stringify(lang)+':'),name+' missing '+lang);
  }
  assert.ok(html.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
- assert.ok(html.includes('setLanguage("en")'));
+ assert.ok(html.includes('setLanguage(initialLanguage)'));
 });
 
 test('new language urgent followup warnings never silently fall back to English',()=>{
