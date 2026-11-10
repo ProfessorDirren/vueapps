@@ -26,11 +26,17 @@ test('results require source provenance and timestamp',()=>{
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[]}));
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'http://example.org',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z'}]}));
  assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]}));
- const result=normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyVerified:true,departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]});
+ const result=normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyEvidence:{verified:true,originId:'stop-A',destinationId:'stop-B',departureIds:['trip-1']},departures:[{id:'trip-1',scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]});
  assert.equal(result.status,'ok');
 });
 test('missing provider, stations or data never invents a departure',async()=>{
  assert.deepEqual((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).departures,[]);
  assert.equal((await queryCommute({provider:'paris',from:'',to:'Châtelet'})).status,'needs_stations');
  assert.equal((await queryCommute({provider:'paris',from:'Gare du Nord',to:'Châtelet',adapter:async()=>{throw Error('offline')}})).status,'unavailable');
+});
+
+test('journey evidence must cover each individual departure',()=>{
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyEvidence:{verified:true,originId:'stop-A',destinationId:'stop-B',departureIds:['trip-1']}};
+ assert.throws(()=>normalizeTrafficResult({...base,departures:[{id:'trip-2',scheduled:'2026-11-10T08:01:00Z'}]}));
+ assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...base.journeyEvidence,originId:'stop-B'},departures:[{id:'trip-1',scheduled:'2026-11-10T08:01:00Z'}]}));
 });
