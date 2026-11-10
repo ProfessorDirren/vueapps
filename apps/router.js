@@ -23,6 +23,18 @@ const t=()=>ROUTER_TEXT[document.documentElement.lang]||ROUTER_TEXT.en;
 const provenanceLabel={en:'AI assessment · Not independently verified',es:'Evaluación de IA · Sin verificación independiente',sv:'AI-bedömning · Inte oberoende verifierad',hi:'AI आकलन · स्वतंत्र रूप से सत्यापित नहीं', 'zh-CN':'AI 评估 · 未经独立核实',ru:'Оценка ИИ · Независимо не проверено',ar:'تقييم بالذكاء الاصطناعي · غير متحقق منه بشكل مستقل'};
 
 const previousAnswerNotices={en:'Previous answer (original language; not translated)',es:'Respuesta anterior (idioma original; sin traducir)',sv:'Tidigare svar (originalspråk; inte översatt)',hi:'पिछला उत्तर (मूल भाषा; अनुवादित नहीं)','zh-CN':'先前的回答（原语言，未翻译）',ru:'Предыдущий ответ (язык оригинала; без перевода)',ar:'إجابة سابقة (باللغة الأصلية؛ لم تُترجم)'};
+Object.assign(provenanceLabel,{
+ fr:'Évaluation IA · Non vérifiée indépendamment',
+ el:'Αξιολόγηση AI · Χωρίς ανεξάρτητη επαλήθευση',
+ tr:'Yapay zekâ değerlendirmesi · Bağımsız doğrulanmadı',
+ fa:'ارزیابی هوش مصنوعی · بدون تأیید مستقل'
+});
+Object.assign(previousAnswerNotices,{
+ fr:'Réponse précédente (langue originale ; non traduite)',
+ el:'Προηγούμενη απάντηση (αρχική γλώσσα, χωρίς μετάφραση)',
+ tr:'Önceki yanıt (özgün dil; çevrilmedi)',
+ fa:'پاسخ قبلی (زبان اصلی؛ ترجمه نشده)'
+});
 function updateAnswerLanguageNotices(){for(const article of $('vue-router-replies').querySelectorAll('article[data-answer-language]')){const lang=article.dataset.answerLanguage;let notice=article.querySelector('[data-original-language-notice]');if(lang===document.documentElement.lang){notice?.remove();continue}if(!notice){notice=document.createElement('p');notice.dataset.originalLanguageNotice='';notice.setAttribute('role','note');article.insertBefore(notice,article.firstChild)}notice.textContent=(previousAnswerNotices[document.documentElement.lang]||previousAnswerNotices.en)+(lang==='und'?'':' · '+lang.toUpperCase());}}
 function render(){updateAnswerLanguageNotices();panel.querySelectorAll('[data-router]').forEach(el=>el.textContent=t()[Number(el.dataset.router)]);input.placeholder=t()[2];$('vue-router-send').textContent=t()[photo?20:0];$('vue-router-specialist').textContent=active?t()[7]+' · '+active.domain.toUpperCase():'';$('vue-router-favorite').textContent=readFavorite(favoritesStorage).favorite?t()[13]+' · '+readFavorite(favoritesStorage).favorite.toUpperCase():'';}
 function reply(question,answer,domain=active?.domain,kind='local_guidance',scroll=true,answerLanguage=document.documentElement.lang){const article=document.createElement('article'),q=document.createElement('p'),a=document.createElement('p');article.dataset.answerLanguage=answerLanguage;q.textContent=question;a.textContent=answer;a.style.whiteSpace='pre-wrap';const name=document.createElement('strong');name.textContent=(domain||'CORE-VUE').toUpperCase();article.append(name,q,a);if(kind==='ai_unverified'){const provenance=document.createElement('p');provenance.textContent=provenanceLabel[document.documentElement.lang]||provenanceLabel.en;provenance.setAttribute('role','note');article.append(provenance)}$('vue-router-replies').append(article);updateAnswerLanguageNotices();if(scroll)article.scrollIntoView({behavior:'smooth',block:'nearest'});}
