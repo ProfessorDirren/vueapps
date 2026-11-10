@@ -61,7 +61,12 @@
     @media (max-width: 600px) { main { padding-top: 65px; } .apps { grid-template-columns: 1fr; } }
     #vuecore-help { margin-top:12px; }
     .vuecore-help-trigger,.vuecore-home-link,.vuecore-help-panel button { background:#142630;color:#f4f7f8;border:1px solid #36525a;border-radius:8px;padding:8px 12px;cursor:pointer; }
-    .vuecore-help-trigger,.vuecore-home-link { text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font:inherit; }\n    .vuecore-help-trigger,.vuecore-home-link { background:#16b8b0;color:#06252b;border:1px solid #67eee2;font-weight:700;box-shadow:0 0 0 1px rgba(22,184,176,.2); }\n    .vuecore-help-trigger:hover,.vuecore-home-link:hover { background:#55e1d3;color:#06252b; }\n    .vuecore-help-trigger:focus-visible,.vuecore-home-link:focus-visible { outline:3px solid #f4cf72;outline-offset:3px; }\n    .vuecore-home-link { margin-inline-start:18px; }\n    .vuecore-help-panel { margin-top:10px;padding:16px;border:1px solid #36525a;border-radius:12px;background:#142630;max-width:700px; }
+    .vuecore-help-trigger,.vuecore-home-link { text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font:700 15px Arial,Helvetica,sans-serif;background:#16b8b0;color:#06252b;border:1px solid #67eee2;box-shadow:0 0 0 1px rgba(22,184,176,.2); }
+    .vuecore-help-trigger:hover,.vuecore-home-link:hover { background:#55e1d3;color:#06252b; }
+    .vuecore-help-trigger:focus-visible,.vuecore-home-link:focus-visible { outline:3px solid #f4cf72;outline-offset:3px; }
+    #vuecore-help { display:flex;align-items:center;gap:18px;flex-wrap:wrap; }
+    .vuecore-home-link { margin-inline-start:0; }
+    .vuecore-help-panel { margin-top:10px;padding:16px;border:1px solid #36525a;border-radius:12px;background:#142630;max-width:700px; }
     .vuecore-help-panel[hidden] { display:none; }
     .vuecore-help-panel h2 { margin:0 0 10px; }
     .vuecore-help-panel h3 { margin:14px 0 4px; }
