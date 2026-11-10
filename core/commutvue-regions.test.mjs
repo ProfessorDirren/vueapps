@@ -4,7 +4,7 @@ import {COMMUT_LOCALES,COMMUT_PROVIDERS,queryCommute} from './commutvue.js';
 import {COMMUT_EXPANSION_REGIONS,expansionRegionsForLocale} from './commutvue-regions.js';
 import {parseCommuteQuestion} from './commutvue-query.js';
 test('all eleven languages have at least one discoverable region',()=>{
- for(const locale of COMMUT_LOCALES)assert.ok(expansionRegionsForLocale(locale).length>0||Object.values(COMMUT_PROVIDERS).some(provider=>provider.locales?.includes(locale)),locale);
+ for(const locale of COMMUT_LOCALES)assert.ok(expansionRegionsForLocale(locale).length>0||(locale==='sv'&&Object.hasOwn(COMMUT_PROVIDERS,'stockholm')),locale);
 });
 test('all regions have valid timezone and ISO country, but no unverified live provider',()=>{
  for(const [id,region] of Object.entries(COMMUT_EXPANSION_REGIONS)){
