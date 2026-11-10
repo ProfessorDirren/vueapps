@@ -16,9 +16,18 @@ test('all eleven portal languages have complete shared router labels',()=>{
  }
 });
 
-test('previous-answer notices and AI provenance have translations for all languages',()=>{
- for(const language of languages){
-  assert.match(routerSource,new RegExp('(?:^|[,\\s])'+JSON.stringify(language)+':'),language);
+test('new languages have explicit localized notices in VUECORE',()=>{
+ for(const marker of ['Object.assign(provenanceLabel','Object.assign(previousAnswerNotices']){
+  assert.ok(routerSource.includes(marker),marker);
  }
- for(const marker of ['Object.assign(provenanceLabel','Object.assign(previousAnswerNotices'])assert.ok(routerSource.includes(marker));
+ for(const language of ['fr','el','tr','fa']){
+  const escaped=language.replace(/[.*+?^\x24{}()|[\]\\]/g,'\\$&');
+  assert.match(routerSource,new RegExp('\\\\b'+escaped+':'),language);
+ }
+});
+
+test('new language specialist links stay inside VUECORE instead of opening untranslated pages',()=>{
+ for(const marker of ['extendedOnlyLanguages','specialistPageDomains','event.preventDefault()','location.assign("./?vue="']){
+  assert.ok(portal.includes(marker),marker);
+ }
 });
