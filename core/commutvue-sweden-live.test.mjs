@@ -93,3 +93,23 @@ test('departures are sorted by expected time and far-future times are excluded',
  assert.equal(result.status,'ok');
  assert.deepEqual(result.departures.map(d=>d.id),['early|2026-11-10|stop1','late|2026-11-10|stop1']);
 });
+
+test('official Trafiklab Stop Lookup meta-stop contract preserves numeric child stop ids',async()=>{
+ // Based on Trafiklab's published Stop Lookup example: Stockholm meta-stop 740098000
+ // includes child stop 1617 (Stockholm City), 12275 (T-Centralen), and others.
+ const resolver=createTrafiklabStopResolver({
+  apiKey:'fixture',
+  fetcher:async url=>{
+   assert.match(url,/\/v1\/stops\/name\/Stockholm\?key=fixture$/);
+   return {ok:true,text:async()=>JSON.stringify({timestamp:'2025-05-02T15:10:56',stop_groups:[
+    {id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
+     {id:'1',name:'Stockholm Centralstation'},
+     {id:'1617',name:'Stockholm City'},
+     {id:'12275',name:'T-Centralen'}
+    ]},
+    {id:'740022197',name:'Karlstad Residenstorget',stops:[{id:'41045'}]}
+   ]})};
+  }
+ });
+ assert.deepEqual(await resolver('Stockholm'),{id:'740098000',stopIds:['1','1617','12275']});
+});
