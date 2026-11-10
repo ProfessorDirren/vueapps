@@ -26,5 +26,8 @@ export function parseCommuteQuestion(question){
  const regions=Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(text)).map(([region])=>region);
  const match=PATTERNS.map(re=>re.exec(text)).find(Boolean);
  const from=match?clean(match[1]):null,to=match?clean(match[2]):null;
- return {region:regions.length===1?regions[0]:null,from:from||null,to:to||null,needsClarification:regions.length!==1||!from||!to};
+ // Region must be grounded in an endpoint, not incidental context in the question.
+ const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
+ const selected=endpointRegions.length?endpointRegions:regions;
+ return {region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
 }
