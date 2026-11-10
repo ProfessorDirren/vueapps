@@ -49,3 +49,26 @@ test('Stockholm route proof must bind origin, destination and actual board depar
   assert.deepEqual(result.departures,[]);
  }
 });
+
+test('identical resolved stops cannot create a verified journey',async()=>{
+ let calls=0;
+ const adapter=createTrafiklabAdapter({apiKey:'fixture-key',resolveStop:async()=> '740000001',fetcher:async()=>{calls++;throw Error('unexpected')}});
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'unavailable');assert.equal(calls,0);
+});
+test('duplicate board service IDs fail closed before route proof',async()=>{
+ let verified=0;
+ const departure={id:'journey-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'};
+ const adapter=createTrafiklabAdapter({apiKey:'fixture-key',resolveStop:async name=>name==='Jordbro'?'740000001':'740000002',fetcher:async()=>({ok:true,json:async()=>({departures:[departure,departure]})}),verifyJourney:async()=>{verified++;throw Error('unexpected')}});
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'unavailable');assert.equal(verified,0);
+});
+test('fresh route proof does not excuse a stale station board',async()=>{
+ const proof={verified:true,originId:'740000001',destinationId:'740000002',departureIds:['journey-1'],updatedAt:'2026-11-10T07:58:00Z'};
+ const base={apiKey:'fixture-key',now:()=>Date.parse('2026-11-10T07:59:00Z'),resolveStop:async name=>name==='Jordbro'?'740000001':'740000002',verifyJourney:async()=>proof};
+ for(const updatedAt of ['2026-11-10T07:55:00Z','2026-11-10T08:00:00Z','invalid']){
+  const adapter=createTrafiklabAdapter({...base,fetcher:async()=>({ok:true,json:async()=>({updatedAt,departures:[{id:'journey-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'}]})})});
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+  assert.equal(result.status,'unavailable');
+ }
+});
