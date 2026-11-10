@@ -9,6 +9,7 @@ import {classifyImage,ImageRoutingError} from '../core/image-routing.js';
 import {obviousIdentifier,MEMORY_DOMAINS} from '../core/memory.js';
 import {ROUTER_TEXT} from '../apps/router-content.js';
 import {COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
+import {parseCommuteQuestion} from '../core/commutvue-query.js';
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(request){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
@@ -27,7 +28,7 @@ export async function POST(request){
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  // Fail closed until a verified transport adapter is connected: AI must not guess live train status.
- if(route.domain==='commutvue')return json(200,{domain:'commutvue',answer:COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:'local_guidance',verified:false,evidence_status:'live_unavailable',workspace:'./?vue=commutvue#vue-router'});
+ if(route.domain==='commutvue'){const journey=parseCommuteQuestion(question);return json(200,{domain:'commutvue',answer:journey.needsClarification?({sv:'Ange avreseort, destination och stad så kan COMMUTVUE identifiera rätt trafiksystem.',fr:'Indiquez la gare de départ, la destination et la ville.',es:'Indica el origen, destino y ciudad.',en:'Please specify departure station, destination and city.'}[b.language]||'Please specify departure station, destination and city.'):COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:'local_guidance',verified:false,evidence_status:journey.needsClarification?'needs_stations':'live_unavailable',clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});}
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);
