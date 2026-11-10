@@ -13,6 +13,9 @@ export function detectInputLanguage(value){
  const text=value.trim();if(text.length<8)return null;
  const letters=[...text].filter(c=>/\p{L}/u.test(c));if(letters.length<6)return null;
  // A stray character from another script must never override the user's language.
+ const persianMarkers=(text.match(/[پچژگکۍیۀ]/gu)||[]).length;
+ const arabicLetters=letters.filter(c=>/[\u0600-\u06ff]/u.test(c)).length;
+ if(persianMarkers>=2&&arabicLetters>=4&&arabicLetters/letters.length>=0.6)return 'fa';
  const scripts=[['el',/[\u0370-\u03ff\u1f00-\u1fff]/u],['ar',/[\u0600-\u06ff]/u],['hi',/[\u0900-\u097f]/u],['zh-CN',/[\u4e00-\u9fff]/u],['ru',/[\u0400-\u04ff]/u]];
  const counts=scripts.map(([lang,re])=>({lang,count:letters.filter(c=>re.test(c)).length})).sort((a,b)=>b.count-a.count);
  if(counts[0].count>=4&&counts[0].count/letters.length>=0.6&&counts[0].count>counts[1].count)return counts[0].lang;
