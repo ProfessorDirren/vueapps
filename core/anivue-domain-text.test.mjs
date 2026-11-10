@@ -140,6 +140,6 @@ test('ANIVUE uses VUECORE domain and shared portal rather than its own HTML modu
  const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
  assert.match(portal,/href="\.\/\?vue=anivue#vue-router"/);
- assert.match(router,/requestedSpecialist==='anivue'/);
+ assert.match(router,/isRegisteredSpecialist\(requestedSpecialist\)/);
  assert.ok(createSpecialistDomain('anivue') instanceof VueDomain);
 });

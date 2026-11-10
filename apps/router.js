@@ -1,3 +1,4 @@
+import {isRegisteredSpecialist} from '../core/specialists.js';
 import {specialistLabel} from './specialist-labels.js';
 import {detectInputLanguage} from '../core/language-detection.js';
 import {mountVuecoreVideoInput,VIDEO_LABELS,videoBlocksSubmission} from '../core/video-input.js';
@@ -12,10 +13,10 @@ const favorite=readFavorite(favoritesStorage).favorite;if(favorite&&active?.doma
 
 // A specialist deep link selects a VUECORE domain without starting a separate UI.
 const requestedSpecialist=new URLSearchParams(location.search).get('vue');
-if(requestedSpecialist==='anivue'){
- const m=memories.get('anivue')||new VueMemory({domain:'anivue',storage});
- memories.set('anivue',m);
- active={domain:'anivue',memory:m,caseId:null};
+if(requestedSpecialist&&isRegisteredSpecialist(requestedSpecialist)){
+ const m=memories.get(requestedSpecialist)||new VueMemory({domain:requestedSpecialist,storage});
+ memories.set(requestedSpecialist,m);
+ active={domain:requestedSpecialist,memory:m,caseId:null};
  window.addEventListener('load',()=>input?.focus({preventScroll:true}),{once:true});
 }
 const t=()=>ROUTER_TEXT[document.documentElement.lang]||ROUTER_TEXT.en;
