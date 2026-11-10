@@ -28,6 +28,7 @@ export function normalizeDeparture(raw){
  const scheduled=raw.scheduled?Date.parse(raw.scheduled):NaN;
  const expected=raw.expected?Date.parse(raw.expected):NaN;
  if(!Number.isFinite(scheduled))throw new TypeError('Verified scheduled timestamp required');
+ if(typeof raw.id!=='string'||!raw.id.trim()||typeof raw.line!=='string'||!raw.line.trim()||typeof raw.destination!=='string'||!raw.destination.trim())throw new TypeError('Verified departure identity required');
  if(raw.expected&&!Number.isFinite(expected))throw new TypeError('Invalid expected timestamp');
  return Object.freeze({id:String(raw.id||''),line:String(raw.line||''),destination:String(raw.destination||''),scheduled:new Date(scheduled).toISOString(),expected:Number.isFinite(expected)?new Date(expected).toISOString():null,delayMinutes:Number.isFinite(expected)?Math.max(0,Math.round((expected-scheduled)/60000)):null,cancelled:raw.cancelled===true});
 }
