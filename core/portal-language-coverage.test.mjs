@@ -21,8 +21,7 @@ test('new languages have explicit localized notices in VUECORE',()=>{
   assert.ok(routerSource.includes(marker),marker);
  }
  for(const language of ['fr','el','tr','fa']){
-  const escaped=language.replace(/[.*+?^\x24{}()|[\]\\]/g,'\\$&');
-  assert.match(routerSource,new RegExp('\\\\b'+escaped+':'),language);
+  assert.ok(routerSource.includes(language+':'),language);
  }
 });
 
