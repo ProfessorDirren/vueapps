@@ -92,7 +92,8 @@ test('departures are sorted by expected time and far-future times are excluded',
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
  assert.equal(result.status,'ok');
  assert.deepEqual(result.departures.map(d=>d.id),['early|2026-11-10|stop1','late|2026-11-10|stop1']);
- assert.deepEqual(result.journeyEvidence.departureIds,result.departures.map(d=>d.id));
+ const verified=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(verified.journeyEvidence.departureIds,verified.departures.map(d=>d.id));
 });
 
 test('official Trafiklab Stop Lookup meta-stop contract preserves numeric child stop ids',async()=>{
