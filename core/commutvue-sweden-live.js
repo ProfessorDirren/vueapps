@@ -4,6 +4,8 @@
  * Server-side only. Never expose API keys in source URLs.
  */
 const ROOT='https://realtime-api.trafiklab.se/v1/';
+const MAX_FETCH_MS=7000;
+const MAX_RESPONSE_BYTES=350000;
 const area=id=>/^740\d{6}$/.test(String(id));
 const date=d=>/^\d{4}-\d{2}-\d{2}$/.test(String(d));
 // Trafiklab timestamps are local Swedish wall-clock values without UTC offset.
@@ -31,9 +33,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  if(!apiKey||typeof fetcher!=='function'||typeof resolveStop!=='function'||typeof now!=='function')throw new TypeError('Server-only Trafiklab credentials, fetcher and stop lookup required');
  async function get(path){
   const url=new URL(path,ROOT);url.searchParams.set('key',apiKey);
-  const res=await fetcher(url.toString(),{headers:{accept:'application/json'}});
+  const res=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
   if(!res.ok)throw Error('Trafiklab unavailable');
-  return res.json();
+  const body=await res.text();
+  if(body.length>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
+  return JSON.parse(body);
  }
  return async({provider,from,to})=>{
   if(provider!=='stockholm')throw Error('Unexpected region');
@@ -77,9 +81,11 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Invalid stop name');
   const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
   url.searchParams.set('key',apiKey);
-  const response=await fetcher(url.toString(),{headers:{accept:'application/json'}});
+  const response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
   if(!response.ok)throw Error('Stop lookup unavailable');
-  const payload=await response.json();
+  const body=await response.text();
+  if(body.length>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
+  const payload=JSON.parse(body);
   const exact=(payload.stop_groups||[]).filter(s=>area(s.id)&&s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'));
   if(exact.length!==1)throw Error('Stop not uniquely identified');
   const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
