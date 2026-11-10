@@ -43,9 +43,8 @@ test('ANIVUE workspace remains native and has no external fallback',async()=>{
  const {readFile}=await import('node:fs/promises');
  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
  const portal=await readFile(new URL('../index.html',import.meta.url),'utf8');
- const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
  assert.match(source,/workspace:'\.\/\?vue='/);
- for(const file of [source,portal,native])assert.doesNotMatch(file,/anivue(?:app)?\.se|legacy_workspace/);
+ for(const file of [source,portal])assert.doesNotMatch(file,/anivue(?:app)?\.se|legacy_workspace/);
  assert.match(portal,/href="\.\/\?vue=anivue#vue-router"/);
 });
 
@@ -70,12 +69,11 @@ test('runtime files never link to retired standalone ANIVUE',async()=>{
 });
 
 
-test('native ANIVUE displays emergency triage before starting image analysis',async()=>{
+test('shared ANIVUE stops emergency cases before image analysis',async()=>{
  const {readFile}=await import('node:fs/promises');
- const native=await readFile(new URL('../anivue-core.html',import.meta.url),'utf8');
- const triage=native.indexOf("const emergency=flow.domain.emergencyCheck(context)");
- const visible=native.indexOf("if(urgent){$('answer').textContent=check.assessment.summary");
- const vision=native.indexOf('await flow.domain.analyzePhoto(');
- assert.ok(triage>=0&&visible>triage&&vision>visible,'emergency warning must precede photo analysis');
- assert.match(native,/if\(urgent\)\{[\s\S]*?return;\}const photoVersionAtSubmit=/);
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ const urgent=source.indexOf("if(route.domain==='anivue'&&urgent)return json(200");
+ const image=source.indexOf('classifyImage(b.image,question)');
+ assert.ok(urgent>=0&&image>urgent,'emergency guidance must precede image routing');
+ assert.match(source,/image_analyzed:false/);
 });
