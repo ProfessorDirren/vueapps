@@ -50,3 +50,17 @@ export function createParisAdapter({apiKey,fetcher}={}){
  if(!apiKey||typeof fetcher!=='function')throw new Error('Paris PRIM server credentials and transport required');
  return async()=>{throw new Error('Paris route mapping not configured');};
 }
+
+/**
+ * Chile transit boundary: Santiago Red Movilidad buses and Metro de Santiago.
+ * Provider schema, stop mapping and journey verification are not configured.
+ * Do not treat a schedule, a city name or a photo as a live delay.
+ */
+export function createSantiagoAdapter({resolveStop,verifyJourney}={}){
+ return async ({provider})=>{
+  if(provider!=='santiago')throw new Error('Wrong provider');
+  // Keep unavailable until BOTH mappings and independent route verification exist.
+  if(typeof resolveStop!=='function'||typeof verifyJourney!=='function')return {provider,status:'unavailable',departures:[]};
+  return {provider,status:'unavailable',departures:[]};
+ };
+}
