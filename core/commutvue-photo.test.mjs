@@ -41,3 +41,10 @@ test('shared CORE image gate exception cannot trigger specialist extraction',asy
  assert.equal(result.verified,false);
  assert.equal(called,false);
 });
+
+test('timetable evidence rejects timezone ambiguity and impossible dates',()=>{
+ const depart=scheduled=>({...evidence,departures:[{line:'43',destination:'Stockholm City',scheduled}]});
+ assert.equal(validateTimetableEvidence(depart('2026-11-10T08:42:00')),false);
+ assert.equal(validateTimetableEvidence(depart('2026-11-10T08:42:00+01:00')),true);
+ assert.equal(validateTimetableEvidence(depart('tomorrow')),false);
+});
