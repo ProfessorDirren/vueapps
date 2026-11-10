@@ -41,13 +41,15 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!area(origin)||!area(destination)||origin===destination)return {provider,status:'unavailable',departures:[]};
   const board=await get('departures/'+origin);
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',departures:[]};
-  const departures=[];const ids=[];const seen=new Set();
+  const departures=[];const ids=[];const seen=new Set();let tripRequests=0;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
    if(typeof tripId!=='string'||!tripId||!date(startDate)||!d.is_realtime||!d.stop?.id)continue;
    const id=tripId+'|'+startDate+'|'+d.stop.id;
    if(seen.has(id))continue;seen.add(id);
+   if(tripRequests>=maxTrips)break;
+   tripRequests++;
    const details=await get('trips/'+encodeURIComponent(tripId)+'/'+startDate);
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
