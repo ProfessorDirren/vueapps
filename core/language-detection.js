@@ -7,7 +7,7 @@ const WORDS={
  es:['mi','mis','perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','porque','está','estoy','tengo','puedo','qué','una','unos','para','con','por','del','los','las'],
  en:['my','dog','sick','hello','thanks','need','help','please','what','how','why','the','this','that','with','have','does','can','not','and','is','are','broken','works','want']
 };
-const UNIQUE={fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué'],en:['hello','thanks','please','the','this','that','does','broken','works']};
+const UNIQUE={fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué'],en:['hello','thanks','please','the','this','that','does','broken','works','dog','sick','need']};
 export function detectInputLanguage(value){
  if(typeof value!=='string')return null;
  const text=value.trim();if(text.length<8)return null;
