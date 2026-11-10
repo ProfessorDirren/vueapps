@@ -24,8 +24,10 @@ export function detectInputLanguage(value){
  if(words.length<3)return null;
  const scores=Object.fromEntries(Object.entries(WORDS).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0)+(UNIQUE[lang].includes(w)?2:0),0)]));
  // A genuinely multilingual question must not hijack the user's current UI language.
- // Two independently evidenced Latin languages are enough to make selection ambiguous.
- const supported=Object.values(scores).filter(score=>score>=3);
+ // Require independent language-specific evidence before treating shared words as multilingual.
+ // Common words such as 'mi', 'can' or 'is' alone must not freeze a clear language switch.
+ const uniqueScores=Object.fromEntries(Object.entries(UNIQUE).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0),0)]));
+ const supported=Object.entries(scores).filter(([lang,score])=>score>=3&&uniqueScores[lang]>=1);
  if(supported.length>1)return null;
  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
  return sorted[0][1]>=3&&sorted[0][1]>=sorted[1][1]+2?sorted[0][0]:null;
