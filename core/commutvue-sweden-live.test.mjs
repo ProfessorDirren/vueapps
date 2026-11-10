@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createVerifiedSwedenAdapter} from './commutvue-sweden-live.js';
+import {createVerifiedSwedenAdapter,createTrafiklabStopResolver} from './commutvue-sweden-live.js';
 import {queryCommute} from './commutvue.js';
 const clock=()=>Date.parse('2026-11-10T08:59:00Z');
 const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},is_realtime:true,scheduled:'2026-11-10T09:59:00',realtime:'2026-11-10T10:06:00',route:{designation:'43',direction:'Stockholm City'},canceled:false};
@@ -54,4 +54,23 @@ test('stale departed trips and unsafe quota overrides fail closed',async()=>{
  for(const maxTrips of [0,9,100,-1,1.5]){
   assert.throws(()=>createVerifiedSwedenAdapter({apiKey:'fixture',resolveStop:async()=>({id:'740000001',stopIds:['stop1']}),maxTrips}),/required/);
  }
+});
+
+test('stop resolver accepts only a unique exact station group with child stop IDs',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:[
+   {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+   {id:'740000002',name:'Jordbro södra',stops:[{id:'stop3'}]}
+  ]})};
+ }});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+ assert.equal(calls.length,1);
+ await assert.rejects(resolver('Unknown'),/uniquely/);
+ const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'stop2'}]}
+ ]})})});
+ await assert.rejects(ambiguous('Jordbro'),/uniquely/);
 });
