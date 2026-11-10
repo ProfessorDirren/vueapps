@@ -70,7 +70,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
-   departures.push({id,line:String(d.route?.designation||d.route?.name||''),destination:String(d.route?.direction||d.route?.destination?.name||''),scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:d.canceled===true});
+   const line=String(d.route?.designation||d.route?.name||'').trim();
+   const direction=String(d.route?.direction||d.route?.destination?.name||'').trim();
+   if(!line||!direction)continue; // One incomplete route must not invalidate other verified departures.
+   departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
    ids.push(id);
   }
   if(!departures.length)return {provider,status:'unavailable',departures:[]};
