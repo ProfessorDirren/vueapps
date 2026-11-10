@@ -29,13 +29,14 @@ export function normalizeDeparture(raw){
  const expected=raw.expected?Date.parse(raw.expected):NaN;
  if(!Number.isFinite(scheduled))throw new TypeError('Verified scheduled timestamp required');
  if(raw.expected&&!Number.isFinite(expected))throw new TypeError('Invalid expected timestamp');
- return Object.freeze({line:String(raw.line||''),destination:String(raw.destination||''),scheduled:new Date(scheduled).toISOString(),expected:Number.isFinite(expected)?new Date(expected).toISOString():null,delayMinutes:Number.isFinite(expected)?Math.max(0,Math.round((expected-scheduled)/60000)):null,cancelled:raw.cancelled===true});
+ return Object.freeze({id:String(raw.id||''),line:String(raw.line||''),destination:String(raw.destination||''),scheduled:new Date(scheduled).toISOString(),expected:Number.isFinite(expected)?new Date(expected).toISOString():null,delayMinutes:Number.isFinite(expected)?Math.max(0,Math.round((expected-scheduled)/60000)):null,cancelled:raw.cancelled===true});
 }
-export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,journeyVerified=false,status='ok'}){
+export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,journeyEvidence,status='ok'}){
  if(!COMMUT_PROVIDERS[provider])throw new TypeError('Unknown provider');
  if(status!=='ok')return {status:'unavailable',provider,departures:[]};
  if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('HTTPS source and timestamp required');
- if(journeyVerified!==true)throw new TypeError('Journey destination not verified');
+ if(!journeyEvidence||journeyEvidence.verified!==true||typeof journeyEvidence.originId!=='string'||!journeyEvidence.originId.trim()||typeof journeyEvidence.destinationId!=='string'||!journeyEvidence.destinationId.trim()||journeyEvidence.originId===journeyEvidence.destinationId||!Array.isArray(journeyEvidence.departureIds)||journeyEvidence.departureIds.length===0)throw new TypeError('Verified journey evidence required');
+ if(!Array.isArray(departures)||departures.some(d=>typeof d.id!=='string'||!journeyEvidence.departureIds.includes(d.id)))throw new TypeError('Departure not covered by journey evidence');
  if(!Array.isArray(departures)||departures.length===0)throw new TypeError('No verified journey departures');
  return {status:'ok',provider,sourceUrl,updatedAt:new Date(updatedAt).toISOString(),departures:(departures||[]).map(normalizeDeparture)};
 }
