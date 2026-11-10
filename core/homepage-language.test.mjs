@@ -14,12 +14,12 @@ test("homepage retains all eleven language choices and descriptive labels",()=>{
 test("English is default for first-time visitors and explicit language persists across VUEs",()=>{
  assert.match(html,/<html lang="en">/);
  assert.match(html,/let initialLanguage="en"/);
- assert.match(html,/localStorage\.getItem\(VUE_LANGUAGE_KEY\)/);
+ assert.match(html,/sessionStorage\.getItem\(VUE_LANGUAGE_KEY\)/);
  assert.match(html,/supportedLanguages\.has\(saved\)/);
  assert.match(html,/setLanguage\(initialLanguage\)/);
  
- assert.doesNotMatch(html,/localStorage\.getItem\("vueapps-language-v2"\)/);
- assert.doesNotMatch(html,/localStorage\.setItem\("vueapps-language-v2"/);
+ assert.doesNotMatch(html,/sessionStorage\.getItem\("vueapps-language-v2"\)/);
+ assert.doesNotMatch(html,/sessionStorage\.setItem\("vueapps-language-v2"/);
  assert.match(html,/\["ar","fa"\]\.includes\(lang\)\?"rtl":"ltr"/);
 });
 test("homepage hero and navigation retain brand and product promises",()=>{
@@ -31,17 +31,17 @@ test("homepage hero and navigation retain brand and product promises",()=>{
 
 test("FOODVUE and other standalone tools use the same explicit portal language",()=>{
  const tools=readFileSync(new URL("../apps/tools.js",import.meta.url),"utf8");
- assert.match(tools,/localStorage\.getItem\('vue-language'\)/);
- assert.doesNotMatch(tools,/localStorage\.getItem\(storageKey\+'-language'\)/);
- assert.doesNotMatch(tools,/localStorage\.setItem\(storageKey\+'-language'/);
+ assert.match(tools,/sessionStorage\.getItem\('vue-language'\)/);
+ assert.doesNotMatch(tools,/sessionStorage\.getItem\(storageKey\+'-language'\)/);
+ assert.doesNotMatch(tools,/sessionStorage\.setItem\(storageKey\+'-language'/);
 });
 
 test("all standalone specialist interfaces share one explicit language key",()=>{
  const files=['antiqvue','musicgearvue','vinylvue','possessions','vue-backlog','medivue','tools'];
  for(const file of files){const code=readFileSync(new URL('../apps/'+file+'.js',import.meta.url),'utf8');
-  assert.match(code,/localStorage\.getItem\('vue-language'\)/,file);
-  assert.match(code,/localStorage\.setItem\('vue-language',language\)/,file);
+  assert.match(code,/sessionStorage\.getItem\('vue-language'\)/,file);
+  assert.match(code,/sessionStorage\.setItem\('vue-language',language\)/,file);
  }
  const help=readFileSync(new URL('../apps/anyvue-help.js',import.meta.url),'utf8');
- assert.match(help,/localStorage\.getItem\('vue-language'\)/);
+ assert.match(help,/sessionStorage\.getItem\('vue-language'\)/);
 });
