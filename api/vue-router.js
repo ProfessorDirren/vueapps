@@ -1,5 +1,5 @@
 import {createTrafiklabSwedenLive} from '../core/commutvue-sweden-live.js';
-import {queryCommute,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
+import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
@@ -38,7 +38,8 @@ export async function POST(request){
     liveDiagnostic='not_configured';
    }else{
     try{
-     live=await queryCommute({provider:'stockholm',from:journey.from,to:journey.to,adapter:createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})});
+     const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
+     live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      liveDiagnostic=live?.status==='ok'?'verified':'no_verified_departures';
     }catch{
      // Deliberately do not return credentials, request URLs or upstream error details.
