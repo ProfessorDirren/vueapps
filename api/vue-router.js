@@ -1,4 +1,4 @@
-import {createTrafiklabSwedenLive} from '../core/commutvue-sweden-live.js';
+import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -41,17 +41,17 @@ export async function POST(request){
      const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      liveDiagnostic=live?.status==='ok'?'verified':(['stop_resolution','board_unavailable','no_eligible_departures','route_not_verified'].includes(raw.reason)?raw.reason:'no_verified_departures');
-    }catch{
-     // Deliberately do not return credentials, request URLs or upstream error details.
-     liveDiagnostic='provider_error';
+    }catch(error){
+     // Only publish a fixed, non-sensitive category; never expose upstream URLs or credentials.
+     liveDiagnostic=error instanceof TrafiklabRequestError?('provider_'+error.category):'provider_error';
     }
    }
   }
   const verified=live?.status==='ok';
   // Give users a safe, actionable category without exposing provider secrets or URLs.
   const diagnosticLabels={
-   en:{not_configured:'Live connection is not configured.',no_verified_departures:'No verified departures were returned for this route.',provider_error:'The traffic provider request failed.',stop_resolution:'The requested stops could not be resolved safely.',board_unavailable:'No current departure board was available.',no_eligible_departures:'The departure board contained no eligible real-time trains.',route_not_verified:'Train trips could not be verified through the destination.'},
-   sv:{not_configured:'Realtidsanslutningen är inte konfigurerad.',no_verified_departures:'Inga verifierade avgångar hittades för denna sträcka.',provider_error:'Anropet till trafikleverantören misslyckades.',stop_resolution:'Hållplatserna kunde inte identifieras säkert.',board_unavailable:'Ingen aktuell avgångstavla fanns tillgänglig.',no_eligible_departures:'Inga användbara realtidsavgångar fanns på avgångstavlan.',route_not_verified:'Tågens färdväg till destinationen kunde inte verifieras.'},
+   en:{not_configured:'Live connection is not configured.',no_verified_departures:'No verified departures were returned for this route.',provider_error:'The traffic provider request failed.',provider_authorization:'The traffic provider rejected the server credentials.',provider_rate_limited:'The traffic provider rate limit was reached.',provider_http_error:'The traffic provider returned an HTTP error.',provider_network_or_timeout:'The traffic provider network request timed out or failed.',stop_resolution:'The requested stops could not be resolved safely.',board_unavailable:'No current departure board was available.',no_eligible_departures:'The departure board contained no eligible real-time trains.',route_not_verified:'Train trips could not be verified through the destination.'},
+   sv:{not_configured:'Realtidsanslutningen är inte konfigurerad.',no_verified_departures:'Inga verifierade avgångar hittades för denna sträcka.',provider_error:'Anropet till trafikleverantören misslyckades.',provider_authorization:'Trafikleverantören nekade serverns behörighet.',provider_rate_limited:'Trafikleverantörens anropsgräns har nåtts.',provider_http_error:'Trafikleverantören returnerade ett HTTP-fel.',provider_network_or_timeout:'Trafikleverantörens nätverksanrop misslyckades eller tog för lång tid.',stop_resolution:'Hållplatserna kunde inte identifieras säkert.',board_unavailable:'Ingen aktuell avgångstavla fanns tillgänglig.',no_eligible_departures:'Inga användbara realtidsavgångar fanns på avgångstavlan.',route_not_verified:'Tågens färdväg till destinationen kunde inte verifieras.'},
    es:{not_configured:'La conexión en tiempo real no está configurada.',no_verified_departures:'No se encontraron salidas verificadas para esta ruta.',provider_error:'Falló la solicitud al proveedor de transporte.',stop_resolution:'No se pudieron identificar las paradas con seguridad.',board_unavailable:'No había un tablero de salidas actualizado.',no_eligible_departures:'No había trenes en tiempo real aptos.',route_not_verified:'No se pudo verificar el trayecto hasta el destino.'}
   };
   const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||diagnosticLabels.en[liveDiagnostic]||'';
