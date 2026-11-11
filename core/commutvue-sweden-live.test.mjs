@@ -339,3 +339,12 @@ test('official Trafiklab Stockholm meta-stop fixture resolves City child, not Ce
  assert.equal(urls.length,2);
  assert.ok(urls.every(url=>new URL(url).hostname==='realtime-api.trafiklab.se'));
 });
+
+test('ambiguous exact Jordbro groups must fail closed rather than select the first',async()=>{
+ const payload={stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'stop2',name:'Jordbro'}]}
+ ]};
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify(payload)})});
+ await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
