@@ -297,3 +297,15 @@ test('stop lookup safely distinguishes empty, missing, ambiguous and incomplete 
   await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===category&&!e.message.includes('fixture'));
  }
 });
+
+test('only alerts on verified departures are exposed; invalid routes never leak alerts',async()=>{
+ const alert={title:'Signal failure',text:'Delays on this line',type:'WARNING'};
+ const verified=await make({...board,departures:[{...departure,alerts:[alert]}]})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.alerts.length,1);
+ assert.equal(verified.alerts[0].title,'Signal failure');
+ assert.deepEqual(verified.alerts[0].affectedLines,['43']);
+ const unverified=await make({...board,departures:[{...departure,alerts:[alert]}]},{...details,calls:[...details.calls].reverse()})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(unverified.status,'unavailable');
+ assert.equal(unverified.alerts,undefined);
+});
