@@ -72,7 +72,8 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000});
   const directory=join(output,'generated','bookvue');
   const files=await readdir(directory);
-  assert.equal(files.length,9);
+  assert.equal(files.length,10);
+  assert.ok(files.includes('test-requirements.json'));
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
   const audit=JSON.parse(await readFile(join(directory,'existing-router-audit.json'),'utf8'));
