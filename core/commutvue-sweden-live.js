@@ -6,6 +6,9 @@
 const ROOT='https://realtime-api.trafiklab.se/v1/';
 const MAX_FETCH_MS=7000;
 const MAX_RESPONSE_BYTES=350000;
+export class TrafiklabRequestError extends Error {
+ constructor(stage,category){super('Trafiklab '+category+' at '+stage);this.name='TrafiklabRequestError';this.stage=stage;this.category=category;}
+}
 const area=id=>/^740\d{6}$/.test(String(id));
 const date=d=>/^\d{4}-\d{2}-\d{2}$/.test(String(d));
 // Trafiklab timestamps are local Swedish wall-clock values without UTC offset.
@@ -33,8 +36,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  if(!apiKey||typeof fetcher!=='function'||typeof resolveStop!=='function'||typeof now!=='function'||!Number.isInteger(maxTrips)||maxTrips<1||maxTrips>8)throw new TypeError('Server-only Trafiklab credentials, fetcher and stop lookup required');
  async function get(path){
   const url=new URL(path,ROOT);url.searchParams.set('key',apiKey);
-  const res=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
-  if(!res.ok)throw Error('Trafiklab unavailable');
+  let res;try{res=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError(path.startsWith('trips/')?'trip_lookup':'departure_board','network_or_timeout');}
+  if(!res.ok)throw new TrafiklabRequestError(path.startsWith('stops/')?'stop_lookup':path.startsWith('trips/')?'trip_lookup':'departure_board',res.status===401||res.status===403?'authorization':res.status===429?'rate_limited':'http_error');
   if(Number(res.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
   const body=await res.text();
   if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Trafiklab payload too large');
