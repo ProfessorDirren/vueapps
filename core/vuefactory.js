@@ -291,6 +291,7 @@ export function scaffoldVue(input){
   "import test from 'node:test';",
   "import assert from 'node:assert/strict';",
   "import {profile,labels} from './profile.js';",
+  "import {isPublicSourceHost} from '../../core/vuefactory.js';",
   "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
   "test('generated '+d.id+' profile and language contract',()=>{",
   " assert.ok(profile.scope.length>=12);",
@@ -305,7 +306,7 @@ export function scaffoldVue(input){
   "  assert.equal(url.protocol,'https:');",
   "  assert.equal(url.username,'');",
   "  assert.equal(url.password,'');",
-  "  assert.ok(!/^(localhost|127\\\\.|10\\\\.|192\\\\.168\\\\.|169\\\\.254\\\\.)/i.test(url.hostname),'private source host');",
+  "  assert.ok(isPublicSourceHost(url.hostname),'private source host');",
   " }",
   "});",
   ""
