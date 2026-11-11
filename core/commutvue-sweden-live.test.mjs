@@ -197,3 +197,21 @@ test('ambiguous matching child stop names fail closed',async()=>{
  ]})})});
  await assert.rejects(resolver('Stockholm City'),/uniquely/);
 });
+
+test('distinct child stops within the same Trafiklab meta-stop can form a verified journey',async()=>{
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Origin'?{id:'740098000',stopIds:['stop1']}:{id:'740098000',stopIds:['stop2']},
+  fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:board)})
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Origin',to:'Destination',adapter});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures.length,1);
+});
+test('identical child stops are never treated as a valid journey',async()=>{
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async()=>({id:'740098000',stopIds:['stop1']}),
+  fetcher:async()=>{throw Error('Must not call provider for same stop')}
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Origin',to:'Origin',adapter});
+ assert.equal(result.status,'unavailable');
+});
