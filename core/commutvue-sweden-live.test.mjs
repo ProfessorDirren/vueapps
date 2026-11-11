@@ -348,3 +348,14 @@ test('ambiguous exact Jordbro groups must fail closed rather than select the fir
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify(payload)})});
  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
 });
+
+test('scheduled-only pendeltag is never falsely presented as live realtime',async()=>{
+ const scheduledOnly={...board,departures:[{...departure,is_realtime:false,realtime:departure.scheduled}]};
+ const raw=await make(scheduledOnly)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'unavailable');
+ assert.equal(raw.reason,'no_eligible_departures');
+ assert.deepEqual(raw.departures,[]);
+ const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(scheduledOnly)});
+ assert.equal(normalized.status,'unavailable');
+ assert.deepEqual(normalized.departures,[]);
+});
