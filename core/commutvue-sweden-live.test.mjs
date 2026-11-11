@@ -238,7 +238,7 @@ test('unavailable live journeys expose only safe stage diagnostics',async()=>{
  const noBoard=make({...board,timestamp:'2026-11-10T09:50:00'});
  assert.equal((await noBoard({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'board_unavailable');
  const noEligible=make({...board,departures:[{...departure,is_realtime:false}]});
- assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'no_eligible_departures');
+ assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'scheduled_only');
  const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
  assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
 });
