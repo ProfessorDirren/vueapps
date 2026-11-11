@@ -233,3 +233,10 @@ test('provider HTTP authorization and rate-limit failures are safely classified'
   await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),e=>e instanceof TrafiklabRequestError&&e.category===category&&e.stage==='departure_board'&&!e.message.includes('fixture'));
  }
 });
+
+test('stop lookup distinguishes unauthorized credentials from network failure',async()=>{
+ const unauthorized=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:false,status:403})});
+ await assert.rejects(unauthorized('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category==='authorization');
+ const offline=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>{throw Error('secret upstream URL')}});
+ await assert.rejects(offline('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category==='network_or_timeout'&&!e.message.includes('secret'));
+});
