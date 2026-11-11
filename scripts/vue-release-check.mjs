@@ -15,26 +15,36 @@ export function preflightVue(id,question){
  const problems=[];
  if(typeof id!=='string'||!Object.hasOwn(SPECIALISTS,id))problems.push('Specialist not registered in VUECORE');
  if(!VUE_NAMES.includes(id))problems.push('Missing central display-name registration');
- if(typeof question!=='string'||question.trim().length<3)problems.push('Routing smoke question required');
+ if(question!==null&&(typeof question!=='string'||question.trim().length<3))problems.push('Routing smoke question required');
  if(!problems.length){
   for(const lang of RELEASE_LANGUAGES){
    const label=localizedVueName(id,lang);
    if(!label||label.trim()==='-VUE')problems.push('Missing name in '+lang);
   }
-  const result=routeQuestion(question);
-  if(result.clarify||result.domain!==id)problems.push('Routing mismatch: expected '+id+', got '+(result.domain||'clarification'));
+  if(question!==null){
+   const result=routeQuestion(question);
+   if(result.clarify||result.domain!==id)problems.push('Routing mismatch: expected '+id+', got '+(result.domain||'clarification'));
+  }
  }
  return {ok:problems.length===0,problems};
 }
 const invoked=process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href;
 if(invoked){
  const [id,question]=process.argv.slice(2);
- const preflight=preflightVue(id,question);
+ const preflight=id==='--all'
+  ? {ok:true,problems:[]} : preflightVue(id,question);
+ if(id==='--all'){
+  for(const specialist of Object.keys(SPECIALISTS)){
+   const check=preflightVue(specialist,null);
+   preflight.problems.push(...check.problems.map(problem=>specialist+': '+problem));
+  }
+  preflight.ok=preflight.problems.length===0;
+ }
  if(!preflight.ok){
   for(const issue of preflight.problems)console.error('BLOCKED: '+issue);
   process.exitCode=1;
  }else{
-  console.log('VUE preflight OK: '+id+'; 11 language names and route checked.');
+  console.log('VUE preflight OK: '+(id==='--all'?'all registered specialists':id)+'; 11 language names checked.');
   const result=spawnSync(process.execPath,['--test','core/*.test.mjs'],{stdio:'inherit',shell:true});
   if(result.error){console.error(result.error.message);process.exitCode=1;}
   else if(result.status!==0){console.error('BLOCKED: regression tests failed');process.exitCode=1;}
