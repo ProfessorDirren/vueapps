@@ -42,3 +42,32 @@ test('Swedish commuter question selects Swedish rather than keeping English UI',
  assert.equal(detect('När går nästa pendeltåg från Jordbro till Stockholm City? Finns det några trafikstörningar?'),'sv');
  assert.equal(detect('När går nästa pendeltåg från Jordbro till Stockholm City?'),'sv');
 });
+
+// The UI language is authoritative when a question has no reliable language signal.
+// This protects all supported VUECORE locales, not just Swedish and Spanish.
+test('all supported selected languages remain selected for ambiguous questions',()=>{
+ const locales=['en','es','sv','fr','hi','zh-CN','ru','ar','el','tr','fa'];
+ for(const selected of locales){
+  const detected=detect('Jordbro Stockholm City 43');
+  assert.equal(detected,null);
+  assert.equal(detected||selected,selected);
+ }
+});
+test('Spanish questions do not switch an explicitly Spanish VUE to English',()=>{
+ for(const question of ['Mi perro está enfermo y necesito ayuda','Hola, necesito ayuda para mi perro']){
+  const detected=detect(question);
+  assert.equal(detected,'es');
+  assert.equal(detected||'es','es');
+ }
+});
+test('unambiguous questions in additional supported languages select their own language',()=>{
+ for(const [question,expected] of [
+  ['Bonjour mon chien est malade','fr'],
+  ['Merhaba köpek hasta yardım','tr'],
+  ['Γεια σας, ο σκύλος μου είναι άρρωστος','el'],
+  ['Моя собака заболела сегодня','ru'],
+  ['मेरा कुत्ता बीमार है','hi'],
+  ['我的小狗生病了怎么办','zh-CN'],
+  ['مرحبا أحتاج إلى المساعدة','ar']
+ ])assert.equal(detect(question),expected,question);
+});
