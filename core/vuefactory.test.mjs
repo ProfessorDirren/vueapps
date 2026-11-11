@@ -18,7 +18,7 @@ test('factory generates a deterministic reviewable profile and checklist',()=>{
  assert.deepEqual(a,b);
  assert.match(a.files['generated/bookvue/profile.js'],/Book identification/);
  assert.match(a.files['generated/bookvue/RELEASE-CHECKLIST.md'],/manual review required/);
- assert.equal(Object.keys(a.files).length,7);
+ assert.equal(Object.keys(a.files).length,8);
  const requirements=JSON.parse(a.files['generated/bookvue/test-requirements.json']);
  assert.equal(requirements.specialist,'bookvue');
  assert.equal(requirements.vercelBuildsDuringDevelopment,0);
@@ -72,8 +72,10 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000});
   const directory=join(output,'generated','bookvue');
   const files=await readdir(directory);
-  assert.equal(files.length,10);
+  assert.equal(files.length,11);
   assert.ok(files.includes('test-requirements.json'));
+  assert.ok(files.includes('contract.test.mjs'));
+  execFileSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000});
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
   const audit=JSON.parse(await readFile(join(directory,'existing-router-audit.json'),'utf8'));
