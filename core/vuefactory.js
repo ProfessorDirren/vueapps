@@ -286,7 +286,7 @@ export function scaffoldVue(input){
   " for(const language of languages)assert.ok(typeof labels[language]==='string'&&labels[language].trim(),language);",
   "});",
   ""
- ].join('\\n');
+ ].join('\n');
 
  const changeProposal=JSON.stringify(buildVueCoreIntegrationProposal(input),null,2)+'\n';
  const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\n'
