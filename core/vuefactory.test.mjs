@@ -102,6 +102,9 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','https://127.0.0.1/'));
   const privateHost=runContract();
   assert.notEqual(privateHost.status,0,'Private source unexpectedly passed: '+privateHost.stdout+' '+privateHost.stderr);
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','https://user:secret@www.loc.gov/'));
+  const credentialed=runContract();
+  assert.notEqual(credentialed.status,0,'Credentialed source unexpectedly passed: '+credentialed.stdout+' '+credentialed.stderr);
   await writeFile(profilePath,originalProfile);
   const restored=runContract();
   assert.equal(restored.status,0,'Restored contract failed: '+restored.stdout+' '+restored.stderr);
