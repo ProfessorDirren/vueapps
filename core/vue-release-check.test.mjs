@@ -39,3 +39,19 @@ test('all explicitly routed VUEs have a deterministic real-user smoke question',
   assert.deepEqual(preflightVue(id,questions[id]),{ok:true,problems:[]},id);
  }
 });
+
+test('a new unrelated topic overrides the previous VUE without leaking context',async()=>{
+ const {routeQuestion}=await import('./router.js');
+ const cases=[
+  ['anivue','När går nästa pendeltåg?','commutvue'],
+  ['anivue','Min motorcykel startar inte','motovue'],
+  ['foodvue','Min hund är sjuk','anivue'],
+  ['commutvue','Vad betyder E-nummer?','foodvue'],
+  ['martialartsvue','Min katt är sjuk','anivue']
+ ];
+ for(const [previous,question,expected] of cases){
+  const result=routeQuestion(question,previous);
+  assert.equal(result.clarify,false,question);
+  assert.equal(result.domain,expected,question);
+ }
+});
