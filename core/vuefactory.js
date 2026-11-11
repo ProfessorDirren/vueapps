@@ -6,6 +6,18 @@ import {obviousIdentifier} from './memory.js';
 export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
+export function isPublicSourceHost(hostname){
+ const host=String(hostname).toLowerCase().replace(/\.$/,'');
+ if(!host||host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.startsWith('[')||!host.includes('.'))return false;
+ if(/^\d+\.\d+\.\d+\.\d+$/.test(host)){
+  const parts=host.split('.').map(Number);
+  if(parts.some(x=>x>255))return false;
+  const [a,b]=parts;
+  return !(a===0||a===10||a===127||a>=224||a===169&&b===254||a===172&&b>=16&&b<=31||a===192&&b===168||a===100&&b>=64&&b<=127||a===192&&b===0||a===198&&(b===18||b===19)||a===192&&b===0||a===198&&b===51||a===203&&b===0);
+ }
+ if(/^\d+(?:\.\d+)*$/.test(host))return false;
+ return /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host);
+}
 export function validateVueDefinition(value){
  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Definition must be an object');
  const {id,scope,method,labels,sources=[]}=value;
@@ -18,7 +30,7 @@ export function validateVueDefinition(value){
  for(const source of sources){
   if(!Array.isArray(source)||source.length!==2||typeof source[0]!=='string'||!source[0].trim()||source[0].length>100||typeof source[1]!=='string')throw Error('Invalid source');
   let url;try{url=new URL(source[1])}catch{throw Error('Invalid source URL')}
-  if(url.protocol!=='https:'||url.username||url.password)throw Error('Sources must be public HTTPS URLs without credentials');
+  if(url.protocol!=='https:'||url.username||url.password||!isPublicSourceHost(url.hostname))throw Error('Sources must be public HTTPS URLs without credentials or private hosts');
  }
  return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,labels[lang].trim()])),sources};
 }
@@ -293,6 +305,7 @@ export function scaffoldVue(input){
   "  assert.equal(url.protocol,'https:');",
   "  assert.equal(url.username,'');",
   "  assert.equal(url.password,'');",
+  "  assert.ok(!/^(localhost|127\\\\.|10\\\\.|192\\\\.168\\\\.|169\\\\.254\\\\.)/i.test(url.hostname),'private source host');",
   " }",
   "});",
   ""
