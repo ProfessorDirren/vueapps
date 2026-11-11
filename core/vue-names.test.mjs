@@ -18,3 +18,11 @@ test('COMMUTEVUE has correct public branding without changing its internal route
  assert.match(localizedVueName('commutvue','es'),/Transporte público/);
  assert.match(localizedVueName('martialartsvue','sv'),/Kampsport/);
 });
+
+test('newer languages never silently display English names',()=>{
+ for(const lang of ['fr','el','tr','fa']){
+  for(const id of ['anivue','foodvue','motovue','vinylvue','commutvue','martialartsvue']){
+   assert.notEqual(localizedVueName(id,lang),localizedVueName(id,'en'),id+' '+lang);
+  }
+ }
+});
