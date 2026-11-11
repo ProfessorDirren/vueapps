@@ -48,9 +48,9 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const originStops=Array.isArray(originResult?.stopIds)?originResult.stopIds:[];
   const destinationStops=Array.isArray(destinationResult?.stopIds)?destinationResult.stopIds:[];
   // Distinct platforms may share a Trafiklab meta-stop. Compare actual stop IDs, not just group IDs.
-  if(!area(origin)||!area(destination)||!originStops.length||!destinationStops.length||originStops.some(id=>destinationStops.includes(id)))return {provider,status:'unavailable',departures:[]};
+  if(!area(origin)||!area(destination)||!originStops.length||!destinationStops.length||originStops.some(id=>destinationStops.includes(id)))return {provider,status:'unavailable',reason:'stop_resolution',departures:[]};
   const board=await get('departures/'+origin);
-  if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',departures:[]};
+  if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
   const departures=[];const ids=[];const seen=new Set();let tripRequests=0;
@@ -77,7 +77,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
    ids.push(id);
   }
-  if(!departures.length)return {provider,status:'unavailable',departures:[]};
+  if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?'no_eligible_departures':'route_not_verified',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
   // Evidence IDs must follow the same order as the departures presented to callers.
   ids.splice(0,ids.length,...departures.map(d=>d.id));
