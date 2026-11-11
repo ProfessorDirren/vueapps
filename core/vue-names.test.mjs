@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {VUE_NAMES,localizedVueName,vueBrandName} from './vue-names.js';
+import {VUE_NAMES,localizedVueName,vueBrandName,renderVueNames} from './vue-names.js';
 import {SPECIALISTS} from './specialists.js';
 
 test('every registered VUE has a centralized localized name',()=>{
@@ -25,4 +25,25 @@ test('newer languages never silently display English names',()=>{
    assert.notEqual(localizedVueName(id,lang),localizedVueName(id,'en'),id+' '+lang);
   }
  }
+});
+
+test('all sixteen portal headings rerender in the selected language without altering IDs',()=>{
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ renderVueNames(document,'en');
+ const english=new Map([...headings].map(([id,h])=>[id,h.children[2].textContent]));
+ renderVueNames(document,'sv');
+ for(const [id,heading] of headings){
+  assert.equal(heading.children[0].textContent,vueBrandName(id),id);
+  assert.equal(heading.children[2].textContent,'('+localizedVueName(id,'sv')+')',id);
+  assert.equal(heading.children[2].dir,'auto');
+  assert.equal(heading.children[0].dir,'ltr');
+  assert.ok(english.get(id));
+ }
+ renderVueNames(document,'es');
+ assert.equal(headings.get('commutvue').children[2].textContent,'(Transporte público-VUE)');
 });
