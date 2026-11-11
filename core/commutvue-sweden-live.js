@@ -45,15 +45,18 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  }
  return async({provider,from,to})=>{
   if(provider!=='stockholm')throw Error('Unexpected region');
-  let originResult,destinationResult;
-  try{
-   [originResult,destinationResult]=await Promise.all([resolveStop(from),resolveStop(to)]);
-  }catch(error){
-   // Preserve known provider/network categories, but distinguish malformed or ambiguous
-   // stop data from an unknown failure without returning raw upstream details.
-   if(error instanceof TrafiklabRequestError)throw error;
-   throw new TrafiklabRequestError('stop_lookup','invalid_stop_data');
-  }
+  const safeResolve=async(name,category)=>{
+   try{return await resolveStop(name);}
+   catch(error){
+    if(error instanceof TrafiklabRequestError)throw error;
+    // Identify which requested stop failed, without revealing upstream response data.
+    throw new TrafiklabRequestError('stop_lookup',category);
+   }
+  };
+  const [originResult,destinationResult]=await Promise.all([
+   safeResolve(from,'invalid_origin_stop_data'),
+   safeResolve(to,'invalid_destination_stop_data')
+  ]);
   const origin=typeof originResult==='string'?originResult:originResult?.id;
   const destination=typeof destinationResult==='string'?destinationResult:destinationResult?.id;
   const originStops=Array.isArray(originResult?.stopIds)?originResult.stopIds:[];
