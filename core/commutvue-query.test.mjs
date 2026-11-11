@@ -64,3 +64,8 @@ test('two different endpoint regions always require clarification',()=>{
  assert.equal(q.region,null);
  assert.equal(q.needsClarification,true);
 });
+
+test('actual Swedish next-train phrasing extracts Stockholm stations',()=>{
+ const q=parseCommuteQuestion('När går nästa tåg från Jordbro till Stockholm City?');
+ assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+});
