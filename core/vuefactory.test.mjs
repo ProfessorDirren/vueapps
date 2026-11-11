@@ -87,6 +87,12 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   assert.equal(files.length,11);
   assert.ok(files.includes('test-requirements.json'));
   assert.ok(files.includes('contract.test.mjs'));
+  const profilePath=join(directory,'profile.js');
+  const originalProfile=await readFile(profilePath,'utf8');
+  assert.ok(originalProfile.includes('https://www.loc.gov/'));
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','http://www.loc.gov/'));
+  assert.throws(()=>execFileSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000,stdio:'pipe'}),/Command failed/);
+  await writeFile(profilePath,originalProfile);
   execFileSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000});
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
