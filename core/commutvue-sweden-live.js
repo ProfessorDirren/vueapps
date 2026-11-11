@@ -47,7 +47,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const destination=typeof destinationResult==='string'?destinationResult:destinationResult?.id;
   const originStops=Array.isArray(originResult?.stopIds)?originResult.stopIds:[];
   const destinationStops=Array.isArray(destinationResult?.stopIds)?destinationResult.stopIds:[];
-  if(!area(origin)||!area(destination)||origin===destination||!originStops.length||!destinationStops.length)return {provider,status:'unavailable',departures:[]};
+  // Distinct platforms may share a Trafiklab meta-stop. Compare actual stop IDs, not just group IDs.
+  if(!area(origin)||!area(destination)||!originStops.length||!destinationStops.length||originStops.some(id=>destinationStops.includes(id)))return {provider,status:'unavailable',departures:[]};
   const board=await get('departures/'+origin);
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',departures:[]};
   const originStopIds=new Set(originStops);
