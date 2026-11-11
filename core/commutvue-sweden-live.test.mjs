@@ -91,6 +91,14 @@ test('stop resolver accepts only a unique exact station group with child stop ID
  await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
 });
 
+test('duplicate exact station rows sharing one area ID are one location, not ambiguous',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop2'},{id:'stop1'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1','stop2']});
+});
+
 test('departures are sorted by expected time and far-future times are excluded',async()=>{
  const late={...departure,trip:{trip_id:'late',start_date:'2026-11-10'},realtime:'2026-11-10T10:26:00'};
  const early={...departure,trip:{trip_id:'early',start_date:'2026-11-10'},realtime:'2026-11-10T10:03:00'};
