@@ -54,7 +54,18 @@ export async function POST(request){
    sv:{not_configured:'Realtidsanslutningen är inte konfigurerad.',no_verified_departures:'Inga verifierade avgångar hittades för denna sträcka.',provider_error:'Anropet till trafikleverantören misslyckades.',provider_authorization:'Trafikleverantören nekade serverns behörighet.',provider_rate_limited:'Trafikleverantörens anropsgräns har nåtts.',provider_http_error:'Trafikleverantören returnerade ett HTTP-fel.',provider_network_or_timeout:'Trafikleverantörens nätverksanrop misslyckades eller tog för lång tid.',stop_resolution:'Hållplatserna kunde inte identifieras säkert.',board_unavailable:'Ingen aktuell avgångstavla fanns tillgänglig.',no_eligible_departures:'Inga användbara realtidsavgångar fanns på avgångstavlan.',route_not_verified:'Tågens färdväg till destinationen kunde inte verifieras.'},
    es:{not_configured:'La conexión en tiempo real no está configurada.',no_verified_departures:'No se encontraron salidas verificadas para esta ruta.',provider_error:'Falló la solicitud al proveedor de transporte.',stop_resolution:'No se pudieron identificar las paradas con seguridad.',board_unavailable:'No había un tablero de salidas actualizado.',no_eligible_departures:'No había trenes en tiempo real aptos.',route_not_verified:'No se pudo verificar el trayecto hasta el destino.'}
   };
-  const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||diagnosticLabels.en[liveDiagnostic]||'';
+  const genericDiagnostic={
+   es:'No se pudo verificar la información en tiempo real del proveedor.',
+   fr:'Les informations en temps réel du fournisseur n’ont pas pu être vérifiées.',
+   hi:'प्रदाता से वास्तविक समय की जानकारी सत्यापित नहीं की जा सकी।',
+   'zh-CN':'无法验证交通服务商的实时信息。',
+   ru:'Не удалось проверить данные перевозчика в реальном времени.',
+   ar:'تعذر التحقق من معلومات مزود النقل في الوقت الفعلي.',
+   el:'Δεν ήταν δυνατή η επαλήθευση των δεδομένων πραγματικού χρόνου του παρόχου.',
+   tr:'Sağlayıcının gerçek zamanlı bilgileri doğrulanamadı.',
+   fa:'اطلاعات لحظه‌ای ارائه‌دهنده قابل تأیید نبود.'
+  };
+  const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||genericDiagnostic[b.language]||diagnosticLabels.en[liveDiagnostic]||'';
   const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Προσδιορίστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Lütfen kalkış istasyonunu, varış noktasını ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.'};
   return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language):COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
  }
