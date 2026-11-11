@@ -49,6 +49,12 @@ test('factory blocks internal, loopback and private source addresses',()=>{
  }
  assert.doesNotThrow(()=>validateVueDefinition(definition));
 });
+test('factory rejects encoded loopback, IPv6 and metadata endpoints',()=>{
+ for(const host of ['0x7f000001','2130706433','0177.0.0.1','127.1','[::1]','[::ffff:127.0.0.1]','169.254.169.254','100.100.100.200','metadata.google.internal']){
+  assert.throws(()=>validateVueDefinition({...definition,sources:[['blocked','https://'+host+'/']]}),/public HTTPS/,host);
+ }
+ assert.doesNotThrow(()=>validateVueDefinition({...definition,sources:[['public','https://www.loc.gov/']]}));
+});
 test('factory never writes, registers, deploys or calls an AI service',()=>{
  const a=scaffoldVue(definition);
  assert.ok(Object.keys(a.files).every(p=>p.startsWith('generated/')));
