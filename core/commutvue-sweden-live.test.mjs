@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createVerifiedSwedenAdapter,createTrafiklabStopResolver} from './commutvue-sweden-live.js';
+import {createVerifiedSwedenAdapter,createTrafiklabStopResolver,TrafiklabRequestError} from './commutvue-sweden-live.js';
 import {queryCommute} from './commutvue.js';
 const clock=()=>Date.parse('2026-11-10T08:59:00Z');
 const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},is_realtime:true,scheduled:'2026-11-10T09:59:00',realtime:'2026-11-10T10:06:00',route:{designation:'43',direction:'Stockholm City'},canceled:false};
@@ -225,4 +225,11 @@ test('unavailable live journeys expose only safe stage diagnostics',async()=>{
  assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'no_eligible_departures');
  const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
  assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
+});
+
+test('provider HTTP authorization and rate-limit failures are safely classified',async()=>{
+ for(const [status,category] of [[401,'authorization'],[403,'authorization'],[429,'rate_limited'],[500,'http_error']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>({ok:false,status})});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),e=>e instanceof TrafiklabRequestError&&e.category===category&&e.stage==='departure_board'&&!e.message.includes('fixture'));
+ }
 });
