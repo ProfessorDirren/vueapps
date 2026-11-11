@@ -139,9 +139,12 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   }
   const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
-  if(exact.length>1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
-  if(exact.length===1){
-   const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
+  // Duplicate rows for one station area are not different locations. Combine their
+  // child platforms; still reject exact-name matches across different area IDs.
+  const exactAreaIds=new Set(exact.map(s=>s.id));
+  if(exactAreaIds.size>1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
+  if(exactAreaIds.size===1){
+   const stopIds=[...new Set(exact.flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
    if(!stopIds.length)throw new TrafiklabRequestError('stop_lookup','missing_platform_ids');
    return {id:exact[0].id,stopIds};
   }
