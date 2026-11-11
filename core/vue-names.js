@@ -7,6 +7,13 @@ const names={
  ru:["Любая тема", "Животные", "Антиквариат", "Оружие", "Наследство", "Еда", "Дом", "Лекарства", "Транспорт", "Музыкальное оборудование", "Растения", "Случайное", "Винил", "Гардероб"],
  ar:["أي موضوع", "الحيوانات", "التحف", "الأسلحة", "التركة", "الطعام", "المنزل", "الأدوية", "المركبات", "المعدات الموسيقية", "النباتات", "العشوائي", "الفينيل", "خزانة الملابس"]
 };
+const additionalLanguages={
+ fr:['Tous les sujets','Animaux','Antiquités','Armes','Succession','Alimentation','Maison','Médicaments','Véhicules','Matériel musical','Plantes','Aléatoire','Vinyles','Garde-robe'],
+ el:['Κάθε θέμα','Ζώα','Αντίκες','Όπλα','Κληρονομιά','Τρόφιμα','Σπίτι','Φάρμακα','Οχήματα','Μουσικός εξοπλισμός','Φυτά','Τυχαία επιλογή','Βινύλια','Γκαρνταρόμπα'],
+ tr:['Her konu','Hayvanlar','Antikalar','Silahlar','Miras','Yiyecek','Ev','İlaçlar','Araçlar','Müzik ekipmanı','Bitkiler','Rastgele','Plaklar','Gardırop'],
+ fa:['هر موضوعی','حیوانات','عتیقه‌ها','سلاح‌ها','ارث','غذا','خانه','داروها','وسایل نقلیه','تجهیزات موسیقی','گیاهان','تصادفی','صفحات وینیل','کمد لباس']
+};
+Object.assign(names,additionalLanguages);
 const extraNames={
  commutvue:{en:'Commuting',sv:'Pendling',es:'Transporte público',hi:'सार्वजनिक परिवहन','zh-CN':'公共交通',ru:'Общественный транспорт',ar:'النقل العام',fr:'Transports en commun',el:'Δημόσιες συγκοινωνίες',tr:'Toplu taşıma',fa:'حمل‌ونقل عمومی'},
  martialartsvue:{en:'Martial arts',sv:'Kampsport',es:'Artes marciales',hi:'मार्शल आर्ट','zh-CN':'武术',ru:'Боевые искусства',ar:'الفنون القتالية',fr:'Arts martiaux',el:'Πολεμικές τέχνες',tr:'Dövüş sanatları',fa:'هنرهای رزمی'}
