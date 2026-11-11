@@ -285,3 +285,15 @@ test('same-name platforms within one meta-stop are retained without accepting di
  ]})})});
  assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617','1618']});
 });
+
+test('stop lookup safely distinguishes empty, missing, ambiguous and incomplete results',async()=>{
+ for(const [groups,category] of [
+  [[], 'empty_station_results'],
+  [[{id:'740000001',name:'Other',stops:[{id:'1',name:'Other'}]}]], 'station_not_found'],
+  [[{id:'740000001',name:'Jordbro',stops:[]}]], 'missing_platform_ids'],
+  [[{id:'740000001',name:'Jordbro',stops:[{id:'1',name:'Jordbro'}]},{id:'740000002',name:'Jordbro',stops:[{id:'2',name:'Jordbro'}]}]], 'ambiguous_station']
+ ]){
+  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===category&&!e.message.includes('fixture'));
+ }
+});
