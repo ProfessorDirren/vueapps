@@ -320,3 +320,22 @@ test('Jordbro stop lookup fails with explicit safe categories for unexpected pro
   await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===expected);
  }
 });
+
+test('official Trafiklab Stockholm meta-stop fixture resolves City child, not Centralstation',async()=>{
+ const urls=[];
+ const fetcher=async url=>{
+  urls.push(url);
+  const name=decodeURIComponent(new URL(url).pathname);
+  const payload=name.endsWith('/Stockholm City')?{stop_groups:[]}:
+   {stop_groups:[{id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
+    {id:'1',name:'Stockholm Centralstation'},
+    {id:'1617',name:'Stockholm City'},
+    {id:'12275',name:'T-Centralen'}
+   ]}]};
+  return {ok:true,text:async()=>JSON.stringify(payload)};
+ };
+ const resolved=await createTrafiklabStopResolver({apiKey:'fixture',fetcher})('Stockholm City');
+ assert.deepEqual(resolved,{id:'740098000',stopIds:['1617']});
+ assert.equal(urls.length,2);
+ assert.ok(urls.every(url=>new URL(url).hostname==='realtime-api.trafiklab.se'));
+});
