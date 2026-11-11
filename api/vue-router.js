@@ -33,6 +33,7 @@ export async function POST(request){
  if(route.domain==='commutvue'){
   const journey=parseCommuteQuestion(question);
   let live=null;
+  let liveAlerts=null;
   let liveDiagnostic='not_attempted';
   if(!journey.needsClarification&&journey.region==='stockholm'){
    if(process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED!=='true'||!process.env.TRAFIKLAB_API_KEY){
@@ -41,6 +42,7 @@ export async function POST(request){
     try{
      const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
+     if(raw.status==='ok')liveAlerts={sourceUrl:raw.sourceUrl,updatedAt:raw.updatedAt,alerts:raw.alerts||[]};
      liveDiagnostic=live?.status==='ok'?'verified':(['stop_resolution','board_unavailable','no_eligible_departures','route_not_verified'].includes(raw.reason)?raw.reason:'no_verified_departures');
     }catch(error){
      // Only publish a fixed, non-sensitive category; never expose upstream URLs or credentials.
@@ -50,7 +52,7 @@ export async function POST(request){
   }
   // All regions use the same fail-closed disruption contract. No connected alert
   // adapter means UNKNOWN, never an invented all-clear.
-  const disruptions=await queryDisruptions({provider:journey.region||'unknown',from:journey.from,to:journey.to});
+  const disruptions=await queryDisruptions({provider:journey.region||'unknown',from:journey.from,to:journey.to,adapter:liveAlerts?async()=>liveAlerts:undefined});
   const verified=live?.status==='ok';
   // Give users a safe, actionable category without exposing provider secrets or URLs.
   const diagnosticLabels={
