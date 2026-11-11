@@ -1,3 +1,6 @@
+import {createTrafiklabSwedenLive} from '../core/commutvue-sweden-live.js';
+import {queryCommute,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
+import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
 import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
@@ -25,6 +28,16 @@ export async function POST(request){
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
+ if(route.domain==='commutvue'){
+  const journey=parseCommuteQuestion(question);
+  let live=null;
+  if(!journey.needsClarification&&journey.region==='stockholm'&&process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED==='true'&&process.env.TRAFIKLAB_API_KEY){
+   try{live=await queryCommute({provider:'stockholm',from:journey.from,to:journey.to,adapter:createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})});}catch{live=null;}
+  }
+  const verified=live?.status==='ok';
+  const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.'};
+  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?live.departures.map(d=>d.line+' '+d.destination+': '+(d.delayMinutes===null?'?':d.delayMinutes+' min')).join('\\n'):COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+ }
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);
