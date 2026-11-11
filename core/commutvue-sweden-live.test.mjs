@@ -215,3 +215,14 @@ test('identical child stops are never treated as a valid journey',async()=>{
  const result=await queryCommute({provider:'stockholm',from:'Origin',to:'Origin',adapter});
  assert.equal(result.status,'unavailable');
 });
+
+test('unavailable live journeys expose only safe stage diagnostics',async()=>{
+ const noStops=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async()=>({id:'740000001',stopIds:['stop1']}),fetcher:async()=>{throw Error('unexpected fetch')}});
+ assert.equal((await noStops({provider:'stockholm',from:'A',to:'A'})).reason,'stop_resolution');
+ const noBoard=make({...board,timestamp:'2026-11-10T09:50:00'});
+ assert.equal((await noBoard({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'board_unavailable');
+ const noEligible=make({...board,departures:[{...departure,is_realtime:false}]});
+ assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'no_eligible_departures');
+ const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
+ assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
+});
