@@ -95,8 +95,8 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Invalid stop name');
   const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
   url.searchParams.set('key',apiKey);
-  const response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
-  if(!response.ok)throw Error('Stop lookup unavailable');
+  let response;try{response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
+  if(!response.ok)throw new TrafiklabRequestError('stop_lookup',response.status===401||response.status===403?'authorization':response.status===429?'rate_limited':'http_error');
   if(Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
   const body=await response.text();
   if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
