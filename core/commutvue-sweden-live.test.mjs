@@ -309,3 +309,14 @@ test('only alerts on verified departures are exposed; invalid routes never leak 
  assert.equal(unverified.status,'unavailable');
  assert.equal(unverified.alerts,undefined);
 });
+
+test('Jordbro stop lookup fails with explicit safe categories for unexpected provider payloads',async()=>{
+ for(const [payload,expected] of [
+  [{stop_groups:[]},'empty_station_results'],
+  [{stop_groups:[{id:'740000001',name:'Different stop',stops:[{id:'stop1'}]}]},'station_not_found'],
+  [{stop_groups:[{id:'740000001',name:'Jordbro',stops:[]}]},'missing_platform_ids']
+ ]){
+  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify(payload)})});
+  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===expected);
+ }
+});
