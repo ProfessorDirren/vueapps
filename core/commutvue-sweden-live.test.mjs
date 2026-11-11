@@ -28,6 +28,17 @@ test('wrong route order, absent realtime or stale provider evidence never claims
  }
 });
 
+test('malformed or ambiguous stop lookup yields safe diagnostic category',async()=>{
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async()=>{throw new Error('provider secret internal data');},fetcher:async()=>{throw Error('must not fetch departures');}});
+ await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>{
+  assert.equal(error.name,'TrafiklabRequestError');
+  assert.equal(error.stage,'stop_lookup');
+  assert.equal(error.category,'invalid_stop_data');
+  assert.doesNotMatch(error.message,/provider secret internal data/);
+  return true;
+ });
+});
+
 test('network errors and oversized payloads fail closed',async()=>{
  const failing=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>{throw Error('offline')}});
  assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:failing})).status,'unavailable');
