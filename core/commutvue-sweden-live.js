@@ -105,7 +105,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // Trafiklab publishes Stockholm City as a child of the Stockholm meta-stop.
   // If the direct child-name lookup omits that parent, request the documented parent
   // and still require an exact child-name match. Never accept a fuzzy station match.
-  if(!groups.length&&['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
+  if(!groups.some(g=>g.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')||(g.stops||[]).some(s=>s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')))&&['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
    const parentUrl=new URL('stops/name/Stockholm',ROOT);parentUrl.searchParams.set('key',apiKey);
    let parentResponse;try{parentResponse=await fetcher(parentUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
    if(!parentResponse.ok)throw new TrafiklabRequestError('stop_lookup',parentResponse.status===401||parentResponse.status===403?'authorization':parentResponse.status===429?'rate_limited':'http_error');
