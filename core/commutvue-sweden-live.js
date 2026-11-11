@@ -67,7 +67,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const ids=[];const seen=new Set();let tripRequests=0;
+  const departures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
@@ -88,6 +88,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
+   // Only attach messages to a trip whose route to the requested destination was verified.
+   // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
+   for(const [index,alert] of (Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
+    if(typeof alert?.title!=='string'||!alert.title.trim())continue;
+    const title=alert.title.trim().slice(0,240),description=typeof alert.text==='string'?alert.text.slice(0,1200):'';
+    const key=title+'|'+description;
+    if(alertKeys.has(key))continue;
+    alertKeys.add(key);
+    alerts.push({id:'trafiklab-'+id+'-'+index,title,description,type:'disruption',status:'active',affectedLines:[line]});
+   }
    departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
    ids.push(id);
   }
@@ -95,7 +105,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
   // Evidence IDs must follow the same order as the departures presented to callers.
   ids.splice(0,ids.length,...departures.map(d=>d.id));
-  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin+'|'+originStops.join(','),destinationId:destination+'|'+destinationStops.join(','),departureIds:ids},departures};
+  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin+'|'+originStops.join(','),destinationId:destination+'|'+destinationStops.join(','),departureIds:ids},departures,alerts:alerts.slice(0,100)};
  };
 }
 
