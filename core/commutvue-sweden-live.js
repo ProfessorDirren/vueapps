@@ -45,7 +45,15 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  }
  return async({provider,from,to})=>{
   if(provider!=='stockholm')throw Error('Unexpected region');
-  const [originResult,destinationResult]=await Promise.all([resolveStop(from),resolveStop(to)]);
+  let originResult,destinationResult;
+  try{
+   [originResult,destinationResult]=await Promise.all([resolveStop(from),resolveStop(to)]);
+  }catch(error){
+   // Preserve known provider/network categories, but distinguish malformed or ambiguous
+   // stop data from an unknown failure without returning raw upstream details.
+   if(error instanceof TrafiklabRequestError)throw error;
+   throw new TrafiklabRequestError('stop_lookup','invalid_stop_data');
+  }
   const origin=typeof originResult==='string'?originResult:originResult?.id;
   const destination=typeof destinationResult==='string'?destinationResult:destinationResult?.id;
   const originStops=Array.isArray(originResult?.stopIds)?originResult.stopIds:[];
