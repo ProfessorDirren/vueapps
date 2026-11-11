@@ -69,3 +69,8 @@ test('actual Swedish next-train phrasing extracts Stockholm stations',()=>{
  const q=parseCommuteQuestion('När går nästa tåg från Jordbro till Stockholm City?');
  assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
 });
+
+test('Jordbro question with a second disruption sentence preserves both station endpoints',()=>{
+ const q=parseCommuteQuestion('När går nästa pendeltåg från Jordbro till Stockholm City? Finns det några trafikstörningar?');
+ assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+});
