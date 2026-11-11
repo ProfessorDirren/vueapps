@@ -266,7 +266,7 @@ const martialTranslations={
 };
 const mediTranslations={"fr":"Consultez les notices publiques des médicaments. Distinguez la fréquence des effets indésirables des alertes urgentes.","el":"Διαβάστε δημόσια φύλλα οδηγιών φαρμάκων. Ξεχωρίστε τη συχνότητα παρενεργειών από τις επείγουσες προειδοποιήσεις.","tr":"Halka açık ilaç prospektüslerini inceleyin. Yan etki sıklığını acil uyarılardan ayırın.","fa":"برگه‌های راهنمای عمومی دارو را بررسی کنید. فراوانی عوارض را از هشدارهای فوری جدا کنید.","en": "Read public medication leaflets. Separate side-effect frequency from explicit urgent warnings.", "sv": "Granska offentliga bipacksedlar. Skilj biverkningsfrekvens från uttryckliga akuta varningar.", "es": "Revisa prospectos públicos. Distingue frecuencia de efectos adversos y avisos urgentes.", "hi": "सार्वजनिक दवा पर्चे जाँचें। दुष्प्रभाव की आवृत्ति और स्पष्ट आपात चेतावनी अलग देखें।", "zh-CN": "审查公开药品说明书，区分副作用发生频率和明确紧急警告。", "ru": "Читайте публичные инструкции. Отделяйте частоту побочных эффектов от срочных предупреждений.", "ar": "راجع نشرات الأدوية العامة وافصل تكرار الآثار الجانبية عن التحذيرات العاجلة."};
 const foodReviewTranslations={"fr":"Adaptez les recettes et examinez les ingrédients, les additifs E et les risques documentés.","el":"Προσαρμόστε συνταγές και ελέγξτε συστατικά, αριθμούς E και τεκμηριωμένους κινδύνους.","tr":"Tarifleri ölçekleyin; içerikleri, E numaralarını ve kaynaklı risk bilgilerini inceleyin.","fa":"مقدار دستور غذا را تنظیم کنید و مواد، شماره‌های E و خطرات مستند را بررسی کنید.","en": "Scale recipes and review ingredient labels, E numbers and source-supported risk information.", "sv": "Skala recept och granska ingredienser, E-nummer och källbelagd riskinformation.", "es": "Ajusta recetas y revisa ingredientes, números E y riesgos con fuentes.", "hi": "रेसिपी मात्रा बदलें और सामग्री, E नंबर तथा स्रोत आधारित जोखिम जाँचें।", "zh-CN": "调整食谱并审查配料、E编号与有来源的风险信息。", "ru": "Пересчитывайте рецепты, проверяйте ингредиенты, E-номера и данные о рисках.", "ar": "عدل الوصفات وراجع المكونات وأرقام E والمخاطر المدعومة بالمصادر."};
-function setLanguage(lang){
+function setLanguage(lang,{automatic=false}={}){
  renderVueNames(document,lang);
  ["estatevue","wardrobevue"].forEach((id,i)=>document.querySelector("#app-"+id+" p").textContent=(possessionsTranslations[lang]||possessionsTranslations.en)[i]);
  localizeLanguagePicker(picker,lang);
@@ -298,7 +298,7 @@ function setLanguage(lang){
  document.querySelector("#app-medivue p").textContent=mediTranslations[lang]||mediTranslations.en;
  document.querySelector("#app-foodvue p").textContent=foodReviewTranslations[lang]||foodReviewTranslations.en;
  picker.value=lang;
- document.dispatchEvent(new CustomEvent("vueapps:languagechange",{detail:{language:lang}}));
+ document.dispatchEvent(new CustomEvent("vueapps:languagechange",{detail:{language:lang,automatic}}));
 
 }
 // English for first-time visitors; preserve only an explicitly selected language across VUE pages.
@@ -319,11 +319,12 @@ document.addEventListener("click",event=>{
  location.assign("./?vue="+encodeURIComponent(domain)+"#vue-router");
 });
 const VUE_LANGUAGE_KEY="vue-language";
+const VUE_AUTO_LANGUAGE_KEY="vue-auto-language";
 const supportedLanguages=new Set([...picker.options].map(option=>option.value));
 let initialLanguage="en";
-try{const saved=sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
+try{const saved=sessionStorage.getItem(VUE_AUTO_LANGUAGE_KEY)||sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
 setLanguage(initialLanguage);
-picker.addEventListener("change",event=>{setLanguage(picker.value);if(event.detail?.automatic)return;try{sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
+picker.addEventListener("change",event=>{setLanguage(picker.value,{automatic:event.detail?.automatic===true});try{if(event.detail?.automatic){sessionStorage.setItem(VUE_AUTO_LANGUAGE_KEY,picker.value);return}sessionStorage.removeItem(VUE_AUTO_LANGUAGE_KEY);sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
 </script>
 </body>
 </html>
