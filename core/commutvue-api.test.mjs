@@ -113,6 +113,30 @@ test('COMMUTVUE POST reports Trafiklab rate limits without inventing departures 
  }
 });
 
+test('COMMUTVUE provider failures use localized diagnostics in all 11 languages',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.TRAFIKLAB_API_KEY='private-locale-fixture';
+  process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='true';
+  globalThis.fetch=async()=>({ok:false,status:429});
+  const languages=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa'];
+  for(const language of languages){
+   const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går nästa tåg från Jordbro till Stockholm City?',language})});
+   const response=await POST(request),body=await response.json();
+   assert.equal(body.domain,'commutvue',language);
+   assert.equal(body.live_diagnostic,'provider_rate_limited',language);
+   assert.equal(body.verified,false,language);
+   assert.deepEqual(body.departures,[],language);
+   if(language!=='en')assert.doesNotMatch(body.answer,/The traffic provider rate limit was reached/,language);
+   assert.doesNotMatch(JSON.stringify(body),/private-locale-fixture/);
+  }
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ }
+});
+
 test('ordinary Swedish next-train question routes to COMMUTVUE without prior context',()=>{
  assert.equal(routeQuestion('När går nästa tåg från Jordbro till Stockholm City?').domain,'commutvue');
 });
