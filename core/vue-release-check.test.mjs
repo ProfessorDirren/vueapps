@@ -24,6 +24,7 @@ test('entire registered VUE fleet passes the shared offline contract without Ver
 
 test('all explicitly routed VUEs have a deterministic real-user smoke question',async()=>{
  const {ROUTED_SPECIALIST_IDS}=await import('./router.js');
+ const {SPECIALISTS}=await import('./specialists.js');
  const questions={
   commutvue:'När går nästa pendeltåg?',martialartsvue:'Hur tränar jag karate?',
   estatevue:'Hur inventerar jag ett dödsbo?',medivue:'Vilka biverkningar har medicin?',
@@ -35,6 +36,8 @@ test('all explicitly routed VUEs have a deterministic real-user smoke question',
   slumpvue:'Överraska mig'
  };
  assert.deepEqual([...ROUTED_SPECIALIST_IDS].sort(),Object.keys(questions).sort());
+ const untested=Object.keys(SPECIALISTS).filter(id=>id!=='anyvue'&&!ROUTED_SPECIALIST_IDS.includes(id));
+ assert.deepEqual(untested,[], 'Every new specialist must add an explicit routing rule and smoke question');
  for(const id of ROUTED_SPECIALIST_IDS){
   assert.deepEqual(preflightVue(id,questions[id]),{ok:true,problems:[]},id);
  }
