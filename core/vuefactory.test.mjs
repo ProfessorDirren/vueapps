@@ -2,7 +2,7 @@ import test from 'node:test';
 import {mkdtemp,readFile,readdir,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry,createFactoryTestApi,buildVueCoreIntegrationProposal} from './vuefactory.js';
 const definition={
@@ -91,7 +91,8 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   const originalProfile=await readFile(profilePath,'utf8');
   assert.ok(originalProfile.includes('https://www.loc.gov/'));
   await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','http://www.loc.gov/'));
-  assert.throws(()=>execFileSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000,stdio:'pipe'}),/Command failed/);
+  const tampered=spawnSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000,encoding:'utf8'});
+  assert.notEqual(tampered.status,0,'Tampered source unexpectedly passed: '+tampered.stdout+' '+tampered.stderr);
   await writeFile(profilePath,originalProfile);
   execFileSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000});
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
