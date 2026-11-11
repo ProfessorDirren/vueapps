@@ -128,10 +128,10 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   }
   const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
-  if(exact.length>1)throw Error('Stop not uniquely identified');
+  if(exact.length>1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
   if(exact.length===1){
    const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
-   if(!stopIds.length)throw Error('No verified child stop ids');
+   if(!stopIds.length)throw new TrafiklabRequestError('stop_lookup','missing_platform_ids');
    return {id:exact[0].id,stopIds};
   }
   // Stockholm City can be a named child of the Stockholm meta-stop in Trafiklab.
@@ -139,7 +139,8 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
   // Several platforms with the same exact name are valid only within one meta-stop.
   const parents=new Set(children.map(child=>child.id));
-  if(parents.size!==1||!children.length)throw Error('Stop not uniquely identified');
+  if(!children.length)throw new TrafiklabRequestError('stop_lookup',groups.length?'station_not_found':'empty_station_results');
+  if(parents.size!==1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
   return {id:children[0].id,stopIds:[...new Set(children.flatMap(child=>child.stopIds))]};
  };
 }
