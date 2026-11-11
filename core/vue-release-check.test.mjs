@@ -21,3 +21,21 @@ test('entire registered VUE fleet passes the shared offline contract without Ver
   assert.deepEqual(preflightVue(id,null),{ok:true,problems:[]},id);
  }
 });
+
+test('all explicitly routed VUEs have a deterministic real-user smoke question',async()=>{
+ const {ROUTED_SPECIALIST_IDS}=await import('./router.js');
+ const questions={
+  commutvue:'När går nästa pendeltåg?',martialartsvue:'Hur tränar jag karate?',
+  estatevue:'Hur inventerar jag ett dödsbo?',medivue:'Vilka biverkningar har medicin?',
+  vinylvue:'Vilken vinylpressning är detta?',musicgearvue:'Vilken Marshall förstärkare är detta?',
+  wardrobevue:'Hur bedömer jag min klänning?',anivue:'Min hund är sjuk',
+  motovue:'Motorcykel startar inte',foodvue:'Vad betyder E-nummer?',
+  plantvue:'Hur vattnar jag min krukväxt?',antiqvue:'Är denna antika byrå äkta?',
+  armvue:'Hur dokumenterar jag vapenvård?',homevue:'Hur byter jag luftfilter?',
+  slumpvue:'Överraska mig'
+ };
+ assert.deepEqual([...ROUTED_SPECIALIST_IDS].sort(),Object.keys(questions).sort());
+ for(const id of ROUTED_SPECIALIST_IDS){
+  assert.deepEqual(preflightVue(id,questions[id]),{ok:true,problems:[]},id);
+ }
+});
