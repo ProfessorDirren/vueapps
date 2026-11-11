@@ -28,15 +28,20 @@ test('wrong route order, absent realtime or stale provider evidence never claims
  }
 });
 
-test('malformed or ambiguous stop lookup yields safe diagnostic category',async()=>{
- const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async()=>{throw new Error('provider secret internal data');},fetcher:async()=>{throw Error('must not fetch departures');}});
- await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>{
-  assert.equal(error.name,'TrafiklabRequestError');
-  assert.equal(error.stage,'stop_lookup');
-  assert.equal(error.category,'invalid_stop_data');
-  assert.doesNotMatch(error.message,/provider secret internal data/);
-  return true;
- });
+test('invalid origin and destination stop data have distinct safe diagnostics',async()=>{
+ for(const [badName,expected] of [['Jordbro','invalid_origin_stop_data'],['Stockholm City','invalid_destination_stop_data']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async name=>{
+   if(name===badName)throw new Error('secret upstream response');
+   return {id:'740000001',stopIds:['stop1']};
+  },fetcher:async()=>{throw Error('No departure request expected')}});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>{
+   assert.equal(error.name,'TrafiklabRequestError');
+   assert.equal(error.stage,'stop_lookup');
+   assert.equal(error.category,expected);
+   assert.doesNotMatch(error.message,/secret upstream response/);
+   return true;
+  });
+ }
 });
 
 test('network errors and oversized payloads fail closed',async()=>{
