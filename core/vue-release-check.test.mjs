@@ -14,3 +14,10 @@ test('one-command gate fails closed on missing or incorrectly routed specialists
  assert.match(mismatch.problems.join(' '),/Routing mismatch/);
  assert.equal(preflightVue('anivue','').ok,false);
 });
+
+test('entire registered VUE fleet passes the shared offline contract without Vercel',async()=>{
+ const {SPECIALISTS}=await import('./specialists.js');
+ for(const id of Object.keys(SPECIALISTS)){
+  assert.deepEqual(preflightVue(id,null),{ok:true,problems:[]},id);
+ }
+});
