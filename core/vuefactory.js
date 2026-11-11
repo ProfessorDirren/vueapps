@@ -291,7 +291,7 @@ export function scaffoldVue(input){
   "import test from 'node:test';",
   "import assert from 'node:assert/strict';",
   "import {profile,labels} from './profile.js';",
-  "import {isPublicSourceHost} from '../../core/vuefactory.js';",
+  "const isPublicSourceHost="+isPublicSourceHost.toString()+";",
   "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
   "test('generated '+d.id+' profile and language contract',()=>{",
   " assert.ok(profile.scope.length>=12);",
