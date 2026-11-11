@@ -182,3 +182,18 @@ test('ambiguous autumn clock-change timestamps cannot be represented as verified
  });
  assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
 });
+
+test('Stockholm City resolves as an exact child of Stockholm meta-stop',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1',name:'Stockholm Centralstation'},{id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ await assert.rejects(resolver('Stockholm C'),/uniquely/);
+});
+test('ambiguous matching child stop names fail closed',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]},
+  {id:'740098001',name:'Another Group',stops:[{id:'9999',name:'Stockholm City'}]}
+ ]})})});
+ await assert.rejects(resolver('Stockholm City'),/uniquely/);
+});
