@@ -284,6 +284,16 @@ export function scaffoldVue(input){
   " assert.ok(profile.scope.length>=12);",
   " assert.ok(profile.method.length>=80);",
   " for(const language of languages)assert.ok(typeof labels[language]==='string'&&labels[language].trim(),language);",
+  " assert.ok(Object.isFrozen(profile)&&Object.isFrozen(labels),'immutable generated exports');",
+  "});",
+  "test('generated '+d.id+' sources must use public HTTPS without credentials',()=>{",
+  " for(const source of profile.sources||[]){",
+  "  assert.ok(Array.isArray(source)&&source.length===2,'source tuple');",
+  "  const url=new URL(source[1]);",
+  "  assert.equal(url.protocol,'https:');",
+  "  assert.equal(url.username,'');",
+  "  assert.equal(url.password,'');",
+  " }",
   "});",
   ""
  ].join('\n');
