@@ -280,6 +280,7 @@ export function scaffoldVue(input){
   +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\n';
  const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\n'
   +'// '+d.id+': define specific patterns and priority; do not auto-route generic terms.\n';
+ const testRequirements={specialist:d.id,gate:'npm run vue:check -- --all',required:['registry','routing-smoke','all-language-labels','domain-safety','api-contract','cross-vue-regression','preview-browser-smoke'],previewRequired:true,productionApproved:false,vercelBuildsDuringDevelopment:0};
  const checklist=[
   '# '+d.id.toUpperCase()+' — release checklist','',
   '- [ ] Review specialist scope, method, emergency/safety boundaries and sources.',
@@ -292,5 +293,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,['generated/'+d.id+'/test-requirements.json']:JSON.stringify(testRequirements,null,2)+'\n',...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
 }
