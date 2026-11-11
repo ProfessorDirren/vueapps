@@ -97,11 +97,20 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const body=await response.text();
   if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
   const payload=JSON.parse(body);
-  const exact=(payload.stop_groups||[]).filter(s=>area(s.id)&&s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'));
-  if(exact.length!==1)throw Error('Stop not uniquely identified');
-  const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
-  if(!stopIds.length)throw Error('No verified child stop ids');
-  return {id:exact[0].id,stopIds};
+  const groups=Array.isArray(payload.stop_groups)?payload.stop_groups:[];
+  const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
+  const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
+  if(exact.length>1)throw Error('Stop not uniquely identified');
+  if(exact.length===1){
+   const stopIds=(exact[0].stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0);
+   if(!stopIds.length)throw Error('No verified child stop ids');
+   return {id:exact[0].id,stopIds};
+  }
+  // Stockholm City can be a named child of the Stockholm meta-stop in Trafiklab.
+  // Match exactly one child across all groups; never guess from partial names.
+  const children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
+  if(children.length!==1)throw Error('Stop not uniquely identified');
+  return children[0];
  };
 }
 /** Fully configured Sweden adapter using one server-only Trafiklab key. */
