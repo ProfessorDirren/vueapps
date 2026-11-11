@@ -37,3 +37,8 @@ test('mixed Latin text with stray non-Latin characters cannot trigger script lan
   assert.notEqual(detect('Min hund är sjuk '+fragment),'ru');
  }
 });
+
+test('Swedish commuter question selects Swedish rather than keeping English UI',()=>{
+ assert.equal(detect('När går nästa pendeltåg från Jordbro till Stockholm City? Finns det några trafikstörningar?'),'sv');
+ assert.equal(detect('När går nästa pendeltåg från Jordbro till Stockholm City?'),'sv');
+});
