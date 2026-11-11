@@ -137,8 +137,10 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // Stockholm City can be a named child of the Stockholm meta-stop in Trafiklab.
   // Match exactly one child across all groups; never guess from partial names.
   const children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
-  if(children.length!==1)throw Error('Stop not uniquely identified');
-  return children[0];
+  // Several platforms with the same exact name are valid only within one meta-stop.
+  const parents=new Set(children.map(child=>child.id));
+  if(parents.size!==1||!children.length)throw Error('Stop not uniquely identified');
+  return {id:children[0].id,stopIds:[...new Set(children.flatMap(child=>child.stopIds))]};
  };
 }
 /** Fully configured Sweden adapter using one server-only Trafiklab key. */
