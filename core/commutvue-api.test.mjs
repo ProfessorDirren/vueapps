@@ -39,3 +39,26 @@ test('COMMUTVUE missing-station prompts honor all 11 supported languages',async(
   assert.ok(data.answer.includes(word),language);
  }
 });
+
+test('COMMUTVUE never claims verified live data when provider credentials are absent',async()=>{
+ const previousFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ const previousKey=process.env.TRAFIKLAB_API_KEY;
+ try{
+  delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+  delete process.env.TRAFIKLAB_API_KEY;
+  for(const language of ['en','sv','es']){
+   const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till T-Centralen försenade?',language})});
+   const response=await POST(request);
+   assert.equal(response.status,200);
+   const data=await response.json();
+   assert.equal(data.domain,'commutvue');
+   assert.equal(data.verified,false);
+   assert.equal(data.evidence_status,'live_unavailable');
+   assert.equal(data.source_url,null);
+   assert.deepEqual(data.departures,[]);
+  }
+ }finally{
+  if(previousFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=previousFlag;
+  if(previousKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=previousKey;
+ }
+});
