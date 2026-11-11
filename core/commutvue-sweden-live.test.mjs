@@ -353,7 +353,7 @@ test('scheduled-only pendeltag is never falsely presented as live realtime',asyn
  const scheduledOnly={...board,departures:[{...departure,is_realtime:false,realtime:departure.scheduled}]};
  const raw=await make(scheduledOnly)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
  assert.equal(raw.status,'unavailable');
- assert.equal(raw.reason,'no_eligible_departures');
+ assert.equal(raw.reason,'scheduled_only');
  assert.deepEqual(raw.departures,[]);
  const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(scheduledOnly)});
  assert.equal(normalized.status,'unavailable');
