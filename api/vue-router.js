@@ -53,6 +53,10 @@ export async function POST(request){
   // All regions use the same fail-closed disruption contract. No connected alert
   // adapter means UNKNOWN, never an invented all-clear.
   const disruptions=await queryDisruptions({provider:journey.region||'unknown',from:journey.from,to:journey.to,adapter:liveAlerts?async()=>liveAlerts:undefined});
+  const disruptionLines=disruptions.status==='verified'&&disruptions.alerts.length
+   ?disruptions.alerts.filter(a=>a.status==='active'||a.status==='upcoming').slice(0,5).map(a=>'⚠ '+a.title+(a.description?' — '+a.description:'')).join('\n')
+   :'';
+  const disruptionText=disruptionLines?'\n'+disruptionLines:'';
   const verified=live?.status==='ok';
   // Give users a safe, actionable category without exposing provider secrets or URLs.
   const diagnosticLabels={
@@ -73,7 +77,7 @@ export async function POST(request){
   };
   const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||genericDiagnostic[b.language]||diagnosticLabels.en[liveDiagnostic]||'';
   const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Προσδιορίστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Lütfen kalkış istasyonunu, varış noktasını ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.'};
-  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language):COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
  }
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
