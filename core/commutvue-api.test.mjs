@@ -24,3 +24,18 @@ test('COMMUTVUE asks for missing stations in the requested language',async()=>{
  assert.equal(data.evidence_status,'needs_stations');
  assert.match(data.answer,/gare de départ/);
 });
+
+test('COMMUTVUE missing-station prompts honor all 11 supported languages',async()=>{
+ const expected={en:'Please specify',es:'Indica',sv:'Ange',hi:'कृपया', 'zh-CN':'请提供',ru:'Укажите',ar:'يرجى',fr:'Indiquez',el:'Προσδιορίστε',tr:'Lütfen',fa:'لطفاً'};
+ for(const [language,word] of Object.entries(expected)){
+  const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'RER B delayed?',language})});
+  const response=await POST(request);
+  assert.equal(response.status,200,language);
+  const data=await response.json();
+  assert.equal(data.domain,'commutvue',language);
+  assert.equal(data.clarify,true,language);
+  assert.equal(data.verified,false,language);
+  assert.equal(data.evidence_status,'needs_stations',language);
+  assert.ok(data.answer.includes(word),language);
+ }
+});
