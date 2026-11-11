@@ -99,6 +99,9 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','http://www.loc.gov/'));
   const tampered=runContract();
   assert.notEqual(tampered.status,0,'Tampered source unexpectedly passed: '+tampered.stdout+' '+tampered.stderr);
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','https://127.0.0.1/'));
+  const privateHost=runContract();
+  assert.notEqual(privateHost.status,0,'Private source unexpectedly passed: '+privateHost.stdout+' '+privateHost.stderr);
   await writeFile(profilePath,originalProfile);
   const restored=runContract();
   assert.equal(restored.status,0,'Restored contract failed: '+restored.stdout+' '+restored.stderr);
