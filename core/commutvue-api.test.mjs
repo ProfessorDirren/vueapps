@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {POST} from '../api/vue-router.js';
+import {routeQuestion} from './router.js';
 test('COMMUTVUE does not generate invented live train delays',async()=>{
  const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till T-Centralen försenade?',language:'sv'})});
  const response=await POST(request);
@@ -85,4 +86,8 @@ test('COMMUTVUE POST classifies mocked Trafiklab authorization failures without 
   if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
   if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
  }
+});
+
+test('ordinary Swedish next-train question routes to COMMUTVUE without prior context',()=>{
+ assert.equal(routeQuestion('När går nästa tåg från Jordbro till Stockholm City?').domain,'commutvue');
 });
