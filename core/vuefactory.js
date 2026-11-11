@@ -275,6 +275,19 @@ export function scaffoldVue(input){
   deploy:{automatic:false,approved:false}
  };
  const integrationFile=JSON.stringify(integration,null,2)+'\n';
+ const generatedContractTest=[
+  "import test from 'node:test';",
+  "import assert from 'node:assert/strict';",
+  "import {profile,labels} from './profile.js';",
+  "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
+  "test('generated '+d.id+' profile and language contract',()=>{",
+  " assert.ok(profile.scope.length>=12);",
+  " assert.ok(profile.method.length>=80);",
+  " for(const language of languages)assert.ok(typeof labels[language]==='string'&&labels[language].trim(),language);",
+  "});",
+  ""
+ ].join('\\n');
+
  const changeProposal=JSON.stringify(buildVueCoreIntegrationProposal(input),null,2)+'\n';
  const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\n'
   +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\n';
@@ -293,5 +306,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,['generated/'+d.id+'/test-requirements.json']:JSON.stringify(testRequirements,null,2)+'\n',...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/contract.test.mjs']:generatedContractTest,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,['generated/'+d.id+'/test-requirements.json']:JSON.stringify(testRequirements,null,2)+'\n',...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
 }
