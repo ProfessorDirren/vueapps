@@ -43,6 +43,12 @@ test('factory rejects credentialed or insecure sources',()=>{
  assert.throws(()=>validateVueDefinition({...definition,sources:[['bad','http://example.org']]}),/HTTPS/);
  assert.throws(()=>validateVueDefinition({...definition,sources:[['bad','https://user:pass@example.org']]}),/HTTPS/);
 });
+test('factory blocks internal, loopback and private source addresses',()=>{
+ for(const host of ['localhost','app.local','server.internal','127.0.0.1','10.0.0.8','172.16.0.1','192.168.1.2','169.254.1.1','[::1]']){
+  assert.throws(()=>validateVueDefinition({...definition,sources:[['internal','https://'+host+'/']]}),/public HTTPS/,host);
+ }
+ assert.doesNotThrow(()=>validateVueDefinition(definition));
+});
 test('factory never writes, registers, deploys or calls an AI service',()=>{
  const a=scaffoldVue(definition);
  assert.ok(Object.keys(a.files).every(p=>p.startsWith('generated/')));
