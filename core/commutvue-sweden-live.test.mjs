@@ -278,3 +278,10 @@ test('Stockholm City fallback also handles unrelated nonempty direct lookup grou
  assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
  assert.equal(calls.length,2);
 });
+
+test('same-name platforms within one meta-stop are retained without accepting different meta-stops',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'},{id:'1618',name:'Stockholm City'},{id:'1617',name:'Stockholm City'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617','1618']});
+});
