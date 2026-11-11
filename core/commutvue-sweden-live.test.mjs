@@ -83,12 +83,12 @@ test('stop resolver accepts only a unique exact station group with child stop ID
  }});
  assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
  assert.equal(calls.length,1);
- await assert.rejects(resolver('Unknown'),/uniquely/);
+ await assert.rejects(resolver('Unknown'),e=>e instanceof TrafiklabRequestError&&e.category==='station_not_found');
  const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
   {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
   {id:'740000002',name:'Jordbro',stops:[{id:'stop2'}]}
  ]})})});
- await assert.rejects(ambiguous('Jordbro'),/uniquely/);
+ await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
 });
 
 test('departures are sorted by expected time and far-future times are excluded',async()=>{
