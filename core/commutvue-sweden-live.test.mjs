@@ -251,3 +251,14 @@ test('Stockholm City resolves through exact child of published Stockholm meta-st
  assert.equal(calls.length,2);
  assert.match(calls[1],/stops\/name\/Stockholm\?key=fixture/);
 });
+
+test('Stockholm City fallback also handles unrelated nonempty direct lookup groups',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  const parent=url.includes('/stops/name/Stockholm?');
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:parent?[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]}]:[{id:'740000001',name:'Stockholm Cityvägen',stops:[{id:'123',name:'Stockholm Cityvägen'}]}]})};
+ }});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.equal(calls.length,2);
+});
