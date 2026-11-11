@@ -240,3 +240,14 @@ test('stop lookup distinguishes unauthorized credentials from network failure',a
  const offline=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>{throw Error('secret upstream URL')}});
  await assert.rejects(offline('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category==='network_or_timeout'&&!e.message.includes('secret'));
 });
+
+test('Stockholm City resolves through exact child of published Stockholm meta-stop when direct lookup is empty',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  return {ok:true,text:async()=>JSON.stringify(url.includes('/stops/name/Stockholm?')?{stop_groups:[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}]}]}:{stop_groups:[]})};
+ }});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.equal(calls.length,2);
+ assert.match(calls[1],/stops\/name\/Stockholm\?key=fixture/);
+});
