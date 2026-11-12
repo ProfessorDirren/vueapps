@@ -35,7 +35,7 @@ test('new language specialist links stay inside VUECORE instead of opening untra
 
 test('direct ANYVUE visits preserve newer languages via VUECORE',()=>{
  const anyvue=readFileSync(new URL('../anyvue.html',import.meta.url),'utf8');
- for(const language of ['fr','el','tr','fa'])assert.ok(anyvue.includes("'"+language+"'"),language);
+ assert.ok(anyvue.includes("language && language!=='en'"));
  assert.ok(anyvue.includes("location.replace('./?vue=anyvue#vue-router')"));
  assert.ok(anyvue.includes("sessionStorage.getItem('vue-language')"));
 });
