@@ -471,3 +471,11 @@ test('verified scheduled train is shown without inventing realtime or delay',asy
  assert.equal(rejected.status,'unavailable');
  assert.deepEqual(rejected.departures,[]);
 });
+
+
+test('trip without the requested origin is rejected even if destination exists',async()=>{
+ const missingOrigin={...details,calls:[{stop:{id:'unrelated',area_id:'740000099'},is_realtime:true},details.calls[1]]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,missingOrigin)});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
+});
