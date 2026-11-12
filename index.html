@@ -288,7 +288,9 @@ function setLanguage(lang,{automatic=false}={}){
  function localizeVueLink(link){
   if(!link)return;
   // Keep the translated action verb, but never append duplicate localized names on language changes.
-  const current=link.textContent.replace(/(?:[^\s]+-VUE \()?([A-Z]+VUE)\)/g,'$1');
+  const current=link.id==='slump-link'||link.matches('.hero-link, #app-anivue a, #app-motovue a, #app-anyvue a, #app-martialartsvue a')
+   ? link.textContent
+   : (link.dataset.vueOriginalLabel ||= link.textContent);
   for(const domain of localizedLinkDomains){
    const brand=vueBrandName(domain);
    if(current.includes(brand)){
