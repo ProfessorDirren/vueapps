@@ -5,7 +5,7 @@ import { localizedVueName } from './vue-names.js';
 export class AniVueHelp extends VueHelp {
   getHelp(language='en') {
     const data=super.getHelp(language);
-    return {...data,direction:['ar','fa'].includes(data.language)?'rtl':'ltr',title:data.title.replaceAll('ANIVUE',localizedVueName('anivue',data.language))};
+    return {...data,title:data.title.replaceAll('ANIVUE',localizedVueName('anivue',data.language))};
   }
   constructor() {
     super({
