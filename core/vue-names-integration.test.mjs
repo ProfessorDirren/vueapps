@@ -6,7 +6,9 @@ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 test('portal and router share the VUECORE display-name renderer',()=>{
  const portal=read('../index.html');
  const router=read('../apps/router.js');
- assert.match(portal,/import \{renderVueNames\} from '\.\/core\/vue-names\.js'/);
+ assert.match(portal,/import \{renderVueNames,localizedVueName,vueBrandName\} from '\.\/core\/vue-names\.js'/);
+ assert.match(portal,/localizedVueName\(id,lang\)\+' \('\+vueBrandName\(id\)/);
+ assert.doesNotMatch(portal,/toolLinkVerbs\[lang\].*id\.toUpperCase\(\)/);
  assert.match(portal,/renderVueNames\(document,lang\)/);
  assert.match(router,/localizedVueName\(id,document\.documentElement\.lang\)\+' \('\+vueBrandName\(id\)/);
  assert.match(router,/vueTitle\(active\.domain\)/);
