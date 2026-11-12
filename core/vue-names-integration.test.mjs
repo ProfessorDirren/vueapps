@@ -29,3 +29,8 @@ test('non-English ANYVUE standalone sessions use central VUECORE instead of Engl
  assert.match(html,/language && language!=='en'/);
  assert.match(html,/location\.replace\('\.\/\?vue=anyvue#vue-router'\)/);
 });
+
+test('shared standalone tools use RTL for both Arabic and Persian',()=>{
+ const tools=read('../apps/tools.js');
+ assert.match(tools,/\['ar','fa'\]\.includes\(language\)\?'rtl':'ltr'/);
+});
