@@ -32,5 +32,5 @@ test('non-English ANYVUE standalone sessions use central VUECORE instead of Engl
 
 test('shared standalone tools use RTL for both Arabic and Persian',()=>{
  const tools=read('../apps/tools.js');
- assert.match(tools,/\['ar','fa'\]\.includes\(language\)\?'rtl':'ltr'/);
+ assert.match(tools,/document\.documentElement\.dir=languageDirection\(language\)/);
 });
