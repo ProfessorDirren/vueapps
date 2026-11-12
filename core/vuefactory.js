@@ -5,7 +5,7 @@
 import {obviousIdentifier} from './memory.js';
 import {LANGUAGES,validateLanguage} from './index.js';
 /** Legacy VUEFACTORY v1 minimum for existing definitions. New locales are owned by VUECORE. */
-export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
+export const FACTORY_LANGUAGES=Object.freeze(LANGUAGES.filter(language=>new Set(['en','es','sv','hi','zh-CN','ru','ar']).has(language)));
 export const FACTORY_SUPPORTED_LANGUAGES=LANGUAGES;
 /** All optional language fields must be recognized by the shared VUECORE policy. */
 function validateOptionalLocales(record,field){
@@ -37,7 +37,7 @@ export function validateVueDefinition(value){
  if(typeof id!=='string'||!ID_PATTERN.test(id))throw Error('id must be a lowercase specialist name ending in vue');
  if(typeof scope!=='string'||scope.trim().length<12||scope.length>240||forbidden.test(scope))throw Error('Invalid scope');
  if(typeof method!=='string'||method.trim().length<80||method.length>3000||forbidden.test(method))throw Error('Method needs at least 80 characters of reviewable specialist guidance');
- if(!labels||typeof labels!=='object'||Array.isArray(labels))throw Error('All seven language labels required');
+ if(!labels||typeof labels!=='object'||Array.isArray(labels))throw Error('All required legacy language labels must be supplied');
  for(const lang of FACTORY_LANGUAGES)if(typeof labels[lang]!=='string'||!labels[lang].trim()||labels[lang].length>90||forbidden.test(labels[lang]))throw Error('Missing/invalid label: '+lang);
  validateOptionalLocales(labels,'labels');
  if(!Array.isArray(sources)||sources.length>12)throw Error('Invalid sources');
