@@ -7,7 +7,7 @@
 // VUECORE owns all non-English ANYVUE interfaces until standalone UI and answers are localized.
 // Keep the selected language in the central router instead of showing an English-only page.
 try {
- const language=sessionStorage.getItem('vue-auto-language')||sessionStorage.getItem('vue-language');
+ const language=sessionStorage.getItem('vue-language')||sessionStorage.getItem('vue-auto-language');
  if(language && language!=='en')location.replace('./?vue=anyvue#vue-router');
 } catch {}
 </script>
