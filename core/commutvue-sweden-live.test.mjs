@@ -442,3 +442,15 @@ test('Trafiklab Trips documented call shape verifies exact destination area with
  assert.equal(blocked.status,'unavailable');
  assert.deepEqual(blocked.departures,[]);
 });
+
+
+test('missing provider direction is safe only after destination trip is verified',async()=>{
+ const withoutDirection={...departure,route:{designation:'43'}};
+ const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},details)});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.departures[0].destination,'Stockholm City');
+ const wrongTrip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000099'},is_realtime:true}]};
+ const rejected=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},wrongTrip)});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
