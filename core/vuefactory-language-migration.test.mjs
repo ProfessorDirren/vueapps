@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {LANGUAGES} from './index.js';
@@ -26,4 +27,11 @@ test('generated factory manifest and contract carry all supplied VUECORE locales
  assert.match(result.files['generated/testvue/contract.test.mjs'],/fr/);
  assert.match(result.files['generated/testvue/contract.test.mjs'],/fa/);
  assert.equal(manifest.deploy.automatic,false);
+});
+
+test('factory preview delegates locale availability to VUECORE and translated activation',()=>{
+ const source=readFileSync(new URL('./vuefactory.js',import.meta.url),'utf8');
+ assert.match(source,/FACTORY_SUPPORTED_LANGUAGES\.includes\(body\.language\)/);
+ assert.match(source,/Object\.hasOwn\(definition\.labels,language\)&&Object\.hasOwn\(activation\.questions,language\)/);
+ assert.doesNotMatch(source,/add-seven-localized-question-arrays/);
 });
