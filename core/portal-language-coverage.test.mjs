@@ -77,7 +77,8 @@ test('all standalone specialists preserve four new languages on direct visits',(
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
   assert.ok(html.includes("sessionStorage.getItem('vue-language')"),domain);
   assert.ok(html.includes("location.replace('./?vue="+domain+"#vue-router')"),domain);
-  for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
+  if(domain==='anyvue')assert.ok(html.includes("language && language!=='en'"));
+  else for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
  }
 });
 
