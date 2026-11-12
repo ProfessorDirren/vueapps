@@ -204,6 +204,7 @@
   <footer>&copy; 2026 VUEAPPS. All rights reserved.</footer>
 <script type="module">
 import {renderVueNames} from './core/vue-names.js';
+import {languageDirection} from './core/index.js';
 import {listSpecialistDefinitions} from './core/domain-registry.js';
 
 import {UI, DOMAINS, localizeLanguagePicker} from "./apps/content.js?v=languages-3";
@@ -283,7 +284,7 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
- document.documentElement.lang=lang;document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr";
+ document.documentElement.lang=lang;document.documentElement.dir=languageDirection(lang);
  document.querySelector(".hero-swedish").lang=lang;
  const slump=slumpTranslations[lang]||slumpTranslations.en;
  ["slump-description","slump-status","slump-link"].forEach((id,i)=>{(()=>{const el=document.getElementById(id);if(el)el.textContent=slump[i]})()});
