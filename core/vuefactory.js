@@ -130,7 +130,7 @@ export function createFactoryTestRegistry(input,existingSpecialists,routeExistin
   route:question=>simulateVueIntegration(input,question,routeExisting),
   guide:(id,language='en')=>{
    if(id!==definition.id)throw Error('Factory test guide only supports generated specialist');
-   const locale=FACTORY_LANGUAGES.includes(language)?language:'en';
+   const locale=Object.hasOwn(definition.labels,language)&&Object.hasOwn(activation.questions,language)?language:'en';
    return {domain:id,label:definition.labels[locale],questions:[...activation.questions[locale]],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
   }
  });
@@ -149,7 +149,7 @@ export function createFactoryTestApi(registry){
    if(raw.length>10000)return Response.json({error:'Too large'},{status:413});
    body=JSON.parse(raw);
   }catch{return Response.json({error:'Invalid JSON'},{status:400})}
-  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
+  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_SUPPORTED_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
   const route=registry.route(body.question);
   if(route.clarify)return Response.json({domain:null,clarify:true,candidates:route.candidates||[],testOnly:true});
   if(!registry.isRegistered(route.domain))return Response.json({error:'Unregistered specialist'},{status:422});
@@ -171,12 +171,12 @@ export function buildVueCoreIntegrationProposal(input){
   status:'blocked-pending-review',
   edits:[
    {file:'core/specialists.js',section:'SPECIALISTS',key:d.id,value:profile,action:'add'},
-   {file:'core/specialists.js',section:'questions',key:d.id,value:null,action:'add-seven-localized-question-arrays'},
+   {file:'core/specialists.js',section:'questions',key:d.id,value:null,action:'add-required-localized-question-arrays'},
    {file:'core/router.js',section:'rules',key:d.id,value:candidate?.keywords||[],action:'review-and-add-pattern'},
    {file:'apps/router-content.js',section:'localization',key:d.id,value:d.labels,action:'review-labels'},
    {file:'api/vue-router.js',section:'dispatch',key:d.id,value:null,action:'review-api-routing'}
   ],
-  blockers:['Seven localized specialist question arrays','Routing collision and precedence review','Domain safety and emergency review','API and end-to-end regression tests'],
+  blockers:['Required localized specialist question arrays','Routing collision and precedence review','Domain safety and emergency review','API and end-to-end regression tests'],
   productionReady:false,
   automaticApply:false
  };
@@ -190,7 +190,7 @@ export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
  const routing=buildRoutingCandidates(input,existingKeywords);
  if(routing.collisions.length)throw Error('Routing keyword collision: '+routing.collisions.join(', '));
  const questions=input.questions;
- if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
+ if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Required localized question arrays missing for activation');
  validateOptionalLocales(questions,'questions');
  for(const language of FACTORY_LANGUAGES)if(!Object.hasOwn(questions,language))throw Error('Missing required questions: '+language);
  const localized={};
@@ -278,7 +278,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   uiPreview,
   apiPreview,
   reviewRequired:true,
-  incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
+  incomplete:['API dispatch integration and registration validation','UI card and required translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
   automaticApply:false,
   productionReady:false
  });
