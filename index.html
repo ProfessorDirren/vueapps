@@ -324,7 +324,7 @@ const VUE_LANGUAGE_KEY="vue-language";
 const VUE_AUTO_LANGUAGE_KEY="vue-auto-language";
 const supportedLanguages=new Set([...picker.options].map(option=>option.value));
 let initialLanguage="en";
-try{const saved=sessionStorage.getItem(VUE_AUTO_LANGUAGE_KEY)||sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
+try{const saved=sessionStorage.getItem(VUE_LANGUAGE_KEY)||sessionStorage.getItem(VUE_AUTO_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
 setLanguage(initialLanguage);
 picker.addEventListener("change",event=>{setLanguage(picker.value,{automatic:event.detail?.automatic===true});try{if(event.detail?.automatic){sessionStorage.setItem(VUE_AUTO_LANGUAGE_KEY,picker.value);return}sessionStorage.removeItem(VUE_AUTO_LANGUAGE_KEY);sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
 </script>
