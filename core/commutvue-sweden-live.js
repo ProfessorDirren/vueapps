@@ -87,7 +87,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
-   const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
+   // A trip may use a different platform ID within the same verified station area.
+   // Accept an exact area match only when the provider supplies that area ID;
+   // otherwise require the resolved child stop ID. Never infer by direction text.
+   const j=calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c.stop?.id)||(c.stop?.area_id===destination&&area(destination))));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
