@@ -25,4 +25,19 @@ export function localizedVueName(domain,language='en'){
  return index<0?'':(names[language]||names.en)[index]+'-VUE';
 }
 export function vueBrandName(domain){return domain==='commutvue'?'COMMUTEVUE':String(domain).toUpperCase();}
-export function renderVueNames(document,language){for(const domain of VUE_NAMES){const heading=document.querySelector('#app-'+domain+' h3');if(!heading)continue;const brand=document.createElement('bdi');brand.dir='ltr';brand.textContent=vueBrandName(domain);const local=document.createElement('bdi');local.dir='auto';local.textContent='('+localizedVueName(domain,language)+')';local.style.fontSize='0.78em';local.style.fontWeight='500';heading.replaceChildren(brand,document.createTextNode(' '),local)}}
+/** Render the selected-language name first; retain a small stable brand for recognition. */
+export function renderVueNames(document,language){
+ for(const domain of VUE_NAMES){
+  const heading=document.querySelector('#app-'+domain+' h3');
+  if(!heading)continue;
+  const local=document.createElement('bdi');
+  local.dir='auto';
+  local.textContent=localizedVueName(domain,language);
+  const brand=document.createElement('bdi');
+  brand.dir='ltr';
+  brand.textContent='('+vueBrandName(domain)+')';
+  brand.style.fontSize='0.7em';
+  brand.style.fontWeight='400';
+  heading.replaceChildren(local,document.createTextNode(' '),brand);
+ }
+}
