@@ -389,3 +389,13 @@ test('empty full-name Jordbro lookup retries indexed prefix but only accepts exa
  assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
  assert.equal(calls.length,2);
 });
+
+test('station ambiguity identifies origin versus destination without exposing credentials',async()=>{
+ for(const [ambiguous,role] of [['Jordbro','origin'],['Stockholm City','destination']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'secret-fixture',now:clock,resolveStop:async name=>{
+   if(name===ambiguous)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
+   return {id:'740000001',stopIds:['stop1']};
+  },fetcher:async()=>{throw Error('should not fetch departures')}});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>error instanceof TrafiklabRequestError&&error.category==='ambiguous_station'&&error.stopRole===role&&!error.message.includes('secret-fixture'));
+ }
+});
