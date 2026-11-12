@@ -159,12 +159,14 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   if(exactAreaIds.size>1){
    // Prefer an exact station with explicitly rail-classified platforms only when
    // exactly one area qualifies. Never infer rail service from names or area IDs.
-   const modes=stop=>Array.isArray(stop.transport_modes)?stop.transport_modes:[];
-   const rail=stop=>modes(stop).some(mode=>['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'].includes(String(mode).toUpperCase()));
-   const railAreas=new Set(exact.filter(group=>(group.stops||[]).some(rail)).map(group=>group.id));
+   // Stop Lookup documents transport_modes on the GROUP, not child stops.
+   // A unique TRAIN-capable group is a safe rail candidate; Trips validation
+   // still checks that an actual train reaches the requested destination.
+   const rail=group=>Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'].includes(String(mode).toUpperCase()));
+   const railAreas=new Set(exact.filter(rail).map(group=>group.id));
    if(railAreas.size===1){
     const selected=[...railAreas][0];
-    const stopIds=[...new Set(exact.filter(group=>group.id===selected).flatMap(group=>(group.stops||[]).filter(rail).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
+    const stopIds=[...new Set(exact.filter(group=>group.id===selected).flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
     if(stopIds.length)return {id:selected,stopIds};
    }
    throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
