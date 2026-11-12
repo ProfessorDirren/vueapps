@@ -1,7 +1,7 @@
 import { specialistGuide } from '../core/specialists.js';
 import { localizedVueName, vueBrandName } from '../core/vue-names.js';
 import { UI, DOMAINS, localizeLanguagePicker } from './content.js?v=languages-3';
-import { validateMedia, LANGUAGES } from '../core/index.js';
+import { validateMedia, LANGUAGES, languageDirection } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
 const storageKey='vueapps-'+domain+'-v1';
@@ -111,7 +111,7 @@ function renderShopping(){const parent=document.getElementById('shopping');if(!p
 }
 function render(){
  localizeLanguagePicker(picker,language);
- document.documentElement.lang=language;document.documentElement.dir=['ar','fa'].includes(language)?'rtl':'ltr';picker.value=language;
+ document.documentElement.lang=language;document.documentElement.dir=languageDirection(language);picker.value=language;
  const displayName=localizedVueName(domain,language);
  const brand=document.querySelector('header a.brand span');
  if(brand)brand.textContent=' / '+displayName+' ('+vueBrandName(domain)+')';
