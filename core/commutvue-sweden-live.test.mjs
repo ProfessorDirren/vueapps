@@ -479,3 +479,16 @@ test('trip without the requested origin is rejected even if destination exists',
  assert.equal(result.status,'unavailable');
  assert.deepEqual(result.departures,[]);
 });
+
+
+test('Trafiklab canceled departure and arrival flags never produce a verified journey',async()=>{
+ for(const [label,changedBoard,changedTrip] of [
+  ['board departureCanceled',{...board,departures:[{...departure,departureCanceled:true}]},details],
+  ['origin departureCanceled',board,{...details,calls:details.calls.map((c,i)=>i===0?{...c,departureCanceled:true}:c)}],
+  ['destination arrivalCanceled',board,{...details,calls:details.calls.map((c,i)=>i===1?{...c,arrivalCanceled:true}:c)}]
+ ]){
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(changedBoard,changedTrip)});
+  assert.equal(result.status,'unavailable',label);
+  assert.deepEqual(result.departures,[],label);
+ }
+});
