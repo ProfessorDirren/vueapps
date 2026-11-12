@@ -12,7 +12,12 @@ export const MEDIA_CAPTURE = Object.freeze({
 });
 
 export const IMAGE_TYPES = Object.freeze(["image/jpeg","image/png","image/webp","image/heic","image/heif"]);
-export const LANGUAGES = Object.freeze(["en","sv","es","hi","zh-CN","ru","ar"]);
+export const LANGUAGES = Object.freeze(["en","sv","es","fr","hi","zh-CN","ru","ar","el","tr","fa"]);
+/** VUECORE is the sole authority for supported language codes. */
+export function validateLanguage(language) {
+  if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
+  return language;
+}
 export const SEVERITIES = Object.freeze(["normal","monitor","professional","emergency"]);
 
 export class VueCoreError extends Error {
@@ -66,7 +71,7 @@ export class VueFlow {
   }
   /** Informational text assessments have an answer contract, not a medical severity contract. */
   async runText({description='',language='en'} = {}) {
-    if (!LANGUAGES.includes(language)) throw new VueCoreError('invalid_language','Unsupported language');
+    validateLanguage(language);
     if (typeof description!=='string'||description.trim().length<3||description.length>2000)
       throw new VueCoreError('invalid_description','Enter a question of 3–2000 characters');
     const result=await this.domain.assess({description:description.trim(),language});
@@ -82,7 +87,7 @@ export class VueFlow {
     return Object.freeze({domain:this.domain.id,answer:result.answer.trim(),kind:result.kind||'unverified',sub_specialist:result.sub_specialist||null,source:'domain'});
   }
   async run({ category, species, symptoms = [], description = "", media = [], language = "en" } = {}) {
-    if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
+    validateLanguage(language);
     if (!Array.isArray(symptoms) || !Array.isArray(media)) throw new VueCoreError("invalid_input","Expected arrays");
     if (typeof description !== "string" || description.length > 2000) throw new VueCoreError("invalid_description","Invalid description");
     const context={ category, species, symptoms:Object.freeze([...symptoms]), description, media:Object.freeze([...media]), language };
