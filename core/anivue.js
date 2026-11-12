@@ -40,7 +40,7 @@ const EQUINE={
  tr:'Derhal acil at veterineriyle iletişime geçin.',
  fa:'فوراً با دامپزشک اورژانس متخصص اسب تماس بگیرید.'
 };
-const URGENT_RE=/(breathing difficulty|trouble breathing|difficulty breathing|cannot breathe|can't breathe|can’t breathe|struggling to breathe|andningssvårigheter|kan inte andas|svårt att andas|dificultad para respirar|le cuesta respirar|no puede respirar|saans lene mein dikkat|सांस लेने में (?:दिक्कत|कठिनाई|परेशानी)|साँस लेने में (?:दिक्कत|कठिनाई|परेशानी)|呼吸困难|呼吸困難|无法呼吸|затруднен(?:о|ное|ное) дыхание|трудно дышать|صعوبة (?:في )?التنفس|لا يستطيع التنفس)/i;
+const URGENT_RE=/(breathing difficulty|trouble breathing|difficulty breathing|cannot breathe|can't breathe|can’t breathe|struggling to breathe|andningssvårigheter|kan inte andas|svårt att andas|dificultad para respirar|le cuesta respirar|no puede respirar|saans lene mein dikkat|सांस लेने में (?:दिक्कत|कठिनाई|परेशानी)|साँस लेने में (?:दिक्कत|कठिनाई|परेशानी)|呼吸困难|呼吸困難|无法呼吸|затруднен(?:о|ное|ное) дыхание|трудно дышать|صعوبة (?:في )?التنفس|لا يستطيع التنفس|difficulté(?:s)? (?:à|a) respirer|ne (?:peut|parvient) pas à respirer|δυσκολία στην αναπνοή|δεν μπορεί να αναπνεύσει|nefes (?:almakta|almada) (?:zorlanıyor|güçlük)|nefes alamıyor|تنفس (?:سخت|دشوار)|مشکل (?:در )?تنفس|نمی‌تواند نفس بکشد)/i;
 /** Explicit equine Celsius readings above 39.5°C warrant emergency contact. */
 function highHorseFever(description){
  const text=String(description||'');
