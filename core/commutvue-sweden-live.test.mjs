@@ -399,3 +399,16 @@ test('station ambiguity identifies origin versus destination without exposing cr
   await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>error instanceof TrafiklabRequestError&&error.category==='ambiguous_station'&&error.stopRole===role&&!error.message.includes('secret-fixture'));
  }
 });
+
+
+test('ambiguous Jordbro resolves only uniquely identified rail platforms, never bus or unclassified stops',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',stops:[{id:'bus1',name:'Jordbro',transport_modes:['BUS']}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'rail1',name:'Jordbro',transport_modes:['TRAIN']},{id:'bus2',name:'Jordbro',transport_modes:['BUS']}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000002',stopIds:['rail1']});
+ const bothRail=groups.map(g=>({...g,stops:g.stops.map(stop=>({...stop,transport_modes:['TRAIN']}))}));
+ const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:bothRail})})});
+ await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
