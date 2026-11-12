@@ -412,3 +412,15 @@ test('ambiguous Jordbro resolves only uniquely identified rail platforms, never 
  const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:bothRail})})});
  await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
 });
+
+
+test('trip destination is verified by exact station area when child platform differs',async()=>{
+ const trip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000002'},is_realtime:true}]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,trip)});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures.length,1);
+ const wrong={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000999'},is_realtime:true}]};
+ const rejected=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,wrong)});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
