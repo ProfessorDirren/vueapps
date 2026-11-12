@@ -34,3 +34,9 @@ test('shared standalone tools use RTL for both Arabic and Persian',()=>{
  const tools=read('../apps/tools.js');
  assert.match(tools,/document\.documentElement\.dir=languageDirection\(language\)/);
 });
+
+test('portal delegates all RTL direction decisions to VUECORE',()=>{
+ const portal=read('../index.html');
+ assert.match(portal,/import \{languageDirection\} from '\.\/core\/index\.js'/);
+ assert.match(portal,/document\.documentElement\.dir=languageDirection\(lang\)/);
+});
