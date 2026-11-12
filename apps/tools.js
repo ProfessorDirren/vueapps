@@ -6,7 +6,7 @@ import { addDays, dueState, scaleIngredients, validateRecords } from '../core/pl
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
 const storageKey='vueapps-'+domain+'-v1';
 let language='en', records=[],completed=0,storageAvailable=true;
-try { const chosen=sessionStorage.getItem('vue-auto-language')||sessionStorage.getItem('vue-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
+try { const chosen=sessionStorage.getItem('vue-language')||sessionStorage.getItem('vue-auto-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
 let recipe={name:'',category:0,original:4,target:4,items:[{name:'',quantity:0,unit:'g'}]},scaled=[];
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const t=key=>UI[language][key], detail=()=>config.locales[language];
