@@ -111,7 +111,7 @@ function renderShopping(){const parent=document.getElementById('shopping');if(!p
 }
 function render(){
  localizeLanguagePicker(picker,language);
- document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';picker.value=language;
+ document.documentElement.lang=language;document.documentElement.dir=['ar','fa'].includes(language)?'rtl':'ltr';picker.value=language;
  const displayName=localizedVueName(domain,language);
  const brand=document.querySelector('header a.brand span');
  if(brand)brand.textContent=' / '+displayName+' ('+vueBrandName(domain)+')';
