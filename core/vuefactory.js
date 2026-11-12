@@ -5,7 +5,7 @@
 import {obviousIdentifier} from './memory.js';
 import {LANGUAGES,validateLanguage} from './index.js';
 /** Legacy VUEFACTORY v1 minimum for existing definitions. New locales are owned by VUECORE. */
-export const FACTORY_LANGUAGES=Object.freeze(LANGUAGES.filter(language=>new Set(['en','es','sv','hi','zh-CN','ru','ar']).has(language)));
+export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar'].filter(language=>LANGUAGES.includes(language)));
 export const FACTORY_SUPPORTED_LANGUAGES=LANGUAGES;
 /** All optional language fields must be recognized by the shared VUECORE policy. */
 function validateOptionalLocales(record,field){
