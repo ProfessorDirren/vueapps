@@ -1,0 +1,401 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createVerifiedSwedenAdapter,createTrafiklabStopResolver,TrafiklabRequestError} from './commutvue-sweden-live.js';
+import {queryCommute} from './commutvue.js';
+const clock=()=>Date.parse('2026-11-10T08:59:00Z');
+const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},is_realtime:true,scheduled:'2026-11-10T09:59:00',realtime:'2026-11-10T10:06:00',route:{designation:'43',direction:'Stockholm City'},canceled:false};
+const board={timestamp:'2026-11-10T09:58:00',departures:[departure]};
+const details={timestamp:'2026-11-10T09:58:00',trip:{trip_id:'t1',start_date:'2026-11-10'},calls:[{stop:{id:'stop1',area_id:'740000001'},is_realtime:true},{stop:{id:'stop2',area_id:'740000002'},is_realtime:true}]};
+const make=(boardPayload=board,tripPayload=details)=>createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?tripPayload:boardPayload)})});
+test('verified Swedish realtime delay requires origin-before-destination trip calls',async()=>{
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make()});
+ assert.equal(result.status,'ok');assert.equal(result.departures[0].delayMinutes,7);
+ assert.equal(result.sourceUrl.includes('key='),false);
+ assert.equal(result.updatedAt,'2026-11-10T08:58:00.000Z');
+});
+test('wrong route order, absent realtime or stale provider evidence never claims delay',async()=>{
+ for(const adapter of [
+  make(board,{...details,calls:[...details.calls].reverse()}),
+  make({...board,departures:[{...departure,is_realtime:false}]}),
+  make({...board,departures:[{...departure,canceled:true}]}),
+  make(board,{...details,calls:[details.calls[0],{...details.calls[1],canceled:true}]}),
+  make({...board,departures:[{...departure,stop:{id:'wrong-origin-stop'}}]}),
+  make({...board,timestamp:'2026-11-10T09:50:00'}),
+  make(board,{...details,timestamp:'2026-11-10T09:50:00'})
+ ]){
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+  assert.equal(result.status,'unavailable');
+ }
+});
+
+test('invalid origin and destination stop data have distinct safe diagnostics',async()=>{
+ for(const [badName,expected] of [['Jordbro','invalid_origin_stop_data'],['Stockholm City','invalid_destination_stop_data']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async name=>{
+   if(name===badName)throw new Error('secret upstream response');
+   return {id:'740000001',stopIds:['stop1']};
+  },fetcher:async()=>{throw Error('No departure request expected')}});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>{
+   assert.equal(error.name,'TrafiklabRequestError');
+   assert.equal(error.stage,'stop_lookup');
+   assert.equal(error.category,expected);
+   assert.doesNotMatch(error.message,/secret upstream response/);
+   return true;
+  });
+ }
+});
+
+test('network errors and oversized payloads fail closed',async()=>{
+ const failing=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>{throw Error('offline')}});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:failing})).status,'unavailable');
+ const oversized=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>({ok:true,text:async()=> ' '.repeat(350001)})});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversized})).status,'unavailable');
+});
+
+test('the source URL never includes a secret and limits trip lookups to eight',async()=>{
+ const seen=[];
+ const many={...board,departures:Array.from({length:30},(_,i)=>({...departure,trip:{trip_id:'unmatched'+i,start_date:'2026-11-10'}}))};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'private-key',now:clock,maxTrips:8,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{seen.push(url);return {ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:many)};}
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'unavailable'); // Trip identifiers in details do not match, so none are verified.
+ assert.equal(seen.filter(url=>url.includes('/trips/')).length,8);
+});
+
+test('stale departed trips and unsafe quota overrides fail closed',async()=>{
+ const departed={...departure,realtime:'2026-11-10T09:40:00'};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[departed]})});
+ assert.equal(result.status,'unavailable');
+ for(const maxTrips of [0,9,100,-1,1.5]){
+  assert.throws(()=>createVerifiedSwedenAdapter({apiKey:'fixture',resolveStop:async()=>({id:'740000001',stopIds:['stop1']}),maxTrips}),/required/);
+ }
+});
+
+test('stop resolver accepts only a unique exact station group with child stop IDs',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:[
+   {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+   {id:'740000002',name:'Jordbro södra',stops:[{id:'stop3'}]}
+  ]})};
+ }});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+ assert.equal(calls.length,1);
+ await assert.rejects(resolver('Unknown'),e=>e instanceof TrafiklabRequestError&&e.category==='station_not_found');
+ const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'stop2'}]}
+ ]})})});
+ await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
+
+test('duplicate exact station rows sharing one area ID are one location, not ambiguous',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]},
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop2'},{id:'stop1'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1','stop2']});
+});
+
+test('departures are sorted by expected time and far-future times are excluded',async()=>{
+ const late={...departure,trip:{trip_id:'late',start_date:'2026-11-10'},realtime:'2026-11-10T10:26:00'};
+ const early={...departure,trip:{trip_id:'early',start_date:'2026-11-10'},realtime:'2026-11-10T10:03:00'};
+ const far={...departure,trip:{trip_id:'far',start_date:'2026-11-10'},realtime:'2026-11-10T15:03:00'};
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,maxTrips:8,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   seen.push(url);
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   return {ok:true,text:async()=>JSON.stringify(tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:[late,far,early]})};
+  }
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.departures.map(d=>d.id),['early|2026-11-10|stop1','late|2026-11-10|stop1']);
+ const verified=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(verified.journeyEvidence.departureIds,verified.departures.map(d=>d.id));
+});
+
+test('official Trafiklab Stop Lookup meta-stop contract preserves numeric child stop ids',async()=>{
+ // Based on Trafiklab's published Stop Lookup example: Stockholm meta-stop 740098000
+ // includes child stop 1617 (Stockholm City), 12275 (T-Centralen), and others.
+ const resolver=createTrafiklabStopResolver({
+  apiKey:'fixture',
+  fetcher:async url=>{
+   assert.match(url,/\/v1\/stops\/name\/Stockholm\?key=fixture$/);
+   return {ok:true,text:async()=>JSON.stringify({timestamp:'2025-05-02T15:10:56',stop_groups:[
+    {id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
+     {id:'1',name:'Stockholm Centralstation'},
+     {id:'1617',name:'Stockholm City'},
+     {id:'12275',name:'T-Centralen'}
+    ]},
+    {id:'740022197',name:'Karlstad Residenstorget',stops:[{id:'41045'}]}
+   ]})};
+  }
+ });
+ assert.deepEqual(await resolver('Stockholm'),{id:'740098000',stopIds:['1','1617','12275']});
+});
+
+test('Trafiklab response size cap is measured in UTF-8 bytes and prechecks Content-Length',async()=>{
+ const resolveStop=async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']};
+ let reads=0;
+ const oversizedHeader=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async()=>({
+  ok:true,headers:{get:()=> '350001'},text:async()=>{reads++;return JSON.stringify(board)}
+ })});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversizedHeader})).status,'unavailable');
+ assert.equal(reads,0);
+ const oversizedUtf8=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async()=>({
+  ok:true,text:async()=> 'å'.repeat(175001)
+ })});
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:oversizedUtf8})).status,'unavailable');
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,headers:{get:()=> '350001'},text:async()=>{reads++;return '{}'}
+ })});
+ await assert.rejects(resolver('Stockholm'),/too large/);
+ assert.equal(reads,0);
+});
+
+test('expired, cancelled and far-future departures never consume a Trips API request',async()=>{
+ const invalid=[
+  {...departure,trip:{trip_id:'old',start_date:'2026-11-10'},realtime:'2026-11-10T09:30:00'},
+  {...departure,trip:{trip_id:'cancelled',start_date:'2026-11-10'},canceled:true},
+  {...departure,trip:{trip_id:'far',start_date:'2026-11-10'},realtime:'2026-11-10T16:00:00'}
+ ];
+ const requests=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   requests.push(url);
+   return {ok:true,text:async()=>JSON.stringify({...board,departures:invalid})};
+  }
+ });
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
+ assert.equal(requests.filter(url=>url.includes('/trips/')).length,0);
+});
+
+test('an incomplete route label is skipped without hiding other verified departures',async()=>{
+ const requestedTrips=[];
+ const incomplete={...departure,trip:{trip_id:'missing',start_date:'2026-11-10'},route:{}};
+ const complete={...departure,trip:{trip_id:'valid',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   if(tripId)requestedTrips.push(tripId);
+   return {ok:true,text:async()=>JSON.stringify(tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:[incomplete,complete]})};
+  }
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.departures.map(d=>d.id),['valid|2026-11-10|stop1']);
+ assert.deepEqual(requestedTrips,['valid']);
+});
+
+test('ambiguous autumn clock-change timestamps cannot be represented as verified realtime',async()=>{
+ const ambiguous={...departure,scheduled:'2026-10-25T02:30:00',realtime:'2026-10-25T02:35:00'};
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:()=>Date.parse('2026-10-25T00:30:00Z'),
+  resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async()=>({ok:true,text:async()=>JSON.stringify({...board,timestamp:'2026-10-25T02:30:00',departures:[ambiguous]})})
+ });
+ assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
+});
+
+test('Stockholm City resolves as an exact child of Stockholm meta-stop',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1',name:'Stockholm Centralstation'},{id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ await assert.rejects(resolver('Stockholm C'),e=>e instanceof TrafiklabRequestError&&e.category==='station_not_found');
+});
+test('ambiguous matching child stop names fail closed',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]},
+  {id:'740098001',name:'Another Group',stops:[{id:'9999',name:'Stockholm City'}]}
+ ]})})});
+ await assert.rejects(resolver('Stockholm City'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
+
+test('distinct child stops within the same Trafiklab meta-stop can form a verified journey',async()=>{
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Origin'?{id:'740098000',stopIds:['stop1']}:{id:'740098000',stopIds:['stop2']},
+  fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:board)})
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Origin',to:'Destination',adapter});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures.length,1);
+});
+test('identical child stops are never treated as a valid journey',async()=>{
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async()=>({id:'740098000',stopIds:['stop1']}),
+  fetcher:async()=>{throw Error('Must not call provider for same stop')}
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Origin',to:'Origin',adapter});
+ assert.equal(result.status,'unavailable');
+});
+
+test('unavailable live journeys expose only safe stage diagnostics',async()=>{
+ const noStops=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async()=>({id:'740000001',stopIds:['stop1']}),fetcher:async()=>{throw Error('unexpected fetch')}});
+ assert.equal((await noStops({provider:'stockholm',from:'A',to:'A'})).reason,'stop_resolution');
+ const noBoard=make({...board,timestamp:'2026-11-10T09:50:00'});
+ assert.equal((await noBoard({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'board_unavailable');
+ const noEligible=make({...board,departures:[{...departure,is_realtime:false}]});
+ assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'scheduled_only');
+ const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
+ assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
+});
+
+test('provider HTTP authorization and rate-limit failures are safely classified',async()=>{
+ for(const [status,category] of [[401,'authorization'],[403,'authorization'],[429,'rate_limited'],[500,'http_error']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async()=>({ok:false,status})});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),e=>e instanceof TrafiklabRequestError&&e.category===category&&e.stage==='departure_board'&&!e.message.includes('fixture'));
+ }
+});
+
+test('stop lookup distinguishes unauthorized credentials from network failure',async()=>{
+ const unauthorized=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:false,status:403})});
+ await assert.rejects(unauthorized('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category==='authorization');
+ const offline=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>{throw Error('secret upstream URL')}});
+ await assert.rejects(offline('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category==='network_or_timeout'&&!e.message.includes('secret'));
+});
+
+test('Stockholm City resolves through exact child of published Stockholm meta-stop when direct lookup is empty',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  return {ok:true,text:async()=>JSON.stringify(url.includes('/stops/name/Stockholm?')?{stop_groups:[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}]}]}:{stop_groups:[]})};
+ }});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.equal(calls.length,2);
+ assert.match(calls[1],/stops\/name\/Stockholm\?key=fixture/);
+});
+
+test('Stockholm City fallback also handles unrelated nonempty direct lookup groups',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(url);
+  const parent=url.includes('/stops/name/Stockholm?');
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:parent?[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]}]:[{id:'740000001',name:'Stockholm Cityvägen',stops:[{id:'123',name:'Stockholm Cityvägen'}]}]})};
+ }});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.equal(calls.length,2);
+});
+
+test('same-name platforms within one meta-stop are retained without accepting different meta-stops',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'},{id:'1618',name:'Stockholm City'},{id:'1617',name:'Stockholm City'}]}
+ ]})})});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617','1618']});
+});
+
+test('stop lookup safely distinguishes empty, missing, ambiguous and incomplete results',async()=>{
+ for(const [groups,category] of [
+  [[], 'empty_station_results'],
+  [[{id:'740000001',name:'Other',stops:[{id:'1',name:'Other'}]}], 'station_not_found'],
+  [[{id:'740000001',name:'Jordbro',stops:[]}], 'missing_platform_ids'],
+  [[{id:'740000001',name:'Jordbro',stops:[{id:'1',name:'Jordbro'}]},{id:'740000002',name:'Jordbro',stops:[{id:'2',name:'Jordbro'}]}], 'ambiguous_station']
+ ]){
+  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===category&&!e.message.includes('fixture'));
+ }
+});
+
+test('only alerts on verified departures are exposed; invalid routes never leak alerts',async()=>{
+ const alert={title:'Signal failure',text:'Delays on this line',type:'WARNING'};
+ const verified=await make({...board,departures:[{...departure,alerts:[alert]}]})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.alerts.length,1);
+ assert.equal(verified.alerts[0].title,'Signal failure');
+ assert.deepEqual(verified.alerts[0].affectedLines,['43']);
+ const unverified=await make({...board,departures:[{...departure,alerts:[alert]}]},{...details,calls:[...details.calls].reverse()})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(unverified.status,'unavailable');
+ assert.equal(unverified.alerts,undefined);
+});
+
+test('Jordbro stop lookup fails with explicit safe categories for unexpected provider payloads',async()=>{
+ for(const [payload,expected] of [
+  [{stop_groups:[]},'empty_station_results'],
+  [{stop_groups:[{id:'740000001',name:'Different stop',stops:[{id:'stop1'}]}]},'station_not_found'],
+  [{stop_groups:[{id:'740000001',name:'Jordbro',stops:[]}]},'missing_platform_ids']
+ ]){
+  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify(payload)})});
+  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.stage==='stop_lookup'&&e.category===expected);
+ }
+});
+
+test('official Trafiklab Stockholm meta-stop fixture resolves City child, not Centralstation',async()=>{
+ const urls=[];
+ const fetcher=async url=>{
+  urls.push(url);
+  const name=decodeURIComponent(new URL(url).pathname);
+  const payload=name.endsWith('/Stockholm City')?{stop_groups:[]}:
+   {stop_groups:[{id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
+    {id:'1',name:'Stockholm Centralstation'},
+    {id:'1617',name:'Stockholm City'},
+    {id:'12275',name:'T-Centralen'}
+   ]}]};
+  return {ok:true,text:async()=>JSON.stringify(payload)};
+ };
+ const resolved=await createTrafiklabStopResolver({apiKey:'fixture',fetcher})('Stockholm City');
+ assert.deepEqual(resolved,{id:'740098000',stopIds:['1617']});
+ assert.equal(urls.length,2);
+ assert.ok(urls.every(url=>new URL(url).hostname==='realtime-api.trafiklab.se'));
+});
+
+test('ambiguous exact Jordbro groups must fail closed rather than select the first',async()=>{
+ const payload={stop_groups:[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'stop2',name:'Jordbro'}]}
+ ]};
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify(payload)})});
+ await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
+
+test('scheduled-only pendeltag is never falsely presented as live realtime',async()=>{
+ const scheduledOnly={...board,departures:[{...departure,is_realtime:false,realtime:departure.scheduled}]};
+ const raw=await make(scheduledOnly)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'unavailable');
+ assert.equal(raw.reason,'scheduled_only');
+ assert.deepEqual(raw.departures,[]);
+ const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(scheduledOnly)});
+ assert.equal(normalized.status,'unavailable');
+ assert.deepEqual(normalized.departures,[]);
+});
+
+test('duplicate exact Jordbro meta-stop rows combine platforms instead of reporting false ambiguity',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop2',name:'Jordbro'},{id:'stop1',name:'Jordbro'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1','stop2']});
+});
+
+test('empty full-name Jordbro lookup retries indexed prefix but only accepts exact station',async()=>{
+ const calls=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  calls.push(decodeURIComponent(new URL(url).pathname));
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:new URL(url).pathname.endsWith('/Jordb')?[
+   {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
+   {id:'740000002',name:'Jordberg',stops:[{id:'stop2',name:'Jordberg'}]}
+  ]:[]})};
+ }});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+ assert.equal(calls.length,2);
+});
+
+test('station ambiguity identifies origin versus destination without exposing credentials',async()=>{
+ for(const [ambiguous,role] of [['Jordbro','origin'],['Stockholm City','destination']]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'secret-fixture',now:clock,resolveStop:async name=>{
+   if(name===ambiguous)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
+   return {id:'740000001',stopIds:['stop1']};
+  },fetcher:async()=>{throw Error('should not fetch departures')}});
+  await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>error instanceof TrafiklabRequestError&&error.category==='ambiguous_station'&&error.stopRole===role&&!error.message.includes('secret-fixture'));
+ }
+});

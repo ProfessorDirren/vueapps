@@ -17,3 +17,9 @@ test('keyboard layout cannot override explicit or text-detected language',()=>{
  assert.equal(detectInputLanguage('Testing testing'),null);
  assert.doesNotMatch(router,/navigator\.keyboard\.getLayoutMap|KeyboardLayoutMap|navigator\.language/);
 });
+
+test('explicit manual selection takes precedence over automatic detection for every VUE',()=>{
+ assert.match(router,/function syncInputLanguage\(question\)\{try\{if\(sessionStorage\.getItem\('vue-language'\)\)return\}catch\{\}/);
+ assert.match(router,/language:requestedLanguage,previous:active\?\.domain/);
+ assert.match(html,/sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
+});

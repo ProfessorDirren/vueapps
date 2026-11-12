@@ -6,6 +6,18 @@ import {obviousIdentifier} from './memory.js';
 export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
+export function isPublicSourceHost(hostname){
+ const host=String(hostname).toLowerCase().replace(/\.$/,'');
+ if(!host||host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.endsWith('.test')||host.endsWith('.invalid')||host.startsWith('[')||!host.includes('.'))return false;
+ if(/^\d+\.\d+\.\d+\.\d+$/.test(host)){
+  const parts=host.split('.').map(Number);
+  if(parts.some(x=>x>255))return false;
+  const [a,b]=parts;
+  return !(a===0||a===10||a===127||a>=224||a===169&&b===254||a===172&&b>=16&&b<=31||a===192&&b===168||a===100&&b>=64&&b<=127||a===192&&b===0||a===198&&(b===18||b===19)||a===192&&b===0||a===198&&b===51||a===203&&b===0);
+ }
+ if(/^\d+(?:\.\d+)*$/.test(host))return false;
+ return /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host);
+}
 export function validateVueDefinition(value){
  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Definition must be an object');
  const {id,scope,method,labels,sources=[]}=value;
@@ -18,7 +30,7 @@ export function validateVueDefinition(value){
  for(const source of sources){
   if(!Array.isArray(source)||source.length!==2||typeof source[0]!=='string'||!source[0].trim()||source[0].length>100||typeof source[1]!=='string')throw Error('Invalid source');
   let url;try{url=new URL(source[1])}catch{throw Error('Invalid source URL')}
-  if(url.protocol!=='https:'||url.username||url.password)throw Error('Sources must be public HTTPS URLs without credentials');
+  if(url.protocol!=='https:'||url.username||url.password||!isPublicSourceHost(url.hostname))throw Error('Sources must be public HTTPS URLs without credentials or private hosts');
  }
  return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,labels[lang].trim()])),sources};
 }
@@ -275,11 +287,37 @@ export function scaffoldVue(input){
   deploy:{automatic:false,approved:false}
  };
  const integrationFile=JSON.stringify(integration,null,2)+'\n';
+ const generatedContractTest=[
+  "import test from 'node:test';",
+  "import assert from 'node:assert/strict';",
+  "import {profile,labels} from './profile.js';",
+  "const isPublicSourceHost="+isPublicSourceHost.toString()+";",
+  "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
+  "test('generated "+d.id+" profile and language contract',()=>{",
+  " assert.ok(profile.scope.length>=12);",
+  " assert.ok(profile.method.length>=80);",
+  " for(const language of languages)assert.ok(typeof labels[language]==='string'&&labels[language].trim(),language);",
+  " assert.ok(Object.isFrozen(profile)&&Object.isFrozen(labels),'immutable generated exports');",
+  "});",
+  "test('generated "+d.id+" sources must use public HTTPS without credentials',()=>{",
+  " for(const source of profile.sources||[]){",
+  "  assert.ok(Array.isArray(source)&&source.length===2,'source tuple');",
+  "  const url=new URL(source[1]);",
+  "  assert.equal(url.protocol,'https:');",
+  "  assert.equal(url.username,'');",
+  "  assert.equal(url.password,'');",
+  "  assert.ok(isPublicSourceHost(url.hostname),'private source host');",
+  " }",
+  "});",
+  ""
+ ].join('\n');
+
  const changeProposal=JSON.stringify(buildVueCoreIntegrationProposal(input),null,2)+'\n';
  const registrySnippet='// REVIEW BEFORE ADDING to core/specialists.js\n'
   +JSON.stringify(d.id)+': '+JSON.stringify(profile,null,2)+',\n';
  const routeSnippet='// REVIEW: add a language-aware, collision-tested route in core/router.js\n'
   +'// '+d.id+': define specific patterns and priority; do not auto-route generic terms.\n';
+ const testRequirements={specialist:d.id,gate:'npm run vue:check -- --all',required:['registry','routing-smoke','all-language-labels','domain-safety','api-contract','cross-vue-regression','preview-browser-smoke'],previewRequired:true,productionApproved:false,vercelBuildsDuringDevelopment:0};
  const checklist=[
   '# '+d.id.toUpperCase()+' — release checklist','',
   '- [ ] Review specialist scope, method, emergency/safety boundaries and sources.',
@@ -292,5 +330,5 @@ export function scaffoldVue(input){
   '- [ ] Run npm test and inspect the preview before release.',
   '- [ ] Confirm zero new paid services and approve production deployment.',''
  ].join('\n');
- return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
+ return {id:d.id,files:{['generated/'+d.id+'/profile.js']:js,['generated/'+d.id+'/contract.test.mjs']:generatedContractTest,['generated/'+d.id+'/RELEASE-CHECKLIST.md']:checklist,['generated/'+d.id+'/integration-plan.json']:integrationFile,['generated/'+d.id+'/vuecore-change-proposal.json']:changeProposal,['generated/'+d.id+'/registry-snippet.txt']:registrySnippet,['generated/'+d.id+'/routing-review.txt']:routeSnippet,['generated/'+d.id+'/test-requirements.json']:JSON.stringify(testRequirements,null,2)+'\n',...(routingCandidates?{['generated/'+d.id+'/routing-candidates.json']:JSON.stringify(routingCandidates,null,2)+'\n'}:{})}};
 }
