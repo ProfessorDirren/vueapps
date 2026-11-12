@@ -191,8 +191,9 @@ export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
  if(routing.collisions.length)throw Error('Routing keyword collision: '+routing.collisions.join(', '));
  const questions=input.questions;
  if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
+ validateOptionalLocales(questions,'questions');
  const localized={};
- for(const language of FACTORY_LANGUAGES){
+ for(const language of Object.keys(questions)){
   const items=questions[language];
   if(!Array.isArray(items)||items.length!==3)throw Error('Exactly three questions required: '+language);
   if(items.some(q=>typeof q!=='string'||q.trim().length<12||q.length>240||forbidden.test(q)))throw Error('Invalid specialist questions: '+language);
