@@ -137,6 +137,20 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    const parentPayload=JSON.parse(parentBody);
    groups=Array.isArray(parentPayload.stop_groups)?parentPayload.stop_groups:[];
   }
+  // A full-name lookup can return zero groups even when a shorter indexed search
+  // finds the station. Retry with a prefix, but still require an exact name below.
+  if(!groups.length&&name.trim().length>=4&&!['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
+   const prefix=name.trim().slice(0,Math.max(3,Math.min(5,name.trim().length-1)));
+   const prefixUrl=new URL('stops/name/'+encodeURIComponent(prefix),ROOT);
+   prefixUrl.searchParams.set('key',apiKey);
+   let prefixResponse;try{prefixResponse=await fetcher(prefixUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
+   if(!prefixResponse.ok)throw new TrafiklabRequestError('stop_lookup',prefixResponse.status===401||prefixResponse.status===403?'authorization':prefixResponse.status===429?'rate_limited':'http_error');
+   if(Number(prefixResponse.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
+   const prefixBody=await prefixResponse.text();
+   if(Buffer.byteLength(prefixBody,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
+   const prefixPayload=JSON.parse(prefixBody);
+   groups=Array.isArray(prefixPayload.stop_groups)?prefixPayload.stop_groups:[];
+  }
   const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
   // Duplicate rows for one station area are not different locations. Combine their
