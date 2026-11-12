@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LANGUAGES, validateLanguage, VueCoreError } from './index.js';
+import { LANGUAGES, validateLanguage, languageDirection, VueCoreError } from './index.js';
 import { AniVueDomain } from './anivue.js';
 import { AniVueHelp } from './anivue-help.js';
 
@@ -19,4 +19,8 @@ test('ANIVUE inherits VUECORE language policy and help direction',()=>{
  const domain=new AniVueDomain({fetcher:async()=>{throw Error('No provider calls expected')}});
  assert.equal(domain.id,'anivue');
  assert.equal(domain.emergencyCheck({species:'horse',symptoms:['horseColic'],language:'fa'}).severity,'emergency');
+});
+
+test('all specialist text direction is defined once in VUECORE',()=>{
+ for(const language of expected)assert.equal(languageDirection(language),['ar','fa'].includes(language)?'rtl':'ltr');
 });
