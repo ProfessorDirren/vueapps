@@ -25,7 +25,7 @@ test('first visit remains English; existing explicit session selection is preser
 
 test('non-English ANYVUE standalone sessions use central VUECORE instead of English-only UI',()=>{
  const html=read('../anyvue.html');
- assert.match(html,/sessionStorage\.getItem\('vue-auto-language'\)\|\|sessionStorage\.getItem\('vue-language'\)/);
+ assert.match(html,/sessionStorage\.getItem\('vue-language'\)\|\|sessionStorage\.getItem\('vue-auto-language'\)/);
  assert.match(html,/language && language!=='en'/);
  assert.match(html,/location\.replace\('\.\/\?vue=anyvue#vue-router'\)/);
 });
@@ -39,4 +39,12 @@ test('portal delegates all RTL direction decisions to VUECORE',()=>{
  const portal=read('../index.html');
  assert.match(portal,/import \{languageDirection\} from '\.\/core\/index\.js'/);
  assert.match(portal,/document\.documentElement\.dir=languageDirection\(lang\)/);
+});
+
+test('explicit user language wins over auto detection in all entry points',()=>{
+ const portal=read('../index.html');
+ const tools=read('../apps/tools.js');
+ const anyvue=read('../anyvue.html');
+ assert.match(portal,/sessionStorage\.getItem\(VUE_LANGUAGE_KEY\)\|\|sessionStorage\.getItem\(VUE_AUTO_LANGUAGE_KEY\)/);
+ for(const source of [tools,anyvue])assert.match(source,/sessionStorage\.getItem\('vue-language'\)\|\|sessionStorage\.getItem\('vue-auto-language'\)/);
 });
