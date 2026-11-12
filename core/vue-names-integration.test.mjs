@@ -56,5 +56,5 @@ test('translated portal links use VUECORE names and normalize repeated language 
  assert.match(portal,/document\.querySelectorAll\('\.hero-link, #app-anivue a/);
  assert.match(portal,/\.forEach\(localizeVueLink\)/);
  assert.match(portal,/localizedVueName\(domain,lang\)\+' \('\+brand\+'\)'/);
- assert.match(portal,/const current=link\.textContent\.replace\(\/\(\?:\[\^\\s\]\+-VUE/);
+ assert.match(portal,/link\.dataset\.vueOriginalLabel/);
 });
