@@ -367,3 +367,12 @@ test('scheduled-only pendeltag is never falsely presented as live realtime',asyn
  assert.equal(normalized.status,'unavailable');
  assert.deepEqual(normalized.departures,[]);
 });
+
+test('duplicate exact Jordbro meta-stop rows combine platforms instead of reporting false ambiguity',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
+  {id:'740000001',name:'Jordbro',stops:[{id:'stop2',name:'Jordbro'},{id:'stop1',name:'Jordbro'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1','stop2']});
+});
