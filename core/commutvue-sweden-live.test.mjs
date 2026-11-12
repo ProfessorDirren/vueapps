@@ -424,3 +424,21 @@ test('trip destination is verified by exact station area when child platform dif
  assert.equal(rejected.status,'unavailable');
  assert.deepEqual(rejected.departures,[]);
 });
+
+
+test('Trafiklab Trips documented call shape verifies exact destination area without matching platform ID',async()=>{
+ // Trafiklab Trips example: calls[].stop has id, area_id and name;
+ // realtime and scheduled fields can be supplied as Departure/Arrival variants.
+ const documented={...details,calls:[
+  {stop:{id:'stop1',area_id:'740000001',name:'Jordbro'},is_realtime:true,scheduledDeparture:'2026-11-10T09:59:00',realtimeDeparture:'2026-11-10T10:06:00',departureCanceled:false},
+  {stop:{id:'alternate-city-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true,scheduledArrival:'2026-11-10T10:29:00',realtimeArrival:'2026-11-10T10:34:00',arrivalCanceled:false}
+ ]};
+ const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,documented)});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.departures.length,1);
+ assert.equal(verified.departures[0].delayMinutes,7);
+ const wrong={...documented,calls:documented.calls.map((c,i)=>i===1?{...c,stop:{...c.stop,area_id:'740000099'}}:c)};
+ const blocked=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,wrong)});
+ assert.equal(blocked.status,'unavailable');
+ assert.deepEqual(blocked.departures,[]);
+});
