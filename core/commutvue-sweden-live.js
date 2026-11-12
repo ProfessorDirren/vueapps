@@ -78,7 +78,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000||expected>now()+4*60*60*1000)continue;
    const line=String(d.route?.designation||d.route?.name||'').trim();
    const direction=String(d.route?.direction||d.route?.destination?.name||'').trim();
-   if(!line||!direction)continue; // One incomplete route must not invalidate other verified departures.
+   if(!line)continue; // Direction text is optional: the trip's verified destination stop is authoritative.
    const id=tripId+'|'+startDate+'|'+d.stop.id;
    if(seen.has(id))continue;seen.add(id);
    if(tripRequests>=maxTrips)break;
@@ -102,7 +102,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     alertKeys.add(key);
     alerts.push({id:'trafiklab-'+id+'-'+index,title,description,type:'disruption',status:'active',affectedLines:[line]});
    }
-   departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
+   departures.push({id,line,destination:direction||to,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
    ids.push(id);
   }
   if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):'route_not_verified',departures:[]};
