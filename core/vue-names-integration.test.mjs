@@ -22,3 +22,10 @@ test('first visit remains English; existing explicit session selection is preser
  assert.match(portal,/let initialLanguage="en"/);
  assert.match(portal,/sessionStorage\.getItem\(VUE_LANGUAGE_KEY\)/);
 });
+
+test('non-English ANYVUE standalone sessions use central VUECORE instead of English-only UI',()=>{
+ const html=read('../anyvue.html');
+ assert.match(html,/sessionStorage\.getItem\('vue-auto-language'\)\|\|sessionStorage\.getItem\('vue-language'\)/);
+ assert.match(html,/language && language!=='en'/);
+ assert.match(html,/location\.replace\('\.\/\?vue=anyvue#vue-router'\)/);
+});
