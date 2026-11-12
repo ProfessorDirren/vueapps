@@ -21,3 +21,18 @@ test('ANIVUE preserves equine urgent IDs and no emergency for healthy animals',(
  assert.ok(HORSE_EMERGENCY_IDS.includes('horseFoalingDifficulty'));
  assert.equal(domain.emergencyCheck({species:'horse',description:'Horse is healthy',language:'sv'}),null);
 });
+
+test('ANIVUE detects urgent breathing distress in newer supported languages',()=>{
+ const domain=new AniVueDomain({fetcher:async()=>{throw Error('must not call provider')}});
+ const cases=[
+  ['fr','Mon chien a des difficultés à respirer'],
+  ['el','Ο σκύλος έχει δυσκολία στην αναπνοή'],
+  ['tr','Köpeğim nefes alamıyor'],
+  ['fa','سگ من مشکل در تنفس دارد']
+ ];
+ for(const [language,description] of cases){
+  const result=domain.emergencyCheck({species:'dog',description,language});
+  assert.equal(result?.severity,'emergency',language);
+ }
+ assert.equal(domain.emergencyCheck({species:'dog',description:'My dog is playing normally',language:'en'}),null);
+});
