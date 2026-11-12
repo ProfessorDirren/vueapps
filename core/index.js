@@ -18,6 +18,10 @@ export function validateLanguage(language) {
   if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");
   return language;
 }
+/** Shared text direction for all VUECORE descendants and UIs. */
+export function languageDirection(language) {
+  return language === "ar" || language === "fa" ? "rtl" : "ltr";
+}
 export const SEVERITIES = Object.freeze(["normal","monitor","professional","emergency"]);
 
 export class VueCoreError extends Error {
