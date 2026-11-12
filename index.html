@@ -287,10 +287,12 @@ function setLanguage(lang,{automatic=false}={}){
  const localizedLinkDomains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
  function localizeVueLink(link){
   if(!link)return;
+  // Keep the translated action verb, but never append duplicate localized names on language changes.
+  const current=link.textContent.replace(/(?:[^\\s]+-VUE \\()?([A-Z]+VUE)\\)/g,'$1');
   for(const domain of localizedLinkDomains){
    const brand=vueBrandName(domain);
-   if(link.textContent.includes(brand)){
-    link.textContent=link.textContent.replace(brand,localizedVueName(domain,lang)+' ('+brand+')');
+   if(current.includes(brand)){
+    link.textContent=current.replace(brand,localizedVueName(domain,lang)+' ('+brand+')');
     break;
    }
   }
