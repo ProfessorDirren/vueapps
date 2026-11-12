@@ -284,6 +284,17 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
+ const localizedLinkDomains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
+ function localizeVueLink(link){
+  if(!link)return;
+  for(const domain of localizedLinkDomains){
+   const brand=vueBrandName(domain);
+   if(link.textContent.includes(brand)){
+    link.textContent=link.textContent.replace(brand,localizedVueName(domain,lang)+' ('+brand+')');
+    break;
+   }
+  }
+ }
  document.documentElement.lang=lang;document.documentElement.dir=languageDirection(lang);
  document.querySelector(".hero-swedish").lang=lang;
  const slump=slumpTranslations[lang]||slumpTranslations.en;
@@ -299,6 +310,7 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-martialartsvue a").textContent=martial[1];
  document.querySelector("#app-medivue p").textContent=mediTranslations[lang]||mediTranslations.en;
  document.querySelector("#app-foodvue p").textContent=foodReviewTranslations[lang]||foodReviewTranslations.en;
+ document.querySelectorAll('.hero-link, #app-anivue a, #app-motovue a, #app-anyvue a, #slump-link, #app-martialartsvue a, #app-commutvue a, #app-antiqvue a, #app-musicgearvue a, #app-vinylvue a, #app-estatevue a, #app-wardrobevue a, #app-medivue a').forEach(localizeVueLink);
  picker.value=lang;
  document.dispatchEvent(new CustomEvent("vueapps:languagechange",{detail:{language:lang,automatic}}));
 
