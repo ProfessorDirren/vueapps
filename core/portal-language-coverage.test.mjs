@@ -66,7 +66,7 @@ test('specialist links match literal .html suffixes',()=>{
 });
 
 test('Persian and Arabic use RTL while French, Greek and Turkish remain LTR',()=>{
- assert.ok(portal.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(portal.includes('document.documentElement.dir=languageDirection(lang)'));
  assert.ok(portal.includes('document.documentElement.lang=lang'));
  assert.ok(portal.includes('setLanguage(initialLanguage)'));
  assert.ok(portal.includes('let initialLanguage="en"'));
