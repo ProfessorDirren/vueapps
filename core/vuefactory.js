@@ -262,7 +262,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   action:'review-generic-dispatch-and-domain-safety',
   automaticApply:false
  }):null;
- const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
+ const uiLabels=Object.fromEntries(Object.keys(plan.labels).map(language=>[language,plan.labels[language]]));
  const uiPatch=files?.['apps/router-content.js'];
  if(uiPatch!==undefined&&(typeof uiPatch!=='string'||uiPatch.split('export const ROUTER_TEXT=').length!==2))throw Error('Invalid UI source');
  const uiPreview=typeof uiPatch==='string'?{
@@ -296,7 +296,7 @@ export function scaffoldVue(input){
   specialist:d.id,
   status:'review-required',
   registration:{profile:'core/specialists.js',memory:'core/memory.js',router:'core/router.js',api:'api/vue-router.js'},
-  languages:FACTORY_LANGUAGES,
+  languages:Object.keys(d.labels),
   labels:d.labels,
   routing:{patterns:routingCandidates?.keywords||[],priority:null,collisionReviewRequired:true},
   safety:{emergencyReviewRequired:true,sourceReviewRequired:true,apiReviewRequired:true},
@@ -308,7 +308,7 @@ export function scaffoldVue(input){
   "import assert from 'node:assert/strict';",
   "import {profile,labels} from './profile.js';",
   "const isPublicSourceHost="+isPublicSourceHost.toString()+";",
-  "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
+  "const languages="+JSON.stringify(Object.keys(d.labels))+";",
   "test('generated "+d.id+" profile and language contract',()=>{",
   " assert.ok(profile.scope.length>=12);",
   " assert.ok(profile.method.length>=80);",
@@ -340,7 +340,7 @@ export function scaffoldVue(input){
   '- [ ] Add profile to core/specialists.js (manual review required).',
   '- [ ] Register specialist in core/specialists registry and any memory domain allowlists.',
   '- [ ] Add multilingual routing patterns and check collisions in core/router.js.',
-  '- [ ] Add all seven labels to relevant UI and specialist translations.',
+  '- [ ] Review every supplied language label in UI and specialist translations; legacy seven-language minimum remains supported.',
   '- [ ] Add API routing and authorization checks where applicable.',
   '- [ ] Add domain-specific tests, including safety and language regression tests.',
   '- [ ] Run npm test and inspect the preview before release.',
