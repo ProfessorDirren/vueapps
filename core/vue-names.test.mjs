@@ -38,12 +38,12 @@ test('all sixteen portal headings rerender in the selected language without alte
  const english=new Map([...headings].map(([id,h])=>[id,h.children[2].textContent]));
  renderVueNames(document,'sv');
  for(const [id,heading] of headings){
-  assert.equal(heading.children[0].textContent,vueBrandName(id),id);
-  assert.equal(heading.children[2].textContent,'('+localizedVueName(id,'sv')+')',id);
-  assert.equal(heading.children[2].dir,'auto');
-  assert.equal(heading.children[0].dir,'ltr');
+  assert.equal(heading.children[0].textContent,localizedVueName(id,'sv'),id);
+  assert.equal(heading.children[2].textContent,'('+vueBrandName(id)+')',id);
+  assert.equal(heading.children[0].dir,'auto');
+  assert.equal(heading.children[2].dir,'ltr');
   assert.ok(english.get(id));
  }
  renderVueNames(document,'es');
- assert.equal(headings.get('commutvue').children[2].textContent,'(Transporte público-VUE)');
+ assert.equal(headings.get('commutvue').children[0].textContent,'Transporte público-VUE');
 });
