@@ -58,3 +58,20 @@ test('translated portal links use VUECORE names and normalize repeated language 
  assert.match(portal,/localizedVueName\(domain,lang\)\+' \('\+brand\+'\)'/);
  assert.match(portal,/link\.dataset\.vueOriginalLabel/);
 });
+
+test('actual portal link localizer survives Swedish, Spanish, English, then Swedish without duplicate names',async()=>{
+ const portal=read('../index.html');
+ const start=portal.indexOf(' function localizeVueLink(link){');
+ const end=portal.indexOf(' document.documentElement.lang=lang;',start);
+ assert.ok(start>0 && end>start,'localizer function must exist');
+ const functionSource=portal.slice(start,end);
+ const {localizedVueName,vueBrandName}=await import('./vue-names.js');
+ const domains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
+ const link={id:'',textContent:'Ask COMMUTEVUE via VUECORE →',dataset:{},matches:()=>false};
+ for(const lang of ['sv','es','en','sv']){
+  const localize=new Function('localizedVueName','vueBrandName','lang','localizedLinkDomains',functionSource+';return localizeVueLink;')(localizedVueName,vueBrandName,lang,domains);
+  localize(link);
+  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTEVUE) via VUECORE →');
+  assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1);
+ }
+});
