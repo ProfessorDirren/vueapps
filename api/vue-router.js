@@ -33,6 +33,7 @@ export async function POST(request){
  if(route.domain==='commutvue'){
   const journey=parseCommuteQuestion(question);
   let live=null;
+  let scheduled=null;
   let liveAlerts=null;
   let liveDiagnostic='not_attempted';
   if(!journey.needsClarification&&journey.region==='stockholm'){
@@ -42,8 +43,9 @@ export async function POST(request){
     try{
      const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
+     if(raw.status==='scheduled')scheduled=raw;
      if(raw.status==='ok')liveAlerts={sourceUrl:raw.sourceUrl,updatedAt:raw.updatedAt,alerts:raw.alerts||[]};
-     liveDiagnostic=live?.status==='ok'?'verified':(['stop_resolution','board_unavailable','no_eligible_departures','scheduled_only','route_not_verified'].includes(raw.reason)?raw.reason:'no_verified_departures');
+     liveDiagnostic=live?.status==='ok'?'verified':raw.status==='scheduled'?'scheduled_verified':(['stop_resolution','board_unavailable','no_eligible_departures','scheduled_only','route_not_verified'].includes(raw.reason)?raw.reason:'no_verified_departures');
     }catch(error){
      // Only publish a fixed, non-sensitive category; never expose upstream URLs or credentials.
      liveDiagnostic=error instanceof TrafiklabRequestError?(error.category==='ambiguous_station'&&['origin','destination'].includes(error.stopRole)?'provider_ambiguous_'+error.stopRole+'_station':'provider_'+error.category):'provider_error';
@@ -58,6 +60,9 @@ export async function POST(request){
    :'';
   const disruptionText=disruptionLines?'\n'+disruptionLines:'';
   const verified=live?.status==='ok';
+  const scheduledVerified=!verified&&scheduled?.status==='scheduled'&&Array.isArray(scheduled.departures)&&scheduled.departures.length>0;
+  const scheduledLabels={en:'Verified timetable departures (not real-time):',sv:'Verifierade tidtabellsavgångar (inte realtid):',es:'Salidas verificadas del horario (no en tiempo real):'};
+  const scheduledAnswer=scheduledVerified?(scheduledLabels[b.language]||scheduledLabels.en)+'\n'+scheduled.departures.map(d=>d.line+' · '+d.destination+' · '+new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}).format(new Date(d.scheduled))).join('\n'):'';
   // Give users a safe, actionable category without exposing provider secrets or URLs.
   const diagnosticLabels={
    en:{provider_ambiguous_origin_station:"The departure station name matches multiple locations.",provider_ambiguous_destination_station:"The destination station name matches multiple locations.",not_configured:'Live connection is not configured.',no_verified_departures:'No verified departures were returned for this route.',provider_error:'The traffic provider request failed.',provider_invalid_stop_data:'The provider returned unusable or ambiguous station information.',provider_invalid_origin_stop_data:'The provider returned unusable or ambiguous departure station information.',provider_invalid_destination_stop_data:'The provider returned unusable or ambiguous destination station information.',provider_station_not_found:'The requested station was not found in the provider response.',provider_empty_station_results:'The provider returned no stations.',provider_missing_platform_ids:'The station has no usable platform identifiers.',provider_ambiguous_station:'The station name matches multiple locations.',provider_authorization:'The traffic provider rejected the server credentials.',provider_rate_limited:'The traffic provider rate limit was reached.',provider_http_error:'The traffic provider returned an HTTP error.',provider_network_or_timeout:'The traffic provider network request timed out or failed.',stop_resolution:'The requested stops could not be resolved safely.',board_unavailable:'No current departure board was available.',no_eligible_departures:'The departure board contained no eligible real-time trains.',scheduled_only:'The provider returned scheduled departures but no verified real-time departures.',route_not_verified:'Train trips could not be verified through the destination.'},
@@ -77,7 +82,7 @@ export async function POST(request){
   };
   const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||genericDiagnostic[b.language]||diagnosticLabels.en[liveDiagnostic]||'';
   const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Προσδιορίστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Lütfen kalkış istasyonunu, varış noktasını ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.'};
-  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,updated_at:verified?live.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:scheduledVerified?scheduledAnswer:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':scheduledVerified?'verified_schedule':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':scheduledVerified?'schedule_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:scheduledVerified?scheduled.departures:[],source_url:verified?live.sourceUrl:scheduledVerified?scheduled.sourceUrl:null,updated_at:verified?live.updatedAt:scheduledVerified?scheduled.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
  }
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
