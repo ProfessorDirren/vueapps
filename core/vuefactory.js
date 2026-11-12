@@ -3,7 +3,20 @@
  * Generates a reviewable domain profile; never registers, deploys, or calls AI.
  */
 import {obviousIdentifier} from './memory.js';
+import {LANGUAGES,validateLanguage} from './index.js';
+/** Legacy VUEFACTORY v1 minimum for existing definitions. New locales are owned by VUECORE. */
 export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
+export const FACTORY_SUPPORTED_LANGUAGES=LANGUAGES;
+/** All optional language fields must be recognized by the shared VUECORE policy. */
+function validateOptionalLocales(record,field){
+ for(const language of Object.keys(record)){
+  validateLanguage(language);
+  if(!FACTORY_LANGUAGES.includes(language)){
+   const value=record[language];
+   if(field==='labels'&&(typeof value!=='string'||!value.trim()||value.length>90||forbidden.test(value)))throw Error('Invalid optional label: '+language);
+  }
+ }
+}
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
 export function isPublicSourceHost(hostname){
@@ -26,13 +39,14 @@ export function validateVueDefinition(value){
  if(typeof method!=='string'||method.trim().length<80||method.length>3000||forbidden.test(method))throw Error('Method needs at least 80 characters of reviewable specialist guidance');
  if(!labels||typeof labels!=='object'||Array.isArray(labels))throw Error('All seven language labels required');
  for(const lang of FACTORY_LANGUAGES)if(typeof labels[lang]!=='string'||!labels[lang].trim()||labels[lang].length>90||forbidden.test(labels[lang]))throw Error('Missing/invalid label: '+lang);
+ validateOptionalLocales(labels,'labels');
  if(!Array.isArray(sources)||sources.length>12)throw Error('Invalid sources');
  for(const source of sources){
   if(!Array.isArray(source)||source.length!==2||typeof source[0]!=='string'||!source[0].trim()||source[0].length>100||typeof source[1]!=='string')throw Error('Invalid source');
   let url;try{url=new URL(source[1])}catch{throw Error('Invalid source URL')}
   if(url.protocol!=='https:'||url.username||url.password||!isPublicSourceHost(url.hostname))throw Error('Sources must be public HTTPS URLs without credentials or private hosts');
  }
- return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,labels[lang].trim()])),sources};
+ return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(Object.keys(labels).map(lang=>[lang,labels[lang].trim()])),sources};
 }
 /**
  * Fail closed on specialist ID collisions. Pass the existing registry's IDs
