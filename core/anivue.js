@@ -1,4 +1,4 @@
-import {VueDomain,VueCoreError,normalizeAssessment,LANGUAGES} from './index.js';
+import {VueDomain,VueCoreError,normalizeAssessment,validateLanguage} from './index.js';
 import {routingFields} from './router.js';
 
 /**
@@ -51,7 +51,7 @@ export class AniVueDomain extends VueDomain {
  constructor({fetcher=fetch}={}){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:true,videoAnalysis:false}});this.fetcher=fetcher}
  /** Native VUECORE specialist text response, independent of deterministic emergency checks. */
  async analyzeText({species,description='',symptoms=[],language='en'}={}){
-  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  validateLanguage(language);
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof description!=='string'||description.trim().length<3||description.length>2000)throw new VueCoreError('invalid_description','Description must be 3–2000 characters');
   const symptom=Array.isArray(symptoms)?symptoms.filter(x=>typeof x==='string').slice(0,12).join(' '):'';
@@ -67,7 +67,7 @@ export class AniVueDomain extends VueDomain {
  }
  /** Optional supplementary photo analysis via the VUECORE-native server endpoint. */
  async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
-  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  validateLanguage(language);
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof image!=='string'||!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)||image.length>4200000)throw new VueCoreError('invalid_image','Supported JPEG, PNG or WebP image required (max 3 MB after conversion)');
   let response;
