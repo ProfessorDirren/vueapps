@@ -4,11 +4,11 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0b1720">
 <script>
-// VUECORE owns the four new language interfaces until standalone ANYVUE is localized.
-// Preserve an explicit session choice; do not silently display an English-only page.
+// VUECORE owns all non-English ANYVUE interfaces until standalone UI and answers are localized.
+// Keep the selected language in the central router instead of showing an English-only page.
 try {
- const language=sessionStorage.getItem('vue-language');
- if(['fr','el','tr','fa'].includes(language))location.replace('./?vue=anyvue#vue-router');
+ const language=sessionStorage.getItem('vue-auto-language')||sessionStorage.getItem('vue-language');
+ if(language && language!=='en')location.replace('./?vue=anyvue#vue-router');
 } catch {}
 </script>
 <title>ANYVUE | A New Perspective on Everything</title>
