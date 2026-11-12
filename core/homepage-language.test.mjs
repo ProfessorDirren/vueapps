@@ -20,7 +20,7 @@ test("English is default for first-time visitors and explicit language persists 
  
  assert.doesNotMatch(html,/sessionStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(html,/sessionStorage\.setItem\("vueapps-language-v2"/);
- assert.match(html,/\["ar","fa"\]\.includes\(lang\)\?"rtl":"ltr"/);
+ assert.match(html,/document\.documentElement\.dir=languageDirection\(lang\)/);
 });
 test("homepage hero and navigation retain brand and product promises",()=>{
  assert.match(html,/VUEAPPS\.se/);
