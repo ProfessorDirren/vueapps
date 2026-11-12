@@ -192,6 +192,7 @@ export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
  const questions=input.questions;
  if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
  validateOptionalLocales(questions,'questions');
+ for(const language of FACTORY_LANGUAGES)if(!Object.hasOwn(questions,language))throw Error('Missing required questions: '+language);
  const localized={};
  for(const language of Object.keys(questions)){
   const items=questions[language];
