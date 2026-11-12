@@ -1,7 +1,12 @@
 import { VueHelp } from './help.js';
+import { localizedVueName } from './vue-names.js';
 
 /** Native VUECORE ANIVUE Help. Emergency triage is separate and always visible. */
 export class AniVueHelp extends VueHelp {
+  getHelp(language='en') {
+    const data=super.getHelp(language);
+    return {...data,title:data.title.replaceAll('ANIVUE',localizedVueName('anivue',data.language))};
+  }
   constructor() {
     super({
       id: 'anivue',
