@@ -381,7 +381,7 @@ test('empty full-name Jordbro lookup retries indexed prefix but only accepts exa
  const calls=[];
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
   calls.push(decodeURIComponent(new URL(url).pathname));
-  return {ok:true,text:async()=>JSON.stringify({stop_groups:url.includes('/stops/name/Jordb')?[
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:new URL(url).pathname.endsWith('/Jordb')?[
    {id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]},
    {id:'740000002',name:'Jordberg',stops:[{id:'stop2',name:'Jordberg'}]}
   ]:[]})};
