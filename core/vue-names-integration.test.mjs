@@ -50,3 +50,11 @@ test('explicit user language wins over auto detection in all entry points',()=>{
  assert.match(portal,/sessionStorage\.getItem\(VUE_LANGUAGE_KEY\)\|\|sessionStorage\.getItem\(VUE_AUTO_LANGUAGE_KEY\)/);
  for(const source of [tools,anyvue])assert.match(source,/sessionStorage\.getItem\('vue-language'\)\|\|sessionStorage\.getItem\('vue-auto-language'\)/);
 });
+
+test('translated portal links use VUECORE names and normalize repeated language switches',()=>{
+ const portal=read('../index.html');
+ assert.match(portal,/document\.querySelectorAll\('\.hero-link, #app-anivue a/);
+ assert.match(portal,/\.forEach\(localizeVueLink\)/);
+ assert.match(portal,/localizedVueName\(domain,lang\)\+' \('\+brand\+'\)'/);
+ assert.match(portal,/const current=link\.textContent\.replace\(\/\(\?:\[\^\\s\]\+-VUE/);
+});
