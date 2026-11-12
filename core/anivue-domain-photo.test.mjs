@@ -24,7 +24,7 @@ test('native photo analysis uses the VUECORE domain inheritance and API',async()
 test('unsupported species and language do not reach photo provider',async()=>{
  let calls=0;
  const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('Unexpected')}});
- await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'fr'}),error=>error.code==='invalid_language');
+ await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'horse',language:'xx'}),error=>error.code==='invalid_language');
  await assert.rejects(domain.analyzePhoto({image:'data:image/png;base64,abc',species:'cow',language:'en'}),error=>error.code==='invalid_species');
  assert.equal(calls,0);
 });
