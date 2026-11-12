@@ -1,4 +1,5 @@
 import { specialistGuide } from '../core/specialists.js';
+import { localizedVueName, vueBrandName } from '../core/vue-names.js';
 import { UI, DOMAINS, localizeLanguagePicker } from './content.js?v=languages-3';
 import { validateMedia, LANGUAGES } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
@@ -111,6 +112,10 @@ function renderShopping(){const parent=document.getElementById('shopping');if(!p
 function render(){
  localizeLanguagePicker(picker,language);
  document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';picker.value=language;
+ const displayName=localizedVueName(domain,language);
+ const brand=document.querySelector('header a.brand span');
+ if(brand)brand.textContent=' / '+displayName+' ('+vueBrandName(domain)+')';
+ document.title=displayName+' | VUEAPPS';
  document.querySelectorAll('[data-ui]').forEach(e=>e.textContent=t(e.dataset.ui));document.getElementById('headline').textContent=detail().title;document.getElementById('subtitle').textContent=detail().subtitle;document.getElementById('domain-note').textContent=detail().note;
  const reference=document.getElementById('reference');reference.href=config.reference[1];reference.textContent=t('sources')+' ↗';
  if(domain==='foodvue')buildFood();else buildPlanner();if(!storageAvailable)announce('storageError');
