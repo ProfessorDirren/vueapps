@@ -289,7 +289,7 @@ function setLanguage(lang,{automatic=false}={}){
  const slump=slumpTranslations[lang]||slumpTranslations.en;
  ["slump-description","slump-status","slump-link"].forEach((id,i)=>{(()=>{const el=document.getElementById(id);if(el)el.textContent=slump[i]})()});
  const names=['homevue','plantvue','armvue','foodvue'];
- names.forEach(id=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=(toolLinkVerbs[lang]||toolLinkVerbs.en)+' '+id.toUpperCase()+' →'});
+ names.forEach(id=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=(toolLinkVerbs[lang]||toolLinkVerbs.en)+' '+localizedVueName(id,lang)+' ('+vueBrandName(id)+') →'});
  document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=(DOMAINS.armvue.locales[lang]||DOMAINS.armvue.locales.en).types[i]);
  const food=(DOMAINS.foodvue.locales[lang]||DOMAINS.foodvue.locales.en).types;
  document.querySelectorAll('#app-foodvue .subcategories li').forEach((el,i)=>el.textContent=food[[0,2,3,4][i]]);
