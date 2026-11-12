@@ -454,3 +454,18 @@ test('missing provider direction is safe only after destination trip is verified
  assert.equal(rejected.status,'unavailable');
  assert.deepEqual(rejected.departures,[]);
 });
+
+
+test('verified scheduled train is shown without inventing realtime or delay',async()=>{
+ const scheduledBoard={...board,departures:[{...departure,is_realtime:false,realtime:null}]};
+ const scheduledTrip={...details,calls:details.calls.map(c=>({...c,is_realtime:false}))};
+ const raw=await make(scheduledBoard,scheduledTrip)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'scheduled');
+ assert.equal(raw.departures.length,1);
+ assert.equal(raw.departures[0].expected,null);
+ assert.equal(raw.departures[0].scheduled,'2026-11-10T08:59:00.000Z');
+ const wrong={...scheduledTrip,calls:[scheduledTrip.calls[0],{stop:{id:'wrong',area_id:'740000099'},is_realtime:false}]};
+ const rejected=await make(scheduledBoard,wrong)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
