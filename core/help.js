@@ -29,7 +29,7 @@ export class VueHelp {
     return {
       id: this.id,
       language: selected,
-      direction: selected === 'ar' ? 'rtl' : 'ltr',
+      direction: ['ar','fa'].includes(selected) ? 'rtl' : 'ltr',
       title: common.title,
       button: common.button ?? this.translations.en.button ?? 'Help',
       close: common.close ?? this.translations.en.close ?? 'Close',
