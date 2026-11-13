@@ -79,3 +79,10 @@ test('SWAT question extracts Jordbro to T-Centralen even with Spanish selected i
  const q=parseCommuteQuestion('är det förseningar mellan jordbro och t-centralen?');
  assert.deepEqual(q,{region:'stockholm',from:'jordbro',to:'t-centralen',needsClarification:false});
 });
+
+test('SWAT station extraction does not turn incidental station mentions into an invented journey',()=>{
+ const q=parseCommuteQuestion('Är det förseningar vid Jordbro?');
+ assert.equal(q.needsClarification,true);
+ assert.equal(q.from,null);
+ assert.equal(q.to,null);
+});
