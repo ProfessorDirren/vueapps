@@ -74,3 +74,8 @@ test('Jordbro question with a second disruption sentence preserves both station 
  const q=parseCommuteQuestion('När går nästa pendeltåg från Jordbro till Stockholm City? Finns det några trafikstörningar?');
  assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
 });
+
+test('SWAT question extracts Jordbro to T-Centralen even with Spanish selected in UI',()=>{
+ const q=parseCommuteQuestion('är det förseningar mellan jordbro och t-centralen?');
+ assert.deepEqual(q,{region:'stockholm',from:'jordbro',to:'t-centralen',needsClarification:false});
+});
