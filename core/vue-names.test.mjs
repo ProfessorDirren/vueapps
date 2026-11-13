@@ -67,3 +67,14 @@ test('all sixteen VUE headings survive repeated switches through all eleven lang
   }
  }
 });
+
+test('unsupported locale falls back to English without changing explicit translations',()=>{
+ for(const domain of VUE_NAMES){
+  assert.equal(localizedVueName(domain,'unsupported'),localizedVueName(domain,'en'),domain);
+  assert.equal(localizedVueName(domain,'en'),localizedVueName(domain),domain);
+ }
+});
+test('unknown specialist cannot produce a misleading translated VUE label',()=>{
+ assert.equal(localizedVueName('not-a-vue','sv'),'');
+ assert.equal(localizedVueName('not-a-vue','en'),'');
+});
