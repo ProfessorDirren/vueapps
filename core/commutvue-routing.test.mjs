@@ -28,3 +28,14 @@ test('SWAT regression: Swedish delay question must escape previous ANIVUE contex
   assert.equal(route.clarify,false);
  }
 });
+
+test('generic Swedish delays must not hijack unrelated specialist context',()=>{
+ for(const question of ['Min leverans har förseningar','Paketet är försenat']){
+  const route=routeRegisteredQuestion(question,'anivue');
+  assert.equal(route.domain,'anivue',question);
+ }
+ for(const question of ['Är bussen försenad?','Finns det förseningar vid stationen?']){
+  const route=routeRegisteredQuestion(question,'anivue');
+  assert.equal(route.domain,'commutvue',question);
+ }
+});
