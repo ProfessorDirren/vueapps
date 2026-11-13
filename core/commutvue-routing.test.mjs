@@ -20,3 +20,11 @@ test('commuter queries route to COMMUTVUE rather than car or animal specialists'
   assert.equal(route.clarify,false);
  }
 });
+
+test('SWAT regression: Swedish delay question must escape previous ANIVUE context',()=>{
+ for(const question of ['är det förseningar mellan jordbro och t-centralen?','Finns det förseningar mellan Jordbro och T-Centralen?']){
+  const route=routeRegisteredQuestion(question,'anivue');
+  assert.equal(route.domain,'commutvue',question);
+  assert.equal(route.clarify,false);
+ }
+});
