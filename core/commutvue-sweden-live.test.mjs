@@ -506,3 +506,12 @@ test('T-Centralen and Stockholm City remain distinct child stops of Stockholm me
  assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['12275']});
  assert.equal(requested.filter(p=>p.endsWith('/Stockholm')).length,2);
 });
+
+test('same Stockholm meta-stop must not verify T-Centralen trip via Stockholm City child',async()=>{
+ const resolveStop=async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740098000',stopIds:['12275']};
+ const trip={...details,calls:[details.calls[0],{stop:{id:'1617',area_id:'740098000',name:'Stockholm City'},is_realtime:true}]};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?trip:board)})});
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'T-Centralen',adapter});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
+});
