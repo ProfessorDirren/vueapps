@@ -71,8 +71,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
-   if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true)scheduledOnlyAtOrigin=true;
-   if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id)||d.canceled===true)continue;
+   if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true&&d?.departureCanceled!==true)scheduledOnlyAtOrigin=true;
+   if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id)||(d.canceled===true||d.departureCanceled===true))continue;
    const realtime=d.is_realtime===true;
    // Reject stale/far-future departures before spending a Trips API request.
    const scheduled=swedishTime(d.scheduled),expected=realtime?swedishTime(d.realtime):NaN;
