@@ -114,3 +114,19 @@ test('all routed VUE specialists inherit the selected language across seven lang
 });
 
 test('Swedish pistol troubleshooting routes to ARMVUE despite a prior ANIVUE case',()=>{assert.equal(routeQuestion('min pistol funkar inte','anivue').domain,'armvue');assert.equal(routeQuestion('min pistol funkar inte').domain,'armvue')});
+
+test('SWAT Spanish selection survives Swedish commute question after ANIVUE',async()=>{
+ const flag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='false';
+  const response=await POST(req({language:'es',previous:'anivue',question:'är det förseningar mellan jordbro och t-centralen?'}));
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.domain,'commutvue');
+  assert.equal(result.liveDiagnostic,'not_configured');
+  assert.match(result.answer,/conexión|tiempo real|verificar|información/i);
+ }finally{
+  if(flag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+  else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=flag;
+ }
+});
