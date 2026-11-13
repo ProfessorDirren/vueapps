@@ -75,3 +75,19 @@ test('actual portal link localizer survives Swedish, Spanish, English, then Swed
   assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1);
  }
 });
+
+test('all eleven language switches update COMMUTEVUE links without accumulating brands',async()=>{
+ const portal=read('../index.html');
+ const start=portal.indexOf(' function localizeVueLink(link){');
+ const end=portal.indexOf(' document.documentElement.lang=lang;',start);
+ assert.ok(start>0&&end>start);
+ const {localizedVueName,vueBrandName}=await import('./vue-names.js');
+ const domains=['commutvue'];
+ const link={id:'',textContent:'Ask COMMUTEVUE via VUECORE →',dataset:{},matches:()=>false};
+ for(const lang of ['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','en','es']){
+  const localize=new Function('localizedVueName','vueBrandName','lang','localizedLinkDomains',portal.slice(start,end)+';return localizeVueLink;')(localizedVueName,vueBrandName,lang,domains);
+  localize(link);
+  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTEVUE) via VUECORE →',lang);
+  assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1,lang);
+ }
+});
