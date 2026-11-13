@@ -417,7 +417,7 @@ test('ambiguous Jordbro resolves only uniquely identified rail platforms, never 
 
 
 test('trip destination is verified by exact station area when child platform differs',async()=>{
- const trip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000002'},is_realtime:true}]};
+ const trip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true}]};
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,trip)});
  assert.equal(result.status,'ok');
  assert.equal(result.departures.length,1);
