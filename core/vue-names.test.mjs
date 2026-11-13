@@ -47,3 +47,23 @@ test('all sixteen portal headings rerender in the selected language without alte
  renderVueNames(document,'es');
  assert.equal(headings.get('commutvue').children[0].textContent,'Transporte público-VUE');
 });
+
+test('all sixteen VUE headings survive repeated switches through all eleven languages',()=>{
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','en','sv']){
+  renderVueNames(document,language);
+  for(const domain of VUE_NAMES){
+   const heading=headings.get(domain);
+   assert.equal(heading.children.length,3,domain+' '+language);
+   assert.equal(heading.children[0].textContent,localizedVueName(domain,language),domain+' '+language);
+   assert.equal(heading.children[2].textContent,'('+vueBrandName(domain)+')',domain+' '+language);
+   assert.equal(heading.children[0].dir,'auto');
+   assert.equal(heading.children[2].dir,'ltr');
+  }
+ }
+});
