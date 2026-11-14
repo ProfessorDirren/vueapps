@@ -35,7 +35,7 @@ test('new language specialist links stay inside VUECORE instead of opening untra
 
 test('direct ANYVUE visits preserve newer languages via VUECORE',()=>{
  const anyvue=readFileSync(new URL('../anyvue.html',import.meta.url),'utf8');
- for(const language of ['fr','el','tr','fa'])assert.ok(anyvue.includes("'"+language+"'"),language);
+ assert.ok(anyvue.includes("language && language!=='en'"));
  assert.ok(anyvue.includes("location.replace('./?vue=anyvue#vue-router')"));
  assert.ok(anyvue.includes("sessionStorage.getItem('vue-language')"));
 });
@@ -66,7 +66,7 @@ test('specialist links match literal .html suffixes',()=>{
 });
 
 test('Persian and Arabic use RTL while French, Greek and Turkish remain LTR',()=>{
- assert.ok(portal.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(portal.includes('document.documentElement.dir=languageDirection(lang)'));
  assert.ok(portal.includes('document.documentElement.lang=lang'));
  assert.ok(portal.includes('setLanguage(initialLanguage)'));
  assert.ok(portal.includes('let initialLanguage="en"'));
@@ -77,7 +77,8 @@ test('all standalone specialists preserve four new languages on direct visits',(
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
   assert.ok(html.includes("sessionStorage.getItem('vue-language')"),domain);
   assert.ok(html.includes("location.replace('./?vue="+domain+"#vue-router')"),domain);
-  for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
+  if(domain==='anyvue')assert.ok(html.includes("language && language!=='en'"));
+  else for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
  }
 });
 

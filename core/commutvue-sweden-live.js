@@ -67,18 +67,20 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;
+  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
-   if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true)scheduledOnlyAtOrigin=true;
-   if(typeof tripId!=='string'||!tripId||!date(startDate)||d.is_realtime!==true||!originStopIds.has(d.stop?.id)||d.canceled===true)continue;
+   if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true&&d?.departureCanceled!==true)scheduledOnlyAtOrigin=true;
+   if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id)||(d.canceled===true||d.departureCanceled===true))continue;
+   const realtime=d.is_realtime===true;
    // Reject stale/far-future departures before spending a Trips API request.
-   const scheduled=swedishTime(d.scheduled),expected=swedishTime(d.realtime);
-   if(!Number.isFinite(scheduled)||!Number.isFinite(expected)||expected<now()-120000||expected>now()+4*60*60*1000)continue;
+   const scheduled=swedishTime(d.scheduled),expected=realtime?swedishTime(d.realtime):NaN;
+   const departureTime=realtime?expected:scheduled;
+   if(!Number.isFinite(scheduled)||!Number.isFinite(departureTime)||departureTime<now()-120000||departureTime>now()+4*60*60*1000)continue;
    const line=String(d.route?.designation||d.route?.name||'').trim();
    const direction=String(d.route?.direction||d.route?.destination?.name||'').trim();
-   if(!line||!direction)continue; // One incomplete route must not invalidate other verified departures.
+   if(!line)continue; // Direction text is optional: the trip's verified destination stop is authoritative.
    const id=tripId+'|'+startDate+'|'+d.stop.id;
    if(seen.has(id))continue;seen.add(id);
    if(tripRequests>=maxTrips)break;
@@ -87,8 +89,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
    const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
-   const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
-   if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
+   // A trip may use a different platform ID within the same verified station area.
+   // Accept an exact area match only when the provider supplies that area ID;
+   // otherwise require the resolved child stop ID. Never infer by direction text.
+   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c.stop?.id)||(c.stop?.area_id===destination&&area(destination)&&typeof c.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
+   if(i<0||j<=i||(realtime&&calls[i].is_realtime!==true)||d.canceled===true||d.departureCanceled===true||calls[i].canceled===true||calls[i].departureCanceled===true||calls[j].canceled===true||calls[j].arrivalCanceled===true)continue;
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
    for(const [index,alert] of (Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
@@ -99,8 +104,12 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     alertKeys.add(key);
     alerts.push({id:'trafiklab-'+id+'-'+index,title,description,type:'disruption',status:'active',affectedLines:[line]});
    }
-   departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
-   ids.push(id);
+   const departure={id,line,destination:direction||to,scheduled:new Date(scheduled).toISOString(),expected:realtime?new Date(expected).toISOString():null,cancelled:false};
+   if(realtime){departures.push(departure);ids.push(id);}else{scheduledDepartures.push(departure);}
+  }
+  if(!departures.length&&scheduledDepartures.length){
+   scheduledDepartures.sort((a,b)=>Date.parse(a.scheduled)-Date.parse(b.scheduled));
+   return {provider,status:'scheduled',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
   }
   if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):'route_not_verified',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
@@ -156,7 +165,21 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // Duplicate rows for one station area are not different locations. Combine their
   // child platforms; still reject exact-name matches across different area IDs.
   const exactAreaIds=new Set(exact.map(s=>s.id));
-  if(exactAreaIds.size>1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
+  if(exactAreaIds.size>1){
+   // Prefer an exact station with explicitly rail-classified platforms only when
+   // exactly one area qualifies. Never infer rail service from names or area IDs.
+   // Stop Lookup documents transport_modes on the GROUP, not child stops.
+   // A unique TRAIN-capable group is a safe rail candidate; Trips validation
+   // still checks that an actual train reaches the requested destination.
+   const rail=group=>Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'].includes(String(mode).toUpperCase()));
+   const railAreas=new Set(exact.filter(rail).map(group=>group.id));
+   if(railAreas.size===1){
+    const selected=[...railAreas][0];
+    const stopIds=[...new Set(exact.filter(group=>group.id===selected).flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
+    if(stopIds.length)return {id:selected,stopIds};
+   }
+   throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
+  }
   if(exactAreaIds.size===1){
    const stopIds=[...new Set(exact.flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
    if(!stopIds.length)throw new TrafiklabRequestError('stop_lookup','missing_platform_ids');

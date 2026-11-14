@@ -246,7 +246,9 @@ test('unavailable live journeys expose only safe stage diagnostics',async()=>{
  const noBoard=make({...board,timestamp:'2026-11-10T09:50:00'});
  assert.equal((await noBoard({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'board_unavailable');
  const noEligible=make({...board,departures:[{...departure,is_realtime:false}]});
- assert.equal((await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'scheduled_only');
+ const scheduled=await noEligible({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(scheduled.status,'scheduled');
+  assert.equal(scheduled.departures[0].expected,null);
  const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
  assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
 });
@@ -360,9 +362,9 @@ test('ambiguous exact Jordbro groups must fail closed rather than select the fir
 test('scheduled-only pendeltag is never falsely presented as live realtime',async()=>{
  const scheduledOnly={...board,departures:[{...departure,is_realtime:false,realtime:departure.scheduled}]};
  const raw=await make(scheduledOnly)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
- assert.equal(raw.status,'unavailable');
- assert.equal(raw.reason,'scheduled_only');
- assert.deepEqual(raw.departures,[]);
+ assert.equal(raw.status,'scheduled');
+ assert.equal(raw.departures.length,1);
+ assert.equal(raw.departures[0].expected,null);
  const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(scheduledOnly)});
  assert.equal(normalized.status,'unavailable');
  assert.deepEqual(normalized.departures,[]);
@@ -398,4 +400,118 @@ test('station ambiguity identifies origin versus destination without exposing cr
   },fetcher:async()=>{throw Error('should not fetch departures')}});
   await assert.rejects(adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'}),error=>error instanceof TrafiklabRequestError&&error.category==='ambiguous_station'&&error.stopRole===role&&!error.message.includes('secret-fixture'));
  }
+});
+
+
+test('ambiguous Jordbro resolves only uniquely identified rail platforms, never bus or unclassified stops',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',transport_modes:['BUS'],stops:[{id:'bus1',name:'Jordbro'}]},
+  {id:'740000002',name:'Jordbro',transport_modes:['TRAIN'],stops:[{id:'rail1',name:'Jordbro'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000002',stopIds:['rail1']});
+ const bothRail=groups.map(g=>({...g,transport_modes:['TRAIN']}));
+ const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:bothRail})})});
+ await assert.rejects(ambiguous('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='ambiguous_station');
+});
+
+
+test('trip destination is verified by exact station area when child platform differs',async()=>{
+ const trip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true}]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,trip)});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures.length,1);
+ const wrong={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000999'},is_realtime:true}]};
+ const rejected=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,wrong)});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
+
+
+test('Trafiklab Trips documented call shape verifies exact destination area without matching platform ID',async()=>{
+ // Trafiklab Trips example: calls[].stop has id, area_id and name;
+ // realtime and scheduled fields can be supplied as Departure/Arrival variants.
+ const documented={...details,calls:[
+  {stop:{id:'stop1',area_id:'740000001',name:'Jordbro'},is_realtime:true,scheduledDeparture:'2026-11-10T09:59:00',realtimeDeparture:'2026-11-10T10:06:00',departureCanceled:false},
+  {stop:{id:'alternate-city-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true,scheduledArrival:'2026-11-10T10:29:00',realtimeArrival:'2026-11-10T10:34:00',arrivalCanceled:false}
+ ]};
+ const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,documented)});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.departures.length,1);
+ assert.equal(verified.departures[0].delayMinutes,7);
+ const wrong={...documented,calls:documented.calls.map((c,i)=>i===1?{...c,stop:{...c.stop,area_id:'740000099'}}:c)};
+ const blocked=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,wrong)});
+ assert.equal(blocked.status,'unavailable');
+ assert.deepEqual(blocked.departures,[]);
+});
+
+
+test('missing provider direction is safe only after destination trip is verified',async()=>{
+ const withoutDirection={...departure,route:{designation:'43'}};
+ const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},details)});
+ assert.equal(verified.status,'ok');
+ assert.equal(verified.departures[0].destination,'Stockholm City');
+ const wrongTrip={...details,calls:[details.calls[0],{stop:{id:'different-platform',area_id:'740000099'},is_realtime:true}]};
+ const rejected=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},wrongTrip)});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
+
+
+test('verified scheduled train is shown without inventing realtime or delay',async()=>{
+ const scheduledBoard={...board,departures:[{...departure,is_realtime:false,realtime:null}]};
+ const scheduledTrip={...details,calls:details.calls.map(c=>({...c,is_realtime:false}))};
+ const raw=await make(scheduledBoard,scheduledTrip)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'scheduled');
+ assert.equal(raw.departures.length,1);
+ assert.equal(raw.departures[0].expected,null);
+ assert.equal(raw.departures[0].scheduled,'2026-11-10T08:59:00.000Z');
+ const wrong={...scheduledTrip,calls:[scheduledTrip.calls[0],{stop:{id:'wrong',area_id:'740000099'},is_realtime:false}]};
+ const rejected=await make(scheduledBoard,wrong)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(rejected.status,'unavailable');
+ assert.deepEqual(rejected.departures,[]);
+});
+
+
+test('trip without the requested origin is rejected even if destination exists',async()=>{
+ const missingOrigin={...details,calls:[{stop:{id:'unrelated',area_id:'740000099'},is_realtime:true},details.calls[1]]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,missingOrigin)});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
+});
+
+
+test('Trafiklab canceled departure and arrival flags never produce a verified journey',async()=>{
+ for(const [label,changedBoard,changedTrip] of [
+  ['board departureCanceled',{...board,departures:[{...departure,departureCanceled:true}]},details],
+  ['origin departureCanceled',board,{...details,calls:details.calls.map((c,i)=>i===0?{...c,departureCanceled:true}:c)}],
+  ['destination arrivalCanceled',board,{...details,calls:details.calls.map((c,i)=>i===1?{...c,arrivalCanceled:true}:c)}]
+ ]){
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(changedBoard,changedTrip)});
+  assert.equal(result.status,'unavailable',label);
+  assert.deepEqual(result.departures,[],label);
+ }
+});
+
+test('T-Centralen and Stockholm City remain distinct child stops of Stockholm meta-stop',async()=>{
+ const groups=[{id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
+  {id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}
+ ]}];
+ const requested=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  requested.push(new URL(url).pathname);
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:url.includes('/Stockholm?')?groups:[]})};
+ }});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['12275']});
+ assert.equal(requested.filter(p=>p.endsWith('/Stockholm')).length,2);
+});
+
+test('same Stockholm meta-stop must not verify T-Centralen trip via Stockholm City child',async()=>{
+ const resolveStop=async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740098000',stopIds:['12275']};
+ const trip={...details,calls:[details.calls[0],{stop:{id:'1617',area_id:'740098000',name:'Stockholm City'},is_realtime:true}]};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop,fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?trip:board)})});
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'T-Centralen',adapter});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
 });

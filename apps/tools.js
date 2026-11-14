@@ -1,11 +1,12 @@
 import { specialistGuide } from '../core/specialists.js';
+import { localizedVueName, vueBrandName } from '../core/vue-names.js';
 import { UI, DOMAINS, localizeLanguagePicker } from './content.js?v=languages-3';
-import { validateMedia, LANGUAGES } from '../core/index.js';
+import { validateMedia, LANGUAGES, languageDirection } from '../core/index.js';
 import { addDays, dueState, scaleIngredients, validateRecords } from '../core/planning.js';
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
 const storageKey='vueapps-'+domain+'-v1';
 let language='en', records=[],completed=0,storageAvailable=true;
-try { const chosen=sessionStorage.getItem('vue-auto-language')||sessionStorage.getItem('vue-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
+try { const chosen=sessionStorage.getItem('vue-language')||sessionStorage.getItem('vue-auto-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
 let recipe={name:'',category:0,original:4,target:4,items:[{name:'',quantity:0,unit:'g'}]},scaled=[];
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const t=key=>UI[language][key], detail=()=>config.locales[language];
@@ -110,7 +111,11 @@ function renderShopping(){const parent=document.getElementById('shopping');if(!p
 }
 function render(){
  localizeLanguagePicker(picker,language);
- document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';picker.value=language;
+ document.documentElement.lang=language;document.documentElement.dir=languageDirection(language);picker.value=language;
+ const displayName=localizedVueName(domain,language);
+ const brand=document.querySelector('header a.brand span');
+ if(brand)brand.textContent=' / '+displayName+' ('+vueBrandName(domain)+')';
+ document.title=displayName+' | VUEAPPS';
  document.querySelectorAll('[data-ui]').forEach(e=>e.textContent=t(e.dataset.ui));document.getElementById('headline').textContent=detail().title;document.getElementById('subtitle').textContent=detail().subtitle;document.getElementById('domain-note').textContent=detail().note;
  const reference=document.getElementById('reference');reference.href=config.reference[1];reference.textContent=t('sources')+' ↗';
  if(domain==='foodvue')buildFood();else buildPlanner();if(!storageAvailable)announce('storageError');

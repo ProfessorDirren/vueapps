@@ -203,7 +203,8 @@
   </main>
   <footer>&copy; 2026 VUEAPPS. All rights reserved.</footer>
 <script type="module">
-import {renderVueNames} from './core/vue-names.js';
+import {renderVueNames,localizedVueName,vueBrandName} from './core/vue-names.js';
+import {languageDirection} from './core/index.js';
 import {listSpecialistDefinitions} from './core/domain-registry.js';
 
 import {UI, DOMAINS, localizeLanguagePicker} from "./apps/content.js?v=languages-3";
@@ -283,12 +284,27 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
- document.documentElement.lang=lang;document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr";
+ const localizedLinkDomains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
+ function localizeVueLink(link){
+  if(!link)return;
+  // Keep the translated action verb, but never append duplicate localized names on language changes.
+  const current=link.id==='slump-link'||link.matches('.hero-link, #app-anivue a, #app-motovue a, #app-anyvue a, #app-martialartsvue a')
+   ? link.textContent
+   : (link.dataset.vueOriginalLabel ||= link.textContent);
+  for(const domain of localizedLinkDomains){
+   const brand=vueBrandName(domain);
+   if(current.includes(brand)){
+    link.textContent=current.replace(brand,localizedVueName(domain,lang)+' ('+brand+')');
+    break;
+   }
+  }
+ }
+ document.documentElement.lang=lang;document.documentElement.dir=languageDirection(lang);
  document.querySelector(".hero-swedish").lang=lang;
  const slump=slumpTranslations[lang]||slumpTranslations.en;
  ["slump-description","slump-status","slump-link"].forEach((id,i)=>{(()=>{const el=document.getElementById(id);if(el)el.textContent=slump[i]})()});
  const names=['homevue','plantvue','armvue','foodvue'];
- names.forEach(id=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=(toolLinkVerbs[lang]||toolLinkVerbs.en)+' '+id.toUpperCase()+' →'});
+ names.forEach(id=>{const card=document.getElementById('app-'+id);card.querySelector('.tool-link').textContent=(toolLinkVerbs[lang]||toolLinkVerbs.en)+' '+localizedVueName(id,lang)+' ('+vueBrandName(id)+') →'});
  document.querySelectorAll('#app-armvue .subcategories li').forEach((el,i)=>el.textContent=(DOMAINS.armvue.locales[lang]||DOMAINS.armvue.locales.en).types[i]);
  const food=(DOMAINS.foodvue.locales[lang]||DOMAINS.foodvue.locales.en).types;
  document.querySelectorAll('#app-foodvue .subcategories li').forEach((el,i)=>el.textContent=food[[0,2,3,4][i]]);
@@ -298,6 +314,7 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-martialartsvue a").textContent=martial[1];
  document.querySelector("#app-medivue p").textContent=mediTranslations[lang]||mediTranslations.en;
  document.querySelector("#app-foodvue p").textContent=foodReviewTranslations[lang]||foodReviewTranslations.en;
+ document.querySelectorAll('.hero-link, #app-anivue a, #app-motovue a, #app-anyvue a, #slump-link, #app-martialartsvue a, #app-commutvue a, #app-antiqvue a, #app-musicgearvue a, #app-vinylvue a, #app-estatevue a, #app-wardrobevue a, #app-medivue a').forEach(localizeVueLink);
  picker.value=lang;
  document.dispatchEvent(new CustomEvent("vueapps:languagechange",{detail:{language:lang,automatic}}));
 
@@ -323,9 +340,9 @@ const VUE_LANGUAGE_KEY="vue-language";
 const VUE_AUTO_LANGUAGE_KEY="vue-auto-language";
 const supportedLanguages=new Set([...picker.options].map(option=>option.value));
 let initialLanguage="en";
-try{const saved=sessionStorage.getItem(VUE_AUTO_LANGUAGE_KEY)||sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
+try{const saved=sessionStorage.getItem(VUE_LANGUAGE_KEY)||sessionStorage.getItem(VUE_AUTO_LANGUAGE_KEY);if(supportedLanguages.has(saved))initialLanguage=saved}catch{}
 setLanguage(initialLanguage);
-picker.addEventListener("change",event=>{setLanguage(picker.value,{automatic:event.detail?.automatic===true});try{if(event.detail?.automatic){sessionStorage.setItem(VUE_AUTO_LANGUAGE_KEY,picker.value);return}sessionStorage.removeItem(VUE_AUTO_LANGUAGE_KEY);sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
+picker.addEventListener("change",event=>{const automatic=event.detail?.automatic===true;if(automatic){try{const explicit=sessionStorage.getItem(VUE_LANGUAGE_KEY);if(supportedLanguages.has(explicit)){picker.value=explicit;return}}catch{}}setLanguage(picker.value,{automatic});try{if(automatic){sessionStorage.setItem(VUE_AUTO_LANGUAGE_KEY,picker.value);return}sessionStorage.removeItem(VUE_AUTO_LANGUAGE_KEY);sessionStorage.setItem(VUE_LANGUAGE_KEY,picker.value)}catch{}});
 </script>
 </body>
 </html>

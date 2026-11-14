@@ -1,16 +1,22 @@
 // Shared, provider-independent VUECORE frame schedule. No upload or AI calls.
 // Sampling is intentionally bounded for the free-tier budget.
+import {VIDEO_POLICY} from './video-policy.js';
+import {validateVideoMetadata} from './video-metadata.js';
 export const VIDEO_SAMPLE_COUNT=3;
 export function videoSampleTimes(duration,count=VIDEO_SAMPLE_COUNT){
  if(!Number.isFinite(duration)||duration<=0||duration>120)throw new RangeError('Invalid video duration');
  if(!Number.isSafeInteger(count)||count<1||count>3)throw new RangeError('Invalid sample count');
  return Array.from({length:count},(_,i)=>Number((duration*(i+1)/(count+1)).toFixed(3)));
 }
-export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}={}){
+export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal,consent=false,file}={}){
+ if(consent!==true)throw new Error('Video frame consent required');
+ if(!file||!VIDEO_POLICY.acceptedMimeTypes.includes(file.type)||!Number.isSafeInteger(file.size)||file.size<1||file.size>VIDEO_POLICY.maxBytes)throw new Error('Invalid video file');
  if(signal?.aborted)throw new Error('Cancelled');
  const duration=video?.duration;
+ const metadata=validateVideoMetadata({duration,videoWidth:video?.videoWidth,videoHeight:video?.videoHeight});
+ if(!metadata.ok)throw new Error('Invalid video metadata: '+metadata.reason);
  const times=videoSampleTimes(duration,count);
- if(!Number.isSafeInteger(video.videoWidth)||!Number.isSafeInteger(video.videoHeight)||video.videoWidth<128||video.videoHeight<128)throw new Error('Invalid video dimensions');
+ if(video.videoWidth<128||video.videoHeight<128)throw new Error('Invalid video dimensions');
  const scale=Math.min(1,960/Math.max(video.videoWidth,video.videoHeight));
  const canvas=document.createElement('canvas');
  canvas.width=Math.round(video.videoWidth*scale);
@@ -18,6 +24,11 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
  const ctx=canvas.getContext('2d');
  if(!ctx)throw new Error('Canvas unavailable');
  const frames=[];
+ let totalChars=0;
+ const originalTime=Number.isFinite(video.currentTime)?video.currentTime:null;
+ const wasPaused=video.paused===true;
+ if(typeof video.pause==='function')video.pause();
+ try{
  for(const time of times){
   if(signal?.aborted)throw new Error('Cancelled');
   await new Promise((resolve,reject)=>{
@@ -33,8 +44,16 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
   if(signal?.aborted)throw new Error('Cancelled');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const frame=canvas.toDataURL('image/jpeg',0.65);
-  if(frame.length>700000)throw new Error('Frame too large');
+  totalChars+=frame.length;
+  if(frame.length>700000||totalChars>1200000)throw new Error('Frame too large');
   frames.push({time,image:frame});
  }
  return frames;
+ }finally{
+  // Sampling must not leave the user's preview at the last extracted frame.
+  if(originalTime!==null){try{video.currentTime=originalTime}catch{}}
+  if(!wasPaused&&typeof video.play==='function'){
+   try{const playback=video.play();playback?.catch?.(()=>{});}catch{}
+  }
+ }
 }

@@ -20,7 +20,7 @@ test("English is default for first-time visitors and explicit language persists 
  
  assert.doesNotMatch(html,/sessionStorage\.getItem\("vueapps-language-v2"\)/);
  assert.doesNotMatch(html,/sessionStorage\.setItem\("vueapps-language-v2"/);
- assert.match(html,/\["ar","fa"\]\.includes\(lang\)\?"rtl":"ltr"/);
+ assert.match(html,/document\.documentElement\.dir=languageDirection\(lang\)/);
 });
 test("homepage hero and navigation retain brand and product promises",()=>{
  assert.match(html,/VUEAPPS\.se/);
@@ -63,4 +63,10 @@ test("all linked standalone VUE pages are covered by extended-language routing",
  const covered=new Set([...match[1].matchAll(/"([^"]+)"/g)].map(m=>m[1]));
  const linked=[...html.matchAll(/href="\.\/([a-z]+vue)\.html"/g)].map(m=>m[1]);
  for(const domain of linked)assert.ok(covered.has(domain),'Missing extended-language navigation for '+domain);
+});
+
+test("automatic language events cannot override a valid explicit user selection",()=>{
+ assert.match(html,/const automatic=event\.detail\?\.automatic===true/);
+ assert.match(html,/if\(automatic\)\{try\{const explicit=sessionStorage\.getItem\(VUE_LANGUAGE_KEY\);if\(supportedLanguages\.has\(explicit\)\)\{picker\.value=explicit;return\}/);
+ assert.match(html,/sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
 });
