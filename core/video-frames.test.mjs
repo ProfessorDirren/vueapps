@@ -78,3 +78,22 @@ test('oversized video dimensions are rejected before canvas allocation',async()=
   assert.equal(created,false);
  }finally{globalThis.document=oldDocument}
 });
+
+test('local sampling restores the original playback position',async()=>{
+ const oldDocument=globalThis.document;
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,'+'A'.repeat(128)})};
+ const listeners=new Map();
+ let time=2;
+ const video={duration:20,videoWidth:640,videoHeight:480,paused:true,
+  pause(){},
+  addEventListener(name,fn){if(!listeners.has(name))listeners.set(name,new Set());listeners.get(name).add(fn)},
+  removeEventListener(name,fn){listeners.get(name)?.delete(fn)},
+  get currentTime(){return time},
+  set currentTime(value){time=value;queueMicrotask(()=>{for(const fn of [...(listeners.get('seeked')||[])])fn()})}
+ };
+ try{
+  const frames=await captureVideoFrames(video,{consent:true,file:{type:'video/mp4',size:1024}});
+  assert.equal(frames.length,3);
+  assert.equal(video.currentTime,2);
+ }finally{globalThis.document=oldDocument}
+});
