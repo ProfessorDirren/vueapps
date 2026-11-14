@@ -27,9 +27,11 @@ export function hasLocalizedVueName(domain,language){
  return index>=0&&Array.isArray(names[language])&&typeof names[language][index]==='string'&&names[language][index].trim().length>0;
 }
 export function localizedVueName(domain,language='en'){
- if(extraNames[domain])return (extraNames[domain][language]||extraNames[domain].en)+'-VUE';
+ if(!VUE_NAMES.includes(domain))return '';
+ const locale=typeof language==='string'&&Object.hasOwn(names,language)?language:'en';
+ if(Object.hasOwn(extraNames,domain))return (extraNames[domain][locale]||extraNames[domain].en)+'-VUE';
  const index=VUE_NAMES.indexOf(domain);
- return index<0?'':(names[language]||names.en)[index]+'-VUE';
+ return (names[locale][index]||names.en[index])+'-VUE';
 }
 export function vueBrandName(domain){return domain==='commutvue'?'COMMUTEVUE':String(domain).toUpperCase();}
 /** Render the selected-language name first; retain a small stable brand for recognition. */
