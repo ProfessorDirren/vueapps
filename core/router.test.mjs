@@ -86,9 +86,9 @@ test('ARMVUE handoff preserves Swedish UI language in provider instructions',asy
  try{const r=await POST(req({question:'min 308 klickar',language:'sv',previous:'anivue',history:[{question:'min hund är sjuk',answer:'Hundens symtom'}]}));assert.equal(r.status,200);const d=await r.json();assert.equal(d.domain,'armvue');assert.match(d.answer,/Kontakta/);assert.equal(observed,true)}finally{globalThis.fetch=old;process.env=saved}
 });
 
-test('all routed VUE specialists inherit the selected language across seven languages',async()=>{
+test('all routed VUE specialists inherit the selected language across eleven languages',async()=>{
  const examples=[['martialartsvue','karate'],['estatevue','dödsbo'],['vinylvue','vinyl'],['musicgearvue','Marshall amplifier'],['wardrobevue','klänning'],['anivue','min hund är trött'],['motovue','bil starter'],['foodvue','E330'],['plantvue','krukväxt'],['antiqvue','antik byrå'],['armvue','min 308 klickar'],['homevue','luftfilter'],['slumpvue','överraska mig'],['anyvue','testing testing']];
- const names={en:'English',sv:'Swedish',es:'Spanish',hi:'Hindi','zh-CN':'Simplified Chinese',ru:'Russian',ar:'Arabic'};
+ const names={en:'English',sv:'Swedish',es:'Spanish',hi:'Hindi','zh-CN':'Simplified Chinese',ru:'Russian',ar:'Arabic',fr:'French',el:'Greek',tr:'Turkish',fa:'Persian'};
  const saved={...process.env},old=globalThis.fetch;
  Object.assign(process.env,{UPSTASH_REDIS_REST_URL:'https://redis.test',UPSTASH_REDIS_REST_TOKEN:'test',OPENAI_API_KEY:'test'});
  let expectedLanguage,checked=0;
