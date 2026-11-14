@@ -1,6 +1,7 @@
 // Shared, provider-independent VUECORE frame schedule. No upload or AI calls.
 // Sampling is intentionally bounded for the free-tier budget.
 import {VIDEO_POLICY} from './video-policy.js';
+import {validateVideoMetadata} from './video-metadata.js';
 export const VIDEO_SAMPLE_COUNT=3;
 export function videoSampleTimes(duration,count=VIDEO_SAMPLE_COUNT){
  if(!Number.isFinite(duration)||duration<=0||duration>120)throw new RangeError('Invalid video duration');
@@ -12,8 +13,10 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal,
  if(!file||!VIDEO_POLICY.acceptedMimeTypes.includes(file.type)||!Number.isSafeInteger(file.size)||file.size<1||file.size>VIDEO_POLICY.maxBytes)throw new Error('Invalid video file');
  if(signal?.aborted)throw new Error('Cancelled');
  const duration=video?.duration;
+ const metadata=validateVideoMetadata({duration,videoWidth:video?.videoWidth,videoHeight:video?.videoHeight});
+ if(!metadata.ok)throw new Error('Invalid video metadata: '+metadata.reason);
  const times=videoSampleTimes(duration,count);
- if(!Number.isSafeInteger(video.videoWidth)||!Number.isSafeInteger(video.videoHeight)||video.videoWidth<128||video.videoHeight<128)throw new Error('Invalid video dimensions');
+ if(video.videoWidth<128||video.videoHeight<128)throw new Error('Invalid video dimensions');
  const scale=Math.min(1,960/Math.max(video.videoWidth,video.videoHeight));
  const canvas=document.createElement('canvas');
  canvas.width=Math.round(video.videoWidth*scale);
