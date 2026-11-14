@@ -1,12 +1,15 @@
 // Shared, provider-independent VUECORE frame schedule. No upload or AI calls.
 // Sampling is intentionally bounded for the free-tier budget.
+import {VIDEO_POLICY} from './video-policy.js';
 export const VIDEO_SAMPLE_COUNT=3;
 export function videoSampleTimes(duration,count=VIDEO_SAMPLE_COUNT){
  if(!Number.isFinite(duration)||duration<=0||duration>120)throw new RangeError('Invalid video duration');
  if(!Number.isSafeInteger(count)||count<1||count>3)throw new RangeError('Invalid sample count');
  return Array.from({length:count},(_,i)=>Number((duration*(i+1)/(count+1)).toFixed(3)));
 }
-export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}={}){
+export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal,consent=false,file}={}){
+ if(consent!==true)throw new Error('Video frame consent required');
+ if(!file||!VIDEO_POLICY.acceptedMimeTypes.includes(file.type)||!Number.isSafeInteger(file.size)||file.size<1||file.size>VIDEO_POLICY.maxBytes)throw new Error('Invalid video file');
  if(signal?.aborted)throw new Error('Cancelled');
  const duration=video?.duration;
  const times=videoSampleTimes(duration,count);
@@ -18,6 +21,7 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
  const ctx=canvas.getContext('2d');
  if(!ctx)throw new Error('Canvas unavailable');
  const frames=[];
+ let totalChars=0;
  for(const time of times){
   if(signal?.aborted)throw new Error('Cancelled');
   await new Promise((resolve,reject)=>{
@@ -33,7 +37,8 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal}
   if(signal?.aborted)throw new Error('Cancelled');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const frame=canvas.toDataURL('image/jpeg',0.65);
-  if(frame.length>700000)throw new Error('Frame too large');
+  totalChars+=frame.length;
+  if(frame.length>700000||totalChars>1200000)throw new Error('Frame too large');
   frames.push({time,image:frame});
  }
  return frames;
