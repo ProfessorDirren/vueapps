@@ -123,7 +123,7 @@ test('SWAT Spanish selection survives Swedish commute question after ANIVUE',asy
   assert.equal(response.status,200);
   const result=await response.json();
   assert.equal(result.domain,'commutvue');
-  assert.equal(result.liveDiagnostic,'not_configured');
+  assert.equal(result.live_diagnostic,'not_configured');
   assert.match(result.answer,/conexión|tiempo real|verificar|información/i);
  }finally{
   if(flag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
