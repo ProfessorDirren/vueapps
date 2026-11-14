@@ -2,6 +2,7 @@ import {MEMORY_DOMAINS} from './memory.js';
 import {isRegisteredSpecialist} from './specialists.js';
 // Conservative topic routing. Historical answers are never used to classify a new topic.
 const rules=[
+ ['commutvue',8,/pendeltåg|tågtrafik|tågen|tågavgång|commut(?:e|ing)|train delay|delayed train|suburban train|rail disruption|rer [a-e]|transilien|train en retard|train de banlieue|cercanías|tren retrasado|trenes retrasados|通勤列车|列车晚点|электричк|пригородный поезд|قطار متأخر|قطار الضواحي|लोकल ट्रेन|ट्रेन लेट|τρένο καθυστέρηση|banliyö treni|tren gecik|قطار حومه|تاخیر قطار/iu],
  ['martialartsvue',6,/martial arts|kampsport|artes marciales|taekwondo|karate|judo|jiu[ -]?jitsu|muay thai|kickboxing|武术|боевые искусства|الفنون القتالية|मार्शल आर्ट|arts martiaux|dövüş sanatları|πολεμικές τέχνες|هنرهای رزمی/iu],
  ['estatevue',7,/dödsbo|arvskifte|inventera (?:hem|hus)|hela (?:hemmet|huset)|estate inventory|deceased estate|succession|遗产|наследств|تركة|विरासत|succession familiale|miras|κληρονομιά|ارث/iu],
  ['medivue',6,/bipacksedel|läkemedel|medicin|biverkning|medication|medicine|leaflet|side effects|prospecto|medicamento|药品|药物|лекарств|دواء|दवा|médicament|effets secondaires|ilaç|yan etki|φάρμακο|παρενέργειες|دارو|عوارض جانبی/iu],

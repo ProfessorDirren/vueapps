@@ -1,3 +1,5 @@
+import {createTrafiklabSwedenLive} from '../core/commutvue-sweden-live.js';
+import {queryCommute} from '../core/commutvue.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
 import {usableImage} from '../core/image-input.js';
 import {specialistPath} from '../core/specialist-tree.js';
@@ -8,6 +10,11 @@ import {subSpecialist} from '../core/sub-specialists.js';
 import {classifyImage,ImageRoutingError} from '../core/image-routing.js';
 import {obviousIdentifier,MEMORY_DOMAINS} from '../core/memory.js';
 import {ROUTER_TEXT} from '../apps/router-content.js';
+import {COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
+import {parseCommuteQuestion} from '../core/commutvue-query.js';
+import {createModelTimetablePipeline} from '../core/commutvue-photo.js';
+import {createStructuredImageRunner} from '../core/structured-image-runner.js';
+import {budget,ready} from './vue-followup.js';
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(request){
  let b;try{const raw=await request.text();if(raw.length>4250000)return json(413,{error:'Too large'});b=JSON.parse(raw)}catch{return json(400,{error:'Invalid JSON'})}
@@ -25,6 +32,26 @@ export async function POST(request){
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
+ // Fail closed until a verified transport adapter is connected: AI must not guess live train status.
+ if(route.domain==='commutvue'){
+  let photoEvidence=null,photoStatus=b.image?'disabled':'not_supplied';
+  // Explicitly opt-in: the shared model quota is finite and must never be bypassed.
+  // CORE image classification above remains the privacy gate for all photos.
+  if(b.image&&process.env.COMMUTVUE_PHOTO_ENABLED==='true'&&ready()){
+   try{
+    const run=createStructuredImageRunner({apiKey:process.env.OPENAI_API_KEY,model:process.env.CORE_VUE_MODEL||process.env.ANTIQVUE_MODEL||'gpt-4.1-mini'});
+    const result=await createModelTimetablePipeline({run,allow:()=>budget()}).analyze({image:b.image,question,language:b.language});
+    photoStatus=result.status;
+    if(result.status==='extracted_unverified')photoEvidence=result.evidence;
+   }catch{photoStatus='unavailable';}
+  }
+  const journey=parseCommuteQuestion(question);
+  let live=null;
+  if(!journey.needsClarification&&journey.region==='stockholm'&&process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED==='true'&&process.env.TRAFIKLAB_API_KEY){
+   try{live=await queryCommute({provider:'stockholm',from:journey.from,to:journey.to,adapter:createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})});}catch{live=null;}
+  }
+  const verified=live?.status==='ok';
+  return json(200,{photo_status:photoStatus,photo_evidence:photoEvidence,image_analyzed:photoStatus==='extracted_unverified'||photoStatus==='needs_clarification',domain:'commutvue',answer:journey.needsClarification?({sv:'Ange avreseort, destination och stad så kan COMMUTVUE identifiera rätt trafiksystem.',fr:'Indiquez la gare de départ, la destination et la ville.',es:'Indica el origen, destino y ciudad.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Δώστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Kalkış istasyonu, varış noktası ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.',en:'Please specify departure station, destination and city.'}[b.language]||'Please specify departure station, destination and city.' ):verified?live.departures.map(d=>`${d.line} ${d.destination}: ${d.delayMinutes===null?'?':d.delayMinutes+' min'} (${d.scheduled} → ${d.expected||'?'})`).join('\n'):COMMUT_MESSAGES[commuteLocale(b.language)][0],kind:verified?'verified_live':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':'live_unavailable',departures:verified?live.departures:[],source_url:verified?live.sourceUrl:null,attribution:verified?'Data from Trafiklab.se (CC BY 4.0)':null,updated_at:verified?live.updatedAt:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});}
  if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);

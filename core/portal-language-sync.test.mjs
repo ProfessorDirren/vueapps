@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 
 const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
-const help=readFileSync(new URL('../apps/help-renderer.js',import.meta.url),'utf8');
+const help=readFileSync(new URL('./help-renderer.js',import.meta.url),'utf8');
 const video=readFileSync(new URL('./video-input.js',import.meta.url),'utf8');
 
 test('portal announces language changes after synchronizing the selected language',()=>{
@@ -29,6 +29,7 @@ test('Help actually changes EN → SV → ES after the portal event', async()=>{
  const listeners=new Map();
  const element=tag=>({
   tagName:tag,hidden:false,children:[],attributes:{},
+  querySelector(){return null;},
   append(...nodes){this.children.push(...nodes);},
   replaceChildren(...nodes){this.children=nodes;},
   setAttribute(name,value){this.attributes[name]=value;},
@@ -100,4 +101,29 @@ test('planner specialists ignore stale per-VUE language settings',()=>{
  const tools=readFileSync(new URL('../apps/tools.js',import.meta.url),'utf8');
  assert.match(tools,/sessionStorage\.getItem\('vue-language'\)/);
  assert.doesNotMatch(tools,/sessionStorage\.getItem\(storageKey\+'-language'\)/);
+});
+
+test('VUECORE propagates and persists automatic Swedish language switching after Spanish selection',()=>{
+ assert.match(portal,/function setLanguage\(lang,\{automatic=false\}=\{\}\)/);
+ assert.match(portal,/new CustomEvent\("vueapps:languagechange",\{detail:\{language:lang,automatic\}\}\)/);
+ assert.match(portal,/sessionStorage\.setItem\(VUE_AUTO_LANGUAGE_KEY,picker\.value\)/);
+ assert.match(portal,/sessionStorage\.getItem\(VUE_AUTO_LANGUAGE_KEY\)\|\|sessionStorage\.getItem\(VUE_LANGUAGE_KEY\)/);
+ assert.match(portal,/sessionStorage\.removeItem\(VUE_AUTO_LANGUAGE_KEY\)/);
+ assert.match(router,/languagePicker\.dispatchEvent\(new CustomEvent\('change',\{bubbles:true,detail:\{automatic:true\}\}\)\)/);
+ assert.match(router,/if\(!event\.detail\?\.automatic\)\{/);
+});
+
+test('all specialist VUEs inherit shared VUECORE language change events',()=>{
+ const specialists=['anyvue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue'];
+ for(const name of specialists)assert.ok(portal.includes('app-'+name),name+' must remain on the shared VUECORE portal');
+ assert.match(portal,/document\.dispatchEvent\(new CustomEvent\("vueapps:languagechange"/);
+ assert.match(router,/detectInputLanguage\(question\)/);
+ assert.match(router,/document\.addEventListener\('vueapps:languagechange'/);
+});
+
+test('planner VUEs inherit VUECORE automatic language and manual override semantics',()=>{
+ const tools=readFileSync(new URL('../apps/tools.js',import.meta.url),'utf8');
+ assert.match(tools,/sessionStorage\.getItem\('vue-auto-language'\)\|\|sessionStorage\.getItem\('vue-language'\)/);
+ assert.match(tools,/sessionStorage\.removeItem\('vue-auto-language'\)/);
+ assert.match(tools,/sessionStorage\.setItem\('vue-language',language\)/);
 });
