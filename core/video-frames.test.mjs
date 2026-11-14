@@ -68,3 +68,13 @@ test('frame capture requires explicit consent and a valid local video file',asyn
  await assert.rejects(captureVideoFrames(video,{consent:true,file:{type:'video/mp4',size:0}}),/Invalid video file/);
  await assert.rejects(captureVideoFrames(video,{consent:true,file:{type:'image/png',size:100}}),/Invalid video file/);
 });
+
+test('oversized video dimensions are rejected before canvas allocation',async()=>{
+ const oldDocument=globalThis.document;
+ let created=false;
+ globalThis.document={createElement:()=>{created=true;throw Error('Must not allocate canvas')}};
+ try{
+  await assert.rejects(captureVideoFrames({duration:10,videoWidth:8000,videoHeight:6000},{consent:true,file:{type:'video/mp4',size:1024}}),/Invalid video metadata: dimensions/);
+  assert.equal(created,false);
+ }finally{globalThis.document=oldDocument}
+});
