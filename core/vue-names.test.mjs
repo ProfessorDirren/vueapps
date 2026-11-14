@@ -78,3 +78,13 @@ test('unknown specialist cannot produce a misleading translated VUE label',()=>{
  assert.equal(localizedVueName('not-a-vue','sv'),'');
  assert.equal(localizedVueName('not-a-vue','en'),'');
 });
+
+test('prototype property names cannot masquerade as supported languages',()=>{
+ for(const language of ['toString','constructor','__proto__','hasOwnProperty']){
+  for(const domain of VUE_NAMES){
+   assert.equal(localizedVueName(domain,language),localizedVueName(domain,'en'),domain+' '+language);
+  }
+ }
+ assert.equal(localizedVueName('toString','sv'),'');
+ assert.equal(localizedVueName('__proto__','en'),'');
+});
