@@ -25,6 +25,10 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal,
  if(!ctx)throw new Error('Canvas unavailable');
  const frames=[];
  let totalChars=0;
+ const originalTime=Number.isFinite(video.currentTime)?video.currentTime:null;
+ const wasPaused=video.paused===true;
+ if(typeof video.pause==='function')video.pause();
+ try{
  for(const time of times){
   if(signal?.aborted)throw new Error('Cancelled');
   await new Promise((resolve,reject)=>{
@@ -45,4 +49,11 @@ export async function captureVideoFrames(video,{count=VIDEO_SAMPLE_COUNT,signal,
   frames.push({time,image:frame});
  }
  return frames;
+ }finally{
+  // Sampling must not leave the user's preview at the last extracted frame.
+  if(originalTime!==null){try{video.currentTime=originalTime}catch{}}
+  if(!wasPaused&&typeof video.play==='function'){
+   try{const playback=video.play();playback?.catch?.(()=>{});}catch{}
+  }
+ }
 }
