@@ -115,14 +115,14 @@ test('direct specialist redirects execute for each newer language, not English',
  }
 });
 
-test('all eleven languages preserve selected locale when navigating across specialist links',()=>{
+test('all eleven languages preserve selected locale when navigating across standalone specialist links',()=>{
  const start=portal.indexOf('const extendedOnlyLanguages=');
  const end=portal.indexOf('const VUE_LANGUAGE_KEY=',start);
  assert.ok(start>=0&&end>start);
  const handler=portal.slice(start,end);
  const extended=new Set(['fr','el','tr','fa']);
  for(const language of languages){
-  for(const domain of ['anivue','foodvue','antiqvue','vinylvue','musicgearvue','medivue','motovue','wardrobevue']){
+  for(const domain of ['foodvue','antiqvue','vinylvue','musicgearvue','medivue','motovue','wardrobevue']){
    let listener,redirect=null,prevented=false;
    const location={href:'https://vueapps.test/',origin:'https://vueapps.test',assign:value=>{redirect=value}};
    const document={addEventListener:(event,callback)=>{if(event==='click')listener=callback}};
