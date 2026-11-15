@@ -1,0 +1,126 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {COMMUT_LOCALES,COMMUT_MESSAGES,COMMUT_PROVIDERS,commuteLocale,normalizeDeparture,normalizeTrafficResult,queryCommute} from './commutvue.js';
+test('COMMUTVUE supports every portal language',()=>{
+ assert.equal(COMMUT_LOCALES.length,11);
+ for(const locale of COMMUT_LOCALES){assert.equal(COMMUT_MESSAGES[locale].length,8);assert.ok(COMMUT_MESSAGES[locale][0]);}
+ assert.equal(commuteLocale('xx'),'en');
+});
+test('Stockholm and Paris providers are configured without embedded credentials',()=>{
+ assert.equal(COMMUT_PROVIDERS.stockholm.country,'SE');
+ assert.equal(COMMUT_PROVIDERS.paris.country,'FR');
+ assert.match(COMMUT_PROVIDERS.stockholm.credential,/API_KEY/);
+});
+test('unknown realtime delay is never reported as zero',()=>{
+ const result=normalizeDeparture({id:'trip-43',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'});
+ assert.equal(result.delayMinutes,null);
+ assert.equal(result.expected,null);
+});
+test('verified timestamps produce a delay',()=>{
+ const result=normalizeDeparture({id:'trip-43',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z',expected:'2026-11-10T08:07:00Z'});
+ assert.equal(result.delayMinutes,7);
+ assert.throws(()=>normalizeDeparture({id:'trip-43',line:'43',destination:'Stockholm City',scheduled:'tomorrow'}));
+});
+test('results require source provenance and timestamp',()=>{
+ assert.throws(()=>normalizeTrafficResult({provider:'stockholm',departures:[]}));
+ assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[]}));
+ assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'http://example.org',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z'}]}));
+ assert.throws(()=>normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',departures:[{scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]}));
+ const result=normalizeTrafficResult({provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyEvidence:{verified:true,originId:'stop-A',destinationId:'stop-B',departureIds:['trip-1']},departures:[{id:'trip-1',line:'43',scheduled:'2026-11-10T08:01:00Z',destination:'Stockholm City'}]});
+ assert.equal(result.status,'ok');
+});
+test('missing provider, stations or data never invents a departure',async()=>{
+ assert.deepEqual((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).departures,[]);
+ assert.equal((await queryCommute({provider:'paris',from:'',to:'Châtelet'})).status,'needs_stations');
+ assert.equal((await queryCommute({provider:'paris',from:'Gare du Nord',to:'Châtelet',adapter:async()=>{throw Error('offline')}})).status,'unavailable');
+});
+
+test('journey evidence must cover each individual departure',()=>{
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-10T08:00:00Z',journeyEvidence:{verified:true,originId:'stop-A',destinationId:'stop-B',departureIds:['trip-1']}};
+ assert.throws(()=>normalizeTrafficResult({...base,departures:[{id:'trip-2',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:01:00Z'}]}));
+ assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...base.journeyEvidence,originId:'stop-B'},departures:[{id:'trip-1',scheduled:'2026-11-10T08:01:00Z'}]}));
+});
+
+test('departure identity must include provider trip ID, line and destination',()=>{
+ const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'};
+ for(const field of ['id','line','destination'])assert.throws(()=>normalizeDeparture({...base,[field]:''}));
+});
+
+test('unverified provider status fails closed without exposing departures',()=>{
+ for(const status of ['scheduled_only','provider_error','unknown']){
+  const result=normalizeTrafficResult({provider:'stockholm',status,departures:[{id:'fake',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'}]});
+  assert.equal(result.status,'unavailable');
+  assert.deepEqual(result.departures,[]);
+ }
+});
+
+test('verified journey rejects duplicate provider trip IDs rather than double-counting departures',()=>{
+ const trip={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ const payload={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-15T07:59:00Z',journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds:['trip-1']},departures:[trip,{...trip}]};
+ assert.throws(()=>normalizeTrafficResult(payload),/Duplicate verified departure ID/);
+ assert.equal(normalizeTrafficResult({...payload,departures:[trip]}).departures.length,1);
+});
+
+test('verified journey evidence IDs must be unique and nonblank',()=>{
+ const trip={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-15T07:59:00Z',departures:[trip]};
+ for(const departureIds of [['trip-1','trip-1'],['trip-1',''],['trip-1','  ']]){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds}}),/Invalid journey departure evidence IDs/);
+ }
+});
+
+test('departure identities must be canonical to match journey evidence exactly',()=>{
+ const base={id:'journey-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T09:00:00Z'};
+ for(const key of ['id','line','destination']){
+  assert.throws(()=>normalizeDeparture({...base,[key]:' '+base[key]}),/Uncanonical departure identity/);
+  assert.throws(()=>normalizeDeparture({...base,[key]:base[key]+' '}),/Uncanonical departure identity/);
+ }
+ assert.equal(normalizeDeparture(base).id,'journey-1');
+});
+
+test('verified journey refuses padded station IDs and evidence departure IDs',()=>{
+ const trip={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T09:00:00Z'};
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-15T08:59:00Z',departures:[trip]};
+ const evidence={verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds:['trip-1']};
+ for(const key of ['originId','destinationId']){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...evidence,[key]:' '+evidence[key]}}),/Uncanonical journey station identity/);
+ }
+ for(const departureIds of [[' trip-1'],['trip-1 ']]){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...evidence,departureIds}}),/Invalid journey departure evidence IDs/);
+ }
+ assert.equal(normalizeTrafficResult({...base,journeyEvidence:evidence}).departures.length,1);
+});
+
+test('prototype keys cannot masquerade as real transit providers',()=>{
+ for(const provider of ['constructor','toString','__proto__','hasOwnProperty']){
+  assert.throws(()=>normalizeTrafficResult({provider,status:'unavailable',departures:[]}),/Unknown provider/,provider);
+ }
+});
+
+test('verified provider updates require an explicit ISO timestamp, never ambiguous dates',()=>{
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds:['trip-1']},departures:[{id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'}]};
+ for(const updatedAt of ['0','2026-11-15','November 15 2026',0,null,undefined]){
+  assert.throws(()=>normalizeTrafficResult({...base,updatedAt}),/HTTPS source and timestamp required/,String(updatedAt));
+ }
+ assert.equal(normalizeTrafficResult({...base,updatedAt:'2026-11-15T07:59:00Z'}).status,'ok');
+});
+
+test('departure timestamps must include unambiguous date, time and timezone',()=>{
+ const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ for(const scheduled of ['2026-11-15','2026-11-15T08:00:00','November 15 2026',0]){
+  assert.throws(()=>normalizeDeparture({...base,scheduled}),/Verified scheduled timestamp required/,String(scheduled));
+ }
+ for(const expected of ['2026-11-15','2026-11-15T08:05:00','November 15 2026']){
+  assert.throws(()=>normalizeDeparture({...base,expected}),/Invalid expected timestamp/,String(expected));
+ }
+ assert.equal(normalizeDeparture({...base,expected:'2026-11-15T09:05:00+01:00'}).delayMinutes,5);
+});
+
+test('explicit invalid expected times cannot silently become unknown',()=>{
+ const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ for(const expected of [0,false,'',{},'invalid']){
+  assert.throws(()=>normalizeDeparture({...base,expected}),/Invalid expected timestamp/,String(expected));
+ }
+ assert.equal(normalizeDeparture(base).expected,null);
+ assert.equal(normalizeDeparture({...base,expected:null}).expected,null);
+});

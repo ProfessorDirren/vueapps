@@ -37,3 +37,26 @@ test('mixed Latin text with stray non-Latin characters cannot trigger script lan
   assert.notEqual(detect('Min hund är sjuk '+fragment),'ru');
  }
 });
+
+test('mixed Spanish Swedish English question preserves currently selected UI language',()=>{
+ assert.equal(detect('Mi perro esta enfermo, vad skall jag göra? Do you have a solution?'),null);
+ assert.equal(detect('Mi perro está enfermo, vad skall jag göra? Do you have a solution?'),null);
+ assert.equal(detect('Min hund är sjuk och behöver hjälp'), 'sv');
+ assert.equal(detect('Mi perro está enfermo y necesito ayuda'), 'es');
+});
+
+test('language detection remains conservative for multilingual user input',()=>{
+ const mixed=[
+  'Hola necesito ayuda, min hund är sjuk och behöver hjälp',
+  'My dog is sick and I need help, mi perro está enfermo y necesito ayuda',
+  'Jag behöver hjälp med min hund, my dog is sick and I need help',
+  'Mi perro está enfermo, vad skall jag göra? Do you have a solution?'
+ ];
+ for(const question of mixed)assert.equal(detect(question),null,question);
+});
+
+test('shared words alone must not masquerade as a second language',()=>{
+ assert.equal(detect('My dog is sick and I need help with my dog'), 'en');
+ assert.equal(detect('Min hund är sjuk och behöver hjälp med min hund'), 'sv');
+ assert.equal(detect('Mi perro está enfermo y necesito ayuda para mi perro'), 'es');
+});

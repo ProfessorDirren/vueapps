@@ -7,7 +7,7 @@ const WORDS={
  es:['mi','mis','perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','porque','está','estoy','tengo','puedo','qué','una','unos','para','con','por','del','los','las'],
  en:['my','dog','sick','hello','thanks','need','help','please','what','how','why','the','this','that','with','have','does','can','not','and','is','are','broken','works','want']
 };
-const UNIQUE={fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué'],en:['hello','thanks','please','the','this','that','does','broken','works']};
+const UNIQUE={fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué'],en:['hello','thanks','please','the','this','that','does','broken','works','dog','sick','need']};
 export function detectInputLanguage(value){
  if(typeof value!=='string')return null;
  const text=value.trim();if(text.length<8)return null;
@@ -23,6 +23,12 @@ export function detectInputLanguage(value){
  const words=(text.toLocaleLowerCase().match(/[\p{L}]+/gu)||[]);
  if(words.length<3)return null;
  const scores=Object.fromEntries(Object.entries(WORDS).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0)+(UNIQUE[lang].includes(w)?2:0),0)]));
+ // A genuinely multilingual question must not hijack the user's current UI language.
+ // Require independent language-specific evidence before treating shared words as multilingual.
+ // Common words such as 'mi', 'can' or 'is' alone must not freeze a clear language switch.
+ const uniqueScores=Object.fromEntries(Object.entries(UNIQUE).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0),0)]));
+ const supported=Object.entries(scores).filter(([lang,score])=>score>=3&&uniqueScores[lang]>=1);
+ if(supported.length>1)return null;
  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
  return sorted[0][1]>=3&&sorted[0][1]>=sorted[1][1]+2?sorted[0][0]:null;
 }

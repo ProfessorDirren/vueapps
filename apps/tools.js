@@ -5,7 +5,7 @@ import { addDays, dueState, scaleIngredients, validateRecords } from '../core/pl
 const domain=document.body.dataset.domain, config=DOMAINS[domain], workspace=document.getElementById('workspace'), picker=document.getElementById('language');
 const storageKey='vueapps-'+domain+'-v1';
 let language='en', records=[],completed=0,storageAvailable=true;
-try { const chosen=sessionStorage.getItem('vue-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
+try { const chosen=sessionStorage.getItem('vue-auto-language')||sessionStorage.getItem('vue-language');if(LANGUAGES.includes(chosen))language=chosen; } catch {}
 let recipe={name:'',category:0,original:4,target:4,items:[{name:'',quantity:0,unit:'g'}]},scaled=[];
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const t=key=>UI[language][key], detail=()=>config.locales[language];
@@ -115,7 +115,7 @@ function render(){
  const reference=document.getElementById('reference');reference.href=config.reference[1];reference.textContent=t('sources')+' ↗';
  if(domain==='foodvue')buildFood();else buildPlanner();if(!storageAvailable)announce('storageError');
 }
-picker.addEventListener('change',()=>{if(LANGUAGES.includes(picker.value)){language=picker.value;try{sessionStorage.setItem('vue-language',language)}catch{}render()}});
+picker.addEventListener('change',()=>{if(LANGUAGES.includes(picker.value)){language=picker.value;try{sessionStorage.removeItem('vue-auto-language');sessionStorage.setItem('vue-language',language)}catch{}render()}});
 const urls={};
 function attachMedia(id,kind){const input=document.getElementById(id),out=document.getElementById(id+'-preview');input.addEventListener('change',()=>{
  if(urls[id]){URL.revokeObjectURL(urls[id]);delete urls[id]}out.replaceChildren();const file=input.files?.[0];if(!file)return;const check=validateMedia(file,kind);
