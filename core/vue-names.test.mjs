@@ -157,3 +157,23 @@ test('switching all languages never changes the identity or order of specialist 
   }
  }
 });
+
+test('localized headings never treat translated names as markup',()=>{
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){assert.equal(tag,'bdi');return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(value){return {textContent:value};}
+ };
+ for(const language of ['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa']){
+  renderVueNames(document,language);
+  for(const id of VUE_NAMES){
+   const children=headings.get(id).children;
+   assert.equal(children.length,3);
+   assert.equal(children[0].tag,'bdi');
+   assert.equal(children[0].textContent,localizedVueName(id,language));
+   assert.equal(children[2].tag,'bdi');
+   assert.equal(children[2].dir,'ltr');
+  }
+ }
+});
