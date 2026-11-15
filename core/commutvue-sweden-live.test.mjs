@@ -296,3 +296,15 @@ test('invalid station names are rejected before making any Trafiklab request',as
  }
  assert.equal(requests,0);
 });
+
+test('Swedish DST gap and repeated-hour timestamps fail closed without guessing',async()=>{
+ const cases=[
+  '2026-03-29T02:30:00', // spring-forward: no such Stockholm local time
+  '2026-10-25T02:30:00'  // autumn fallback: occurs twice
+ ];
+ for(const timestamp of cases){
+  const adapter=make({...board,timestamp});
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+  assert.equal(result.status,'unavailable',timestamp);
+ }
+});
