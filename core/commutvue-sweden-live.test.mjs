@@ -237,3 +237,15 @@ test('Jordbro to Stockholm City verifies only the City child stop, not T-Central
  assert.deepEqual(result.departures,[]);
  assert.equal(calls.filter(url=>url.includes('/trips/')).length,1);
 });
+
+test('duplicate child stop names within one meta-stop are rejected, never arbitrarily selected',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,text:async()=>JSON.stringify({stop_groups:[{
+   id:'740098000',name:'Stockholm',stops:[
+    {id:'1617',name:'Stockholm City'},
+    {id:'9999',name:'Stockholm City'}
+   ]
+  }]})
+ })});
+ await assert.rejects(resolver('Stockholm City'),/uniquely/);
+});
