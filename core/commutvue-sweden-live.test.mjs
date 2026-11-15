@@ -194,3 +194,25 @@ test('loop service with repeated origin call cannot claim a verified journey',as
  assert.equal(result.status,'unavailable');
  assert.deepEqual(result.departures,[]);
 });
+
+test('Stockholm City resolves to its exact child stop, not the whole Stockholm meta-stop',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,text:async()=>JSON.stringify({stop_groups:[{
+   id:'740098000',name:'Stockholm',stops:[
+    {id:'1',name:'Stockholm Centralstation'},
+    {id:'1617',name:'Stockholm City'},
+    {id:'12275',name:'T-Centralen'}
+   ]
+  }]})
+ })});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
+ assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['12275']});
+ await assert.rejects(resolver('Stockholm södra'),/uniquely/);
+ const ambiguous=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,text:async()=>JSON.stringify({stop_groups:[
+   {id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]},
+   {id:'740098001',name:'Another group',stops:[{id:'9999',name:'Stockholm City'}]}
+  ]})
+ })});
+ await assert.rejects(ambiguous('Stockholm City'),/uniquely/);
+});
