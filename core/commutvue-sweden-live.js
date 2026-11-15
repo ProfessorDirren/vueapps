@@ -70,7 +70,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const details=await get('trips/'+encodeURIComponent(tripId)+'/'+startDate);
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
-   const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
+   // Repeated origin calls make the departure's position ambiguous on loop services.
+   // Fail closed rather than verifying a journey against the wrong occurrence.
+   const originCallIndices=calls.flatMap((c,k)=>c.stop?.id===d.stop.id?[k]:[]);
+   if(originCallIndices.length!==1)continue;
+   const i=originCallIndices[0];
    const j=calls.findIndex((c,k)=>k>i&&destinationStopIds.has(c.stop?.id));
    if(i<0||j<=i||calls[i].is_realtime!==true||d.canceled===true||calls[i].canceled===true||calls[j].canceled===true||!Number.isFinite(swedishTime(d.scheduled))||!Number.isFinite(swedishTime(d.realtime)))continue;
    departures.push({id,line,destination:direction,scheduled:new Date(scheduled).toISOString(),expected:new Date(expected).toISOString(),cancelled:false});
