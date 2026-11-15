@@ -66,8 +66,7 @@ test('MARTIALARTSVUE card and action have all eleven language variants and updat
  const section=portal.match(/const martialTranslations=([\s\S]*?);\s*const mediTranslations=/)?.[1];
  assert.ok(section,'MARTIALARTSVUE translation dictionary exists');
  for(const language of languages){
-  const key=language.includes('-')?JSON.stringify(language):language;
-  assert.ok(section.includes(key+':'),'missing MARTIALARTSVUE locale '+language);
+  assert.ok(section.includes(language+':')||section.includes(JSON.stringify(language)+':'),'missing MARTIALARTSVUE locale '+language);
  }
  assert.match(portal,/querySelector\("#app-martialartsvue p"\)\.textContent=martial\[0\]/);
  assert.match(portal,/querySelector\("#app-martialartsvue a"\)\.textContent=martial\[1\]/);
