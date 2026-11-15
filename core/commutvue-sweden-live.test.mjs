@@ -268,7 +268,7 @@ test('full Trafiklab adapter resolves Jordbro and Stockholm City from meta-stop 
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
  assert.equal(result.status,'ok');
  assert.equal(result.departures[0].delayMinutes,7);
- assert.equal(result.journeyEvidence?.destinationId,'740098000');
+ assert.equal(result.sourceUrl,'https://realtime-api.trafiklab.se/v1/departures/740000001');
  assert.equal(requests.length,4);
  assert.ok(requests.every(url=>url.includes('key=fixture')));
 });
