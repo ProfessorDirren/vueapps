@@ -90,3 +90,9 @@ test('verified journey refuses padded station IDs and evidence departure IDs',()
  }
  assert.equal(normalizeTrafficResult({...base,journeyEvidence:evidence}).departures.length,1);
 });
+
+test('prototype keys cannot masquerade as real transit providers',()=>{
+ for(const provider of ['constructor','toString','__proto__','hasOwnProperty']){
+  assert.throws(()=>normalizeTrafficResult({provider,status:'unavailable',departures:[]}),/Unknown provider/,provider);
+ }
+});
