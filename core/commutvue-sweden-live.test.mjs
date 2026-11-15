@@ -493,7 +493,7 @@ test('Trafiklab canceled departure and arrival flags never produce a verified jo
  }
 });
 
-test('T-Centralen and Stockholm City remain distinct child stops of Stockholm meta-stop',async()=>{
+test('commuter-rail T-Centralen resolves to Stockholm City while child stop IDs stay distinct',async()=>{
  const groups=[{id:'740098000',name:'Stockholm',area_type:'META_STOP',stops:[
   {id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}
  ]}];
@@ -503,7 +503,7 @@ test('T-Centralen and Stockholm City remain distinct child stops of Stockholm me
   return {ok:true,text:async()=>JSON.stringify({stop_groups:url.includes('/Stockholm?')?groups:[]})};
  }});
  assert.deepEqual(await resolver('Stockholm City'),{id:'740098000',stopIds:['1617']});
- assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['12275']});
+ assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['1617']});
  assert.equal(requested.filter(p=>p.endsWith('/Stockholm')).length,2);
 });
 
