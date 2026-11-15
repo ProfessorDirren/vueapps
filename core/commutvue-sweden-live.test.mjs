@@ -515,3 +515,19 @@ test('same Stockholm meta-stop must not verify T-Centralen trip via Stockholm Ci
  assert.equal(result.status,'unavailable');
  assert.deepEqual(result.departures,[]);
 });
+
+
+test('T-Centralen commuter queries resolve to Stockholm City platforms, not metro stop IDs',async()=>{
+ const requested=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  requested.push(url);
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:[
+   {id:'740098000',name:'Stockholm',stops:[
+    {id:'1617',name:'Stockholm City'},
+    {id:'12275',name:'T-Centralen'}
+   ]}
+  ]})};
+ }});
+ assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['1617']});
+ assert.ok(requested.every(url=>!url.includes('/stops/name/T-Centralen')));
+});
