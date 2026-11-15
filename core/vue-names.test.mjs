@@ -135,3 +135,25 @@ test('language switching tolerates missing specialist cards without stale names'
   }
  }
 });
+
+test('switching all languages never changes the identity or order of specialist cards',()=>{
+ const selectors=[];
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){selectors.push(selector);return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ const originalIds=[...headings.keys()];
+ for(const language of ['en','fr','ar','sv','fa','zh-CN','hi','el','tr','ru','es','en']){
+  const before=selectors.length;
+  renderVueNames(document,language);
+  assert.deepEqual(selectors.slice(before),VUE_NAMES.map(id=>'#app-'+id+' h3'));
+  assert.deepEqual([...headings.keys()],originalIds);
+  for(const id of originalIds){
+   const [label,,brand]=headings.get(id).children;
+   assert.equal(label.textContent,localizedVueName(id,language),id+' '+language);
+   assert.equal(brand.textContent,'('+vueBrandName(id)+')',id+' '+language);
+  }
+ }
+});
