@@ -124,6 +124,9 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
  if(!apiKey||typeof fetcher!=='function')throw new TypeError('Trafiklab key and fetcher required');
  return async name=>{
   if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Invalid stop name');
+  // T-Centralen is the metro interchange; commuter trains use the adjacent Stockholm City platforms.
+  // Resolve the commuter-rail platform explicitly, never a similarly named metro stop.
+  if(name.trim().toLocaleLowerCase('sv')==='t-centralen')return await createTrafiklabStopResolver({apiKey,fetcher})('Stockholm City');
   const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
   url.searchParams.set('key',apiKey);
   let response;try{response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
