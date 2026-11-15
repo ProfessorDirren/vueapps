@@ -77,3 +77,16 @@ test('departure identities must be canonical to match journey evidence exactly',
  }
  assert.equal(normalizeDeparture(base).id,'journey-1');
 });
+
+test('verified journey refuses padded station IDs and evidence departure IDs',()=>{
+ const trip={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T09:00:00Z'};
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-15T08:59:00Z',departures:[trip]};
+ const evidence={verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds:['trip-1']};
+ for(const key of ['originId','destinationId']){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...evidence,[key]:' '+evidence[key]}}),/Uncanonical journey station identity/);
+ }
+ for(const departureIds of [[' trip-1'],['trip-1 ']]){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{...evidence,departureIds}}),/Invalid journey departure evidence IDs/);
+ }
+ assert.equal(normalizeTrafficResult({...base,journeyEvidence:evidence}).departures.length,1);
+});
