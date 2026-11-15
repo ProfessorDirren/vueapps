@@ -45,3 +45,20 @@ test('departure identity must include provider trip ID, line and destination',()
  const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'};
  for(const field of ['id','line','destination'])assert.throws(()=>normalizeDeparture({...base,[field]:''}));
 });
+
+test('all eleven commute locales preserve distinct translated status labels across specialist transitions',()=>{
+ const keys=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa'];
+ assert.deepEqual(COMMUT_LOCALES,keys);
+ const english=COMMUT_MESSAGES.en;
+ for(const locale of keys){
+  assert.equal(commuteLocale(locale),locale,`selected locale ${locale} must persist`);
+  const messages=COMMUT_MESSAGES[locale];
+  assert.equal(messages.length,english.length,`message count ${locale}`);
+  for(let i=0;i<messages.length;i++){
+   assert.equal(typeof messages[i],'string');
+   assert.ok(messages[i].trim(),`empty status label ${locale}/${i}`);
+   if(locale!=='en')assert.notEqual(messages[i],english[i],`unexpected English status label ${locale}/${i}`);
+  }
+ }
+ assert.equal(commuteLocale('unknown'),'en');
+});
