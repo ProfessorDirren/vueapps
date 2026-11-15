@@ -30,8 +30,9 @@ export const COMMUT_ROLLOUT=Object.freeze(prioritizedCommuteRegions(COMMUT_PROVI
 export function commuteLocale(locale){return COMMUT_LOCALES.includes(locale)?locale:'en'}
 export function normalizeDeparture(raw){
  if(!raw||typeof raw!=='object')throw new TypeError('Invalid departure');
- const scheduled=raw.scheduled?Date.parse(raw.scheduled):NaN;
- const expected=raw.expected?Date.parse(raw.expected):NaN;
+ const iso=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+ const scheduled=typeof raw.scheduled==='string'&&iso.test(raw.scheduled)?Date.parse(raw.scheduled):NaN;
+ const expected=typeof raw.expected==='string'&&iso.test(raw.expected)?Date.parse(raw.expected):NaN;
  if(!Number.isFinite(scheduled))throw new TypeError('Verified scheduled timestamp required');
  if(typeof raw.id!=='string'||!raw.id.trim()||typeof raw.line!=='string'||!raw.line.trim()||typeof raw.destination!=='string'||!raw.destination.trim())throw new TypeError('Verified departure identity required');
  if(raw.expected&&!Number.isFinite(expected))throw new TypeError('Invalid expected timestamp');
