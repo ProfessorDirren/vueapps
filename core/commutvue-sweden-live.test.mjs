@@ -249,3 +249,26 @@ test('duplicate child stop names within one meta-stop are rejected, never arbitr
  })});
  await assert.rejects(resolver('Stockholm City'),/uniquely/);
 });
+
+test('full Trafiklab adapter resolves Jordbro and Stockholm City from meta-stop fixtures',async()=>{
+ const {createTrafiklabSwedenLive}=await import('./commutvue-sweden-live.js');
+ const requests=[];
+ const adapter=createTrafiklabSwedenLive({apiKey:'fixture',now:clock,fetcher:async url=>{
+  requests.push(url);
+  let payload;
+  if(url.includes('/stops/name/Jordbro?'))payload={stop_groups:[{id:'740000001',name:'Jordbro',stops:[{id:'stop1',name:'Jordbro'}]}]};
+  else if(url.includes('/stops/name/Stockholm%20City?'))payload={stop_groups:[{id:'740098000',name:'Stockholm',stops:[
+   {id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}]}]};
+  else if(url.includes('/departures/740000001?'))payload=board;
+  else if(url.includes('/trips/t1/2026-11-10?'))payload={...details,calls:[
+   {stop:{id:'stop1'},is_realtime:true},{stop:{id:'1617'},is_realtime:true}]};
+  else throw Error('Unexpected Trafiklab endpoint: '+url.split('?')[0]);
+  return {ok:true,text:async()=>JSON.stringify(payload)};
+ }});
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures[0].delayMinutes,7);
+ assert.equal(result.journeyEvidence?.destinationId,'740098000');
+ assert.equal(requests.length,4);
+ assert.ok(requests.every(url=>url.includes('key=fixture')));
+});
