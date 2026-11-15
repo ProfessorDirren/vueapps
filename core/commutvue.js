@@ -41,7 +41,7 @@ export function normalizeDeparture(raw){
 export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,journeyEvidence,status='ok'}){
  if(typeof provider!=='string'||!Object.hasOwn(COMMUT_PROVIDERS,provider))throw new TypeError('Unknown provider');
  if(status!=='ok')return {status:'unavailable',provider,departures:[]};
- if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('HTTPS source and timestamp required');
+ if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||(typeof updatedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(updatedAt)||!Number.isFinite(Date.parse(updatedAt))))throw new TypeError('HTTPS source and timestamp required');
  if(!journeyEvidence||journeyEvidence.verified!==true||typeof journeyEvidence.originId!=='string'||!journeyEvidence.originId.trim()||typeof journeyEvidence.destinationId!=='string'||!journeyEvidence.destinationId.trim()||journeyEvidence.originId===journeyEvidence.destinationId||!Array.isArray(journeyEvidence.departureIds)||journeyEvidence.departureIds.length===0)throw new TypeError('Verified journey evidence required');
  if(new Set(journeyEvidence.departureIds).size!==journeyEvidence.departureIds.length||journeyEvidence.departureIds.some(id=>typeof id!=='string'||!id.trim()||id!==id.trim()))throw new TypeError('Invalid journey departure evidence IDs');
  if(journeyEvidence.originId!==journeyEvidence.originId.trim()||journeyEvidence.destinationId!==journeyEvidence.destinationId.trim())throw new TypeError('Uncanonical journey station identity');
