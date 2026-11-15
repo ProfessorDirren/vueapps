@@ -104,3 +104,14 @@ test('verified provider updates require an explicit ISO timestamp, never ambiguo
  }
  assert.equal(normalizeTrafficResult({...base,updatedAt:'2026-11-15T07:59:00Z'}).status,'ok');
 });
+
+test('departure timestamps must include unambiguous date, time and timezone',()=>{
+ const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ for(const scheduled of ['2026-11-15','2026-11-15T08:00:00','November 15 2026',0]){
+  assert.throws(()=>normalizeDeparture({...base,scheduled}),/Verified scheduled timestamp required/,String(scheduled));
+ }
+ for(const expected of ['2026-11-15','2026-11-15T08:05:00','November 15 2026']){
+  assert.throws(()=>normalizeDeparture({...base,expected}),/Invalid expected timestamp/,String(expected));
+ }
+ assert.equal(normalizeDeparture({...base,expected:'2026-11-15T09:05:00+01:00'}).delayMinutes,5);
+});
