@@ -42,6 +42,7 @@ export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,
  if(status!=='ok')return {status:'unavailable',provider,departures:[]};
  if(typeof sourceUrl!=='string'||!/^https:\/\//i.test(sourceUrl)||!Number.isFinite(Date.parse(updatedAt)))throw new TypeError('HTTPS source and timestamp required');
  if(!journeyEvidence||journeyEvidence.verified!==true||typeof journeyEvidence.originId!=='string'||!journeyEvidence.originId.trim()||typeof journeyEvidence.destinationId!=='string'||!journeyEvidence.destinationId.trim()||journeyEvidence.originId===journeyEvidence.destinationId||!Array.isArray(journeyEvidence.departureIds)||journeyEvidence.departureIds.length===0)throw new TypeError('Verified journey evidence required');
+ if(new Set(journeyEvidence.departureIds).size!==journeyEvidence.departureIds.length||journeyEvidence.departureIds.some(id=>typeof id!=='string'||!id.trim()))throw new TypeError('Invalid journey departure evidence IDs');
  if(!Array.isArray(departures)||departures.some(d=>typeof d.id!=='string'||!journeyEvidence.departureIds.includes(d.id)))throw new TypeError('Departure not covered by journey evidence');
  if(!Array.isArray(departures)||departures.length===0)throw new TypeError('No verified journey departures');
  if(new Set(departures.map(d=>d.id)).size!==departures.length)throw new TypeError('Duplicate verified departure ID');
