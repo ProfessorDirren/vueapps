@@ -2,7 +2,7 @@ import test from 'node:test';
 import {mkdtemp,readFile,readdir,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {FACTORY_LANGUAGES,validateVueDefinition,scaffoldVue,checkVueCollision,buildRoutingCandidates,previewVueRouting,simulateVueIntegration,createFactoryTestRegistry,createFactoryTestApi,buildVueCoreIntegrationProposal} from './vuefactory.js';
 const definition={
@@ -18,7 +18,14 @@ test('factory generates a deterministic reviewable profile and checklist',()=>{
  assert.deepEqual(a,b);
  assert.match(a.files['generated/bookvue/profile.js'],/Book identification/);
  assert.match(a.files['generated/bookvue/RELEASE-CHECKLIST.md'],/manual review required/);
- assert.equal(Object.keys(a.files).length,6);
+ assert.equal(Object.keys(a.files).length,8);
+ const requirements=JSON.parse(a.files['generated/bookvue/test-requirements.json']);
+ assert.equal(requirements.specialist,'bookvue');
+ assert.equal(requirements.vercelBuildsDuringDevelopment,0);
+ assert.equal(requirements.previewRequired,true);
+ assert.equal(requirements.productionApproved,false);
+ assert.ok(requirements.required.includes('domain-safety'));
+ assert.ok(requirements.required.includes('routing-smoke'));
  assert.match(a.files['generated/bookvue/registry-snippet.txt'],/\"bookvue\":/);
  assert.match(a.files['generated/bookvue/routing-review.txt'],/collision-tested/);
  const plan=JSON.parse(a.files['generated/bookvue/integration-plan.json']);
@@ -35,6 +42,18 @@ test('factory requires seven languages and substantive methods',()=>{
 test('factory rejects credentialed or insecure sources',()=>{
  assert.throws(()=>validateVueDefinition({...definition,sources:[['bad','http://example.org']]}),/HTTPS/);
  assert.throws(()=>validateVueDefinition({...definition,sources:[['bad','https://user:pass@example.org']]}),/HTTPS/);
+});
+test('factory blocks internal, loopback and private source addresses',()=>{
+ for(const host of ['localhost','app.local','server.internal','127.0.0.1','10.0.0.8','172.16.0.1','192.168.1.2','169.254.1.1','[::1]']){
+  assert.throws(()=>validateVueDefinition({...definition,sources:[['internal','https://'+host+'/']]}),/public HTTPS/,host);
+ }
+ assert.doesNotThrow(()=>validateVueDefinition(definition));
+});
+test('factory rejects encoded loopback, IPv6 and metadata endpoints',()=>{
+ for(const host of ['0x7f000001','2130706433','0177.0.0.1','127.1','[::1]','[::ffff:127.0.0.1]','169.254.169.254','100.100.100.200','metadata.google.internal']){
+  assert.throws(()=>validateVueDefinition({...definition,sources:[['blocked','https://'+host+'/']]}),/public HTTPS/,host);
+ }
+ assert.doesNotThrow(()=>validateVueDefinition({...definition,sources:[['public','https://www.loc.gov/']]}));
 });
 test('factory never writes, registers, deploys or calls an AI service',()=>{
  const a=scaffoldVue(definition);
@@ -65,7 +84,31 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   execFileSync(process.execPath,['scripts/vuefactory.mjs','examples/vuefactory-bookvue.json',output],{cwd:root,timeout:15000});
   const directory=join(output,'generated','bookvue');
   const files=await readdir(directory);
-  assert.equal(files.length,9);
+  assert.equal(files.length,11);
+  assert.ok(files.includes('test-requirements.json'));
+  assert.ok(files.includes('contract.test.mjs'));
+  const childEnv={...process.env};
+  delete childEnv.NODE_TEST_CONTEXT;
+  const runContract=()=>spawnSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000,encoding:'utf8',env:childEnv});
+  const baseline=runContract();
+  assert.equal(baseline.status,0,'Generated contract baseline failed: '+baseline.stdout+' '+baseline.stderr);
+  assert.match(baseline.stdout,/# tests 2/,'Generated tests did not execute');
+  const profilePath=join(directory,'profile.js');
+  const originalProfile=await readFile(profilePath,'utf8');
+  assert.ok(originalProfile.includes('https://www.loc.gov/'));
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','http://www.loc.gov/'));
+  const tampered=runContract();
+  assert.notEqual(tampered.status,0,'Tampered source unexpectedly passed: '+tampered.stdout+' '+tampered.stderr);
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','https://127.0.0.1/'));
+  const privateHost=runContract();
+  assert.notEqual(privateHost.status,0,'Private source unexpectedly passed: '+privateHost.stdout+' '+privateHost.stderr);
+  await writeFile(profilePath,originalProfile.replace('https://www.loc.gov/','https://user:secret@www.loc.gov/'));
+  const credentialed=runContract();
+  assert.notEqual(credentialed.status,0,'Credentialed source unexpectedly passed: '+credentialed.stdout+' '+credentialed.stderr);
+  await writeFile(profilePath,originalProfile);
+  const restored=runContract();
+  assert.equal(restored.status,0,'Restored contract failed: '+restored.stdout+' '+restored.stderr);
+  assert.match(restored.stdout,/# tests 2/);
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
   const audit=JSON.parse(await readFile(join(directory,'existing-router-audit.json'),'utf8'));

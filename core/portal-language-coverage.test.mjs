@@ -35,7 +35,7 @@ test('new language specialist links stay inside VUECORE instead of opening untra
 
 test('direct ANYVUE visits preserve newer languages via VUECORE',()=>{
  const anyvue=readFileSync(new URL('../anyvue.html',import.meta.url),'utf8');
- for(const language of ['fr','el','tr','fa'])assert.ok(anyvue.includes("'"+language+"'"),language);
+ assert.ok(anyvue.includes("language && language!=='en'"));
  assert.ok(anyvue.includes("location.replace('./?vue=anyvue#vue-router')"));
  assert.ok(anyvue.includes("sessionStorage.getItem('vue-language')"));
 });
@@ -66,7 +66,7 @@ test('specialist links match literal .html suffixes',()=>{
 });
 
 test('Persian and Arabic use RTL while French, Greek and Turkish remain LTR',()=>{
- assert.ok(portal.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(portal.includes('document.documentElement.dir=languageDirection(lang)'));
  assert.ok(portal.includes('document.documentElement.lang=lang'));
  assert.ok(portal.includes('setLanguage(initialLanguage)'));
  assert.ok(portal.includes('let initialLanguage="en"'));
@@ -77,7 +77,8 @@ test('all standalone specialists preserve four new languages on direct visits',(
   const html=readFileSync(new URL('../'+domain+'.html',import.meta.url),'utf8');
   assert.ok(html.includes("sessionStorage.getItem('vue-language')"),domain);
   assert.ok(html.includes("location.replace('./?vue="+domain+"#vue-router')"),domain);
-  for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
+  if(domain==='anyvue')assert.ok(html.includes("language && language!=='en'"));
+  else for(const language of ['fr','el','tr','fa'])assert.ok(html.includes("'"+language+"'"),domain+' '+language);
  }
 });
 
@@ -110,6 +111,27 @@ test('direct specialist redirects execute for each newer language, not English',
    let destination=null;
    runInNewContext(script,{sessionStorage:{getItem:()=>language},location:{replace:value=>{destination=value}}});
    assert.equal(destination,language==='en'?null:'./?vue='+domain+'#vue-router',domain+' '+language);
+  }
+ }
+});
+
+test('all eleven languages preserve selected locale when navigating across standalone specialist links',()=>{
+ const start=portal.indexOf('const extendedOnlyLanguages=');
+ const end=portal.indexOf('const VUE_LANGUAGE_KEY=',start);
+ assert.ok(start>=0&&end>start);
+ const handler=portal.slice(start,end);
+ const extended=new Set(['fr','el','tr','fa']);
+ for(const language of languages){
+  for(const domain of ['foodvue','antiqvue','vinylvue','musicgearvue','medivue','motovue','wardrobevue']){
+   let listener,redirect=null,prevented=false;
+   const location={href:'https://vueapps.test/',origin:'https://vueapps.test',assign:value=>{redirect=value}};
+   const document={addEventListener:(event,callback)=>{if(event==='click')listener=callback}};
+   runInNewContext(handler,{document,picker:{value:language},location,URL,encodeURIComponent,Set});
+   assert.equal(typeof listener,'function',language+' '+domain);
+   const link={href:'https://vueapps.test/'+domain+'.html',target:''};
+   listener({target:{closest:()=>link},defaultPrevented:false,button:0,metaKey:false,ctrlKey:false,shiftKey:false,altKey:false,preventDefault:()=>{prevented=true}});
+   assert.equal(redirect,extended.has(language)?'./?vue='+domain+'#vue-router':null,language+' '+domain);
+   assert.equal(prevented,extended.has(language),language+' '+domain);
   }
  }
 });

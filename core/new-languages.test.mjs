@@ -22,7 +22,7 @@ test('new languages are wired to output instructions and Persian RTL',()=>{
  const followup=readFileSync(new URL('../api/vue-followup.js',import.meta.url),'utf8');
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  for(const lang of languages){assert.match(vision,new RegExp(lang+':'));assert.match(followup,new RegExp("'"+lang+"':"));assert.match(html,new RegExp('value="'+lang+'"'))}
- assert.ok(html.includes('["ar","fa"].includes(lang)'));
+ assert.ok(html.includes('document.documentElement.dir=languageDirection(lang)'));
 });
 
 test('all four new languages have complete translated portal hero content',()=>{
@@ -69,7 +69,7 @@ test('all portal specialist translation groups include the four new languages',(
   const block=source.slice(0,end+1);
   for(const lang of languages)assert.ok(block.includes(JSON.stringify(lang)+':'),name+' missing '+lang);
  }
- assert.ok(html.includes('document.documentElement.dir=["ar","fa"].includes(lang)?"rtl":"ltr"'));
+ assert.ok(html.includes('document.documentElement.dir=languageDirection(lang)'));
  assert.ok(html.includes('setLanguage(initialLanguage)'));
 });
 

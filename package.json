@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "node --test core/*.test.mjs",
-    "factory:example": "node scripts/vuefactory.mjs examples/vuefactory-bookvue.json"
+    "factory:example": "node scripts/vuefactory.mjs examples/vuefactory-bookvue.json",
+    "vue:check": "node scripts/vue-release-check.mjs"
   }
 }

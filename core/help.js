@@ -1,4 +1,4 @@
-import { LANGUAGES, VueCoreError } from './index.js';
+import { LANGUAGES, VueCoreError, languageDirection } from './index.js';
 
 /**
  * Shared VUECORE help contract. Specialist VUEs extend this class and provide
@@ -29,7 +29,7 @@ export class VueHelp {
     return {
       id: this.id,
       language: selected,
-      direction: selected === 'ar' ? 'rtl' : 'ltr',
+      direction: languageDirection(selected),
       title: common.title,
       button: common.button ?? this.translations.en.button ?? 'Help',
       close: common.close ?? this.translations.en.close ?? 'Close',

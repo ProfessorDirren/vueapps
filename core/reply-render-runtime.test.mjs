@@ -9,10 +9,12 @@ test('reply creates question and answer elements in strict mode and preserves th
  const articles=[];
  const createElement=tag=>({tag,children:[],style:{},dataset:{},attributes:{},setAttribute(k,v){this.attributes[k]=v},append(...children){this.children.push(...children)},scrollIntoView(){}});
  const replies={append(node){articles.push(node)},querySelectorAll(){return articles}};
- const context={document:{createElement,documentElement:{lang:'sv'}},$:id=>{assert.equal(id,'vue-router-replies');return replies},active:{domain:'anivue'},provenanceLabel:{sv:'Ej verifierad'},updateAnswerLanguageNotices(){},console};
+ const context={document:{createElement,documentElement:{lang:'sv'}},$:id=>{assert.equal(id,'vue-router-replies');return replies},active:{domain:'anivue'},provenanceLabel:{sv:'Ej verifierad'},updateAnswerLanguageNotices(){},vueTitle:id=>id.toUpperCase()+' (Djur-VUE)',console};
  vm.runInNewContext(`'use strict'; ${replySource}; reply('Min hund är sjuk','Kontakta veterinär','anivue','local_guidance',false,'sv');`,context);
  assert.equal(articles.length,1);
  assert.equal(articles[0].dataset.answerLanguage,'sv');
+ assert.equal(articles[0].children[0].textContent,'ANIVUE (Djur-VUE)');
+ assert.equal(articles[0].children[0].dataset.vueDomain,'anivue');
  assert.equal(articles[0].children[1].textContent,'Min hund är sjuk');
  assert.equal(articles[0].children[2].textContent,'Kontakta veterinär');
 });

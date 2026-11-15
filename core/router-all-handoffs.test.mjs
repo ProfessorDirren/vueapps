@@ -6,6 +6,7 @@ import {MEMORY_DOMAINS} from './memory.js';
 // One unambiguous new topic for every explicitly routed specialist.
 // Every previous specialist must yield to that new topic, including itself.
 const topics={
+ commutvue:'pendeltåg från Jordbro till T-Centralen',
  martialartsvue:'karate',
  estatevue:'dödsbo',
  medivue:'bipacksedel',

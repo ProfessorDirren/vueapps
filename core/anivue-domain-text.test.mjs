@@ -23,7 +23,7 @@ test('invalid text inputs never call the backend',async()=>{
  const domain=new AniVueDomain({fetcher:async()=>{calls++;throw Error('unexpected')}});
  await assert.rejects(domain.analyzeText({species:'cow',description:'Not well'}),error=>error.code==='invalid_species');
  await assert.rejects(domain.analyzeText({species:'cat',description:'a'}),error=>error.code==='invalid_description');
- await assert.rejects(domain.analyzeText({species:'dog',description:'Coughing',language:'fr'}),error=>error.code==='invalid_language');
+ await assert.rejects(domain.analyzeText({species:'dog',description:'Coughing',language:'xx'}),error=>error.code==='invalid_language');
  assert.equal(calls,0);
 });
 
