@@ -130,3 +130,10 @@ test('SWAT Spanish selection survives Swedish commute question after ANIVUE',asy
   else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=flag;
  }
 });
+
+
+test('Swedish train delay question routes to COMMUTVUE from an ANIVUE session',()=>{
+ for(const question of ['är tåget försenat från jordbro?','Är tåget försenat från Jordbro?']){
+  assert.equal(routeQuestion(question,'anivue').domain,'commutvue',question);
+ }
+});
