@@ -272,3 +272,15 @@ test('full Trafiklab adapter resolves Jordbro and Stockholm City from meta-stop 
  assert.equal(requests.length,4);
  assert.ok(requests.every(url=>url.includes('key=fixture')));
 });
+
+test('child stop lookup accepts Swedish case and surrounding whitespace without widening destination',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({
+  ok:true,text:async()=>JSON.stringify({stop_groups:[{
+   id:'740098000',name:'Stockholm',stops:[
+    {id:'1617',name:'Stockholm City'},{id:'12275',name:'T-Centralen'}
+   ]
+  }]})
+ })});
+ assert.deepEqual(await resolver('  stockholm city  '),{id:'740098000',stopIds:['1617']});
+ assert.deepEqual(await resolver('STOCKHOLM CITY'),{id:'740098000',stopIds:['1617']});
+});
