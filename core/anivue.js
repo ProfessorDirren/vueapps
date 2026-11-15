@@ -1,4 +1,4 @@
-import {VueDomain,VueCoreError,normalizeAssessment,LANGUAGES} from './index.js';
+import {VueDomain,VueCoreError,normalizeAssessment,validateLanguage} from './index.js';
 import {routingFields} from './router.js';
 
 /**
@@ -21,7 +21,11 @@ const MESSAGES={
  hi:'तुरंत आपात पशु चिकित्सा लें। AI या फोटो विश्लेषण की प्रतीक्षा न करें।',
  'zh-CN':'立即寻求急诊兽医帮助。不要等待 AI 或照片分析。',
  ru:'Срочно обратитесь за ветеринарной помощью. Не ждите ИИ или анализа фото.',
- ar:'اطلب رعاية بيطرية طارئة الآن. لا تنتظر الذكاء الاصطناعي أو تحليل الصور.'
+ ar:'اطلب رعاية بيطرية طارئة الآن. لا تنتظر الذكاء الاصطناعي أو تحليل الصور.',
+ fr:'Consultez immédiatement un vétérinaire en urgence. N’attendez pas l’IA ou l’analyse des photos.',
+ el:'Ζητήστε αμέσως επείγουσα κτηνιατρική φροντίδα. Μην περιμένετε την AI ή την ανάλυση φωτογραφιών.',
+ tr:'Hemen acil veteriner yardımı alın. Yapay zekâ veya fotoğraf analizini beklemeyin.',
+ fa:'فوراً به دامپزشک اورژانس مراجعه کنید. منتظر هوش مصنوعی یا تحلیل عکس نمانید.'
 };
 const EQUINE={
  en:'Contact an equine emergency veterinarian immediately.',
@@ -30,9 +34,13 @@ const EQUINE={
  hi:'तुरंत घोड़ों के आपातकालीन पशु चिकित्सक से संपर्क करें।',
  'zh-CN':'立即联系马科急诊兽医。',
  ru:'Немедленно свяжитесь с экстренным ветеринаром для лошадей.',
- ar:'اتصل فوراً بطبيب بيطري طارئ متخصص بالخيول.'
+ ar:'اتصل فوراً بطبيب بيطري طارئ متخصص بالخيول.',
+ fr:'Contactez immédiatement un vétérinaire équin d’urgence.',
+ el:'Επικοινωνήστε αμέσως με κτηνίατρο επειγόντων περιστατικών για άλογα.',
+ tr:'Derhal acil at veterineriyle iletişime geçin.',
+ fa:'فوراً با دامپزشک اورژانس متخصص اسب تماس بگیرید.'
 };
-const URGENT_RE=/(breathing difficulty|trouble breathing|difficulty breathing|cannot breathe|can't breathe|can’t breathe|struggling to breathe|andningssvårigheter|kan inte andas|svårt att andas|dificultad para respirar|le cuesta respirar|no puede respirar|saans lene mein dikkat|सांस लेने में (?:दिक्कत|कठिनाई|परेशानी)|साँस लेने में (?:दिक्कत|कठिनाई|परेशानी)|呼吸困难|呼吸困難|无法呼吸|затруднен(?:о|ное|ное) дыхание|трудно дышать|صعوبة (?:في )?التنفس|لا يستطيع التنفس)/i;
+const URGENT_RE=/(breathing difficulty|trouble breathing|difficulty breathing|cannot breathe|can't breathe|can’t breathe|struggling to breathe|andningssvårigheter|kan inte andas|svårt att andas|dificultad para respirar|le cuesta respirar|no puede respirar|saans lene mein dikkat|सांस लेने में (?:दिक्कत|कठिनाई|परेशानी)|साँस लेने में (?:दिक्कत|कठिनाई|परेशानी)|呼吸困难|呼吸困難|无法呼吸|затруднен(?:о|ное|ное) дыхание|трудно дышать|صعوبة (?:في )?التنفس|لا يستطيع التنفس|difficulté(?:s)? (?:à|a) respirer|ne (?:peut|parvient) pas à respirer|δυσκολία στην αναπνοή|δεν μπορεί να αναπνεύσει|nefes (?:almakta|almada) (?:zorlanıyor|güçlük)|nefes alamıyor|تنفس (?:سخت|دشوار)|مشکل (?:در )?تنفس|نمی‌تواند نفس بکشد)/i;
 /** Explicit equine Celsius readings above 39.5°C warrant emergency contact. */
 function highHorseFever(description){
  const text=String(description||'');
@@ -43,7 +51,7 @@ export class AniVueDomain extends VueDomain {
  constructor({fetcher=fetch}={}){super({id:'anivue',name:'ANIVUE',capabilities:{imageAnalysis:true,videoAnalysis:false}});this.fetcher=fetcher}
  /** Native VUECORE specialist text response, independent of deterministic emergency checks. */
  async analyzeText({species,description='',symptoms=[],language='en'}={}){
-  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  validateLanguage(language);
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof description!=='string'||description.trim().length<3||description.length>2000)throw new VueCoreError('invalid_description','Description must be 3–2000 characters');
   const symptom=Array.isArray(symptoms)?symptoms.filter(x=>typeof x==='string').slice(0,12).join(' '):'';
@@ -59,7 +67,7 @@ export class AniVueDomain extends VueDomain {
  }
  /** Optional supplementary photo analysis via the VUECORE-native server endpoint. */
  async analyzePhoto({image,species,description='',symptoms=[],language='en'}={}){
-  if(!LANGUAGES.includes(language))throw new VueCoreError('invalid_language','Unsupported language');
+  validateLanguage(language);
   if(!['dog','cat','horse'].includes(species))throw new VueCoreError('invalid_species','Unsupported species');
   if(typeof image!=='string'||!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)||image.length>4200000)throw new VueCoreError('invalid_image','Supported JPEG, PNG or WebP image required (max 3 MB after conversion)');
   let response;

@@ -2,7 +2,7 @@ import {prioritizedCommuteRegions} from './commutvue-priority.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 import {createProviderRegistry} from './provider-registry.js';
 /**
- * COMMUTVUE: provider-neutral realtime transport contracts.
+ * COMMUTEVUE: provider-neutral realtime transport contracts.
  * No fabricated departures: unknown and unavailable are explicit states.
  * Credentials are server-side only; callers must supply a provider adapter.
  */
@@ -46,7 +46,7 @@ export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,
  if(!Array.isArray(departures)||departures.length===0)throw new TypeError('No verified journey departures');
  return {status:'ok',provider,sourceUrl,updatedAt:new Date(updatedAt).toISOString(),departures:(departures||[]).map(normalizeDeparture)};
 }
-/** COMMUTVUE configures CORE's generic provider lifecycle, never duplicates it. */
+/** COMMUTEVUE configures CORE's generic provider lifecycle, never duplicates it. */
 export function createCommuteRegistry(){return createProviderRegistry({providers:COMMUT_PROVIDERS,normalize:normalizeTrafficResult});}
 export async function queryCommute({provider,from,to,adapter}){
  const registry=createCommuteRegistry();

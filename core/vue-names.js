@@ -19,10 +19,34 @@ const extraNames={
  martialartsvue:{en:'Martial arts',sv:'Kampsport',es:'Artes marciales',hi:'मार्शल आर्ट','zh-CN':'武术',ru:'Боевые искусства',ar:'الفنون القتالية',fr:'Arts martiaux',el:'Πολεμικές τέχνες',tr:'Dövüş sanatları',fa:'هنرهای رزمی'}
 };
 export const VUE_NAMES=['anyvue','anivue','antiqvue','armvue','estatevue','foodvue','homevue','medivue','motovue','musicgearvue','plantvue','slumpvue','vinylvue','wardrobevue','commutvue','martialartsvue'];
-export function localizedVueName(domain,language='en'){
- if(extraNames[domain])return (extraNames[domain][language]||extraNames[domain].en)+'-VUE';
+/** True only when the requested language has its own non-empty translation. */
+export function hasLocalizedVueName(domain,language){
+ if(typeof language!=='string')return false;
+ if(extraNames[domain])return typeof extraNames[domain][language]==='string'&&extraNames[domain][language].trim().length>0;
  const index=VUE_NAMES.indexOf(domain);
- return index<0?'':(names[language]||names.en)[index]+'-VUE';
+ return index>=0&&Array.isArray(names[language])&&typeof names[language][index]==='string'&&names[language][index].trim().length>0;
+}
+export function localizedVueName(domain,language='en'){
+ if(!VUE_NAMES.includes(domain))return '';
+ const locale=typeof language==='string'&&Object.hasOwn(names,language)?language:'en';
+ if(Object.hasOwn(extraNames,domain))return (extraNames[domain][locale]||extraNames[domain].en)+'-VUE';
+ const index=VUE_NAMES.indexOf(domain);
+ return (names[locale][index]||names.en[index])+'-VUE';
 }
 export function vueBrandName(domain){return domain==='commutvue'?'COMMUTEVUE':String(domain).toUpperCase();}
-export function renderVueNames(document,language){for(const domain of VUE_NAMES){const heading=document.querySelector('#app-'+domain+' h3');if(!heading)continue;const brand=document.createElement('bdi');brand.dir='ltr';brand.textContent=vueBrandName(domain);const local=document.createElement('bdi');local.dir='auto';local.textContent='('+localizedVueName(domain,language)+')';local.style.fontSize='0.78em';local.style.fontWeight='500';heading.replaceChildren(brand,document.createTextNode(' '),local)}}
+/** Render the selected-language name first; retain a small stable brand for recognition. */
+export function renderVueNames(document,language){
+ for(const domain of VUE_NAMES){
+  const heading=document.querySelector('#app-'+domain+' h3');
+  if(!heading)continue;
+  const local=document.createElement('bdi');
+  local.dir='auto';
+  local.textContent=localizedVueName(domain,language);
+  const brand=document.createElement('bdi');
+  brand.dir='ltr';
+  brand.textContent='('+vueBrandName(domain)+')';
+  brand.style.fontSize='0.7em';
+  brand.style.fontWeight='400';
+  heading.replaceChildren(local,document.createTextNode(' '),brand);
+ }
+}

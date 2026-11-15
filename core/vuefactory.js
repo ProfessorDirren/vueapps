@@ -3,7 +3,20 @@
  * Generates a reviewable domain profile; never registers, deploys, or calls AI.
  */
 import {obviousIdentifier} from './memory.js';
-export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar']);
+import {LANGUAGES,validateLanguage} from './index.js';
+/** Legacy VUEFACTORY v1 minimum for existing definitions. New locales are owned by VUECORE. */
+export const FACTORY_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar'].filter(language=>LANGUAGES.includes(language)));
+export const FACTORY_SUPPORTED_LANGUAGES=LANGUAGES;
+/** All optional language fields must be recognized by the shared VUECORE policy. */
+function validateOptionalLocales(record,field){
+ for(const language of Object.keys(record)){
+  validateLanguage(language);
+  if(!FACTORY_LANGUAGES.includes(language)){
+   const value=record[language];
+   if(field==='labels'&&(typeof value!=='string'||!value.trim()||value.length>90||forbidden.test(value)))throw Error('Invalid optional label: '+language);
+  }
+ }
+}
 const ID_PATTERN=/^[a-z][a-z0-9]{1,30}vue$/;
 const forbidden=/[<>\x00-\x1f]/;
 export function isPublicSourceHost(hostname){
@@ -24,15 +37,16 @@ export function validateVueDefinition(value){
  if(typeof id!=='string'||!ID_PATTERN.test(id))throw Error('id must be a lowercase specialist name ending in vue');
  if(typeof scope!=='string'||scope.trim().length<12||scope.length>240||forbidden.test(scope))throw Error('Invalid scope');
  if(typeof method!=='string'||method.trim().length<80||method.length>3000||forbidden.test(method))throw Error('Method needs at least 80 characters of reviewable specialist guidance');
- if(!labels||typeof labels!=='object'||Array.isArray(labels))throw Error('All seven language labels required');
+ if(!labels||typeof labels!=='object'||Array.isArray(labels))throw Error('All required legacy language labels must be supplied');
  for(const lang of FACTORY_LANGUAGES)if(typeof labels[lang]!=='string'||!labels[lang].trim()||labels[lang].length>90||forbidden.test(labels[lang]))throw Error('Missing/invalid label: '+lang);
+ validateOptionalLocales(labels,'labels');
  if(!Array.isArray(sources)||sources.length>12)throw Error('Invalid sources');
  for(const source of sources){
   if(!Array.isArray(source)||source.length!==2||typeof source[0]!=='string'||!source[0].trim()||source[0].length>100||typeof source[1]!=='string')throw Error('Invalid source');
   let url;try{url=new URL(source[1])}catch{throw Error('Invalid source URL')}
   if(url.protocol!=='https:'||url.username||url.password||!isPublicSourceHost(url.hostname))throw Error('Sources must be public HTTPS URLs without credentials or private hosts');
  }
- return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,labels[lang].trim()])),sources};
+ return {id,scope:scope.trim(),method:method.trim(),labels:Object.fromEntries(Object.keys(labels).map(lang=>[lang,labels[lang].trim()])),sources};
 }
 /**
  * Fail closed on specialist ID collisions. Pass the existing registry's IDs
@@ -116,7 +130,7 @@ export function createFactoryTestRegistry(input,existingSpecialists,routeExistin
   route:question=>simulateVueIntegration(input,question,routeExisting),
   guide:(id,language='en')=>{
    if(id!==definition.id)throw Error('Factory test guide only supports generated specialist');
-   const locale=FACTORY_LANGUAGES.includes(language)?language:'en';
+   const locale=Object.hasOwn(definition.labels,language)&&Object.hasOwn(activation.questions,language)?language:'en';
    return {domain:id,label:definition.labels[locale],questions:[...activation.questions[locale]],scope:profile.scope,method:profile.method,sources:profile.sources||[],reviewRequired:true};
   }
  });
@@ -135,7 +149,7 @@ export function createFactoryTestApi(registry){
    if(raw.length>10000)return Response.json({error:'Too large'},{status:413});
    body=JSON.parse(raw);
   }catch{return Response.json({error:'Invalid JSON'},{status:400})}
-  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
+  if(!body||typeof body.question!=='string'||body.question.trim().length<3||body.question.length>3000||obviousIdentifier(body.question)||!FACTORY_SUPPORTED_LANGUAGES.includes(body.language))return Response.json({error:'Invalid request'},{status:400});
   const route=registry.route(body.question);
   if(route.clarify)return Response.json({domain:null,clarify:true,candidates:route.candidates||[],testOnly:true});
   if(!registry.isRegistered(route.domain))return Response.json({error:'Unregistered specialist'},{status:422});
@@ -157,12 +171,12 @@ export function buildVueCoreIntegrationProposal(input){
   status:'blocked-pending-review',
   edits:[
    {file:'core/specialists.js',section:'SPECIALISTS',key:d.id,value:profile,action:'add'},
-   {file:'core/specialists.js',section:'questions',key:d.id,value:null,action:'add-seven-localized-question-arrays'},
+   {file:'core/specialists.js',section:'questions',key:d.id,value:null,action:'add-required-localized-question-arrays'},
    {file:'core/router.js',section:'rules',key:d.id,value:candidate?.keywords||[],action:'review-and-add-pattern'},
    {file:'apps/router-content.js',section:'localization',key:d.id,value:d.labels,action:'review-labels'},
    {file:'api/vue-router.js',section:'dispatch',key:d.id,value:null,action:'review-api-routing'}
   ],
-  blockers:['Seven localized specialist question arrays','Routing collision and precedence review','Domain safety and emergency review','API and end-to-end regression tests'],
+  blockers:['Required localized specialist question arrays','Routing collision and precedence review','Domain safety and emergency review','API and end-to-end regression tests'],
   productionReady:false,
   automaticApply:false
  };
@@ -176,9 +190,11 @@ export function validateVueActivation(input,existingIds=[],existingKeywords=[]){
  const routing=buildRoutingCandidates(input,existingKeywords);
  if(routing.collisions.length)throw Error('Routing keyword collision: '+routing.collisions.join(', '));
  const questions=input.questions;
- if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Seven localized question arrays required for activation');
+ if(!questions||typeof questions!=='object'||Array.isArray(questions))throw Error('Required localized question arrays missing for activation');
+ validateOptionalLocales(questions,'questions');
+ for(const language of FACTORY_LANGUAGES)if(!Object.hasOwn(questions,language))throw Error('Exactly three questions required: '+language);
  const localized={};
- for(const language of FACTORY_LANGUAGES){
+ for(const language of Object.keys(questions)){
   const items=questions[language];
   if(!Array.isArray(items)||items.length!==3)throw Error('Exactly three questions required: '+language);
   if(items.some(q=>typeof q!=='string'||q.trim().length<12||q.length>240||forbidden.test(q)))throw Error('Invalid specialist questions: '+language);
@@ -246,7 +262,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   action:'review-generic-dispatch-and-domain-safety',
   automaticApply:false
  }):null;
- const uiLabels=Object.fromEntries(FACTORY_LANGUAGES.map(language=>[language,plan.labels[language]]));
+ const uiLabels=Object.fromEntries(Object.keys(plan.labels).map(language=>[language,plan.labels[language]]));
  const uiPatch=files?.['apps/router-content.js'];
  if(uiPatch!==undefined&&(typeof uiPatch!=='string'||uiPatch.split('export const ROUTER_TEXT=').length!==2))throw Error('Invalid UI source');
  const uiPreview=typeof uiPatch==='string'?{
@@ -262,7 +278,7 @@ export function previewVueCoreSourcePatch(input,files,existingIds=[],existingKey
   uiPreview,
   apiPreview,
   reviewRequired:true,
-  incomplete:['API dispatch integration and registration validation','UI card and seven translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
+  incomplete:['API dispatch integration and registration validation','UI card and required translated labels','Routing precedence and emergency safety','Domain-specific end-to-end tests','Human approval before production deployment'],
   automaticApply:false,
   productionReady:false
  });
@@ -280,7 +296,7 @@ export function scaffoldVue(input){
   specialist:d.id,
   status:'review-required',
   registration:{profile:'core/specialists.js',memory:'core/memory.js',router:'core/router.js',api:'api/vue-router.js'},
-  languages:FACTORY_LANGUAGES,
+  languages:Object.keys(d.labels),
   labels:d.labels,
   routing:{patterns:routingCandidates?.keywords||[],priority:null,collisionReviewRequired:true},
   safety:{emergencyReviewRequired:true,sourceReviewRequired:true,apiReviewRequired:true},
@@ -292,7 +308,7 @@ export function scaffoldVue(input){
   "import assert from 'node:assert/strict';",
   "import {profile,labels} from './profile.js';",
   "const isPublicSourceHost="+isPublicSourceHost.toString()+";",
-  "const languages="+JSON.stringify(FACTORY_LANGUAGES)+";",
+  "const languages="+JSON.stringify(Object.keys(d.labels))+";",
   "test('generated "+d.id+" profile and language contract',()=>{",
   " assert.ok(profile.scope.length>=12);",
   " assert.ok(profile.method.length>=80);",
@@ -324,7 +340,7 @@ export function scaffoldVue(input){
   '- [ ] Add profile to core/specialists.js (manual review required).',
   '- [ ] Register specialist in core/specialists registry and any memory domain allowlists.',
   '- [ ] Add multilingual routing patterns and check collisions in core/router.js.',
-  '- [ ] Add all seven labels to relevant UI and specialist translations.',
+  '- [ ] Review every supplied language label in UI and specialist translations; legacy seven-language minimum remains supported.',
   '- [ ] Add API routing and authorization checks where applicable.',
   '- [ ] Add domain-specific tests, including safety and language regression tests.',
   '- [ ] Run npm test and inspect the preview before release.',

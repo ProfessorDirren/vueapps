@@ -1,5 +1,5 @@
 /**
- * COMMUTVUE implementation priority, independent of the user's chosen language.
+ * COMMUTEVUE implementation priority, independent of the user's chosen language.
  * Tier 1 Sweden, tier 2 Chile, tier 3 EU, tier 4 remaining countries.
  * Discovery support does NOT imply verified live-data availability.
  */

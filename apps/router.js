@@ -1,7 +1,7 @@
 import {isRegisteredSpecialist} from '../core/specialists.js';
 import {specialistLabel} from './specialist-labels.js';
 import {localizedVueName,vueBrandName} from '../core/vue-names.js';
-const vueTitle=id=>vueBrandName(id)+' ('+localizedVueName(id,document.documentElement.lang)+')';
+const vueTitle=id=>localizedVueName(id,document.documentElement.lang)+' ('+vueBrandName(id)+')';
 import {detectInputLanguage} from '../core/language-detection.js';
 import {mountVuecoreVideoInput,VIDEO_LABELS,videoBlocksSubmission} from '../core/video-input.js';
 import {VueMemory,obviousIdentifier} from '../core/memory.js';

@@ -8,7 +8,7 @@
 import {spawnSync} from 'node:child_process';
 import {SPECIALISTS} from '../core/specialists.js';
 import {routeQuestion} from '../core/router.js';
-import {VUE_NAMES,localizedVueName} from '../core/vue-names.js';
+import {VUE_NAMES,localizedVueName,hasLocalizedVueName} from '../core/vue-names.js';
 
 export const RELEASE_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa']);
 export function preflightVue(id,question){
@@ -19,7 +19,7 @@ export function preflightVue(id,question){
  if(!problems.length){
   for(const lang of RELEASE_LANGUAGES){
    const label=localizedVueName(id,lang);
-   if(!label||label.trim()==='-VUE')problems.push('Missing name in '+lang);
+   if(!hasLocalizedVueName(id,lang)||!label||label.trim()==='-VUE')problems.push('Missing name in '+lang);
   }
   if(question!==null){
    const result=routeQuestion(question);

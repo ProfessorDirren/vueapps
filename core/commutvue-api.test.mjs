@@ -188,3 +188,62 @@ test('COMMUTVUE POST fails closed on Trafiklab network timeout without leaking s
 test('ordinary Swedish next-train question routes to COMMUTVUE without prior context',()=>{
  assert.equal(routeQuestion('När går nästa tåg från Jordbro till Stockholm City?').domain,'commutvue');
 });
+
+
+test('COMMUTVUE POST does not call Trafiklab when live flag is absent even if a key exists',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.TRAFIKLAB_API_KEY='private-preview-fixture';
+  delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+  let calls=0;
+  globalThis.fetch=async()=>{calls++;throw Error('Trafiklab should not be called');};
+  const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går nästa tåg från Jordbro till Stockholm City?',language:'sv'})});
+  const response=await POST(request),body=await response.json();
+  assert.equal(response.status,200);
+  assert.equal(body.domain,'commutvue');
+  assert.equal(body.live_diagnostic,'not_configured');
+  assert.equal(body.evidence_status,'live_unavailable');
+  assert.equal(body.verified,false);
+  assert.deepEqual(body.departures,[]);
+  assert.equal(calls,0);
+  assert.doesNotMatch(JSON.stringify(body),/private-preview-fixture/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ }
+});
+
+
+test('COMMUTEVUE distinguishes ambiguous origin and destination without exposing station data',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.TRAFIKLAB_API_KEY='secret-ambiguity-fixture';
+  process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='true';
+  for(const role of ['origin','destination']){
+   globalThis.fetch=async url=>{
+    const name=decodeURIComponent(new URL(url).pathname.split('/').pop());
+    const ambiguous=role==='origin'?'Jordbro':'Stockholm City';
+    const groups=name===ambiguous?[
+     {id:'740000001',name:ambiguous,stops:[{id:'stop1',name:ambiguous}]},
+     {id:'740000002',name:ambiguous,stops:[{id:'stop2',name:ambiguous}]}
+    ]:[{id:'740000003',name,stops:[{id:'stop3',name}]}];
+    return {ok:true,text:async()=>JSON.stringify({stop_groups:groups})};
+   };
+   const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går nästa tåg från Jordbro till Stockholm City?',language:'sv'})});
+   const response=await POST(request),body=await response.json();
+   assert.equal(response.status,200);
+   assert.equal(body.domain,'commutvue');
+   assert.equal(body.live_diagnostic,'provider_ambiguous_'+role+'_station');
+   assert.equal(body.verified,false);
+   assert.deepEqual(body.departures,[]);
+   assert.equal(body.source_url,null);
+   assert.match(body.answer,role==='origin'?/Avresestationens namn/:/Destinationsstationens namn/);
+   assert.doesNotMatch(JSON.stringify(body),/secret-ambiguity-fixture/);
+  }
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ }
+});

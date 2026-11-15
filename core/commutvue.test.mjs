@@ -45,3 +45,35 @@ test('departure identity must include provider trip ID, line and destination',()
  const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-10T08:00:00Z'};
  for(const field of ['id','line','destination'])assert.throws(()=>normalizeDeparture({...base,[field]:''}));
 });
+
+test('all eleven commute locales preserve distinct translated status labels across specialist transitions',()=>{
+ const keys=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa'];
+ assert.deepEqual(COMMUT_LOCALES,keys);
+ const english=COMMUT_MESSAGES.en;
+ for(const locale of keys){
+  assert.equal(commuteLocale(locale),locale,`selected locale ${locale} must persist`);
+  const messages=COMMUT_MESSAGES[locale];
+  assert.equal(messages.length,english.length,`message count ${locale}`);
+  for(let i=0;i<messages.length;i++){
+   assert.equal(typeof messages[i],'string');
+   assert.ok(messages[i].trim(),`empty status label ${locale}/${i}`);
+   if(locale!=='en' && !(locale==='fr' && i===2))assert.notEqual(messages[i],english[i],`unexpected English status label ${locale}/${i}`);
+  }
+ }
+ assert.equal(commuteLocale('unknown'),'en');
+});
+
+test('all eleven localized commute status labels are complete and never fall back to English',()=>{
+ const english=COMMUT_MESSAGES.en;
+ assert.deepEqual(Object.keys(COMMUT_MESSAGES).sort(),[...COMMUT_LOCALES].sort());
+ for(const locale of COMMUT_LOCALES){
+  const labels=COMMUT_MESSAGES[locale];
+  assert.equal(labels.length,english.length,locale);
+  for(const [index,label] of labels.entries()){
+   assert.equal(typeof label,'string',locale+' '+index);
+   assert.equal(label.trim(),label,locale+' '+index);
+   assert.ok(label.length>0,locale+' '+index);
+   if(locale!=='en' && !(locale==='fr' && index===2))assert.notEqual(label,english[index],locale+' '+index);
+  }
+ }
+});

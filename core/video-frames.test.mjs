@@ -15,6 +15,7 @@ test('invalid or excessive sampling fails closed',()=>{
 test('captures exactly three local frames without network or upload',async()=>{
  const oldDocument=globalThis.document;
  const drawn=[];
+ const file={type:'video/mp4',size:1024};
  globalThis.document={createElement:()=>({
   width:0,height:0,
   getContext:()=>({drawImage:(_video,_x,_y,w,h)=>drawn.push([w,h])}),
@@ -28,7 +29,7 @@ test('captures exactly three local frames without network or upload',async()=>{
   set currentTime(value){this._time=value;queueMicrotask(()=>{for(const fn of [...(listeners.get('seeked')||[])])fn()})}
  };
  try{
-  const frames=await captureVideoFrames(video);
+  const frames=await captureVideoFrames(video,{consent:true,file});
   assert.deepEqual(frames.map(f=>f.time),[5,10,15]);
   assert.equal(frames.length,3);
   assert.deepEqual(drawn,[[960,540],[960,540],[960,540]]);
@@ -40,7 +41,7 @@ test('aborted video extraction fails before capturing any frames',async()=>{
  const oldDocument=globalThis.document;
  globalThis.document={createElement:()=>({getContext:()=>({drawImage:()=>{throw Error('Must not draw')}})})};
  const video={duration:20,videoWidth:1920,videoHeight:1080};
- try{await assert.rejects(captureVideoFrames(video,{signal:controller.signal}),/Cancelled/)}
+ try{await assert.rejects(captureVideoFrames(video,{signal:controller.signal,consent:true,file:{type:'video/mp4',size:1024}}),/Cancelled/)}
  finally{globalThis.document=oldDocument}
 });
 
@@ -55,8 +56,44 @@ test('seek failure rejects promptly and removes video listeners',async()=>{
   set currentTime(_value){throw new Error('Video seek failed')}
  };
  try{
-  await assert.rejects(captureVideoFrames(video),/Video seek failed/);
+  await assert.rejects(captureVideoFrames(video,{consent:true,file:{type:'video/mp4',size:1024}}),/Video seek failed/);
   assert.equal(listeners.get('seeked')?.size,0);
   assert.equal(listeners.get('error')?.size,0);
+ }finally{globalThis.document=oldDocument}
+});
+
+test('frame capture requires explicit consent and a valid local video file',async()=>{
+ const video={duration:10,videoWidth:640,videoHeight:480};
+ await assert.rejects(captureVideoFrames(video),/consent required/);
+ await assert.rejects(captureVideoFrames(video,{consent:true,file:{type:'video/mp4',size:0}}),/Invalid video file/);
+ await assert.rejects(captureVideoFrames(video,{consent:true,file:{type:'image/png',size:100}}),/Invalid video file/);
+});
+
+test('oversized video dimensions are rejected before canvas allocation',async()=>{
+ const oldDocument=globalThis.document;
+ let created=false;
+ globalThis.document={createElement:()=>{created=true;throw Error('Must not allocate canvas')}};
+ try{
+  await assert.rejects(captureVideoFrames({duration:10,videoWidth:8000,videoHeight:6000},{consent:true,file:{type:'video/mp4',size:1024}}),/Invalid video metadata: dimensions/);
+  assert.equal(created,false);
+ }finally{globalThis.document=oldDocument}
+});
+
+test('local sampling restores the original playback position',async()=>{
+ const oldDocument=globalThis.document;
+ globalThis.document={createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'data:image/jpeg;base64,'+'A'.repeat(128)})};
+ const listeners=new Map();
+ let time=2;
+ const video={duration:20,videoWidth:640,videoHeight:480,paused:true,
+  pause(){},
+  addEventListener(name,fn){if(!listeners.has(name))listeners.set(name,new Set());listeners.get(name).add(fn)},
+  removeEventListener(name,fn){listeners.get(name)?.delete(fn)},
+  get currentTime(){return time},
+  set currentTime(value){time=value;queueMicrotask(()=>{for(const fn of [...(listeners.get('seeked')||[])])fn()})}
+ };
+ try{
+  const frames=await captureVideoFrames(video,{consent:true,file:{type:'video/mp4',size:1024}});
+  assert.equal(frames.length,3);
+  assert.equal(video.currentTime,2);
  }finally{globalThis.document=oldDocument}
 });
