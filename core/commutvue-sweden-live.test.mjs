@@ -182,3 +182,15 @@ test('ambiguous autumn clock-change timestamps cannot be represented as verified
  });
  assert.equal((await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter})).status,'unavailable');
 });
+
+test('loop service with repeated origin call cannot claim a verified journey',async()=>{
+ const looping={...details,calls:[
+  {stop:{id:'stop1'},is_realtime:true},
+  {stop:{id:'stop3'},is_realtime:true},
+  {stop:{id:'stop1'},is_realtime:true},
+  {stop:{id:'stop2'},is_realtime:true}
+ ]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,looping)});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
+});
