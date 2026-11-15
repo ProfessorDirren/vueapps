@@ -60,3 +60,11 @@ test('verified journey rejects duplicate provider trip IDs rather than double-co
  assert.throws(()=>normalizeTrafficResult(payload),/Duplicate verified departure ID/);
  assert.equal(normalizeTrafficResult({...payload,departures:[trip]}).departures.length,1);
 });
+
+test('verified journey evidence IDs must be unique and nonblank',()=>{
+ const trip={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',updatedAt:'2026-11-15T07:59:00Z',departures:[trip]};
+ for(const departureIds of [['trip-1','trip-1'],['trip-1',''],['trip-1','  ']]){
+  assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds}}),/Invalid journey departure evidence IDs/);
+ }
+});
