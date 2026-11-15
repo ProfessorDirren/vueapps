@@ -216,3 +216,24 @@ test('Stockholm City resolves to its exact child stop, not the whole Stockholm m
  })});
  await assert.rejects(ambiguous('Stockholm City'),/uniquely/);
 });
+
+test('Jordbro to Stockholm City verifies only the City child stop, not T-Centralen',async()=>{
+ const calls=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:
+   {id:'740098000',stopIds:['1617']},
+  fetcher:async url=>{
+   calls.push(url);
+   return {ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?
+    {...details,calls:[
+     {stop:{id:'stop1'},is_realtime:true},
+     {stop:{id:'12275'},is_realtime:true}
+    ]}:board)};
+  }
+ });
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.departures,[]);
+ assert.equal(calls.filter(url=>url.includes('/trips/')).length,1);
+});
