@@ -91,3 +91,23 @@ test('all eleven language switches update COMMUTEVUE links without accumulating 
   assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1,lang);
  }
 });
+
+test('all specialist links retain one translated name through repeated eleven-language navigation',async()=>{
+ const portal=read('../index.html');
+ const start=portal.indexOf(' function localizeVueLink(link){');
+ const end=portal.indexOf(' document.documentElement.lang=lang;',start);
+ assert.ok(start>0&&end>start,'portal localizer must be present');
+ const {localizedVueName,vueBrandName}=await import('./vue-names.js');
+ const domains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
+ const languages=['en','es','sv','fr','hi','zh-CN','ru','ar','el','tr','fa','en','sv'];
+ for(const domain of domains){
+  const brand=vueBrandName(domain);
+  const link={id:'',textContent:'Ask '+brand+' via VUECORE →',dataset:{},matches:()=>false};
+  for(const lang of languages){
+   const localize=new Function('localizedVueName','vueBrandName','lang','localizedLinkDomains',portal.slice(start,end)+';return localizeVueLink;')(localizedVueName,vueBrandName,lang,domains);
+   localize(link);
+   assert.equal(link.textContent,'Ask '+localizedVueName(domain,lang)+' ('+brand+') via VUECORE →',domain+'/'+lang);
+   assert.equal(link.textContent.split(' ('+brand+')').length,2,domain+'/'+lang);
+  }
+ }
+});
