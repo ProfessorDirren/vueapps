@@ -177,3 +177,21 @@ test('localized headings never treat translated names as markup',()=>{
   }
  }
 });
+
+test('unsupported and malicious-looking locale identifiers never alter card text or structure',()=>{
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ for(const language of ['constructor','__proto__','toString','<script>alert(1)</script>','en-US','SV',null,undefined]){
+  assert.doesNotThrow(()=>renderVueNames(document,language));
+  for(const id of VUE_NAMES){
+   const children=headings.get(id).children;
+   assert.equal(children.length,3);
+   assert.equal(children[0].textContent,localizedVueName(id,'en'));
+   assert.equal(children[2].textContent,'('+vueBrandName(id)+')');
+  }
+ }
+});
