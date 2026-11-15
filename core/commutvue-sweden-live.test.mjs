@@ -531,3 +531,20 @@ test('T-Centralen commuter queries resolve to Stockholm City platforms, not metr
  assert.deepEqual(await resolver('T-Centralen'),{id:'740098000',stopIds:['1617']});
  assert.ok(requested.every(url=>!url.includes('/stops/name/T-Centralen')));
 });
+
+
+test('contradictory Trips origin timestamps never verify a real-time delay',async()=>{
+ const matching={...details,calls:[{...details.calls[0],scheduledDeparture:departure.scheduled,realtimeDeparture:departure.realtime},details.calls[1]]};
+ const good=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,matching)});
+ assert.equal(good.status,'ok');
+ assert.equal(good.departures[0].delayMinutes,7);
+ for(const changed of [
+  {...matching,calls:[{...matching.calls[0],scheduledDeparture:'2026-11-10T10:00:00'},matching.calls[1]]},
+  {...matching,calls:[{...matching.calls[0],realtimeDeparture:'2026-11-10T10:07:00'},matching.calls[1]]},
+  {...matching,calls:[{...matching.calls[0],realtimeDeparture:'invalid'},matching.calls[1]]}
+ ]){
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(board,changed)});
+  assert.equal(result.status,'unavailable');
+  assert.deepEqual(result.departures,[]);
+ }
+});
