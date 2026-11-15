@@ -27,3 +27,23 @@ test('CORE rejects unknown and incomplete upstream statuses',async()=>{
   assert.equal((await registry.query({region:'regionA',from:'A',to:'B'})).status,'unavailable');
  }
 });
+
+test('CORE never invokes a provider adapter for missing station input',async()=>{
+ let calls=0;
+ const registry=createProviderRegistry({providers:{regionA:{}},normalize:x=>x});
+ registry.register('regionA',async()=>{calls++;return {provider:'regionA',status:'ok'};});
+ for(const [from,to] of [['   ','Stockholm City'],['Jordbro','   '],[null,'Stockholm City'],['Jordbro',undefined]]){
+  const result=await registry.query({region:'regionA',from,to});
+  assert.equal(result.status,'needs_stations');
+  assert.deepEqual(result.departures,[]);
+ }
+ assert.equal(calls,0,'no paid or live provider calls should be made for invalid station input');
+});
+
+test('CORE fails closed when provider normalization rejects unverified evidence',async()=>{
+ const registry=createProviderRegistry({providers:{regionA:{}},normalize:()=>{throw new TypeError('unverified journey evidence');}});
+ registry.register('regionA',async()=>({provider:'regionA',status:'ok',departures:[{id:'unverified'}]}));
+ const result=await registry.query({region:'regionA',from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(result,{status:'unavailable',provider:'regionA',departures:[]});
+ assert.equal(JSON.stringify(result).includes('unverified journey evidence'),false);
+});
