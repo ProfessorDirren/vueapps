@@ -61,8 +61,8 @@ test('Help actually changes EN → SV → ES after the portal event', async()=>{
  }
 });
 
-test('MARTIALARTSVUE card and action have seven language variants and update with portal selection',()=>{
- const languages=['en','sv','es','hi','zh-CN','ru','ar'];
+test('MARTIALARTSVUE card and action have all eleven language variants and update with portal selection',()=>{
+ const languages=['en','es','sv','hi','zh-CN','ru','ar','el','tr','fa','fr'];
  const section=portal.match(/const martialTranslations=([\s\S]*?);\s*const mediTranslations=/)?.[1];
  assert.ok(section,'MARTIALARTSVUE translation dictionary exists');
  for(const language of languages){
