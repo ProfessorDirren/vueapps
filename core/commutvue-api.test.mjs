@@ -247,3 +247,31 @@ test('COMMUTEVUE distinguishes ambiguous origin and destination without exposing
   if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
  }
 });
+
+
+test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.TRAFIKLAB_API_KEY='fixture';process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='true';
+  const now=new Date();const local=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+  const wall=d=>{const p=Object.fromEntries(local.formatToParts(d).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute+':'+p.second};
+  const day=wall(now).slice(0,10);
+  globalThis.fetch=async url=>{
+   const path=new URL(url).pathname;
+   let data;
+   if(path.includes('/stops/name/')){const station=decodeURIComponent(path.split('/').pop());data={stop_groups:[{id:station==='Jordbro'?'740000001':'740000002',name:station,stops:[{id:station==='Jordbro'?'stop1':'stop2',name:station}]}]};}
+   else if(path.includes('/departures/'))data={timestamp:wall(now),departures:[{trip:{trip_id:'t1',start_date:day},stop:{id:'stop1'},is_realtime:false,scheduled:wall(new Date(now.getTime()+1800000)),route:{designation:'43',direction:'Stockholm City'}}]};
+   else data={timestamp:wall(now),trip:{trip_id:'t1',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001'}},{stop:{id:'stop2',area_id:'740000002'}}]};
+   return {ok:true,text:async()=>JSON.stringify(data)};
+  };
+  const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till Stockholm City försenade?',language:'sv'})});
+  const response=await POST(request),data=await response.json();
+  assert.equal(data.domain,'commutvue');
+  assert.match(data.answer,/Det går inte att avgöra om tåget är försenat utan realtidsdata/);
+  assert.equal(data.verified,false);
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ }
+});
