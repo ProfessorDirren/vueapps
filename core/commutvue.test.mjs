@@ -96,3 +96,11 @@ test('prototype keys cannot masquerade as real transit providers',()=>{
   assert.throws(()=>normalizeTrafficResult({provider,status:'unavailable',departures:[]}),/Unknown provider/,provider);
  }
 });
+
+test('verified provider updates require an explicit ISO timestamp, never ambiguous dates',()=>{
+ const base={provider:'stockholm',sourceUrl:'https://www.trafiklab.se/',journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds:['trip-1']},departures:[{id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'}]};
+ for(const updatedAt of ['0','2026-11-15','November 15 2026',0,null,undefined]){
+  assert.throws(()=>normalizeTrafficResult({...base,updatedAt}),/HTTPS source and timestamp required/,String(updatedAt));
+ }
+ assert.equal(normalizeTrafficResult({...base,updatedAt:'2026-11-15T07:59:00Z'}).status,'ok');
+});
