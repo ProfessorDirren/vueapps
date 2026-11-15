@@ -284,3 +284,15 @@ test('child stop lookup accepts Swedish case and surrounding whitespace without 
  assert.deepEqual(await resolver('  stockholm city  '),{id:'740098000',stopIds:['1617']});
  assert.deepEqual(await resolver('STOCKHOLM CITY'),{id:'740098000',stopIds:['1617']});
 });
+
+test('invalid station names are rejected before making any Trafiklab request',async()=>{
+ let requests=0;
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>{
+  requests++;
+  throw Error('Network should never be called for invalid input');
+ }});
+ for(const name of ['', '   ', 'x'.repeat(101), null, undefined, 123]){
+  await assert.rejects(resolver(name),/Invalid stop name/);
+ }
+ assert.equal(requests,0);
+});
