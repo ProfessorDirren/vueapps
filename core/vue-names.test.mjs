@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {VUE_NAMES,localizedVueName,vueBrandName,renderVueNames} from './vue-names.js';
+import {VUE_NAMES,localizedVueName,hasLocalizedVueName,vueBrandName,renderVueNames} from './vue-names.js';
 import {SPECIALISTS} from './specialists.js';
 
 test('every registered VUE has a centralized localized name',()=>{
@@ -87,4 +87,35 @@ test('prototype property names cannot masquerade as supported languages',()=>{
  }
  assert.equal(localizedVueName('toString','sv'),'');
  assert.equal(localizedVueName('__proto__','en'),'');
+});
+
+test('all eleven languages have actual translations for every specialist, not fallback labels',()=>{
+ const languages=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa'];
+ for(const language of languages){
+  for(const domain of VUE_NAMES){
+   assert.equal(hasLocalizedVueName(domain,language),true,domain+' '+language);
+  }
+ }
+ for(const language of ['xx','',null,'constructor']){
+  for(const domain of VUE_NAMES)assert.equal(hasLocalizedVueName(domain,language),false,domain+' '+language);
+ }
+});
+test('RTL locale switches isolate every localized heading from the LTR brand',()=>{
+ const headings=new Map(VUE_NAMES.map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ for(const language of ['ar','fa','sv','ar','en','fa']){
+  renderVueNames(document,language);
+  for(const domain of VUE_NAMES){
+   const [local,separator,brand]=headings.get(domain).children;
+   assert.equal(local.textContent,localizedVueName(domain,language));
+   assert.equal(local.dir,'auto');
+   assert.equal(separator.textContent,' ');
+   assert.equal(brand.dir,'ltr');
+   assert.equal(brand.textContent,'('+vueBrandName(domain)+')');
+  }
+ }
 });
