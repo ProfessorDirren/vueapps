@@ -68,3 +68,12 @@ test('verified journey evidence IDs must be unique and nonblank',()=>{
   assert.throws(()=>normalizeTrafficResult({...base,journeyEvidence:{verified:true,originId:'Jordbro',destinationId:'Stockholm City',departureIds}}),/Invalid journey departure evidence IDs/);
  }
 });
+
+test('departure identities must be canonical to match journey evidence exactly',()=>{
+ const base={id:'journey-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T09:00:00Z'};
+ for(const key of ['id','line','destination']){
+  assert.throws(()=>normalizeDeparture({...base,[key]:' '+base[key]}),/Uncanonical departure identity/);
+  assert.throws(()=>normalizeDeparture({...base,[key]:base[key]+' '}),/Uncanonical departure identity/);
+ }
+ assert.equal(normalizeDeparture(base).id,'journey-1');
+});
