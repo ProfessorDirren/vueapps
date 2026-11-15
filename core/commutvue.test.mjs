@@ -115,3 +115,12 @@ test('departure timestamps must include unambiguous date, time and timezone',()=
  }
  assert.equal(normalizeDeparture({...base,expected:'2026-11-15T09:05:00+01:00'}).delayMinutes,5);
 });
+
+test('explicit invalid expected times cannot silently become unknown',()=>{
+ const base={id:'trip-1',line:'43',destination:'Stockholm City',scheduled:'2026-11-15T08:00:00Z'};
+ for(const expected of [0,false,'',{},'invalid']){
+  assert.throws(()=>normalizeDeparture({...base,expected}),/Invalid expected timestamp/,String(expected));
+ }
+ assert.equal(normalizeDeparture(base).expected,null);
+ assert.equal(normalizeDeparture({...base,expected:null}).expected,null);
+});
