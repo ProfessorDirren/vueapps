@@ -119,3 +119,19 @@ test('RTL locale switches isolate every localized heading from the LTR brand',()
   }
  }
 });
+
+test('language switching tolerates missing specialist cards without stale names',()=>{
+ const headings=new Map(VUE_NAMES.filter((_,index)=>index%2===0).map(id=>[id,{replaceChildren(...children){this.children=children;}}]));
+ const document={
+  querySelector(selector){return headings.get(selector.slice(5,-3))||null;},
+  createElement(tag){return {tag,style:{},textContent:'',dir:''};},
+  createTextNode(text){return {textContent:text};}
+ };
+ for(const language of ['ar','sv','fa','es','en','zh-CN']){
+  assert.doesNotThrow(()=>renderVueNames(document,language));
+  for(const [id,heading] of headings){
+   assert.equal(heading.children[0].textContent,localizedVueName(id,language),id+' '+language);
+   assert.equal(heading.children[2].textContent,'('+vueBrandName(id)+')');
+  }
+ }
+});
