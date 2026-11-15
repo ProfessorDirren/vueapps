@@ -35,6 +35,7 @@ export function normalizeDeparture(raw){
  if(!Number.isFinite(scheduled))throw new TypeError('Verified scheduled timestamp required');
  if(typeof raw.id!=='string'||!raw.id.trim()||typeof raw.line!=='string'||!raw.line.trim()||typeof raw.destination!=='string'||!raw.destination.trim())throw new TypeError('Verified departure identity required');
  if(raw.expected&&!Number.isFinite(expected))throw new TypeError('Invalid expected timestamp');
+ if(raw.id!==raw.id.trim()||raw.line!==raw.line.trim()||raw.destination!==raw.destination.trim())throw new TypeError('Uncanonical departure identity');
  return Object.freeze({id:String(raw.id||''),line:String(raw.line||''),destination:String(raw.destination||''),scheduled:new Date(scheduled).toISOString(),expected:Number.isFinite(expected)?new Date(expected).toISOString():null,delayMinutes:Number.isFinite(expected)?Math.max(0,Math.round((expected-scheduled)/60000)):null,cancelled:raw.cancelled===true});
 }
 export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,journeyEvidence,status='ok'}){
