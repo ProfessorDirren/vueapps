@@ -589,3 +589,25 @@ test('mixed Trafiklab evidence keeps verified trips and excludes conflicting del
  assert.equal(result.status,'ok');
  assert.equal(result.departures[0].delayMinutes,7);
 });
+
+
+test('stop resolver retries indexed prefix when full-name results contain unrelated stations',async()=>{
+ const requests=[];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  const name=decodeURIComponent(new URL(url).pathname.split('/').pop());requests.push(name);
+  const stop_groups=name==='Jordbro'?[{id:'740000099',name:'Jordbro södra',stops:[{id:'other'}]}]:[
+   {id:'740000099',name:'Jordbro södra',stops:[{id:'other'}]},
+   {id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]}
+  ];
+  return {ok:true,text:async()=>JSON.stringify({stop_groups})};
+ }});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+ assert.deepEqual(requests,['Jordbro','Jordb']);
+});
+
+test('stop resolver prefix fallback never accepts only fuzzy matches',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[
+  {id:'740000099',name:'Jordbro södra',stops:[{id:'other'}]}
+ ]})})});
+ await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='station_not_found');
+});
