@@ -297,7 +297,7 @@ test('COMMUTEVUE never returns today realtime for tomorrow questions',async()=>{
 
 
 test('COMMUTEVUE future-date safety guidance uses all 11 UI languages',async()=>{
- const expected={sv:'Realtidsavgångar',en:'Real-time departures',es:'No se pueden',fr:'Les départs',hi:'कल की', 'zh-CN':'今天无法',ru:'Сегодня невозможно',ar:'لا يمكن',el:'Οι αναχωρήσεις',tr:'Yarının',fa:'اطلاعات لحظه‌ای'};
+ const expected={sv:'Realtidsavgångar',en:'Real-time departures',es:'No se pueden',fr:'Les départs',hi:'भविष्य की', 'zh-CN':'今天无法',ru:'Сегодня невозможно',ar:'لا يمكن',el:'Οι αναχωρήσεις',tr:'Gelecekteki',fa:'اطلاعات لحظه‌ای'};
  for(const [language,phrase] of Object.entries(expected)){
   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går tåget från Jordbro till Stockholm City imorgon?',language})}));
   const data=await response.json();
