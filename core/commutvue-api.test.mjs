@@ -264,11 +264,15 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
    else data={timestamp:wall(now),trip:{trip_id:'t1',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001'}},{stop:{id:'stop2',area_id:'740000002'}}]};
    return {ok:true,text:async()=>JSON.stringify(data)};
   };
-  const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till Stockholm City försenade?',language:'sv'})});
-  const response=await POST(request),data=await response.json();
-  assert.equal(data.domain,'commutvue');
-  assert.match(data.answer,/Det går inte att avgöra om tåget är försenat utan realtidsdata/);
-  assert.equal(data.verified,false);
+  const expected={en:'Delay status cannot be determined',es:'No se puede determinar',sv:'Det går inte att avgöra',hi:'रीयल-टाइम डेटा', 'zh-CN':'没有实时数据',ru:'Без данных в реальном времени',ar:'لا يمكن تحديد التأخير',fr:'Impossible de déterminer',el:'Δεν είναι δυνατό',tr:'Gerçek zamanlı veri',fa:'بدون دادهٔ لحظه‌ای'};
+  for(const [language,phrase] of Object.entries(expected)){
+   const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till Stockholm City försenade?',language})});
+   const response=await POST(request),data=await response.json();
+   assert.equal(data.domain,'commutvue',language);
+   assert.equal(data.verified,false,language);
+   assert.equal(data.evidence_status,'schedule_verified',language);
+   assert.ok(data.answer.includes(phrase),language+' missing delay-unknown disclaimer');
+  }
  }finally{
   globalThis.fetch=oldFetch;
   if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
