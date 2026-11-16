@@ -282,7 +282,7 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
 
 
 test('COMMUTEVUE never returns today realtime for tomorrow questions',async()=>{
- for(const [language,question] of [['sv','När går tåget från Jordbro till Stockholm City imorgon?'],['sv','När går tåget från Jordbro till Stockholm City i morgon?'],['en','Train from Jordbro to Stockholm City tomorrow?']]){
+ for(const [language,question] of [['sv','När går tåget från Jordbro till Stockholm City imorgon?'],['sv','När går tåget från Jordbro till Stockholm City i morgon?'],['en','Train delay from Jordbro to Stockholm City tomorrow?']]){
   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language})}));
   const body=await response.json();
   assert.equal(response.status,200);
