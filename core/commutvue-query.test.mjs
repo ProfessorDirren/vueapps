@@ -86,3 +86,11 @@ test('SWAT station extraction does not turn incidental station mentions into an 
  assert.equal(q.from,null);
  assert.equal(q.to,null);
 });
+
+
+test('Swedish day qualifiers are not part of Stockholm station names',()=>{
+ for(const suffix of ['imorgon','i morgon','idag','ikväll']){
+  const q=parseCommuteQuestion('När går tåget från Jordbro till Stockholm City '+suffix+'?');
+  assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false},suffix);
+ }
+});
