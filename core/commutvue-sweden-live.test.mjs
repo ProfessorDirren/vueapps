@@ -548,3 +548,15 @@ test('contradictory Trips origin timestamps never verify a real-time delay',asyn
   assert.deepEqual(result.departures,[]);
  }
 });
+
+
+test('conflicting Trafiklab times yield a specific safe diagnostic without claiming delay',async()=>{
+ const inconsistent={...details,calls:[{...details.calls[0],scheduledDeparture:'2026-11-10T10:00:00',realtimeDeparture:departure.realtime},details.calls[1]]};
+ const raw=await make(board,inconsistent)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'unavailable');
+ assert.equal(raw.reason,'provider_time_conflict');
+ assert.deepEqual(raw.departures,[]);
+ const wrongRoute={...details,calls:[details.calls[0],{...details.calls[1],stop:{id:'wrong',area_id:'740000099'}}]};
+ const unrelated=await make(board,wrongRoute)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(unrelated.reason,'route_not_verified');
+});
