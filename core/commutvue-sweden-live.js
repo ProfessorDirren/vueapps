@@ -94,6 +94,13 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    // otherwise require the resolved child stop ID. Never infer by direction text.
    const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c.stop?.id)||(c.stop?.area_id===destination&&area(destination)&&typeof c.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
    if(i<0||j<=i||(realtime&&calls[i].is_realtime!==true)||d.canceled===true||d.departureCanceled===true||calls[i].canceled===true||calls[i].departureCanceled===true||calls[j].canceled===true||calls[j].arrivalCanceled===true)continue;
+   // When Trips supplies origin timestamps, they must agree with the departure board.
+   // Otherwise the two provider responses do not verify the same timing evidence.
+   const originCall=calls[i];
+   const tripScheduled=originCall.scheduledDeparture;
+   const tripRealtime=originCall.realtimeDeparture;
+   if(typeof tripScheduled==='string'&&swedishTime(tripScheduled)!==scheduled)continue;
+   if(realtime&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected)continue;
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
    for(const [index,alert] of (Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
