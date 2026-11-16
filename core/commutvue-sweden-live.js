@@ -158,7 +158,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   }
   // A full-name lookup can return zero groups even when a shorter indexed search
   // finds the station. Retry with a prefix, but still require an exact name below.
-  if(!groups.length&&name.trim().length>=4&&!['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
+  if(!groups.some(group=>area(group.id)&&(group.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')||(group.stops||[]).some(stop=>stop.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'))))&&name.trim().length>=4&&!['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
    const prefix=name.trim().slice(0,Math.max(3,Math.min(5,name.trim().length-1)));
    const prefixUrl=new URL('stops/name/'+encodeURIComponent(prefix),ROOT);
    prefixUrl.searchParams.set('key',apiKey);
