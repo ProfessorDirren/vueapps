@@ -291,13 +291,13 @@ test('COMMUTEVUE never returns today realtime for tomorrow questions',async()=>{
   assert.equal(body.evidence_status,'future_date_unavailable');
   assert.deepEqual(body.departures,[]);
   assert.equal(body.source_url,null);
-  assert.match(body.answer,language==='sv'?/imorgon/:/tomorrow/);
+  assert.match(body.answer,language==='sv'?/framtida datum/:/future date/);
  }
 });
 
 
 test('COMMUTEVUE future-date safety guidance uses all 11 UI languages',async()=>{
- const expected={sv:'Realtidsavgångar',en:'Real-time departures',es:'No se pueden',fr:'Les départs',hi:'कल की', 'zh-CN':'今天无法',ru:'Сегодня невозможно',ar:'لا يمكن',el:'Οι αναχωρήσεις',tr:'Yarının',fa:'اطلاعات لحظه‌ای'};
+ const expected={sv:'Realtidsavgångar',en:'Real-time departures',es:'No se pueden',fr:'Les départs',hi:'भविष्य की', 'zh-CN':'今天无法',ru:'Сегодня невозможно',ar:'لا يمكن',el:'Οι αναχωρήσεις',tr:'Gelecekteki',fa:'اطلاعات لحظه‌ای'};
  for(const [language,phrase] of Object.entries(expected)){
   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går tåget från Jordbro till Stockholm City imorgon?',language})}));
   const data=await response.json();
@@ -306,5 +306,19 @@ test('COMMUTEVUE future-date safety guidance uses all 11 UI languages',async()=>
   assert.equal(data.verified,false,language);
   assert.deepEqual(data.departures,[],language);
   assert.ok(data.answer.startsWith(phrase),language);
+ }
+});
+
+
+test('COMMUTEVUE never presents today realtime for the day after tomorrow',async()=>{
+ for(const [language,question] of [['sv','När går tåget från Jordbro till Stockholm City övermorgon?'],['sv','När går tåget från Jordbro till Stockholm City i övermorgon?'],['en','Train delay from Jordbro to Stockholm City day after tomorrow?']]){
+  const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language})}));
+  const data=await response.json();
+  assert.equal(response.status,200,question);
+  assert.equal(data.evidence_status,'future_date_unavailable',question);
+  assert.equal(data.verified,false,question);
+  assert.deepEqual(data.departures,[],question);
+  assert.equal(data.source_url,null,question);
+  assert.match(data.answer,language==='sv'?/framtida datum/:/future date/);
  }
 });
