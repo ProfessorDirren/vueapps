@@ -32,6 +32,11 @@ export async function POST(request){
  if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  if(route.domain==='commutvue'){
   const journey=parseCommuteQuestion(question);
+  // A future-date request must never be answered with today's realtime board.
+  if(/(?:^|[^\p{L}\p{N}])(?:imorgon|i morgon|tomorrow)(?=$|[^\p{L}\p{N}])/iu.test(question)){
+   const futureMessages={sv:'Realtidsavgångar för imorgon kan inte verifieras idag. Fråga igen på resdagen.',en:'Real-time departures for tomorrow cannot be verified today. Please check again on the travel day.',es:'No se pueden verificar hoy las salidas en tiempo real de mañana. Consulta de nuevo el día del viaje.',fr:'Les départs en temps réel de demain ne peuvent pas être vérifiés aujourd’hui. Vérifiez le jour du voyage.'};
+   return json(200,{domain:'commutvue',answer:futureMessages[b.language]||futureMessages.en,kind:'local_guidance',verified:false,evidence_status:'future_date_unavailable',live_diagnostic:'future_date',departures:[],source_url:null,updated_at:null,disruptions:{status:'unknown',alerts:[]},photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  }
   let live=null;
   let scheduled=null;
   let liveAlerts=null;
