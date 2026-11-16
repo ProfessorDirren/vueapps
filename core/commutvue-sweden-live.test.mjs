@@ -631,5 +631,6 @@ test('scheduled-only trip alerts never contaminate a separate verified realtime 
  assert.deepEqual(raw.alerts.map(a=>a.title),['Verified trip warning']);
  const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
  assert.equal(normalized.status,'ok');
- assert.deepEqual(normalized.alerts.map(a=>a.title),['Verified trip warning']);
+ assert.equal(normalized.alerts,undefined); // Provider-neutral query contract does not expose alerts.
+ assert.equal(normalized.departures.length,1);
 });
