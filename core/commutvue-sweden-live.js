@@ -67,7 +67,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;
+  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let timeConflicts=0;
   for(const d of board.departures){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
@@ -99,8 +99,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const originCall=calls[i];
    const tripScheduled=originCall.scheduledDeparture;
    const tripRealtime=originCall.realtimeDeparture;
-   if(typeof tripScheduled==='string'&&swedishTime(tripScheduled)!==scheduled)continue;
-   if(realtime&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected)continue;
+   if(typeof tripScheduled==='string'&&swedishTime(tripScheduled)!==scheduled){timeConflicts++;continue;}
+   if(realtime&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected){timeConflicts++;continue;}
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
    for(const [index,alert] of (Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
@@ -118,7 +118,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    scheduledDepartures.sort((a,b)=>Date.parse(a.scheduled)-Date.parse(b.scheduled));
    return {provider,status:'scheduled',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
   }
-  if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):'route_not_verified',departures:[]};
+  if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):timeConflicts>0?'provider_time_conflict':'route_not_verified',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
   // Evidence IDs must follow the same order as the departures presented to callers.
   ids.splice(0,ids.length,...departures.map(d=>d.id));
