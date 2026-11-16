@@ -294,3 +294,17 @@ test('COMMUTEVUE never returns today realtime for tomorrow questions',async()=>{
   assert.match(body.answer,language==='sv'?/imorgon/:/tomorrow/);
  }
 });
+
+
+test('COMMUTEVUE future-date safety guidance uses all 11 UI languages',async()=>{
+ const expected={sv:'Realtidsavgångar',en:'Real-time departures',es:'No se pueden',fr:'Les départs',hi:'कल की', 'zh-CN':'今天无法',ru:'Сегодня невозможно',ar:'لا يمكن',el:'Οι αναχωρήσεις',tr:'Yarının',fa:'اطلاعات لحظه‌ای'};
+ for(const [language,phrase] of Object.entries(expected)){
+  const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'När går tåget från Jordbro till Stockholm City imorgon?',language})}));
+  const data=await response.json();
+  assert.equal(response.status,200,language);
+  assert.equal(data.evidence_status,'future_date_unavailable',language);
+  assert.equal(data.verified,false,language);
+  assert.deepEqual(data.departures,[],language);
+  assert.ok(data.answer.startsWith(phrase),language);
+ }
+});
