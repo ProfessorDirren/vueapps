@@ -611,3 +611,25 @@ test('stop resolver prefix fallback never accepts only fuzzy matches',async()=>{
  ]})})});
  await assert.rejects(resolver('Jordbro'),e=>e instanceof TrafiklabRequestError&&e.category==='station_not_found');
 });
+
+
+test('scheduled-only trip alerts never contaminate a separate verified realtime journey',async()=>{
+ const scheduled={...departure,trip:{trip_id:'scheduled',start_date:'2026-11-10'},is_realtime:false,alerts:[{title:'Unverified timetable warning',text:'Do not show as live'}]};
+ const verified={...departure,trip:{trip_id:'verified',start_date:'2026-11-10'},alerts:[{title:'Verified trip warning',text:'Verified route'}]};
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   return {ok:true,text:async()=>JSON.stringify(tripId
+    ?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}
+    :{...board,departures:[scheduled,verified]})};
+  }
+ });
+ const raw=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'ok');
+ assert.deepEqual(raw.alerts.map(a=>a.title),['Verified trip warning']);
+ const normalized=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(normalized.status,'ok');
+ assert.deepEqual(normalized.alerts.map(a=>a.title),['Verified trip warning']);
+});
