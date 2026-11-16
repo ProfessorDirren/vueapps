@@ -560,3 +560,32 @@ test('conflicting Trafiklab times yield a specific safe diagnostic without claim
  const unrelated=await make(board,wrongRoute)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
  assert.equal(unrelated.reason,'route_not_verified');
 });
+
+
+test('mixed Trafiklab evidence keeps verified trips and excludes conflicting delays and alerts',async()=>{
+ const valid={...departure,trip:{trip_id:'valid',start_date:'2026-11-10'}};
+ const conflict={...departure,trip:{trip_id:'conflict',start_date:'2026-11-10'},alerts:[{title:'Unverified alert',text:'Should not appear'}]};
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({
+  apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
+   if(tripId)seen.push(tripId);
+   const calls=tripId==='conflict'
+    ?[{...details.calls[0],scheduledDeparture:'2026-11-10T10:00:00'},details.calls[1]]
+    :[{...details.calls[0],scheduledDeparture:departure.scheduled,realtimeDeparture:departure.realtime},details.calls[1]];
+   const payload=tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'},calls}:{...board,departures:[conflict,valid]};
+   return {ok:true,text:async()=>JSON.stringify(payload)};
+  }
+ });
+ const raw=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(raw.status,'ok');
+ assert.deepEqual(raw.departures.map(d=>d.id),['valid|2026-11-10|stop1']);
+ assert.deepEqual(raw.journeyEvidence.departureIds,['valid|2026-11-10|stop1']);
+ assert.deepEqual(raw.alerts,[]);
+ assert.deepEqual(seen,['conflict','valid']);
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures[0].delayMinutes,7);
+});
