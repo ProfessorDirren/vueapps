@@ -103,7 +103,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(realtime&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected){timeConflicts++;continue;}
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
-   for(const [index,alert] of (Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
+   for(const [index,alert] of (realtime&&Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
     if(typeof alert?.title!=='string'||!alert.title.trim())continue;
     const title=alert.title.trim().slice(0,240),description=typeof alert.text==='string'?alert.text.slice(0,1200):'';
     const key=title+'|'+description;
