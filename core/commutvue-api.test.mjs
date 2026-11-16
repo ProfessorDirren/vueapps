@@ -270,7 +270,7 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
    const response=await POST(request),data=await response.json();
    assert.equal(data.domain,'commutvue',language);
    assert.equal(data.verified,false,language);
-   assert.equal(data.evidence_status,'scheduled_verified',language);
+   assert.equal(data.evidence_status,'schedule_verified',language);
    assert.ok(data.answer.includes(phrase),language+' missing delay-unknown disclaimer');
   }
  }finally{
