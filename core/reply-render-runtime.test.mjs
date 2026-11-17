@@ -18,3 +18,8 @@ test('reply creates question and answer elements in strict mode and preserves th
  assert.equal(articles[0].children[1].textContent,'Min hund är sjuk');
  assert.equal(articles[0].children[2].textContent,'Kontakta veterinär');
 });
+
+
+test('router hides redundant workspace deep link when specialist already answers inside VUECORE',()=>{
+ assert.match(source,/link\.hidden=!data\.workspace\|\|data\.workspace\.startsWith\('\.\/\?vue='\)&&data\.workspace\.endsWith\('#vue-router'\)/);
+});
