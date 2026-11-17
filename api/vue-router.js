@@ -50,7 +50,7 @@ export async function POST(request){
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      if(raw.status==='scheduled')scheduled=raw;
      if(raw.status==='ok')liveAlerts={sourceUrl:raw.sourceUrl,updatedAt:raw.updatedAt,alerts:raw.alerts||[]};
-     liveDiagnostic=live?.status==='ok'?'verified':raw.status==='scheduled'?'scheduled_verified':(['stop_resolution','board_unavailable','no_eligible_departures','scheduled_only','route_not_verified','provider_time_conflict'].includes(raw.reason)?raw.reason:'no_verified_departures');
+     liveDiagnostic=live?.status==='ok'?'verified':raw.status==='scheduled'?'scheduled_only':(['stop_resolution','board_unavailable','no_eligible_departures','scheduled_only','route_not_verified','provider_time_conflict'].includes(raw.reason)?raw.reason:'no_verified_departures');
     }catch(error){
      // Only publish a fixed, non-sensitive category; never expose upstream URLs or credentials.
      liveDiagnostic=error instanceof TrafiklabRequestError?(error.category==='ambiguous_station'&&['origin','destination'].includes(error.stopRole)?'provider_ambiguous_'+error.stopRole+'_station':'provider_'+error.category):'provider_error';
