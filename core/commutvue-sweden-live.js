@@ -64,7 +64,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   // Distinct platforms may share a Trafiklab meta-stop. Compare actual stop IDs, not just group IDs.
   if(!area(origin)||!area(destination)||!originStops.length||!destinationStops.length||originStops.some(id=>destinationStops.includes(id)))return {provider,status:'unavailable',reason:'stop_resolution',departures:[]};
   const board=await get('departures/'+origin);
-  if(!Array.isArray(board.departures)||!fresh(board.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
+  if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let timeConflicts=0;
@@ -86,7 +86,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(tripRequests>=maxTrips)break;
    tripRequests++;
    const details=await get('trips/'+encodeURIComponent(tripId)+'/'+startDate);
-   if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
+   if(!fresh(details?.timestamp,now())||!Array.isArray(details?.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
    const i=calls.findIndex(c=>c?.stop?.id===d.stop.id);
    // A trip may use a different platform ID within the same verified station area.
