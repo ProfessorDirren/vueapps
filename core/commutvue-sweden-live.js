@@ -68,7 +68,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let timeConflicts=0;
-  for(const d of board.departures){
+  // A board can contain many timetable-only rows. Check realtime candidates first
+  // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
+  const candidates=[...board.departures].sort((a,b)=>Number(b?.is_realtime===true)-Number(a?.is_realtime===true));
+  for(const d of candidates){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
    if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true&&d?.departureCanceled!==true)scheduledOnlyAtOrigin=true;
