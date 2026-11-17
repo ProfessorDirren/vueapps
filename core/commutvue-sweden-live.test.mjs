@@ -678,3 +678,14 @@ test('null stop-group rows are ignored while an exact station remains resolvable
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[null,{id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]}]})})});
  assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
 });
+
+
+test('null child platform rows do not prevent resolving an exact station',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[{id:'740000001',name:'Jordbro',stops:[null,{id:'stop1'}]}]})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+});
+
+test('null child platform rows do not prevent Stockholm City child lookup',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[{id:'740000002',name:'Stockholm',stops:[null,{id:'city1',name:'Stockholm City'}]}]})})});
+ assert.deepEqual(await resolver('Stockholm City'),{id:'740000002',stopIds:['city1']});
+});
