@@ -642,7 +642,7 @@ test('malformed null trip calls fail closed without hiding later valid departure
  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
   fetcher:async url=>{
-   const tripId=url.match(/\\/trips\\/([^/]+)\\//)?.[1];
+   const parts=new URL(url).pathname.split('/');const tripId=parts.includes('trips')?parts[parts.indexOf('trips')+1]:null;
    const payload=tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'},calls:tripId==='broken'?[null,...details.calls]:details.calls}:{...board,departures:[malformed,valid]};
    return {ok:true,text:async()=>JSON.stringify(payload)};
   }
