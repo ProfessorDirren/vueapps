@@ -689,3 +689,20 @@ test('null child platform rows do not prevent Stockholm City child lookup',async
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[{id:'740000002',name:'Stockholm',stops:[null,{id:'city1',name:'Stockholm City'}]}]})})});
  assert.deepEqual(await resolver('Stockholm City'),{id:'740000002',stopIds:['city1']});
 });
+
+
+test('realtime departure is not starved by earlier scheduled-only rows',async()=>{
+ const scheduledRows=Array.from({length:8},(_,i)=>({...departure,trip:{trip_id:'schedule'+i,start_date:'2026-11-10'},is_realtime:false,realtime:undefined}));
+ const realtimeRow={...departure,trip:{trip_id:'live',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const path=new URL(url).pathname;
+   const id=path.includes('/trips/')?path.split('/trips/')[1].split('/')[0]:null;
+   return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'},calls:details.calls.map(call=>({...call,is_realtime:id==='live'}))}:{...board,departures:[...scheduledRows,realtimeRow]})};
+  }
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.departures.map(d=>d.id),['live|2026-11-10|stop1']);
+});
