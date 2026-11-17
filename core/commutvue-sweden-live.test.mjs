@@ -651,3 +651,18 @@ test('malformed null trip calls fail closed without hiding later valid departure
  assert.equal(result.status,'ok');
  assert.deepEqual(result.departures.map(d=>d.id),['broken|2026-11-10|stop1','valid|2026-11-10|stop1']);
 });
+
+
+test('null Trafiklab departure board fails closed without claiming live service',async()=>{
+ const result=await make(null)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'board_unavailable');
+ assert.deepEqual(result.departures,[]);
+});
+
+test('null Trafiklab trip response is ignored and never verifies a journey',async()=>{
+ const result=await make(board,null)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'route_not_verified');
+ assert.deepEqual(result.departures,[]);
+});
