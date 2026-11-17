@@ -666,3 +666,9 @@ test('null Trafiklab trip response is ignored and never verifies a journey',asyn
  assert.equal(result.reason,'route_not_verified');
  assert.deepEqual(result.departures,[]);
 });
+
+
+test('null Trafiklab stop lookup payload fails closed as empty results',async()=>{
+ const resolve=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=> 'null'})});
+ await assert.rejects(resolve('Jordbro'),error=>error instanceof TrafiklabRequestError&&error.stage==='stop_lookup'&&error.category==='empty_station_results');
+});
