@@ -142,7 +142,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const body=await response.text();
   if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
   const payload=JSON.parse(body);
-  let groups=Array.isArray(payload.stop_groups)?payload.stop_groups:[];
+  let groups=Array.isArray(payload?.stop_groups)?payload.stop_groups:[];
   // Trafiklab publishes Stockholm City as a child of the Stockholm meta-stop.
   // If the direct child-name lookup omits that parent, request the documented parent
   // and still require an exact child-name match. Never accept a fuzzy station match.
@@ -154,7 +154,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    const parentBody=await parentResponse.text();
    if(Buffer.byteLength(parentBody,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
    const parentPayload=JSON.parse(parentBody);
-   groups=Array.isArray(parentPayload.stop_groups)?parentPayload.stop_groups:[];
+   groups=Array.isArray(parentPayload?.stop_groups)?parentPayload.stop_groups:[];
   }
   // A full-name lookup can return zero groups even when a shorter indexed search
   // finds the station. Retry with a prefix, but still require an exact name below.
@@ -168,7 +168,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    const prefixBody=await prefixResponse.text();
    if(Buffer.byteLength(prefixBody,'utf8')>MAX_RESPONSE_BYTES)throw Error('Stop lookup payload too large');
    const prefixPayload=JSON.parse(prefixBody);
-   groups=Array.isArray(prefixPayload.stop_groups)?prefixPayload.stop_groups:[];
+   groups=Array.isArray(prefixPayload?.stop_groups)?prefixPayload.stop_groups:[];
   }
   const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
