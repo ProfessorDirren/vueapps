@@ -88,11 +88,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const details=await get('trips/'+encodeURIComponent(tripId)+'/'+startDate);
    if(!fresh(details.timestamp,now())||!Array.isArray(details.calls)||details.trip?.trip_id!==tripId||details.trip?.start_date!==startDate)continue;
    const calls=details.calls;
-   const i=calls.findIndex(c=>c.stop?.id===d.stop.id);
+   const i=calls.findIndex(c=>c?.stop?.id===d.stop.id);
    // A trip may use a different platform ID within the same verified station area.
    // Accept an exact area match only when the provider supplies that area ID;
    // otherwise require the resolved child stop ID. Never infer by direction text.
-   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c.stop?.id)||(c.stop?.area_id===destination&&area(destination)&&typeof c.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
+   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination)&&typeof c?.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
    if(i<0||j<=i||(realtime&&calls[i].is_realtime!==true)||d.canceled===true||d.departureCanceled===true||calls[i].canceled===true||calls[i].departureCanceled===true||calls[j].canceled===true||calls[j].arrivalCanceled===true)continue;
    // When Trips supplies origin timestamps, they must agree with the departure board.
    // Otherwise the two provider responses do not verify the same timing evidence.

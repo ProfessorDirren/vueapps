@@ -634,3 +634,20 @@ test('scheduled-only trip alerts never contaminate a separate verified realtime 
  assert.equal(normalized.alerts,undefined); // Provider-neutral query contract does not expose alerts.
  assert.equal(normalized.departures.length,1);
 });
+
+
+test('malformed null trip calls fail closed without hiding later valid departures',async()=>{
+ const malformed={...departure,trip:{trip_id:'broken',start_date:'2026-11-10'}};
+ const valid={...departure,trip:{trip_id:'valid',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const parts=new URL(url).pathname.split('/');const tripId=parts.includes('trips')?parts[parts.indexOf('trips')+1]:null;
+   const payload=tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'},calls:tripId==='broken'?[null,...details.calls]:details.calls}:{...board,departures:[malformed,valid]};
+   return {ok:true,text:async()=>JSON.stringify(payload)};
+  }
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(result.departures.map(d=>d.id),['broken|2026-11-10|stop1','valid|2026-11-10|stop1']);
+});
