@@ -672,3 +672,9 @@ test('null Trafiklab stop lookup payload fails closed as empty results',async()=
  const resolve=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=> 'null'})});
  await assert.rejects(resolve('Jordbro'),error=>error instanceof TrafiklabRequestError&&error.stage==='stop_lookup'&&error.category==='empty_station_results');
 });
+
+
+test('null stop-group rows are ignored while an exact station remains resolvable',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:[null,{id:'740000001',name:'Jordbro',stops:[{id:'stop1'}]}]})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['stop1']});
+});
