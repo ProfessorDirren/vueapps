@@ -724,7 +724,7 @@ test('scheduled fallback reports whether realtime evidence was rejected or absen
  assert.equal(absent.reason,'no_realtime_at_origin');
  const rejected=await build([scheduled,unverified])({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
  assert.equal(rejected.status,'scheduled');
- assert.equal(rejected.reason,'realtime_unverified');
+ assert.equal(rejected.reason,'realtime_trip_flag_missing');
  assert.equal(rejected.departures.length,1);
 });
 
