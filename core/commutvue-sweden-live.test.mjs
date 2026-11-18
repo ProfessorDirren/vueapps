@@ -706,3 +706,24 @@ test('realtime departure is not starved by earlier scheduled-only rows',async()=
  assert.equal(result.status,'ok');
  assert.deepEqual(result.departures.map(d=>d.id),['live|2026-11-10|stop1']);
 });
+
+
+test('scheduled fallback reports whether realtime evidence was rejected or absent',async()=>{
+ const scheduled={...departure,trip:{trip_id:'schedule',start_date:'2026-11-10'},is_realtime:false,realtime:undefined};
+ const unverified={...departure,trip:{trip_id:'unverified',start_date:'2026-11-10'},is_realtime:true};
+ const build=rows=>createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const path=new URL(url).pathname;
+   const id=path.includes('/trips/')?path.split('/trips/')[1].split('/')[0]:null;
+   return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'},calls:details.calls.map(call=>({...call,is_realtime:false}))}:{...board,departures:rows})};
+  }
+ });
+ const absent=await build([scheduled])({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(absent.status,'scheduled');
+ assert.equal(absent.reason,'no_realtime_at_origin');
+ const rejected=await build([scheduled,unverified])({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(rejected.status,'scheduled');
+ assert.equal(rejected.reason,'realtime_unverified');
+ assert.equal(rejected.departures.length,1);
+});
