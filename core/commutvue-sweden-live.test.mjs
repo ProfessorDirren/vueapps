@@ -745,3 +745,22 @@ test('schedule fallback distinguishes realtime trip platform, destination and fl
   assert.equal(result.status,'scheduled');assert.equal(result.reason,reason);assert.equal(result.departures.length,1);
  }
 });
+
+
+test('Stockholm City accepts an exact named child of its verified meta-stop even if platform IDs differ',async()=>{
+ const trip={...details,calls:[details.calls[0],{stop:{id:'other-city-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true}]};
+ const result=await make(board,trip)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'ok');assert.equal(result.departures.length,1);
+});
+
+test('Stockholm City does not accept a different station in the same meta-stop',async()=>{
+ const scheduled={...departure,is_realtime:false,trip:{trip_id:'scheduled',start_date:'2026-11-10'}};
+ const realtime={...departure,trip:{trip_id:'realtime',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740098000',stopIds:['1617']},fetcher:async url=>{
+  const id=url.match(/\/trips\/([^/]+)\//)?.[1];
+  const calls=[details.calls[0],{stop:{id:'1',area_id:'740098000',name:'Stockholm Centralstation'},is_realtime:true}];
+  return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'},calls:id==='realtime'?calls:[details.calls[0],{stop:{id:'1617',area_id:'740098000',name:'Stockholm City'},is_realtime:false}]}:{...board,departures:[scheduled,realtime]})};
+ }});
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'scheduled');assert.equal(result.reason,'realtime_destination_unverified');
+});
