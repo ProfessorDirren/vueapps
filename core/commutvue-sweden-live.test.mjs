@@ -727,3 +727,21 @@ test('scheduled fallback reports whether realtime evidence was rejected or absen
  assert.equal(rejected.reason,'realtime_unverified');
  assert.equal(rejected.departures.length,1);
 });
+
+
+test('schedule fallback distinguishes realtime trip platform, destination and flag failures',async()=>{
+ const schedule={...departure,trip:{trip_id:'schedule',start_date:'2026-11-10'},is_realtime:false};
+ const live={...departure,trip:{trip_id:'live',start_date:'2026-11-10'}};
+ for(const [reason,calls] of [
+  ['realtime_origin_unverified',[{stop:{id:'other'},is_realtime:true},{stop:{id:'stop2'},is_realtime:true}]],
+  ['realtime_destination_unverified',[{stop:{id:'stop1'},is_realtime:true},{stop:{id:'other'},is_realtime:true}]],
+  ['realtime_trip_flag_missing',[{stop:{id:'stop1'},is_realtime:false},{stop:{id:'stop2'},is_realtime:true}]]
+ ]){
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async url=>{
+   const id=url.match(/\/trips\/([^/]+)\//)?.[1];
+   return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'},calls:id==='live'?calls:details.calls.map(c=>({...c,is_realtime:false}))}:{...board,departures:[schedule,live]})};
+  }});
+  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'scheduled');assert.equal(result.reason,reason);assert.equal(result.departures.length,1);
+ }
+});
