@@ -272,6 +272,8 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
    assert.equal(data.verified,false,language);
    assert.equal(data.evidence_status,'schedule_verified',language);
    assert.equal(data.live_diagnostic,'no_realtime_at_origin',language);
+   if(language==='sv')assert.ok(data.answer.includes('Trafiklab saknar realtidsmarkering'),language);
+   if(language==='en')assert.ok(data.answer.includes('Trafiklab did not mark'),language);
    assert.ok(data.answer.includes(phrase),language+' missing delay-unknown disclaimer');
   }
  }finally{
