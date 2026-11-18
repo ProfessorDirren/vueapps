@@ -67,13 +67,14 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let timeConflicts=0;
+  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
   const candidates=[...board.departures].sort((a,b)=>Number(b?.is_realtime===true)-Number(a?.is_realtime===true));
   for(const d of candidates){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
+   if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===true&&d?.canceled!==true&&d?.departureCanceled!==true)realtimeAtOrigin=true;
    if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true&&d?.departureCanceled!==true)scheduledOnlyAtOrigin=true;
    if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id)||(d.canceled===true||d.departureCanceled===true))continue;
    const realtime=d.is_realtime===true;
@@ -119,7 +120,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   }
   if(!departures.length&&scheduledDepartures.length){
    scheduledDepartures.sort((a,b)=>Date.parse(a.scheduled)-Date.parse(b.scheduled));
-   return {provider,status:'scheduled',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
+   return {provider,status:'scheduled',reason:realtimeAtOrigin?(timeConflicts>0?'realtime_time_conflict':'realtime_unverified'):'no_realtime_at_origin',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
   }
   if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):timeConflicts>0?'provider_time_conflict':'route_not_verified',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
