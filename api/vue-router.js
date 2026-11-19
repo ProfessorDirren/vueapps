@@ -49,6 +49,8 @@ export async function POST(request){
      const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      if(raw.status==='scheduled')scheduled=raw;
+     // Operational evidence only: fixed reason code, never station names, trip IDs, query text or API credentials.
+     if(raw.status==='scheduled'||raw.status==='unavailable')console.info('commutvue_trafiklab_verification',JSON.stringify({status:raw.status,reason:typeof raw.reason==='string'&&/^[a-z_]{1,60}$/.test(raw.reason)?raw.reason:'unknown'}));
      if(raw.status==='ok')liveAlerts={sourceUrl:raw.sourceUrl,updatedAt:raw.updatedAt,alerts:raw.alerts||[]};
      liveDiagnostic=live?.status==='ok'?'verified':raw.status==='scheduled'?(['realtime_unverified','realtime_time_conflict','no_realtime_at_origin','realtime_origin_unverified','realtime_destination_unverified','realtime_destination_absent','realtime_destination_wrong_order','realtime_destination_id_mismatch','realtime_trip_flag_missing'].includes(raw.reason)?raw.reason:'scheduled_only'):(['stop_resolution','board_unavailable','no_eligible_departures','scheduled_only','route_not_verified','provider_time_conflict'].includes(raw.reason)?raw.reason:'no_verified_departures');
     }catch(error){
