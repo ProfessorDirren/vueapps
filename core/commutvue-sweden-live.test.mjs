@@ -250,7 +250,7 @@ test('unavailable live journeys expose only safe stage diagnostics',async()=>{
   assert.equal(scheduled.status,'scheduled');
   assert.equal(scheduled.departures[0].expected,null);
  const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
- assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
+ assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'realtime_destination_wrong_order');
 });
 
 test('provider HTTP authorization and rate-limit failures are safely classified',async()=>{
@@ -558,7 +558,7 @@ test('conflicting Trafiklab times yield a specific safe diagnostic without claim
  assert.deepEqual(raw.departures,[]);
  const wrongRoute={...details,calls:[details.calls[0],{...details.calls[1],stop:{id:'wrong',area_id:'740000099'}}]};
  const unrelated=await make(board,wrongRoute)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
- assert.equal(unrelated.reason,'route_not_verified');
+ assert.equal(unrelated.reason,'realtime_destination_absent');
 });
 
 
