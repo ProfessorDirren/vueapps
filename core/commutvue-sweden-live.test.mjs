@@ -784,3 +784,18 @@ test('realtime destination diagnostics distinguish absent, wrong order and area-
   assert.equal(result.status,'scheduled');assert.equal(result.reason,reason);
  }
 });
+
+test('unavailable route retains precise realtime destination diagnosis without scheduled fallback',async()=>{
+ const cases=[
+  {name:'absent destination',calls:[details.calls[0]],reason:'realtime_destination_absent'},
+  {name:'destination before origin',calls:[details.calls[1],details.calls[0]],reason:'realtime_destination_wrong_order'},
+  {name:'destination area without verified child/name',calls:[details.calls[0],{stop:{id:'unknown',area_id:'740000002',name:'Another station'},is_realtime:true}],reason:'realtime_destination_id_mismatch'}
+ ];
+ for(const fixture of cases){
+  const adapter=make(board,{...details,calls:fixture.calls});
+  const result=await adapter({from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable',fixture.name);
+  assert.equal(result.reason,fixture.reason,fixture.name);
+  assert.deepEqual(result.departures,[],fixture.name);
+ }
+});
