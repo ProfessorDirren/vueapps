@@ -793,7 +793,7 @@ test('unavailable route retains precise realtime destination diagnosis without s
  ];
  for(const fixture of cases){
   const adapter=make(board,{...details,calls:fixture.calls});
-  const result=await adapter({from:'Jordbro',to:'Stockholm City'});
+  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
   assert.equal(result.status,'unavailable',fixture.name);
   assert.equal(result.reason,fixture.reason,fixture.name);
   assert.deepEqual(result.departures,[],fixture.name);
