@@ -250,7 +250,7 @@ test('unavailable live journeys expose only safe stage diagnostics',async()=>{
   assert.equal(scheduled.status,'scheduled');
   assert.equal(scheduled.departures[0].expected,null);
  const wrongRoute=make(board,{...details,calls:[...details.calls].reverse()});
- assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'route_not_verified');
+ assert.equal((await wrongRoute({provider:'stockholm',from:'Jordbro',to:'Stockholm City'})).reason,'realtime_destination_wrong_order');
 });
 
 test('provider HTTP authorization and rate-limit failures are safely classified',async()=>{
@@ -558,7 +558,7 @@ test('conflicting Trafiklab times yield a specific safe diagnostic without claim
  assert.deepEqual(raw.departures,[]);
  const wrongRoute={...details,calls:[details.calls[0],{...details.calls[1],stop:{id:'wrong',area_id:'740000099'}}]};
  const unrelated=await make(board,wrongRoute)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
- assert.equal(unrelated.reason,'route_not_verified');
+ assert.equal(unrelated.reason,'realtime_destination_absent');
 });
 
 
@@ -782,5 +782,24 @@ test('realtime destination diagnostics distinguish absent, wrong order and area-
   }});
   const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
   assert.equal(result.status,'scheduled');assert.equal(result.reason,reason);
+ }
+});
+
+
+test('unavailable realtime reports verified route failure without inventing a schedule',async()=>{
+ const origin={stop:{id:'stop1',area_id:'740000001',name:'Jordbro'},is_realtime:true};
+ const destination={stop:{id:'stop2',area_id:'740000002',name:'Stockholm City'},is_realtime:true};
+ for(const [reason,calls] of [
+  ['realtime_origin_unverified',[{stop:{id:'other'},is_realtime:true},destination]],
+  ['realtime_destination_absent',[origin,{stop:{id:'elsewhere'},is_realtime:true}]],
+  ['realtime_destination_wrong_order',[destination,origin]],
+  ['realtime_destination_id_mismatch',[origin,{stop:{id:'other-platform',area_id:'740000002',name:'Stockholm Centralstation'},is_realtime:true}]],
+  ['realtime_trip_flag_missing',[{...origin,is_realtime:false},destination]]
+ ]){
+  const adapter=make(board,{...details,calls});
+  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable',reason);
+  assert.equal(result.reason,reason);
+  assert.deepEqual(result.departures,[]);
  }
 });
