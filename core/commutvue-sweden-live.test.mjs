@@ -784,3 +784,22 @@ test('realtime destination diagnostics distinguish absent, wrong order and area-
   assert.equal(result.status,'scheduled');assert.equal(result.reason,reason);
  }
 });
+
+
+test('unavailable realtime reports verified route failure without inventing a schedule',async()=>{
+ const origin={stop:{id:'stop1',area_id:'740000001',name:'Jordbro'},is_realtime:true};
+ const destination={stop:{id:'stop2',area_id:'740000002',name:'Stockholm City'},is_realtime:true};
+ for(const [reason,calls] of [
+  ['realtime_origin_unverified',[{stop:{id:'other'},is_realtime:true},destination]],
+  ['realtime_destination_absent',[origin,{stop:{id:'elsewhere'},is_realtime:true}]],
+  ['realtime_destination_wrong_order',[destination,origin]],
+  ['realtime_destination_id_mismatch',[origin,{stop:{id:'other-platform',area_id:'740000002',name:'Stockholm Centralstation'},is_realtime:true}]],
+  ['realtime_trip_flag_missing',[{...origin,is_realtime:false},destination]]
+ ]){
+  const adapter=make(board,{...details,calls});
+  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable',reason);
+  assert.equal(result.reason,reason);
+  assert.deepEqual(result.departures,[]);
+ }
+});
