@@ -50,7 +50,7 @@ test('extracts only matching station names from regional stops.txt',()=>{
 });
 
 test('extracts scheduled arrival and departure times from GTFS ZIP',()=>{
- const zip=storedZip('stop_times.txt','trip_id,arrival_time,departure_time,stop_id,stop_sequence\\nt1,08:01:00,08:02:00,J1,1\\nt1,08:25:00,08:25:00,C1,9\\n');
+ const zip=storedZip('stop_times.txt','trip_id,arrival_time,departure_time,stop_id,stop_sequence\nt1,08:01:00,08:02:00,J1,1\nt1,08:25:00,08:25:00,C1,9\n');
  assert.deepEqual(parseRegionalGTFSZip(zip,{includeTimes:true}).get('t1'),[
   {stop:'J1',arrivalTime:'08:01:00',departureTime:'08:02:00',sequence:1},
   {stop:'C1',arrivalTime:'08:25:00',departureTime:'08:25:00',sequence:9}
