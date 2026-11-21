@@ -2,6 +2,7 @@ import {interpretVueInput,suggestVueTerms} from './vuecore-interpretation.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 /** Deterministic extraction; never guess a station, route or region. */
 export const COMMUT_REGION_HINTS=Object.freeze({
+ gothenburg:/(?:^|[^\p{L}\p{N}])(?:göteborg|gothenburg)(?=$|[^\p{L}\p{N}])/iu,
  stockholm:/(?:^|[^\p{L}\p{N}])(?:stockholm|jordbro|handen|haninge|tyresö|gullmarsplan|södertälje|uppsala|märsta|solna|sundbyberg|t-centralen|stockholm city|sl pendeltåg)(?=$|[^\p{L}\p{N}])/iu,
  santiago:/(?:^|[^\p{L}\p{N}])(?:chile|santiago(?: de chile)?|providencia|maipú|maipu|puente alto|las condes|estación central|estacion central|plaza de armas|baquedano|tobalaba|pajaritos|los héroes|los heroes|metro de santiago|red movilidad)(?=$|[^\p{L}\p{N}])/iu,
  paris:/(?:^|[^\p{L}\p{N}])(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)(?=$|[^\p{L}\p{N}])/iu
