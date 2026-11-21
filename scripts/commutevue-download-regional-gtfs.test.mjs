@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {deflateRawSync} from 'node:zlib';
 import {downloadRegionalGTFS} from './commutevue-download-regional-gtfs.mjs';
 function archive(){
- const name=Buffer.from('stop_times.txt'),data=Buffer.from('trip_id,stop_id,stop_sequence\\nt1,J,1\\n');
+ const name=Buffer.from('stop_times.txt'),data=Buffer.from('trip_id,stop_id,stop_sequence\nt1,J,1\n');
  const compressed=deflateRawSync(data);
  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50);local.writeUInt16LE(8,8);local.writeUInt32LE(compressed.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(name.length,26);
  const central=Buffer.alloc(46);central.writeUInt32LE(0x02014b50);central.writeUInt16LE(8,10);central.writeUInt32LE(compressed.length,20);central.writeUInt32LE(data.length,24);central.writeUInt16LE(name.length,28);
