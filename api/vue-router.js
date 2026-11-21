@@ -31,7 +31,7 @@ export async function POST(request){
  if(b.question!==undefined&&typeof b.question!=='string')return json(400,{error:'Invalid question'});
  // The question's language overrides the UI language only with sufficient evidence.
  // Uncertain or short follow-ups retain the chosen UI locale.
- if(typeof b.question==='string'&&b.question.trim()){
+ if(b.auto_language===true&&typeof b.question==='string'&&b.question.trim()){
   b={...b,language:detectVueInputLanguage(b.question,b.language)};
  }
  const text=ROUTER_TEXT[b.language];const interpreted=interpretVueInput(b.question?.trim()|| (b.image?text[24]:''));const question=interpreted.question;
