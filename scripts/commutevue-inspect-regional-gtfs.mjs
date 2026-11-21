@@ -7,6 +7,7 @@ const archive=await readFile(path);
 const metadata=inspectRegionalGTFSZip(archive);
 const trips=parseRegionalGTFSZip(archive);
 const matchingStops=parseRegionalGTFSStopsZip(archive);
-const directJourneys=findRegionalDirectJourneys(trips,matchingStops);\nconst stopIds=new Set();
+const directJourneys=findRegionalDirectJourneys(trips,matchingStops);
+const stopIds=new Set();
 for(const sequence of trips.values())for(const stopId of sequence)stopIds.add(stopId);
 console.info(JSON.stringify({archiveBytes:metadata.archiveBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,tripCount:trips.size,uniqueStopIdCount:stopIds.size,matchingStops,directJourneys}));
