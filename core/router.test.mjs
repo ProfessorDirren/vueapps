@@ -148,3 +148,25 @@ test('Swedish bus journey with linjenummer routes to COMMUTE-VUE despite FOOD-VU
  assert.equal(result.domain,'commutvue');
  assert.doesNotMatch(result.answer,/ingredienser|SL:s officiella app/iu);
 });
+
+test('CORE clarifies contradictory cooking and transit actions without guessing or invoking providers',async()=>{
+ const confusing='När går nästa kyckling i ugnen från Tyresö Centrum till Gullmarsplan?';
+ for(const previous of [null,'foodvue','commutvue']){
+  const route=routeQuestion(confusing,previous);
+  assert.equal(route.clarify,true);
+  assert.equal(route.domain,null);
+  assert.deepEqual(route.candidates,['commutvue','foodvue']);
+ }
+ const response=await POST(req({question:confusing,language:'sv',previous:'foodvue'}));
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.clarify,true);
+ assert.equal(data.domain,null);
+ assert.match(data.answer,/vilken del|hjälp med/i);
+});
+test('CORE does not block ordinary travel to food destinations or clear cooking questions',()=>{
+ assert.equal(routeQuestion('När går nästa buss från Tyresö Centrum till restaurangen?').domain,'commutvue');
+ assert.equal(routeQuestion('När går nästa buss från Tyresö Centrum till Gullmarsplan?').domain,'commutvue');
+ assert.equal(routeQuestion('Hur tillagar jag kyckling i ugnen?').clarify,false);
+ assert.equal(routeQuestion('Jag tar bussen till restaurangen för att äta kyckling').clarify,false);
+});
