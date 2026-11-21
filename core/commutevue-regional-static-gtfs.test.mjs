@@ -16,11 +16,11 @@ test('rejects row cap overflow',()=>assert.throws(()=>parseRegionalStopTimes('tr
 test('accepts a larger regional stop_times dataset within bounded limits',()=>{
  const rows=['trip_id,stop_id,stop_sequence'];
  for(let i=0;i<500001;i++)rows.push('t'+Math.floor(i/10)+',s'+(i%10)+','+(i%10+1));
- const map=parseRegionalStopTimes(rows.join('\\n'));
+ const map=parseRegionalStopTimes(rows.join('\n'));
  assert.equal(map.size,50001);
 });
 test('rejects unsafe row and trip limits',()=>{
- const csv='trip_id,stop_id,stop_sequence\\nt1,J,1';
+ const csv='trip_id,stop_id,stop_sequence\nt1,J,1';
  assert.throws(()=>parseRegionalStopTimes(csv,{maxRows:2000001}));
  assert.throws(()=>parseRegionalStopTimes(csv,{maxTrips:100001}));
 });
