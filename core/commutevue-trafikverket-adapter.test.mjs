@@ -59,3 +59,26 @@ test('COMMUTEVUE counts upstream estimate coverage before matching without expos
  assert.deepEqual(response.coverage,{originCount:2,destinationCount:1,originEstimatedCount:1,destinationEstimatedCount:0,originActualCount:0,originCancelledCount:1});
  assert.equal(response.departures.length,1);
 });
+
+test('COMMUTEVUE classifies matched route as estimated only when upstream supplies an explicit forecast',async()=>{
+ const fetcher=async(_url,options)=>{
+  const body=options.body;
+  if(body.includes('TrainStation'))return result('TrainStation',[body.includes('Jordbro')?{AdvertisedLocationName:'Jordbro',LocationSignature:'J'}:{AdvertisedLocationName:'Stockholm City',LocationSignature:'Sci'}]);
+  return result('TrainAnnouncement',[body.includes('value="Avgang"')?origin:destination]);
+ };
+ const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher,now:()=>Date.parse('2026-11-21T09:55:00+01:00')});
+ const response=await probe({from:'Jordbro',to:'Stockholm City'});
+ assert.equal(response.departures[0].evidence.status,'estimated');
+ assert.equal(response.departures[0].evidence.delayMinutes,3);
+});
+test('COMMUTEVUE leaves matched timetable-only routes unverified for delay',async()=>{
+ const fetcher=async(_url,options)=>{
+  const body=options.body;
+  if(body.includes('TrainStation'))return result('TrainStation',[body.includes('Jordbro')?{AdvertisedLocationName:'Jordbro',LocationSignature:'J'}:{AdvertisedLocationName:'Stockholm City',LocationSignature:'Sci'}]);
+  return result('TrainAnnouncement',[body.includes('value="Avgang"')?{...origin,EstimatedTimeAtLocation:undefined,ModifiedTime:'2026-11-21T09:58:00+01:00'}:destination]);
+ };
+ const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher,now:()=>Date.parse('2026-11-21T09:55:00+01:00')});
+ const response=await probe({from:'Jordbro',to:'Stockholm City'});
+ assert.equal(response.departures[0].evidence.status,'timetable_only');
+ assert.equal(response.departures[0].evidence.delayMinutes,null);
+});
