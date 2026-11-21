@@ -28,3 +28,21 @@ test('COMMUTEVUE probe refuses missing destination evidence',async()=>{
  assert.equal(response.status,'unavailable');
  assert.equal(response.departures.length,0);
 });
+
+test('COMMUTEVUE probe fails closed on station lookup provider errors',async()=>{
+ const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher:async()=>new Response('{}')});
+ const result=await probe({from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'invalid_response');
+ assert.deepEqual(result.departures,[]);
+});
+test('COMMUTEVUE probe fails closed when announcement provider is unavailable',async()=>{
+ const fetcher=async(_url,options)=>options.body.includes('TrainStation')
+  ?result('TrainStation',[options.body.includes('Jordbro')?{AdvertisedLocationName:'Jordbro',LocationSignature:'J'}:{AdvertisedLocationName:'Stockholm City',LocationSignature:'Sci'}])
+  :new Response('upstream unavailable',{status:503});
+ const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher});
+ const response=await probe({from:'Jordbro',to:'Stockholm City'});
+ assert.equal(response.status,'unavailable');
+ assert.equal(response.reason,'http_error');
+ assert.deepEqual(response.departures,[]);
+});
