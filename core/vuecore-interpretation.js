@@ -57,7 +57,7 @@ export function suggestVueIntent(question){
  if(words.length>100)return [];
  const candidates=[];
  for(const word of words){
-  if(word.length<5||word.length>30)continue;
+  if(word.length<3||word.length>30)continue;
   for(const [domain,terms] of INTENT_TERMS){
    for(const term of terms){
     if(distanceOne(word,term))candidates.push({original:word,suggested:term,domain,requiresConfirmation:true});
