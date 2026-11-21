@@ -6,7 +6,7 @@ import {verifySignedRegionalSnapshot} from './commutevue-regional-snapshot-auth.
  * The deployment supplies the signed envelope as a base64 UTF-8 environment
  * variable. Authentication and service-day checks remain mandatory.
  */
-const MAX_ENVELOPE_BYTES=4*1024*1024+512;
+// Environment variables have much tighter platform limits than signed files.\n// Reject larger snapshots rather than assuming they fit in Vercel settings.\nconst MAX_ENVELOPE_BYTES=16*1024;
 export function loadRegionalSnapshotFromEnvironment({
  encodedEnvelope,signingKey,expectedServiceDate,now=Date.now()
 }={}){
