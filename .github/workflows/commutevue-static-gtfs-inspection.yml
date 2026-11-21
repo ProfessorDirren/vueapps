@@ -32,6 +32,8 @@ jobs:
           fi
           node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/commutevue-sl-regional.zip"
       - name: Validate and parse bounded SL Regional stop_times
+        env:
+          TRAFIKLAB_REGIONAL_REALTIME_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_REALTIME_KEY }}
         run: |
           node --check scripts/commutevue-inspect-regional-gtfs.mjs
           node scripts/commutevue-inspect-regional-gtfs.mjs "$RUNNER_TEMP/commutevue-sl-regional.zip"
