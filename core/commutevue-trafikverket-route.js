@@ -18,6 +18,14 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   const entries=destinationByTrain.get(key)||new Set();entries.add(t);destinationByTrain.set(key,entries);
  }
  const matched=[];
+ const originForecasts=new Map();
+ for(const o of origin){
+  const train=id(o?.AdvertisedTrainIdent),advertised=timestamp(o?.AdvertisedTimeAtLocation);
+  if(o?.LocationSignature!==originSignature||o?.ActivityType!=='Avgang'||o?.Canceled===true||!validTrain(train)||!Number.isFinite(advertised))continue;
+  const key=train+'|'+advertised;
+  const forecast=Number.isFinite(timestamp(o?.EstimatedTimeAtLocation))?timestamp(o.EstimatedTimeAtLocation):null;
+  const known=originForecasts.get(key)||new Set();known.add(forecast);originForecasts.set(key,known);
+ }
  const seenOrigin=new Set();
  for(const o of origin){
   const advertised=timestamp(o?.AdvertisedTimeAtLocation),estimated=timestamp(o?.EstimatedTimeAtLocation),actual=timestamp(o?.TimeAtLocation),modified=timestamp(o?.ModifiedTime),train=id(o?.AdvertisedTrainIdent);
@@ -28,7 +36,8 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   const later=[...(destinationByTrain.get(train)||[])].filter(t=>t>advertised&&t-advertised<=10800000);
   if(later.length!==1)continue;
   const originKey=train+'|'+advertised;
-  if(seenOrigin.has(originKey))continue;
+  // Conflicting forecasts for the same departure cannot be resolved safely.
+  if(originForecasts.get(originKey)?.size!==1||seenOrigin.has(originKey))continue;
   seenOrigin.add(originKey);
   matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0]).toISOString(),hasEstimatedTime:Number.isFinite(estimated),hasActualTime:Number.isFinite(actual),hasModifiedTime:Number.isFinite(modified)});
  }
