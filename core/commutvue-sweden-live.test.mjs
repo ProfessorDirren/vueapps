@@ -827,3 +827,23 @@ test('missing realtime timestamp does not contaminate a verified scheduled fallb
  assert.equal(result.departures.length,1);
  assert.equal(result.departures[0].expected,null);
 });
+
+test('missing realtime timestamp survives another checked but unverified trip',async()=>{
+ const invalid={...departure,trip:{trip_id:'missing-time',start_date:'2026-11-10'},realtime:undefined};
+ const other={...departure,trip:{trip_id:'wrong-route',start_date:'2026-11-10'}};
+ const otherDetails={...details,trip:{trip_id:'wrong-route',start_date:'2026-11-10'},calls:[{stop:{id:'stop1',area_id:'740000001'},is_realtime:true}]};
+ const result=await make({...board,departures:[invalid,other]},otherDetails)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'realtime_destination_absent');
+ assert.deepEqual(result.departures,[]);
+});
+
+test('missing realtime timestamp remains diagnostic after unrelated trip was checked',async()=>{
+ const invalid={...departure,trip:{trip_id:'missing-time',start_date:'2026-11-10'},realtime:undefined};
+ const other={...departure,trip:{trip_id:'wrong-route',start_date:'2026-11-10'}};
+ const otherDetails={...details,trip:{trip_id:'wrong-route',start_date:'2026-11-10'},calls:[],timestamp:details.timestamp};
+ const result=await make({...board,departures:[invalid,other]},otherDetails)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'realtime_timestamp_missing');
+ assert.deepEqual(result.departures,[]);
+});
