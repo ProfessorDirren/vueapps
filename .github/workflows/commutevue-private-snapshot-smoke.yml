@@ -60,7 +60,25 @@ jobs:
           set -eu
           test -n "$TRAFIKLAB_REGIONAL_REALTIME_KEY" || { echo 'Missing realtime key'; exit 1; }
           node scripts/commutevue-private-live-join-smoke.mjs "$RUNNER_TEMP/manifest.json"
+      - name: Stage bounded signed configuration for private provisioning
+        run: |
+          set -eu
+          node --input-type=module -e '
+            import {readFileSync,writeFileSync} from "node:fs";
+            const manifest=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/manifest.json","utf8"));
+            const allowed=["COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64","COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS","COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS"];
+            if(Object.keys(manifest).length!==3||allowed.some(k=>typeof manifest[k]!=="string"||!manifest[k]))throw Error("Unexpected provisioning manifest fields");
+            writeFileSync(process.env.RUNNER_TEMP+"/commutevue-provisioning.json",JSON.stringify(Object.fromEntries(allowed.map(k=>[k,manifest[k]]))),{mode:0o600,flag:"wx"});
+            console.log("Private signed corridor manifest staged (no API keys or signing key)");
+          '
+      - name: Upload short-lived private provisioning manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: commutevue-private-signed-corridor
+          path: ${{ runner.temp }}/commutevue-provisioning.json
+          retention-days: 1
+          if-no-files-found: error
       - name: Delete private archive and signed artifacts
         if: always()
         run: |
-          rm -f "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/regional.zip.partial" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/manifest.json"
+          rm -f "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/regional.zip.partial" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/manifest.json" "$RUNNER_TEMP/commutevue-provisioning.json"
