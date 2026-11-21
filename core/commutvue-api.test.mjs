@@ -335,3 +335,48 @@ test('COMMUTEVUE router preserves missing realtime timestamp diagnostic in both 
  assert.match(source,/realtime_timestamp_missing:'Trafiklab markerar avgången som realtid/);
  assert.match(source,/realtime_timestamp_missing:'Trafiklab marks the departure as real-time/);
 });
+
+test('COMMUTEVUE POST exposes safe missing-realtime-time diagnostic with timetable fallback',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ try{
+  process.env.TRAFIKLAB_API_KEY='secret-missing-realtime-fixture';
+  process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='true';
+  const now=new Date();
+  const local=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+  const wall=d=>{const p=Object.fromEntries(local.formatToParts(d).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute+':'+p.second};
+  const day=wall(now).slice(0,10);
+  const scheduled=wall(new Date(now.getTime()+1800000));
+  globalThis.fetch=async url=>{
+   const path=new URL(url).pathname;
+   let data;
+   if(path.includes('/stops/name/')){
+    const name=decodeURIComponent(path.split('/').pop());
+    data={stop_groups:[{id:name==='Jordbro'?'740000001':'740000002',name,stops:[{id:name==='Jordbro'?'stop1':'stop2',name}]}]};
+   }else if(path.includes('/departures/')){
+    data={timestamp:wall(now),departures:[
+     {trip:{trip_id:'missing',start_date:day},stop:{id:'stop1'},is_realtime:true,scheduled,route:{designation:'43',direction:'Stockholm City'}},
+     {trip:{trip_id:'scheduled',start_date:day},stop:{id:'stop1'},is_realtime:false,scheduled,route:{designation:'43',direction:'Stockholm City'}}
+    ]};
+   }else{
+    data={timestamp:wall(now),trip:{trip_id:'scheduled',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001'}},{stop:{id:'stop2',area_id:'740000002'}}]};
+   }
+   return {ok:true,text:async()=>JSON.stringify(data)};
+  };
+  for(const [language,phrase] of [['sv','Trafiklab markerar avgången som realtid'],['en','Trafiklab marks the departure as real-time']]){
+   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till Stockholm City försenade?',language})}));
+   const body=await response.json();
+   assert.equal(response.status,200,language);
+   assert.equal(body.domain,'commutvue',language);
+   assert.equal(body.evidence_status,'schedule_verified',language);
+   assert.equal(body.live_diagnostic,'realtime_timestamp_missing',language);
+   assert.equal(body.verified,false,language);
+   assert.ok(body.answer.includes(phrase),language);
+   assert.ok(body.departures.every(d=>d.expected===null),language);
+   assert.doesNotMatch(JSON.stringify(body),/secret-missing-realtime-fixture/,language);
+  }
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ }
+});
