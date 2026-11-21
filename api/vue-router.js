@@ -3,6 +3,7 @@ import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue
 import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
 import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
+import {createRegionalStaticGTFSDownloader} from '../core/commutevue-regional-static-download.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -83,6 +84,20 @@ export async function POST(request){
     console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60),actualCount:Math.min(actualCount,60),modifiedCount:Math.min(modifiedCount,60),forecastCount:Math.min(forecastCount,60),timetableOnlyCount:Math.min(timetableOnlyCount,60),originCount:Math.min(probe.coverage?.originCount||0,60),destinationCount:Math.min(probe.coverage?.destinationCount||0,60),originEstimatedCount:Math.min(probe.coverage?.originEstimatedCount||0,60),originPlannedEstimatedCount:Math.min(probe.coverage?.originPlannedEstimatedCount||0,60),destinationEstimatedCount:Math.min(probe.coverage?.destinationEstimatedCount||0,60),originActualCount:Math.min(probe.coverage?.originActualCount||0,60),originCancelledCount:Math.min(probe.coverage?.originCancelledCount||0,60),originDeviationCount:Math.min(probe.coverage?.originDeviationCount||0,60)}));
    }catch{
     console.info('commutevue_trafikverket_shadow',JSON.stringify({status:'unavailable',reason:'unexpected_error',count:0}));
+   }
+  }
+  // Separate static GTFS product key; bounded one-shot diagnostic per warm instance.
+  // Static stop_times is not proof of a journey until station stop IDs are verified.
+  if(!journey.needsClarification&&journey.region==='stockholm'&&process.env.TRAFIKLAB_REGIONAL_STATIC_KEY&&!globalThis.__commutvueStaticProbeDone){
+   globalThis.__commutvueStaticProbeDone=true;
+   try{
+    const url=new URL('https://opendata.samtrafiken.se/gtfs/sl/sl.zip');
+    url.searchParams.set('key',process.env.TRAFIKLAB_REGIONAL_STATIC_KEY);
+    const result=await createRegionalStaticGTFSDownloader({url:url.toString()})();
+    console.info('commutvue_regional_static_probe',JSON.stringify({status:result.status,tripCount:result.tripStops.size}));
+   }catch(e){
+    const reasons=['authorization','rate_limited','http_error','network_or_timeout','oversized_archive','invalid_body','invalid_size','invalid_archive'];
+    console.info('commutvue_regional_static_probe',JSON.stringify({status:'unavailable',reason:reasons.includes(e?.reason)?e.reason:'unknown'}));
    }
   }
   // Shadow-only authorization check. Never publish unjoined GTFS-RT as verified departures.
