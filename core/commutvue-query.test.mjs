@@ -103,3 +103,19 @@ test('Stockholm Centralstation remains distinct from Stockholm City in route par
  assert.deepEqual(central,{region:'stockholm',from:'Jordbro',to:'Stockholm Centralstation',needsClarification:false});
  assert.notEqual(city.to,central.to);
 });
+
+
+test('known T-Centralen typos are corrected transparently without guessing other stations',()=>{
+ for(const typo of ['T-tentralen','C-tentralen']){
+  const q=parseCommuteQuestion('Är pendeltågen från Jordbro till '+typo+' försenade?');
+  assert.equal(q.region,'stockholm');
+  assert.equal(q.to,'T-Centralen');
+  assert.equal(q.needsClarification,false);
+  assert.deepEqual(q.stationCorrections,[{role:'to',original:typo,corrected:'T-Centralen'}]);
+ }
+ const unknown=parseCommuteQuestion('Är tågen från Jordbro till Blåbärscentralen försenade?');
+ assert.equal(unknown.to,'Blåbärscentralen');
+ assert.equal(unknown.stationCorrections,undefined);
+ const exact=parseCommuteQuestion('Är tågen från Jordbro till T-Centralen försenade?');
+ assert.equal(exact.stationCorrections,undefined);
+});

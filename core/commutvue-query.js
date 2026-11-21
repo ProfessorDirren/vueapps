@@ -1,3 +1,4 @@
+import {interpretVueInput} from './vuecore-interpretation.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 /** Deterministic extraction; never guess a station, route or region. */
 export const COMMUT_REGION_HINTS=Object.freeze({
@@ -25,9 +26,14 @@ export function parseCommuteQuestion(question){
  const text=String(question||'').trim();
  const regions=Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(text)).map(([region])=>region);
  const match=PATTERNS.map(re=>re.exec(text)).find(Boolean);
- const from=match?clean(match[1]):null,to=match?clean(match[2]):null;
+ const rawFrom=match?clean(match[1]):null,rawTo=match?clean(match[2]):null;
+ const origin=rawFrom?interpretVueInput(rawFrom):null,destination=rawTo?interpretVueInput(rawTo):null;
+ const from=origin?.question||null,to=destination?.question||null;
  // Region must be grounded in an endpoint, not incidental context in the question.
  const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
  const selected=endpointRegions.length?endpointRegions:regions;
- return {region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
+ const result={region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
+ const corrections=[...(origin?.corrections||[]).map(c=>({role:'from',...c})),...(destination?.corrections||[]).map(c=>({role:'to',...c}))];
+ if(corrections.length)result.stationCorrections=corrections;
+ return result;
 }

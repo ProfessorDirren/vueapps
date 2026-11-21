@@ -1,3 +1,4 @@
+import {interpretVueInput,vueCorrectionNotice} from '../core/vuecore-interpretation.js';
 import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
@@ -22,20 +23,22 @@ export async function POST(request){
  if(!b||!ROUTER_TEXT[b.language])return json(400,{error:'Invalid language'});
  if(b.image!==undefined&&(!validImage(b.image)||!usableImage(b.image)||b.image_public!==true))return json(400,{error:'A valid public image and confirmation are required'});
  if(b.question!==undefined&&typeof b.question!=='string')return json(400,{error:'Invalid question'});
- const text=ROUTER_TEXT[b.language];const question=b.question?.trim()|| (b.image?text[24]:'');
+ const text=ROUTER_TEXT[b.language];const interpreted=interpretVueInput(b.question?.trim()|| (b.image?text[24]:''));const question=interpreted.question;
+ const correctionNotice=vueCorrectionNotice(interpreted.corrections,b.language);
+ const respond=(status,data)=>json(status,correctionNotice&&data&&typeof data.answer==='string'?{...data,answer:correctionNotice+'\\n'+data.answer,input_corrections:interpreted.corrections}:data);
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
  if(route.domain==='anivue'&&urgent)return json(200,{domain:'anivue',answer:urgent,kind:'safety_rule',emergency:true,workspace:'./?vue=anivue#vue-router',image_analyzed:false});
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
- if(route.clarify)return json(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
+ if(route.clarify)return respond(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  if(route.domain==='commutvue'){
   const journey=parseCommuteQuestion(question);
   // A future-date request must never be answered with today's realtime board.
   if(/(?:^|[^\p{L}\p{N}])(?:imorgon|i morgon|övermorgon|i övermorgon|tomorrow|day after tomorrow)(?=$|[^\p{L}\p{N}])/iu.test(question)){
    const futureMessages={sv:'Realtidsavgångar för ett framtida datum kan inte verifieras idag. Fråga igen på resdagen.',en:'Real-time departures for a future date cannot be verified today. Please check again on the travel day.',es:'No se pueden verificar hoy las salidas en tiempo real de una fecha futura. Consulta de nuevo el día del viaje.',fr:'Les départs en temps réel pour une date future ne peuvent pas être vérifiés aujourd’hui. Vérifiez le jour du voyage.',hi:'भविष्य की तारीख की रीयल-टाइम ट्रेन जानकारी आज सत्यापित नहीं की जा सकती। यात्रा के दिन फिर जाँचें।','zh-CN':'今天无法核实未来日期的列车实时发车信息。请在出行当天再次查询。',ru:'Сегодня невозможно проверить отправления в реальном времени на будущую дату. Проверьте снова в день поездки.',ar:'لا يمكن التحقق اليوم من مواعيد القطارات الفورية لتاريخ مستقبلي. يُرجى التحقق مجددًا يوم السفر.',el:'Οι αναχωρήσεις σε πραγματικό χρόνο για μελλοντική ημερομηνία δεν μπορούν να επαληθευτούν σήμερα. Ελέγξτε ξανά την ημέρα του ταξιδιού.',tr:'Gelecekteki bir tarihin gerçek zamanlı tren kalkışları bugün doğrulanamaz. Seyahat günü tekrar kontrol edin.',fa:'اطلاعات لحظه‌ای حرکت قطارهای یک تاریخ آینده را نمی‌توان امروز تأیید کرد. روز سفر دوباره بررسی کنید.'};
-   return json(200,{domain:'commutvue',answer:futureMessages[b.language]||futureMessages.en,kind:'local_guidance',verified:false,evidence_status:'future_date_unavailable',live_diagnostic:'future_date',departures:[],source_url:null,updated_at:null,disruptions:{status:'unknown',alerts:[]},photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+   return respond(200,{domain:'commutvue',answer:futureMessages[b.language]||futureMessages.en,kind:'local_guidance',verified:false,evidence_status:'future_date_unavailable',live_diagnostic:'future_date',departures:[],source_url:null,updated_at:null,disruptions:{status:'unknown',alerts:[]},photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
   let live=null;
   let scheduled=null;
@@ -96,9 +99,9 @@ export async function POST(request){
   };
   const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||genericDiagnostic[b.language]||diagnosticLabels.en[liveDiagnostic]||'';
   const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Προσδιορίστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Lütfen kalkış istasyonunu, varış noktasını ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.'};
-  return json(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:scheduledVerified?scheduledAnswer:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':scheduledVerified?'verified_schedule':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':scheduledVerified?'schedule_verified':'live_unavailable',live_diagnostic:liveDiagnostic,departures:verified?live.departures:scheduledVerified?scheduled.departures:[],source_url:verified?live.sourceUrl:scheduledVerified?scheduled.sourceUrl:null,updated_at:verified?live.updatedAt:scheduledVerified?scheduled.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  return respond(200,{domain:'commutvue',answer:journey.needsClarification?(prompts[b.language]||prompts.en):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:scheduledVerified?scheduledAnswer:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':scheduledVerified?'verified_schedule':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':scheduledVerified?'schedule_verified':'live_unavailable',live_diagnostic:liveDiagnostic,station_corrections:journey.stationCorrections||[],departures:verified?live.departures:scheduledVerified?scheduled.departures:[],source_url:verified?live.sourceUrl:scheduledVerified?scheduled.sourceUrl:null,updated_at:verified?live.updatedAt:scheduledVerified?scheduled.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
  }
- if(route.domain==='medivue')return json(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
+ if(route.domain==='medivue')return respond(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
  const focused=subSpecialist(route.domain,question,route.sub_specialist),branch=specialistPath(route.domain,question,route.specialist_path,focused);
  const r=await followup(new Request('https://localhost/api/vue-followup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:route.domain,sub_specialist:focused,specialist_path:branch.path,question,language:b.language,history:current?b.history:[],fields:{...(current&&b.fields||{}),...routingFields(route.domain,question)},...(b.image?{image:b.image,image_public:true}:{})})}));
