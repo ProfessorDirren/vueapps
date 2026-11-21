@@ -54,7 +54,7 @@ test("newly added languages keep specialist navigation inside localized VUECORE"
 });
 test("ANYVUE preview keeps its heading before the follow-up widget",()=>{
  const page=readFileSync(new URL("../anyvue.html",import.meta.url),"utf8");
- assert.match(page,/<section class="hero">[\s\S]*?<h1>ANYVUE<\/h1>[\s\S]*?<\/section>/);
+ assert.match(page,/<section class="hero">[\s\S]*?<h1>ANY-VUE<\/h1>[\s\S]*?<\/section>/);
 });
 
 test("all linked standalone VUE pages are covered by extended-language routing",()=>{

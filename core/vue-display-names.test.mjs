@@ -11,8 +11,8 @@ test('all sixteen VUEs have translated display names in all eleven locales',()=>
   assert.ok(name && name.endsWith('-VUE'),`${id}/${lang} missing name`);
  }
 });
-test('COMMUTEVUE internal brand remains correctly spelled',()=>{
- assert.equal(vueBrandName('commutvue'),'COMMUTEVUE');
+test('COMMUTE-VUE display brand keeps internal commutvue identifier',()=>{
+ assert.equal(vueBrandName('commutvue'),'COMMUTE-VUE');
  assert.equal(localizedVueName('commutvue','sv'),'Pendling-VUE');
 });
 test('central renderer puts translated label before immutable brand',()=>{

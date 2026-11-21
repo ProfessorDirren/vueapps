@@ -13,7 +13,15 @@ test('every registered VUE has a centralized localized name',()=>{
  }
 });
 test('COMMUTEVUE has correct public branding without changing its internal route',()=>{
- assert.equal(vueBrandName('commutvue'),'COMMUTEVUE');
+ assert.equal(vueBrandName('commutvue'),'COMMUTE-VUE');
+ for(const id of VUE_NAMES){
+  const label=vueBrandName(id);
+  assert.match(label,/^[A-Z]+-VUE$/,id);
+  assert.equal(label.replace('-','').toLowerCase(),id==='commutvue'?'commutevue':id);
+ }
+ assert.equal(vueBrandName('anivue'),'ANI-VUE');
+ assert.equal(vueBrandName('vinylvue'),'VINYL-VUE');
+ assert.equal(vueBrandName('not-a-vue'),'');
  assert.match(localizedVueName('commutvue','sv'),/Pendling/);
  assert.match(localizedVueName('commutvue','es'),/Transporte público/);
  assert.match(localizedVueName('martialartsvue','sv'),/Kampsport/);

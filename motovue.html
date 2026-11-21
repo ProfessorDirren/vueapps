@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b1720">
 <meta name="description" content="MOTOVUE early prototype: structured vehicle symptom guidance.">
-<title>MOTOVUE | Vehicle Care Preview</title>
+<title>MOTO-VUE | Vehicle Care Preview</title>
 <style>
 :root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}*{box-sizing:border-box}
 body{margin:0;background:#0b1720;color:#f4f7f8;min-height:100vh}
@@ -30,11 +30,11 @@ footer{padding:28px 7%;border-top:1px solid #263943;color:#90a3ac;font-size:13px
 </style>
 <script src="./analytics.js" defer></script><script type="module" src="./apps/memory.js"></script></head>
 <body data-domain="motovue">
-<header><div class="logo">MOTOVUE</div><a href="./index.html">← VUEAPPS</a></header>
+<header><div class="logo">MOTO-VUE</div><a href="./index.html">← VUEAPPS</a></header>
 <main>
 <div class="eyebrow">EARLY INTERACTIVE PROTOTYPE</div>
 <h1>Know your vehicle.</h1>
-<p class="lead">Like ANIVUE, start with a photo or video and describe what you observe. Media is previewed locally only; AI analysis is not implemented yet.</p>
+<p class="lead">Like ANI-VUE, start with a photo or video and describe what you observe. Media is previewed locally only; AI analysis is not implemented yet.</p>
 <section class="card" aria-labelledby="tool-title">
 <h2 id="tool-title">Vehicle symptom guide</h2>
 <form id="guide">
@@ -57,11 +57,11 @@ footer{padding:28px 7%;border-top:1px solid #263943;color:#90a3ac;font-size:13px
 <label for="workshop-location">Town or postcode / Ort eller postnummer</label><input id="workshop-location" type="text" maxlength="120" placeholder="Tyresö, Stockholm…" autocomplete="address-level2" required>
 <label for="workshop-help">Help needed</label><select id="workshop-help"><option value="workshop">Workshop</option><option value="roadside">Roadside assistance / Towing</option></select>
 <button type="submit">Find workshops / Sök verkstad →</button>
-<p class="disclaimer">Opens an external Google Maps search with the vehicle type and location you enter. Check opening hours and whether the workshop handles your vehicle. Results are not independently verified by MOTOVUE. Your photos, symptoms and notes are not included in the search.</p>
+<p class="disclaimer">Opens an external Google Maps search with the vehicle type and location you enter. Check opening hours and whether the workshop handles your vehicle. Results are not independently verified by MOTO-VUE. Your photos, symptoms and notes are not included in the search.</p>
 </form></section>
 <p class="disclaimer">Safety first: If you cannot control the vehicle, notice smoke, fuel leaks, a serious brake fault, or a rapidly rising temperature, stop safely and seek professional assistance. Never troubleshoot while driving. The symptom guide keeps your entries on this device. Workshop search sends only the chosen vehicle type, help category and location to Google Maps when you submit it.</p>
 </main>
-<footer>© 2026 VUEAPPS · MOTOVUE concept preview</footer>
+<footer>© 2026 VUEAPPS · MOTO-VUE concept preview</footer>
 <script type="module">
 import { VueFlow, validateMedia } from './core/index.js';
 import { MotoVueDomain } from './core/motovue.js';
