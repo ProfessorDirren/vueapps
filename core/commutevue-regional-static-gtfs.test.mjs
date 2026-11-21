@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalStopTimes,parseRegionalStopNames,findRegionalDirectJourneys,parseRegionalServiceMetadata,filterRegionalActiveRailTrips} from './commutevue-regional-static-gtfs.js';
+import {parseRegionalStopTimes,parseRegionalStopNames,findRegionalDirectJourneys,parseRegionalServiceMetadata,filterRegionalActiveRailTrips,filterRegionalActiveTrips} from './commutevue-regional-static-gtfs.js';
 test('builds stop sequence sorted by GTFS stop_sequence',()=>{
  const map=parseRegionalStopTimes('trip_id,stop_id,stop_sequence\nt1,StockholmCity,3\nt1,Jordbro,1\nt1,Handen,2\n');
  assert.deepEqual(map.get('t1'),['Jordbro','Handen','StockholmCity']);
@@ -89,4 +89,19 @@ test('parses regional service calendar metadata with CRLF line endings',()=>{
  const result=filterRegionalActiveRailTrips(new Map([['t1',['J','C']]]),metadata,'20261121');
  assert.equal(result.trips.size,0);
  assert.equal(result.inactiveTripCount,1);
+});
+
+test('multimodal active trips retain buses, trains, ferries and extended GTFS route types',()=>{
+ const metadata=parseRegionalServiceMetadata({
+  tripsCsv:'trip_id,route_id,service_id\ntbus,rbus,s1\ntrail,rrail,s1\ntferry,rferry,s1\next,rext,s1\noff,rbus,s2\n',
+  routesCsv:'route_id,route_type\nrbus,3\nrrail,2\nrferry,4\nrext,109\n',
+  calendarCsv:'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\ns1,0,0,0,0,0,1,0,20260101,20261231\ns2,0,0,0,0,0,0,0,20260101,20261231\n'
+ });
+ const trips=new Map(['tbus','trail','tferry','ext','off'].map(k=>[k,['A','B']]));
+ const all=filterRegionalActiveTrips(trips,metadata,'20261121');
+ assert.deepEqual([...all.trips.keys()],['tbus','trail','tferry','ext']);
+ assert.deepEqual(all.activeByType,{'2':1,'3':1,'4':1,'109':1});
+ const onlyBus=filterRegionalActiveTrips(trips,metadata,'20261121',{routeTypes:new Set([3])});
+ assert.deepEqual([...onlyBus.trips.keys()],['tbus']);
+ assert.equal(onlyBus.excludedRouteTypeTripCount,3);
 });
