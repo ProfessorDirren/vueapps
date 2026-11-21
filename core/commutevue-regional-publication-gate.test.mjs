@@ -22,3 +22,21 @@ test('stale prediction and duplicate trip IDs fail closed',()=>{
  assert.equal(prepareRegionalPublication({proof:{...proof,departures:[stale]},enabled:true,now}).status,'unavailable');
  assert.equal(prepareRegionalPublication({proof:{...proof,departures:[departure,departure]},enabled:true,now}).reason,'duplicate_trip');
 });
+
+test('publication enforces precise live departure window boundaries',()=>{
+ const at=ms=>({...departure,predictedDeparture:new Date(ms).toISOString()});
+ for(const ms of [now-120000,now,now+7200000]){
+  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).status,'ready');
+ }
+ for(const ms of [now-120001,now+7200001]){
+  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).reason,'invalid_prediction');
+ }
+});
+test('publication sorts verified departures by predicted time without changing their destination headsigns',()=>{
+ const later={...departure,tripId:'later',tripHeadsign:'Kungsängen',predictedDeparture:new Date(now+900000).toISOString()};
+ const earlier={...departure,tripId:'earlier',tripHeadsign:'Bålsta',predictedDeparture:new Date(now+60000).toISOString()};
+ const result=prepareRegionalPublication({proof:{status:'route_matched',departures:[later,earlier]},enabled:true,now});
+ assert.equal(result.status,'ready');
+ assert.deepEqual(result.departures.map(x=>x.tripId),['earlier','later']);
+ assert.deepEqual(result.departures.map(x=>x.destination),['Bålsta','Kungsängen']);
+});
