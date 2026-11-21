@@ -18,7 +18,7 @@ test('rejects truncated archive',()=>assert.throws(()=>parseRegionalGTFSZip(Buff
 test('rejects oversized archive',()=>assert.throws(()=>parseRegionalGTFSZip(new Uint8Array(45*1024*1024+1))));
 
 test('offline explicit archive limit is bounded and runtime default unchanged',()=>{
- const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\\nt1,Jordbro,1\\n');
+ const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\nt1,Jordbro,1\n');
  assert.deepEqual(parseRegionalGTFSZip(zip,{maxArchiveBytes:80*1024*1024}).get('t1'),['Jordbro']);
  assert.throws(()=>parseRegionalGTFSZip(zip,{maxArchiveBytes:81*1024*1024}));
  assert.throws(()=>parseRegionalGTFSZip(zip,{maxArchiveBytes:1}));
