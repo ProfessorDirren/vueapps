@@ -1,6 +1,7 @@
 import {verifySignedRegionalSnapshot} from './commutevue-regional-snapshot-auth.js';
 import {gunzipSync} from 'node:zlib';
 import {readFileSync,statSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 
 /**
  * Server-only runtime loader for a pre-provisioned signed snapshot.
@@ -47,4 +48,14 @@ export function loadRegionalSnapshotFromFile({
   const envelope=raw[0]===0x1f&&raw[1]===0x8b?gunzipSync(raw,{maxOutputLength:4*1024*1024+512}).toString('utf8'):raw.toString('utf8');
   return verifySignedRegionalSnapshot(envelope,{key:signingKey,expectedServiceDate,now});
  }catch{return unavailable('invalid_or_missing_snapshot_file');}
+}
+
+/**
+ * Checked-in signed daily snapshot (never a signing secret). The literal URL
+ * allows serverless file tracing to bundle the artifact with this module.
+ * A missing or expired file fails closed, never returns fabricated realtime.
+ */
+export function loadBundledRegionalSnapshot({signingKey,expectedServiceDate,now=Date.now()}={}){
+ const filePath=fileURLToPath(new URL('./commutevue-regional-signed-snapshot.gz',import.meta.url));
+ return loadRegionalSnapshotFromFile({filePath,signingKey,expectedServiceDate,now});
 }
