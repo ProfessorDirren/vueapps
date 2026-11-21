@@ -82,3 +82,28 @@ export function parseRegionalGTFSStopsZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}
  }
  throw new Error('Regional GTFS stops.txt missing');
 }
+
+
+/** Extract only the bounded trip/route/service metadata files needed for date-aware rail filtering. */
+export function parseRegionalGTFSServiceMetadataZip(input) {
+ const bytes=input instanceof Uint8Array?input:null;if(!bytes||bytes.length<22||bytes.length>MAX_ARCHIVE)throw new Error('Invalid regional GTFS archive');
+ const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.byteLength);let end=-1;
+ for(let i=buffer.length-22;i>=Math.max(0,buffer.length-65557);i--){if(buffer.readUInt32LE(i)===0x06054b50&&i+22+buffer.readUInt16LE(i+20)===buffer.length){end=i;break;}}
+ if(end<0)throw new Error('Missing ZIP directory');
+ const count=buffer.readUInt16LE(end+10),directoryOffset=buffer.readUInt32LE(end+16),directorySize=buffer.readUInt32LE(end+12);
+ if(!count||count>200||directoryOffset+directorySize>end)throw new Error('Invalid ZIP directory');
+ const wanted=new Set(['trips.txt','routes.txt','calendar.txt','calendar_dates.txt']),files=new Map();let pos=directoryOffset,total=0;
+ for(let n=0;n<count;n++){
+  if(pos+46>end||buffer.readUInt32LE(pos)!==0x02014b50)throw new Error('Invalid ZIP entry');
+  const flags=buffer.readUInt16LE(pos+8),method=buffer.readUInt16LE(pos+10),compressed=buffer.readUInt32LE(pos+20),uncompressed=buffer.readUInt32LE(pos+24),nameLen=buffer.readUInt16LE(pos+28),extraLen=buffer.readUInt16LE(pos+30),commentLen=buffer.readUInt16LE(pos+32),offset=buffer.readUInt32LE(pos+42);
+  const next=pos+46+nameLen+extraLen+commentLen;if(next>end)throw new Error('Invalid ZIP metadata');
+  const name=buffer.toString('utf8',pos+46,pos+46+nameLen);pos=next;if(!wanted.has(name))continue;
+  if(files.has(name)||flags&1||![0,8].includes(method)||uncompressed>32*1024*1024||offset+30>directoryOffset||buffer.readUInt32LE(offset)!==0x04034b50)throw new Error('Unsafe or duplicate GTFS metadata entry');
+  const start=offset+30+buffer.readUInt16LE(offset+26)+buffer.readUInt16LE(offset+28);if(start+compressed>directoryOffset)throw new Error('Invalid GTFS metadata payload');
+  total+=uncompressed;if(total>64*1024*1024)throw new Error('GTFS metadata total size limit');
+  const zipped=buffer.subarray(start,start+compressed),decoded=method===0?zipped:inflateRawSync(zipped,{maxOutputLength:32*1024*1024});
+  if(decoded.length!==uncompressed)throw new Error('GTFS metadata size mismatch');files.set(name,decoded.toString('utf8'));
+ }
+ if(!files.has('trips.txt')||!files.has('routes.txt'))throw new Error('Regional GTFS trips.txt or routes.txt missing');
+ return {tripsCsv:files.get('trips.txt'),routesCsv:files.get('routes.txt'),calendarCsv:files.get('calendar.txt')||'',calendarDatesCsv:files.get('calendar_dates.txt')||''};
+}
