@@ -21,13 +21,28 @@ const PATTERNS=[
  /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
 ];
 const clean=s=>s.trim().replace(/^.*\bdesde\s+/iu,'').replace(/^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').replace(/\s+(?:idag|imorgon|i morgon|ikväll|i kväll)$/iu,'').trim();
+// Only correct explicit, unambiguous station-name typos. Do not fuzzy-match
+// arbitrary places or silently conflate Stockholm City with Centralstation.
+const STATION_TYPO_ALIASES=Object.freeze({
+ 't-tentralen':'T-Centralen',
+ 'c-tentralen':'T-Centralen'
+});
+const correctStation=name=>{
+ if(!name)return {name,correction:null};
+ const corrected=STATION_TYPO_ALIASES[name.toLocaleLowerCase('sv')];
+ return corrected?{name:corrected,correction:{original:name,corrected}}:{name,correction:null};
+};
 export function parseCommuteQuestion(question){
  const text=String(question||'').trim();
  const regions=Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(text)).map(([region])=>region);
  const match=PATTERNS.map(re=>re.exec(text)).find(Boolean);
- const from=match?clean(match[1]):null,to=match?clean(match[2]):null;
+ const origin=correctStation(match?clean(match[1]):null),destination=correctStation(match?clean(match[2]):null);
+ const from=origin.name,to=destination.name;
  // Region must be grounded in an endpoint, not incidental context in the question.
  const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
  const selected=endpointRegions.length?endpointRegions:regions;
- return {region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
+ const result={region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
+ const corrections=[origin.correction&&{role:'from',...origin.correction},destination.correction&&{role:'to',...destination.correction}].filter(Boolean);
+ if(corrections.length)result.stationCorrections=corrections;
+ return result;
 }
