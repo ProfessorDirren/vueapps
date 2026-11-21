@@ -261,7 +261,7 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
    let data;
    if(path.includes('/stops/name/')){const station=decodeURIComponent(path.split('/').pop());data={stop_groups:[{id:station==='Jordbro'?'740000001':'740000002',name:station,stops:[{id:station==='Jordbro'?'stop1':'stop2',name:station}]}]};}
    else if(path.includes('/departures/'))data={timestamp:wall(now),departures:[{trip:{trip_id:'t1',start_date:day},stop:{id:'stop1'},is_realtime:false,scheduled:wall(new Date(now.getTime()+1800000)),route:{designation:'43',direction:'Stockholm City',transport_mode:'TRAIN',transport_mode_code:106}}]};
-   else data={timestamp:wall(now),trip:{trip_id:'t1',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001'}},{stop:{id:'stop2',area_id:'740000002'}}]};
+   else data={timestamp:wall(now),trip:{trip_id:'t1',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001',name:'Jordbro'}},{stop:{id:'stop2',area_id:'740000002',name:'Stockholm City'}}]};
    return {ok:true,text:async()=>JSON.stringify(data)};
   };
   const expected={en:'Delay status cannot be determined',es:'No se puede determinar',sv:'Det går inte att avgöra',hi:'रीयल-टाइम डेटा', 'zh-CN':'没有实时数据',ru:'Без данных в реальном времени',ar:'لا يمكن تحديد التأخير',fr:'Impossible de déterminer',el:'Δεν είναι δυνατό',tr:'Gerçek zamanlı veri',fa:'بدون دادهٔ لحظه‌ای'};
