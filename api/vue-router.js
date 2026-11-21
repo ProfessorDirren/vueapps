@@ -102,9 +102,11 @@ export async function POST(request){
    }
   }
   // Signed static + regional GTFS-RT proof, strictly shadow-only and opt-in.
+  // Skip the duplicate shadow fetch when the guarded publication path is enabled.
   // Runs only for the configured corridor; never changes user-facing departures.
   if(!journey.needsClarification&&journey.region==='stockholm'&&
      process.env.COMMUTVUE_REGIONAL_SHADOW_ENABLED==='true'&&
+     process.env.COMMUTVUE_REGIONAL_PUBLICATION_ENABLED!=='true'&&
      journey.from==='Jordbro'&&journey.to==='Stockholm City'){
    const proof=await runRegionalRouterShadow({env:process.env,from:journey.from,to:journey.to});
    console.info('commutvue_regional_signed_shadow',JSON.stringify(proof));
