@@ -4,7 +4,13 @@ export async function probeRegionalStaticRange({url,fetcher=fetch}={}){
  try{endpoint=new URL(url);}catch{return {status:'invalid_endpoint'};}
  if(endpoint.protocol!=='https:'||endpoint.hostname!=='opendata.samtrafiken.se'||endpoint.username||endpoint.password||endpoint.hash)return {status:'invalid_endpoint'};
  try{
-  const response=await fetcher(endpoint.toString(),{method:'GET',headers:{Range:'bytes=0-0',Accept:'application/zip'},redirect:'error',signal:AbortSignal.timeout(5000)});
+  let response=await fetcher(endpoint.toString(),{method:'GET',headers:{Range:'bytes=0-0',Accept:'application/zip'},redirect:'error',signal:AbortSignal.timeout(5000)});
+  // 406 can indicate unacceptable content negotiation. Retry only that status,
+  // still requesting a single byte, and never consume an unrestricted body.
+  if(response.status===406){
+   await response.body?.cancel?.().catch(()=>{});
+   response=await fetcher(endpoint.toString(),{method:'GET',headers:{Range:'bytes=0-0',Accept:'*/*'},redirect:'error',signal:AbortSignal.timeout(5000)});
+  }
   // Never consume an unrestricted body, including servers ignoring Range.
   if(response.status!==206){await response.body?.cancel?.().catch(()=>{});return {status:response.status===200?'range_ignored':response.status===401||response.status===403?'authorization':response.status===416?'range_not_satisfiable':response.status===429?'rate_limited':'http_error',httpStatus:Number.isInteger(response.status)&&response.status>=100&&response.status<=599?response.status:null};}
   const range=response.headers?.get?.('content-range')||'';
