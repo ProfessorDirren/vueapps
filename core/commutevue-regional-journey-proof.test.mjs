@@ -44,3 +44,22 @@ test('reports stale SL feed as unavailable before route matching',()=>{
  assert.equal(result.reason,'stale_or_missing_feed');
  assert.deepEqual(result.departures,[]);
 });
+
+test('matches real-shaped SL Regional GTFS IDs only when trip, stop order and prediction agree',()=>{
+ const origin='9022001006161002',destination='9022001005310001';
+ const tripId='14010000668275260';
+ const regional={...input,
+  tripStops:new Map([[tripId,[{stop:origin,sequence:2,departureTime:'18:09:00'},{stop:'9022001006161003',sequence:3},{stop:destination,sequence:11,arrivalTime:'18:39:00'}]]]),
+  originStopIds:new Set([origin]),
+  destinationStopIds:new Set([destination]),
+  evidence:{status:'trip_evidence_unverified',feedTimestampMs:now-14000,trips:[{tripId,stops:[{stopId:origin,departure:{unixTime:Math.floor(now/1000)+300}}]}]}
+ };
+ const matched=verifyRegionalJourney(regional);
+ assert.equal(matched.status,'route_matched');
+ assert.equal(matched.departures.length,1);
+ assert.equal(matched.departures[0].evidence,'regional_trip_update');
+ assert.equal(matched.departures[0].destinationStopId,destination);
+ assert.equal(verifyRegionalJourney({...regional,tripStops:new Map([[tripId,[{stop:destination},{stop:origin}]]])}).status,'unavailable');
+ assert.equal(verifyRegionalJourney({...regional,evidence:{...regional.evidence,trips:[{...regional.evidence.trips[0],tripId:'different-trip'}]}}).status,'unavailable');
+ assert.equal(verifyRegionalJourney({...regional,destinationStopIds:new Set(['1617'])}).status,'unavailable');
+});
