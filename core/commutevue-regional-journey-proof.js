@@ -3,7 +3,7 @@
  * SAME SL Regional dataset. Caller supplies authoritative stop sequence.
  * Neither a destination label nor an unmatched realtime trip is route proof.
  */
-export function verifyRegionalJourney({evidence,tripStops,originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000}={}){
+export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000}={}){
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  // Reject stale, future-dated or missing feed timestamps before evaluating trips.
  const feedAge=now-evidence.feedTimestampMs;
@@ -31,7 +31,7 @@ export function verifyRegionalJourney({evidence,tripStops,originStopIds,destinat
   // An event timestamp is a prediction, not a feed freshness timestamp.
   // Do not claim live status until a verified feed header timestamp is supplied.
 
-  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
+  const scheduledStop=stops[originIndex],meta=tripMetadata instanceof Map?tripMetadata.get(trip.tripId)||{}:{};\n  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
  }
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',departures};
 }
