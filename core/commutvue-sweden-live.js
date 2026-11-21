@@ -123,10 +123,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    // For a trip toward Stockholm City, avoid exhausting the bounded Trips budget
    // on realtime departures explicitly marked southbound while scheduled
    // northbound candidates remain unchecked. Direction is never proof of arrival.
-   const directionPriority=directionTier(a)-directionTier(b);
-   if(directionPriority)return directionPriority;
+   // Explicitly southbound candidates remain last for a northbound journey.
+   // Among other candidates, spend the bounded Trips budget on live evidence
+   // before timetable-only rows, even when direction metadata is missing.
+   const southboundA=directionTier(a)===2;
+   const southboundB=directionTier(b)===2;
+   if(southboundA!==southboundB)return Number(southboundA)-Number(southboundB);
    const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
    if(tier)return tier;
+   const directionPriority=directionTier(a)-directionTier(b);
+   if(directionPriority)return directionPriority;
    const time=row=>swedishTime(row?.is_realtime===true?row?.realtime:row?.scheduled);
    const ta=time(a),tb=time(b);
    return (Number.isFinite(ta)?ta:Infinity)-(Number.isFinite(tb)?tb:Infinity);
