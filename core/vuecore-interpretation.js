@@ -42,5 +42,5 @@ export function vueCorrectionNotice(corrections,language='en'){
   if(language==='es')return 'Interpreté «'+original+'» como «'+corrected+'» y corregí la escritura.';
   if(language==='fr')return 'J’ai interprété « '+original+' » comme « '+corrected+' » et corrigé l’orthographe.';
   return 'I interpreted “'+original+'” as “'+corrected+'” and corrected the spelling.';
- }).join('\\n');
+ }).join('\n');
 }
