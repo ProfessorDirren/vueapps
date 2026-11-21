@@ -12,13 +12,14 @@ export function createProviderRegistry({providers,normalize}){
   if(typeof adapter!=='function'&&!(adapter&&typeof adapter.query==='function'))throw new TypeError('Provider adapter must be a function or provider instance');
   adapters.set(region,adapter);
  }
- async function query({region,from,to}){
+ async function query({region,from,to,mode}){
   if(!Object.hasOwn(providers,region))throw new TypeError('Unsupported provider region');
   if(typeof from!=='string'||!from.trim()||typeof to!=='string'||!to.trim())return {status:'needs_stations',provider:region,departures:[]};
   const adapter=adapters.get(region);
   if(!adapter)return {status:'unavailable',provider:region,departures:[]};
   try{
    const input={provider:region,from:from.trim(),to:to.trim()};
+   if(mode!==undefined){if(typeof mode!=='string'||!mode.trim())return {status:'unavailable',provider:region,departures:[]};input.mode=mode.trim().toLowerCase();}
    const raw=await (typeof adapter==='function'?adapter(input):adapter.query(input));
    if(!raw||raw.provider!==region||raw.status!=='ok')return {status:'unavailable',provider:region,departures:[]};
    return normalize(raw);
