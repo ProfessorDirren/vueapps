@@ -291,6 +291,8 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   if(exactAreaIds.size===1){
    const stopIds=[...new Set(exact.flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
    if(!stopIds.length)throw new TrafiklabRequestError('stop_lookup','missing_platform_ids');
+   const groupModes=[...new Set(exact.flatMap(group=>Array.isArray(group.transport_modes)?group.transport_modes.map(mode=>String(mode).toUpperCase()):[]))].sort();
+   console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:exact.length,platform_count:stopIds.length,transport_modes:groupModes,mode_metadata_present:exact.some(group=>Array.isArray(group.transport_modes))}));
    return {id:exact[0].id,stopIds};
   }
   // Stockholm City can be a named child of the Stockholm meta-stop in Trafiklab.
@@ -300,7 +302,11 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const parents=new Set(children.map(child=>child.id));
   if(!children.length)throw new TrafiklabRequestError('stop_lookup',groups.length?'station_not_found':'empty_station_results');
   if(parents.size!==1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
-  return {id:children[0].id,stopIds:[...new Set(children.flatMap(child=>child.stopIds))]};
+  const selectedGroup=groups.find(group=>group.id===children[0].id);
+  const groupModes=[...new Set(Array.isArray(selectedGroup?.transport_modes)?selectedGroup.transport_modes.map(mode=>String(mode).toUpperCase()):[])].sort();
+  const stopIds=[...new Set(children.flatMap(child=>child.stopIds))];
+  console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:1,platform_count:stopIds.length,transport_modes:groupModes,mode_metadata_present:Array.isArray(selectedGroup?.transport_modes)}));
+  return {id:children[0].id,stopIds};
  };
 }
 /** Fully configured Sweden adapter using one server-only Trafiklab key. */
