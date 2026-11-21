@@ -109,15 +109,15 @@ export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',
  const calendars=calendarCsv?read(calendarCsv,['service_id','monday','tuesday','wednesday','thursday','friday','saturday','sunday','start_date','end_date'],10000):[];
  const exceptions=calendarDatesCsv?read(calendarDatesCsv,['service_id','date','exception_type'],100000):[];
  const tripById=new Map();for(const row of trips){if(!row.trip_id||!row.route_id||!row.service_id||tripById.has(row.trip_id))throw new Error('Invalid or duplicate GTFS trip metadata');tripById.set(row.trip_id,{routeId:row.route_id,serviceId:row.service_id});}
- const routeTypes=new Map();for(const row of routes){if(!row.route_id||routeTypes.has(row.route_id)||!/^\\d+$/.test(row.route_type))throw new Error('Invalid or duplicate GTFS route metadata');routeTypes.set(row.route_id,Number(row.route_type));}
- const serviceCalendars=new Map();for(const row of calendars){if(!/^\\d{8}$/.test(row.start_date)||!/^\\d{8}$/.test(row.end_date)||serviceCalendars.has(row.service_id))throw new Error('Invalid GTFS service calendar');serviceCalendars.set(row.service_id,row);}
- const serviceExceptions=new Map();for(const row of exceptions){if(!/^\\d{8}$/.test(row.date)||!['1','2'].includes(row.exception_type))throw new Error('Invalid GTFS service exception');if(!serviceExceptions.has(row.service_id))serviceExceptions.set(row.service_id,new Map());serviceExceptions.get(row.service_id).set(row.date,Number(row.exception_type));}
+ const routeTypes=new Map();for(const row of routes){if(!row.route_id||routeTypes.has(row.route_id)||!/^[0-9]+$/.test(row.route_type))throw new Error('Invalid or duplicate GTFS route metadata');routeTypes.set(row.route_id,Number(row.route_type));}
+ const serviceCalendars=new Map();for(const row of calendars){if(!/^[0-9]{8}$/.test(row.start_date)||!/^[0-9]{8}$/.test(row.end_date)||serviceCalendars.has(row.service_id))throw new Error('Invalid GTFS service calendar');serviceCalendars.set(row.service_id,row);}
+ const serviceExceptions=new Map();for(const row of exceptions){if(!/^[0-9]{8}$/.test(row.date)||!['1','2'].includes(row.exception_type))throw new Error('Invalid GTFS service exception');if(!serviceExceptions.has(row.service_id))serviceExceptions.set(row.service_id,new Map());serviceExceptions.get(row.service_id).set(row.date,Number(row.exception_type));}
  return {tripById,routeTypes,serviceCalendars,serviceExceptions};
 }
 
 /** Keep only trips on rail routes (GTFS route_type 2) active on the requested service date. */
 export function filterRegionalActiveRailTrips(trips,metadata,serviceDate) {
- if(!(trips instanceof Map)||!metadata||!/^\\d{8}$/.test(serviceDate))throw new Error('Invalid active regional service filter input');
+ if(!(trips instanceof Map)||!metadata||!/^[0-9]{8}$/.test(serviceDate))throw new Error('Invalid active regional service filter input');
  const year=Number(serviceDate.slice(0,4)),month=Number(serviceDate.slice(4,6)),day=Number(serviceDate.slice(6,8));
  const date=new Date(Date.UTC(year,month-1,day));if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw new Error('Invalid service date');
  const weekdays=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
