@@ -9,7 +9,11 @@ const validTrain=value=>/^\d{1,8}$/.test(id(value));
 const validStation=value=>typeof value==='string'&&/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(value);
 const serviceDate=entry=>{
  const time=timestamp(entry?.AdvertisedTimeAtLocation);
- return Number.isFinite(time)?new Date(time).toISOString().slice(0,10):null;
+ // The Swedish service day follows the provider's local offset, not UTC.
+ // UTC conversion can shift late-night Swedish trains to the previous day.
+ if(!Number.isFinite(time))return null;
+ const raw=entry.AdvertisedTimeAtLocation;
+ return /^\\d{4}-\\d{2}-\\d{2}T/.test(raw)?raw.slice(0,10):new Date(time).toISOString().slice(0,10);
 };
 export function matchTrafikverketTrainRoute({origin,destination,originSignature,destinationSignature,now=Date.now()}={}){
  if(!Array.isArray(origin)||!Array.isArray(destination)||!validStation(originSignature)||!validStation(destinationSignature)||originSignature===destinationSignature||!Number.isFinite(now))return [];
