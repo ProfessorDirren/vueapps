@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalStopTimes,parseRegionalStopNames,findRegionalDirectJourneys} from './commutevue-regional-static-gtfs.js';
+import {parseRegionalStopTimes,parseRegionalStopNames,findRegionalDirectJourneys,parseRegionalServiceMetadata,filterRegionalActiveRailTrips} from './commutevue-regional-static-gtfs.js';
 test('builds stop sequence sorted by GTFS stop_sequence',()=>{
  const map=parseRegionalStopTimes('trip_id,stop_id,stop_sequence\nt1,StockholmCity,3\nt1,Jordbro,1\nt1,Handen,2\n');
  assert.deepEqual(map.get('t1'),['Jordbro','Handen','StockholmCity']);
@@ -57,4 +57,24 @@ test('retains scheduled departure and arrival times when requested',()=>{
   {stop:'J1',arrivalTime:'08:01:00',departureTime:'08:02:00',sequence:1},
   {stop:'C1',arrivalTime:'08:25:00',departureTime:'08:25:00',sequence:9}
  ]);
+});
+
+test('filters direct trips to active rail service on the selected date',()=>{
+ const metadata=parseRegionalServiceMetadata({
+  tripsCsv:'route_id,service_id,trip_id\\nr1,sat,t1\\nr1,off,t2\\nr2,sat,t3\\n',
+  routesCsv:'route_id,route_type\\nr1,2\\nr2,3\\n',
+  calendarCsv:'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\\nsat,0,0,0,0,0,1,0,20260101,20261231\\noff,0,0,0,0,0,0,0,20260101,20261231\\n',
+  calendarDatesCsv:'service_id,date,exception_type\\noff,20261121,1\\nsat,20261121,2\\n'
+ });
+ const trips=new Map([['t1',['J','C']],['t2',['J','C']],['t3',['J','C']]]);
+ const result=filterRegionalActiveRailTrips(trips,metadata,'20261121');
+ assert.deepEqual([...result.trips.keys()],['t2']);
+ assert.equal(result.nonRailTripCount,1);
+ assert.equal(result.inactiveTripCount,1);
+ assert.equal(result.missingMetadataTripCount,0);
+});
+test('rejects malformed service date and missing trip metadata',()=>{
+ const metadata=parseRegionalServiceMetadata({tripsCsv:'trip_id,route_id,service_id\\nt1,r1,s1\\n',routesCsv:'route_id,route_type\\nr1,2\\n'});
+ assert.throws(()=>filterRegionalActiveRailTrips(new Map(),metadata,'2026-11-21'));
+ assert.throws(()=>filterRegionalActiveRailTrips(new Map(),metadata,'20260230'));
 });
