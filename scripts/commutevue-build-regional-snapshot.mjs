@@ -31,7 +31,8 @@ export function selectDirectRegionalTrips(tripStops,originStopIds,destinationSto
 export function buildSignedRegionalCorridorSnapshot({archive,serviceDate=stockholmServiceDate(),validatedAtMs=Date.now(),signingKey,originName='Jordbro',destinationName='Stockholm City'}={}){
  inspectRegionalGTFSZip(archive);
  const stops=parseRegionalGTFSStopsZip(archive);
- // Keep scheduled stop times alongside stop order so runtime can show a real timetable.\n const tripStops=parseRegionalGTFSZip(archive,{includeTimes:true});
+ // Keep scheduled stop times alongside stop order so runtime can show a real timetable.
+ const tripStops=parseRegionalGTFSZip(archive,{includeTimes:true});
  const metadata=parseRegionalServiceMetadata(parseRegionalGTFSServiceMetadataZip(archive));
  const snapshot=buildRegionalServiceSnapshot({tripStops,serviceMetadata:metadata,serviceDate,validatedAtMs,archiveVerified:true});
  if(snapshot.status!=='validated')throw new Error('No validated regional service snapshot');
