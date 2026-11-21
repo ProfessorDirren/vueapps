@@ -960,3 +960,31 @@ test('missing destination direction hint remains diagnostic only',async()=>{
   assert.deepEqual(result.departures,[]);
  }finally{console.info=old;}
 });
+
+test('each Swedish transport mode validates only its own verified departures',async()=>{
+ const modes=['BUS','METRO','TRAIN','TRAM','BOAT','TAXI'];
+ for(const mode of modes){
+  const other=mode==='BUS'?'TRAIN':'BUS';
+  const rows=[mode,other].map((transport_mode,i)=>({
+   ...departure,trip:{trip_id:'mode-'+i,start_date:'2026-11-10'},
+   route:{...departure.route,designation:String(i+1),transport_mode}
+  }));
+  const seen=[];
+  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+   fetcher:async url=>{
+    const id=url.match(/\/trips\/([^/]+)\//)?.[1];
+    if(id)seen.push(id);
+    return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:rows})};
+   }
+  });
+  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City',transportMode:mode});
+  assert.equal(result.status,'ok',mode);
+  assert.deepEqual(seen,['mode-0'],mode);
+  const wrongOnly=await createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+   fetcher:async()=>({ok:true,text:async()=>JSON.stringify({...board,departures:[rows[1]]})})
+  })({provider:'stockholm',from:'Jordbro',to:'Stockholm City',transportMode:mode});
+  assert.equal(wrongOnly.status,'unavailable',mode);
+ }
+});
