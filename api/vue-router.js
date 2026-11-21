@@ -94,7 +94,7 @@ export async function POST(request){
     const url=new URL('https://opendata.samtrafiken.se/gtfs/sl/sl.zip');
     url.searchParams.set('key',process.env.TRAFIKLAB_REGIONAL_STATIC_KEY);
     const result=await probeRegionalStaticRange({url:url.toString()});
-    console.info('commutvue_regional_range_probe',JSON.stringify({status:result.status,archiveBytes:result.archiveBytes??null}));
+    console.info('commutvue_regional_range_probe',JSON.stringify({status:result.status,archiveBytes:result.archiveBytes??null,httpStatus:result.httpStatus??null}));
    }catch{
     console.info('commutvue_regional_range_probe',JSON.stringify({status:'unexpected_error'}));
    }
