@@ -460,7 +460,7 @@ test('Trafiklab Trips documented call shape verifies exact destination area with
 
 
 test('missing provider direction is safe only after destination trip is verified',async()=>{
- const withoutDirection={...departure,route:{designation:'43'}};
+ const withoutDirection={...departure,route:{designation:'43',transport_mode:'TRAIN',transport_mode_code:106}};
  const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},details)});
  assert.equal(verified.status,'ok');
  assert.equal(verified.departures[0].destination,'Stockholm City');
