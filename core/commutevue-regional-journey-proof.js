@@ -22,6 +22,9 @@ export function verifyRegionalJourney({evidence,tripStops,originStopIds,destinat
   const time=update?.departure?.unixTime;
   if(!Number.isSafeInteger(time)||time<=0)continue;
   const departureMs=time*1000;
+  // Feed freshness alone is insufficient: a fresh feed may include an
+  // already departed trip or a prediction far outside the query window.
+  if(!Number.isSafeInteger(departureMs)||departureMs<now-120000||departureMs>now+7200000)continue;
   // An event timestamp is a prediction, not a feed freshness timestamp.
   // Do not claim live status until a verified feed header timestamp is supplied.
   const age=now-evidence.feedTimestampMs;
