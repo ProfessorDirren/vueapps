@@ -4,7 +4,7 @@ import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-ad
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
 import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
 import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js';
-import {runRegionalRouterShadow} from '../core/commutevue-regional-router-shadow.js';
+import {runRegionalRouterShadow,runRegionalRouterPublication} from '../core/commutevue-regional-router-shadow.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -66,6 +66,7 @@ export async function POST(request){
   let scheduled=null;
   let liveAlerts=null;
   let liveDiagnostic='not_attempted';
+  let regionalPublished=null;
   // Shadow-only Trafikverket verification: never changes user-facing departures.
   // Explicit opt-in prevents unverified upstream contracts from affecting production.
   if(!journey.needsClarification&&journey.region==='stockholm'&&
@@ -143,6 +144,13 @@ export async function POST(request){
     }
    }
   }
+  // Regional realtime publication is a separate, explicitly enabled corridor.
+  // Never overwrite verified live results from the primary provider.
+  if(!journey.needsClarification&&journey.region==='stockholm'&&journey.from==='Jordbro'&&journey.to==='Stockholm City'&&
+     process.env.COMMUTVUE_REGIONAL_PUBLICATION_ENABLED==='true'&&live?.status!=='ok'){
+   regionalPublished=await runRegionalRouterPublication({env:process.env,from:journey.from,to:journey.to});
+   console.info('commutvue_regional_publication',JSON.stringify({status:regionalPublished.status,reason:regionalPublished.reason,count:Math.min(regionalPublished.departures?.length||0,100)}));
+  }
   // All regions use the same fail-closed disruption contract. No connected alert
   // adapter means UNKNOWN, never an invented all-clear.
   const disruptions=await queryDisruptions({provider:journey.region||'unknown',from:journey.from,to:journey.to,adapter:liveAlerts?async()=>liveAlerts:undefined});
@@ -151,7 +159,10 @@ export async function POST(request){
    :'';
   const disruptionText=disruptionLines?'\n'+disruptionLines:'';
   const verified=live?.status==='ok';
-  const scheduledVerified=!verified&&scheduled?.status==='scheduled'&&Array.isArray(scheduled.departures)&&scheduled.departures.length>0;
+  const regionalVerified=!verified&&regionalPublished?.status==='ready'&&regionalPublished.departures.length>0;
+  const scheduledVerified=!verified&&!regionalVerified&&scheduled?.status==='scheduled'&&Array.isArray(scheduled.departures)&&scheduled.departures.length>0;
+  const regionalLabels={sv:'Verifierade regionala realtidsavgångar:',en:'Verified regional real-time departures:',es:'Salidas regionales verificadas en tiempo real:',fr:'Départs régionaux vérifiés en temps réel :'};
+  const regionalAnswer=regionalVerified?(regionalLabels[b.language]||regionalLabels.en)+'\n'+regionalPublished.departures.map(d=>new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}).format(new Date(d.predictedDeparture))+' · '+d.line+' · '+d.destination).join('\n'):'';
   const scheduledLabels={en:'Verified timetable departures (not real-time):',es:'Salidas verificadas del horario (no en tiempo real):',sv:'Verifierade tidtabellsavgångar (inte realtid):',hi:'सत्यापित समय-सारणी प्रस्थान (रीयल-टाइम नहीं):','zh-CN':'已核实的时刻表发车时间（非实时）：',ru:'Подтверждённые отправления по расписанию (не в реальном времени):',ar:'مواعيد المغادرة المؤكدة وفق الجدول (ليست بيانات فورية):',el:'Επαληθευμένες αναχωρήσεις βάσει προγράμματος (όχι σε πραγματικό χρόνο):',tr:'Doğrulanmış tarifeli kalkışlar (gerçek zamanlı değil):',fa:'حرکت‌های تأییدشده طبق برنامه (نه اطلاعات لحظه‌ای):',fr:'Départs vérifiés selon les horaires (pas en temps réel) :'};
   // A timetable-only response cannot establish whether a train is delayed.
   const delayUnknown={en:'Delay status cannot be determined without real-time data.',sv:'Det går inte att avgöra om tåget är försenat utan realtidsdata.',es:'No se puede determinar si hay retrasos sin datos en tiempo real.',fr:'Impossible de déterminer les retards sans données en temps réel.',hi:'रीयल-टाइम डेटा के बिना देरी की पुष्टि नहीं की जा सकती।','zh-CN':'没有实时数据，无法确定列车是否晚点。',ru:'Без данных в реальном времени нельзя определить задержку.',ar:'لا يمكن تحديد التأخير دون بيانات فورية.',el:'Δεν είναι δυνατό να διαπιστωθεί καθυστέρηση χωρίς δεδομένα πραγματικού χρόνου.',tr:'Gerçek zamanlı veri olmadan gecikme belirlenemez.',fa:'بدون دادهٔ لحظه‌ای نمی‌توان تأخیر را تعیین کرد.'};
@@ -180,7 +191,7 @@ export async function POST(request){
   };
   const diagnosticText=diagnosticLabels[b.language]?.[liveDiagnostic]||genericDiagnostic[b.language]||diagnosticLabels.en[liveDiagnostic]||'';
   const prompts={en:'Please specify departure station, destination and city.',sv:'Ange avreseort, destination och stad.',es:'Indica el origen, destino y ciudad.',fr:'Indiquez la gare de départ, la destination et la ville.',hi:'कृपया प्रस्थान स्टेशन, गंतव्य और शहर बताएं।','zh-CN':'请提供出发站、目的地和城市。',ru:'Укажите станцию отправления, пункт назначения и город.',ar:'يرجى تحديد محطة المغادرة والوجهة والمدينة.',el:'Προσδιορίστε σταθμό αναχώρησης, προορισμό και πόλη.',tr:'Lütfen kalkış istasyonunu, varış noktasını ve şehri belirtin.',fa:'لطفاً ایستگاه مبدأ، مقصد و شهر را مشخص کنید.'};
-  return respond(200,{domain:'commutvue',answer:journey.needsClarification?(journey.from&&!journey.to?({sv:'Vilken station vill du resa till från '+journey.from+'?',en:'Which station are you traveling to from '+journey.from+'?',es:'¿A qué estación quieres viajar desde '+journey.from+'?'}[b.language]||'Please specify the destination station from '+journey.from+'.'):(prompts[b.language]||prompts.en)):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:scheduledVerified?scheduledAnswer:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified?'verified_live':scheduledVerified?'verified_schedule':'local_guidance',verified,evidence_status:journey.needsClarification?'needs_stations':verified?'live_verified':scheduledVerified?'schedule_verified':'live_unavailable',live_diagnostic:liveDiagnostic,station_corrections:journey.stationCorrections||[],departures:verified?live.departures:scheduledVerified?scheduled.departures:[],source_url:verified?live.sourceUrl:scheduledVerified?scheduled.sourceUrl:null,updated_at:verified?live.updatedAt:scheduledVerified?scheduled.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  return respond(200,{domain:'commutvue',answer:journey.needsClarification?(journey.from&&!journey.to?({sv:'Vilken station vill du resa till från '+journey.from+'?',en:'Which station are you traveling to from '+journey.from+'?',es:'¿A qué estación quieres viajar desde '+journey.from+'?'}[b.language]||'Please specify the destination station from '+journey.from+'.'):(prompts[b.language]||prompts.en)):verified?formatVerifiedDepartures(live.departures,b.language)+disruptionText:regionalVerified?regionalAnswer+disruptionText:scheduledVerified?scheduledAnswer:COMMUT_MESSAGES[commuteLocale(b.language)][0]+(diagnosticText?' '+diagnosticText:''),kind:verified||regionalVerified?'verified_live':scheduledVerified?'verified_schedule':'local_guidance',verified:verified||regionalVerified,evidence_status:journey.needsClarification?'needs_stations':verified||regionalVerified?'live_verified':scheduledVerified?'schedule_verified':'live_unavailable',live_diagnostic:liveDiagnostic,station_corrections:journey.stationCorrections||[],departures:verified?live.departures:regionalVerified?regionalPublished.departures:scheduledVerified?scheduled.departures:[],source_url:verified?live.sourceUrl:regionalVerified?'https://www.trafiklab.se/':scheduledVerified?scheduled.sourceUrl:null,updated_at:verified?live.updatedAt:regionalVerified?new Date().toISOString():scheduledVerified?scheduled.updatedAt:null,disruptions,photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:journey.needsClarification,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
  }
  if(route.domain==='medivue')return respond(200,{domain:'medivue',sub_specialist:'leaflets',answer:text[10],workspace:'./medivue.html',kind:'local_guidance'});
  const current=MEMORY_DOMAINS.includes(b.previous)&&route.domain===b.previous&&b.newCase!==true;
