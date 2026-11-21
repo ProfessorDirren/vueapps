@@ -1,8 +1,11 @@
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {encodeRegionalSnapshot} from './commutevue-regional-snapshot-codec.js';
 import {signRegionalSnapshot} from './commutevue-regional-snapshot-auth.js';
-import {loadRegionalSnapshotFromEnvironment} from './commutevue-regional-runtime-artifact.js';
+import {loadRegionalSnapshotFromEnvironment,loadRegionalSnapshotFromFile} from './commutevue-regional-runtime-artifact.js';
 const now=1763718000000,day='20261121',key='test-only-signing-secret-that-is-long-enough';
 const payload=encodeRegionalSnapshot({status:'validated',serviceDate:day,validatedAtMs:now-1000,tripStops:new Map([['trip-1',['stop-1','stop-2']]])},{allowedTripIds:new Set(['trip-1'])});
 const encodedEnvelope=Buffer.from(signRegionalSnapshot(payload,{key}),'utf8').toString('base64');
@@ -24,4 +27,19 @@ test('runtime rejects malformed, oversized, stale and unsigned artifacts',()=>{
   const result=loadRegionalSnapshotFromEnvironment({encodedEnvelope,signingKey:key,expectedServiceDate:day,now,...overrides});
   assert.equal(result.status,'unavailable');
  }
+});
+
+test('signed file loader verifies authenticated raw envelope and rejects tampering',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'commutvue-snapshot-'));
+ const filePath=join(dir,'signed-envelope.json');
+ try{
+  writeFileSync(filePath,Buffer.from(encodedEnvelope,'base64'));
+  const valid=loadRegionalSnapshotFromFile({filePath,signingKey:key,expectedServiceDate:day,now});
+  assert.equal(valid.status,'validated');
+  assert.deepEqual(valid.tripStops.get('trip-1'),['stop-1','stop-2']);
+  assert.equal(loadRegionalSnapshotFromFile({filePath,signingKey:'wrong',expectedServiceDate:day,now}).status,'unavailable');
+  writeFileSync(filePath,'tampered');
+  assert.equal(loadRegionalSnapshotFromFile({filePath,signingKey:key,expectedServiceDate:day,now}).status,'unavailable');
+  assert.equal(loadRegionalSnapshotFromFile({filePath:join(dir,'missing'),signingKey:key,expectedServiceDate:day,now}).status,'unavailable');
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });
