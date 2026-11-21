@@ -137,3 +137,14 @@ test('Swedish train delay question routes to COMMUTVUE from an ANIVUE session',(
   assert.equal(routeQuestion(question,'anivue').domain,'commutvue',question);
  }
 });
+
+test('Swedish bus journey with linjenummer routes to COMMUTE-VUE despite FOOD-VUE e-nummer collision',async()=>{
+ const question='När går nästa buss från Tyresö centrum till Gullmarsplan? Visa linjenummer, planerad avgång, realtid, eventuell försening och destination.';
+ assert.equal(routeQuestion(question,'foodvue').domain,'commutvue');
+ assert.equal(routeQuestion('När går bussarna från Tyresö centrum till Gullmarsplan','foodvue').domain,'commutvue');
+ const response=await POST(req({question,language:'sv',previous:'foodvue'}));
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.equal(result.domain,'commutvue');
+ assert.doesNotMatch(result.answer,/ingredienser|SL:s officiella app/iu);
+});
