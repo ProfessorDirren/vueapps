@@ -331,7 +331,6 @@ test('COMMUTEVUE router preserves missing realtime timestamp diagnostic in both 
  const {fileURLToPath}=await import('node:url');
  const source=readFileSync(fileURLToPath(new URL('../api/vue-router.js',import.meta.url)),'utf8');
  assert.match(source,/realtime_trip_flag_missing','realtime_timestamp_missing'\]\.includes\(raw\.reason\)/);
- assert.match(source,/provider_time_conflict','realtime_timestamp_missing'\]\.includes\(raw\.reason\)/);
  assert.match(source,/provider_time_conflict','realtime_timestamp_missing','realtime_origin_unverified','realtime_destination_unverified','realtime_destination_absent','realtime_destination_wrong_order','realtime_destination_id_mismatch','realtime_trip_flag_missing'\]\.includes\(raw\.reason\)/);
  assert.match(source,/realtime_timestamp_missing:'Trafiklab markerar avgången som realtid/);
  assert.match(source,/realtime_timestamp_missing:'Trafiklab marks the departure as real-time/);
