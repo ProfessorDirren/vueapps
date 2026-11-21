@@ -67,6 +67,9 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
+  // Stop resolution maps the metro interchange alias to the commuter-rail station.
+  // Match the canonical name only alongside the exact resolved station area.
+  const resolvedDestinationName=String(to).trim().toLocaleLowerCase('sv')==='t-centralen'?'stockholm city':String(to).trim().toLocaleLowerCase('sv');
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let destinationAreaSeen=0;let destinationNamedStopSeen=0;let cityNamedStopSeen=0;let originPresentWithoutDestination=0;let tripsWithEmptyCalls=0;let tripsWithMultipleCalls=0;let destinationNameInDirection=0;let cityNameInDirection=0;let verifiedDestinationCalls=0;let destinationBeforeOrigin=0;let tripOriginMissing=0;let invalidTripEvidence=0;let checkedRealtimeTrips=0;let checkedScheduledTrips=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
@@ -109,16 +112,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    // A trip may use a different platform ID within the same verified station area.
    // Accept an exact area match only when the provider supplies that area ID;
    // otherwise require the resolved child stop ID. Never infer by direction text.
-   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination)&&typeof c?.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
+   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination)&&typeof c?.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===resolvedDestinationName)));
    if(i<0)tripOriginMissing++;
    if(j>i&&i>=0)verifiedDestinationCalls++;
    if(realtime&&i<0)realtimeOriginMissing++;
    else if(realtime&&j<=i){
     realtimeDestinationMissing++;
-    const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)&&typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')));
+    const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)&&typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===resolvedDestinationName));
     if(destinationCalls.length){realtimeDestinationBeforeOrigin++;destinationBeforeOrigin++;}
     else if(calls.some(call=>call?.stop?.area_id===destination&&area(destination))){realtimeDestinationIdMismatch++;destinationAreaSeen++;}
-    else if(calls.some(call=>typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')))destinationNamedStopSeen++;
+    else if(calls.some(call=>typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===resolvedDestinationName))destinationNamedStopSeen++;
     else {realtimeDestinationAbsent++;if(i>=0)originPresentWithoutDestination++;if(calls.some(call=>call?.stop?.name?.trim().toLocaleLowerCase('sv')==='stockholm city'))cityNamedStopSeen++;if(direction.toLocaleLowerCase('sv').includes(String(to).toLocaleLowerCase('sv')))destinationNameInDirection++;if(direction.toLocaleLowerCase('sv').includes('stockholm city'))cityNameInDirection++;}
    }
    else if(realtime&&calls[i].is_realtime!==true)realtimeCallFlagMissing++;
