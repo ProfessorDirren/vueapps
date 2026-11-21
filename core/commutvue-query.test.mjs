@@ -94,3 +94,12 @@ test('Swedish day qualifiers are not part of Stockholm station names',()=>{
   assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false},suffix);
  }
 });
+
+
+test('Stockholm Centralstation remains distinct from Stockholm City in route parsing',()=>{
+ const city=parseCommuteQuestion('Är pendeltågen från Jordbro till Stockholm City försenade just nu?');
+ const central=parseCommuteQuestion('Är pendeltågen från Jordbro till Stockholm Centralstation försenade just nu?');
+ assert.deepEqual(city,{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+ assert.deepEqual(central,{region:'stockholm',from:'Jordbro',to:'Stockholm Centralstation',needsClarification:false});
+ assert.notEqual(city.to,central.to);
+});
