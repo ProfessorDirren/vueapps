@@ -1,4 +1,5 @@
 import {verifySignedRegionalSnapshot} from './commutevue-regional-snapshot-auth.js';
+import {gunzipSync} from 'node:zlib';
 
 /**
  * Server-only runtime loader for a pre-provisioned signed snapshot.
@@ -18,6 +19,9 @@ export function loadRegionalSnapshotFromEnvironment({
  try{
   const raw=Buffer.from(encodedEnvelope,'base64');
   if(raw.length>MAX_ENVELOPE_BYTES||raw.toString('base64')!==encodedEnvelope)return unavailable('invalid_artifact_encoding');
-  return verifySignedRegionalSnapshot(raw.toString('utf8'),{key:signingKey,expectedServiceDate,now});
+  // New artifacts use gzip-compressed signed envelopes; legacy plain envelopes remain readable.
+  // Bound decompressed bytes before signature verification to prevent zip bombs.
+  const envelope=raw[0]===0x1f&&raw[1]===0x8b?gunzipSync(raw,{maxOutputLength:4*1024*1024+512}).toString('utf8'):raw.toString('utf8');
+  return verifySignedRegionalSnapshot(envelope,{key:signingKey,expectedServiceDate,now});
  }catch{return unavailable('invalid_artifact_encoding');}
 }
