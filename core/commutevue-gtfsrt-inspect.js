@@ -35,7 +35,7 @@ export function inspectGTFSRealtimeFeed(input){
   if(headers.length!==1||entities.length>MAX_ENTITIES)throw new GTFSRealtimeDecodeError();
   const header=nested(bytes,headers[0]);
   const versions=header.filter(f=>f.number===1&&f.wire===2);
-  if(versions.length!==1||!/^2\\.\\d+$/.test(string(bytes,versions[0])))throw new GTFSRealtimeDecodeError();
+  if(versions.length!==1||!/^2\.\d+$/.test(string(bytes,versions[0])))throw new GTFSRealtimeDecodeError();
   let tripUpdateCount=0,vehicleCount=0,alertCount=0;
   for(const entity of entities){
    const e=nested(bytes,entity);
