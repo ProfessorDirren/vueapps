@@ -48,7 +48,7 @@ jobs:
             if(snapshot.status!=="validated")throw Error("Runtime snapshot validation failed: "+snapshot.reason);
             const origin=new Set(manifest.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS.split(","));
             const dest=new Set(manifest.COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS.split(","));
-            const ids=new Set([...snapshot.tripStops.values()].flat().map(stop=>typeof stop==='string'?stop:stop?.stop).filter(Boolean));
+            const ids=new Set([...snapshot.tripStops.values()].flat().map(stop=>typeof stop==="string"?stop:stop?.stop).filter(Boolean));
             if(![...origin].some(x=>ids.has(x))||![...dest].some(x=>ids.has(x)))throw Error("Station IDs missing from signed trips");
             const headSigns=new Set([...snapshot.tripMetadata.values()].map(meta=>meta.tripHeadsign).filter(Boolean));
             const terminalDestinations=["Bålsta","Kungsängen"];
