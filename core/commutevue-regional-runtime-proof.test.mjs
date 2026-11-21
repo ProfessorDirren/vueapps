@@ -1,3 +1,6 @@
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {encodeRegionalSnapshot} from './commutevue-regional-snapshot-codec.js';
@@ -31,4 +34,17 @@ test('runtime proof rejects missing, tampered, stale and mismatched inputs',()=>
   assert.equal(result.status,'unavailable');
   assert.deepEqual(result.departures,[]);
  }
+});
+
+test('regional journey proof accepts authenticated file and rejects tampered file even with valid env fallback',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'commutvue-proof-')),filePath=join(dir,'snapshot.json');
+ try{
+  writeFileSync(filePath,Buffer.from(encodedEnvelope,'base64'));
+  const result=matchProvisionedRegionalJourney({...args,filePath,encodedEnvelope:undefined});
+  assert.equal(result.status,'route_matched');
+  writeFileSync(filePath,'tampered');
+  const bad=matchProvisionedRegionalJourney({...args,filePath});
+  assert.equal(bad.status,'unavailable');
+  assert.deepEqual(bad.departures,[]);
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });
