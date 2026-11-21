@@ -7,16 +7,17 @@ const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},i
 const board={timestamp:'2026-11-10T09:58:00',departures:[departure]};
 const details={timestamp:'2026-11-10T09:58:00',trip:{trip_id:'t1',start_date:'2026-11-10'},calls:[{stop:{id:'stop1',area_id:'740000001'},is_realtime:true},{stop:{id:'stop2',area_id:'740000002'},is_realtime:true}]};
 const make=(boardPayload=board,tripPayload=details)=>createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?tripPayload:boardPayload)})});
-test('bus departures are excluded before the bounded Trips lookup budget',async()=>{
- const busRows=Array.from({length:12},(_,i)=>({...departure,trip:{trip_id:'bus'+i,start_date:'2026-11-10'},route:{designation:'835',direction:'Stockholm City',transport_mode:'BUS',transport_mode_code:700}}));
- const train={...departure,trip:{trip_id:'rail',start_date:'2026-11-10'}};
+test('all documented Trafiklab transport modes are retained and unknown modes are rejected',async()=>{
+ const modes=['BUS','METRO','TRAIN','TRAM','TAXI','BOAT'];
+ const rows=modes.map((mode,i)=>({...departure,trip:{trip_id:'mode'+i,start_date:'2026-11-10'},route:{designation:String(i),direction:'Stockholm City',transport_mode:mode,transport_mode_code:[700,401,106,0,0,0][i]}}));
+ rows.push({...departure,trip:{trip_id:'unknown',start_date:'2026-11-10'},route:{designation:'?',direction:'Stockholm City',transport_mode:'UNKNOWN'}});
  const seen=[];
- const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:1,
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
-  fetcher:async url=>{const id=url.match(/\\/trips\\/([^/]+)\\//)?.[1];if(id)seen.push(id);return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:[...busRows,train]})};}
+  fetcher:async url=>{const id=url.match(/\\/trips\\/([^/]+)\\//)?.[1];if(id)seen.push(id);return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:rows})};}
  });
  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
- assert.deepEqual(seen,['rail']);assert.equal(result.status,'ok');
+ assert.deepEqual(seen,modes.map((_,i)=>'mode'+i));assert.equal(result.status,'ok');
 });
 
 test('verified Swedish realtime delay requires origin-before-destination trip calls',async()=>{
