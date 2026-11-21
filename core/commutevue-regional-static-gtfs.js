@@ -101,7 +101,7 @@ export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',
   const lines=normalized.split(String.fromCharCode(10));const header=parseCSV((lines.shift()||'').replaceAll(String.fromCharCode(13),''));
   const indexes=Object.fromEntries(required.map(k=>[k,header.indexOf(k)]));
   if(Object.values(indexes).some(i=>i<0))throw new Error('Missing regional GTFS metadata columns: '+required.filter(k=>indexes[k]<0).join(', '));
-  const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line);rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
+  const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line.replaceAll(String.fromCharCode(13),''));rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
   return rows;
  };
  const trips=read(tripsCsv,['trip_id','route_id','service_id']);
