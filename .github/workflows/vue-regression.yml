@@ -1,0 +1,44 @@
+name: VUECORE regression framework
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Regression profile
+        required: true
+        type: choice
+        options:
+          - quick
+          - full
+      specialist:
+        description: Optional registered specialist ID (blank = fleet)
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - 'core/regression-*.mjs'
+      - 'scripts/vue-regression.mjs'
+      - 'package.json'
+      - '.github/workflows/vue-regression.yml'
+permissions:
+  contents: read
+concurrency:
+  group: vue-regression-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run regression profile
+        env:
+          PROFILE: ${{ inputs.profile || 'quick' }}
+          SPECIALIST: ${{ inputs.specialist || '' }}
+        run: |
+          if [ -n "$SPECIALIST" ]; then
+            npm run regression -- "--$PROFILE" --vue "$SPECIALIST"
+          else
+            npm run regression -- "--$PROFILE"
+          fi
