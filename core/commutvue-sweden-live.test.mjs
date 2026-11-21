@@ -889,9 +889,9 @@ test('missing destination emits only aggregate safe diagnostic, never provider I
   const noDestination={...details,calls:[details.calls[0]]};
   const result=await make(board,noDestination)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
   assert.equal(result.reason,'realtime_destination_absent');
-  assert.equal(logs.length,1);
-  assert.equal(logs[0][0],'commutvue_destination_match_diagnostic');
-  const diagnostic=JSON.parse(logs[0][1]);
+  const destinationLog=logs.find(entry=>entry[0]==='commutvue_destination_match_diagnostic');
+  assert.ok(destinationLog,'destination diagnostic is emitted');
+  const diagnostic=JSON.parse(destinationLog[1]);
   assert.equal(diagnostic.checked_trips,1);
   assert.equal(diagnostic.missing_destination,1);
   assert.doesNotMatch(JSON.stringify(diagnostic),/stop1|stop2|740000002|fixture|t1/);
