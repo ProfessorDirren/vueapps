@@ -867,3 +867,20 @@ test('bounded Trips lookups prioritize the nearest realtime train over unsorted 
  assert.equal(result.status,'ok');
  assert.equal(result.departures[0].id,'near|2026-11-10|stop1');
 });
+
+
+test('missing destination emits only aggregate safe diagnostic, never provider IDs',async()=>{
+ const logs=[];const old=console.info;
+ console.info=(...args)=>logs.push(args);
+ try{
+  const noDestination={...details,calls:[details.calls[0]]};
+  const result=await make(board,noDestination)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.reason,'realtime_destination_absent');
+  assert.equal(logs.length,1);
+  assert.equal(logs[0][0],'commutvue_destination_match_diagnostic');
+  const diagnostic=JSON.parse(logs[0][1]);
+  assert.equal(diagnostic.checked_trips,1);
+  assert.equal(diagnostic.missing_destination,1);
+  assert.doesNotMatch(JSON.stringify(diagnostic),/stop1|stop2|740000002|fixture|t1/);
+ }finally{console.info=old;}
+});
