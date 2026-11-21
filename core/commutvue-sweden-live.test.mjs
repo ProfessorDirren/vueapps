@@ -14,7 +14,7 @@ test('all documented Trafiklab transport modes are retained and unknown modes ar
  const seen=[];
  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
-  fetcher:async url=>{const id=url.match(/\\/trips\\/([^/]+)\\//)?.[1];if(id)seen.push(id);return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:rows})};}
+  fetcher:async url=>{const id=url.includes('/trips/')?url.split('/trips/')[1].split('/')[0]:null;if(id)seen.push(id);return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:rows})};}
  });
  const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
  assert.deepEqual(seen,modes.map((_,i)=>'mode'+i));assert.equal(result.status,'ok');
