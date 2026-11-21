@@ -23,7 +23,7 @@ test('VUECORE retains UI language for ambiguous short input',()=>{
  assert.equal(detectVueInputLanguage('12345','fr'),'fr');
 });
 test('Urgent ANI-VUE uses detected Swedish response language even when UI is English',async()=>{
- const response=await POST(req({question:'Min hund har svårt att andas.',language:'en',previous:'commutvue'}));
+ const response=await POST(req({question:'Min hund har svårt att andas.',language:'en',auto_language:true,previous:'commutvue'}));
  assert.equal(response.status,200);
  const data=await response.json();
  assert.equal(data.domain,'anivue');
