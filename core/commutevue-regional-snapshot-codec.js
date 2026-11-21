@@ -24,7 +24,7 @@ export function encodeRegionalSnapshot(snapshot,{allowedTripIds}={}){
   });
   trips.push([id,stops]);
   const meta=snapshot.tripMetadata instanceof Map?snapshot.tripMetadata.get(id):null;
-  if(meta){const clean=value=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||value.length>120||/[\\u0000-\\u001f\\u007f]/.test(value))throw new Error('Invalid regional route metadata');return value;};tripMetadata.push([id,{routeShortName:clean(meta.routeShortName),routeLongName:clean(meta.routeLongName),tripHeadsign:clean(meta.tripHeadsign),tripShortName:clean(meta.tripShortName)}]);}
+  if(meta){const clean=value=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||value.length>120||/[\u0000-\u001f\u007f]/.test(value))throw new Error('Invalid regional route metadata');return value;};tripMetadata.push([id,{routeShortName:clean(meta.routeShortName),routeLongName:clean(meta.routeLongName),tripHeadsign:clean(meta.tripHeadsign),tripShortName:clean(meta.tripShortName)}]);}
  }
  if(!trips.length)throw new Error('No selected active regional trips');
  const encoded=JSON.stringify({version:2,serviceDate:snapshot.serviceDate,validatedAtMs:snapshot.validatedAtMs,trips,tripMetadata});
@@ -47,7 +47,7 @@ export function decodeRegionalSnapshot(encoded,{now=Date.now(),expectedServiceDa
    });
    tripStops.set(entry[0],stops);
   }
-  if(value.tripMetadata!==undefined){if(value.version!==2||!Array.isArray(value.tripMetadata)||value.tripMetadata.length>MAX_TRIPS)throw new Error();for(const entry of value.tripMetadata){if(!Array.isArray(entry)||entry.length!==2||!tripStops.has(entry[0])||tripMetadata.has(entry[0])||!entry[1]||typeof entry[1]!=='object'||Array.isArray(entry[1]))throw new Error();const clean=value=>{if(value===null)return null;if(typeof value!=='string'||value.length>120||/[\\u0000-\\u001f\\u007f]/.test(value))throw new Error();return value;};const m=entry[1];tripMetadata.set(entry[0],{routeShortName:clean(m.routeShortName??null),routeLongName:clean(m.routeLongName??null),tripHeadsign:clean(m.tripHeadsign??null),tripShortName:clean(m.tripShortName??null)});}}
+  if(value.tripMetadata!==undefined){if(value.version!==2||!Array.isArray(value.tripMetadata)||value.tripMetadata.length>MAX_TRIPS)throw new Error();for(const entry of value.tripMetadata){if(!Array.isArray(entry)||entry.length!==2||!tripStops.has(entry[0])||tripMetadata.has(entry[0])||!entry[1]||typeof entry[1]!=='object'||Array.isArray(entry[1]))throw new Error();const clean=value=>{if(value===null)return null;if(typeof value!=='string'||value.length>120||/[\u0000-\u001f\u007f]/.test(value))throw new Error();return value;};const m=entry[1];tripMetadata.set(entry[0],{routeShortName:clean(m.routeShortName??null),routeLongName:clean(m.routeLongName??null),tripHeadsign:clean(m.tripHeadsign??null),tripShortName:clean(m.tripShortName??null)});}}
   return {status:'validated',serviceDate:value.serviceDate,validatedAtMs:value.validatedAtMs,tripStops,tripMetadata};
  }catch{return {status:'unavailable',reason:'invalid_or_stale_snapshot'};}
 }
