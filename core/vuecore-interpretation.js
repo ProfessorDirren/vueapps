@@ -53,7 +53,7 @@ const INTENT_TERMS=Object.freeze([
  ['medivue',['medicin','läkemedel']]
 ]);
 export function suggestVueIntent(question){
- const words=String(question??'').match(/[\\p{L}]+/gu)||[];
+ const words=String(question??'').match(/[\p{L}]+/gu)||[];
  if(words.length>100)return [];
  const candidates=[];
  for(const word of words){
