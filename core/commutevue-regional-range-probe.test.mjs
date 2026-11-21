@@ -19,3 +19,11 @@ test('rejects untrusted endpoints and malformed content range',async()=>{
  const result=await probeRegionalStaticRange({url,fetcher:async()=>({status:206,headers:{get:()=> 'bytes 0-5/999'},body:{cancel:async()=>{}}})});
  assert.equal(result.status,'invalid_content_range');
 });
+
+test('categorizes authorization, unsatisfiable range and rate limits without leaking responses',async()=>{
+ for(const [code,expected] of [[401,'authorization'],[403,'authorization'],[416,'range_not_satisfiable'],[429,'rate_limited'],[404,'http_error']]){
+  let cancelled=false;
+  const result=await probeRegionalStaticRange({url,fetcher:async()=>({status:code,body:{cancel:async()=>{cancelled=true;}}})});
+  assert.deepEqual(result,{status:expected});assert.equal(cancelled,true);
+ }
+});
