@@ -33,3 +33,14 @@ test('rejects old and distant realtime departures even when feed timestamp is fr
  assert.equal(verifyRegionalJourney(withTime(Math.floor((now+10800000)/1000))).status,'unavailable');
  assert.equal(verifyRegionalJourney(withTime(Math.floor((now+300000)/1000))).status,'route_matched');
 });
+
+test('rejects future-dated SL realtime feed timestamp even if a trip looks valid',()=>{
+ const result=verifyRegionalJourney({...input,evidence:{...input.evidence,feedTimestampMs:now+60000}});
+ assert.equal(result.status,'unavailable');
+ assert.equal(result.reason,'stale_or_missing_feed');
+});
+test('reports stale SL feed as unavailable before route matching',()=>{
+ const result=verifyRegionalJourney({...input,evidence:{...input.evidence,feedTimestampMs:now-180000}});
+ assert.equal(result.reason,'stale_or_missing_feed');
+ assert.deepEqual(result.departures,[]);
+});
