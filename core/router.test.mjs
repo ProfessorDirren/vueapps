@@ -170,3 +170,9 @@ test('CORE does not block ordinary travel to food destinations or clear cooking 
  assert.equal(routeQuestion('Hur tillagar jag kyckling i ugnen?').clarify,false);
  assert.equal(routeQuestion('Jag tar bussen till restaurangen för att äta kyckling').clarify,false);
 });
+
+test('all Swedish public transport questions route to COMMUTE-VUE from unrelated specialists',()=>{
+ for(const question of ['När går nästa buss från Tyresö centrum till Gullmarsplan?','När går tunnelbanan från T-Centralen till Gullmarsplan?','När går spårvagnen från Stockholm till Solna?','När går pendelbåten från Stockholm till Solna?','När går färjan från Stockholm till Solna?','När går regionaltåget från Stockholm till Uppsala?']){
+  assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
+ }
+});

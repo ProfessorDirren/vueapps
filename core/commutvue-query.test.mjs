@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseCommuteQuestion} from './commutvue-query.js';
+import {parseCommuteQuestion,commuteTransportMode} from './commutvue-query.js';
 test('extract Stockholm commute without inventing stops',()=>{
  const q=parseCommuteQuestion('Är pendeltågen från Jordbro till T-Centralen försenade?');
  assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'T-Centralen',needsClarification:false});
@@ -133,4 +133,20 @@ test('COMMUTVUE exposes confirmation before any Trafiklab request',async()=>{
  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
  assert.ok(source.indexOf('if(journey.stationSuggestions?.length)')<source.indexOf('createTrafiklabSwedenLive({apiKey:'));
  assert.match(source,/evidence_status:'station_confirmation_required'/);
+});
+
+test('all supported Swedish modes classify without inventing live departures',()=>{
+ const cases=[
+  ['När går nästa buss från Tyresö centrum till Gullmarsplan?','BUS'],
+  ['När går nästa expressbuss från Tyresö centrum till Gullmarsplan?','BUS'],
+  ['När går tunnelbanan från T-Centralen till Gullmarsplan?','METRO'],
+  ['När går spårvagnen från Stockholm till Solna?','TRAM'],
+  ['När går pendelbåten från Stockholm till Solna?','BOAT'],
+  ['När går färjan från Stockholm till Solna?','BOAT'],
+  ['När går pendeltåget från Jordbro till Stockholm City?','TRAIN'],
+  ['När går regionaltåget från Stockholm till Uppsala?','TRAIN']
+ ];
+ for(const [question,mode] of cases)assert.equal(commuteTransportMode(question),mode,question);
+ assert.equal(commuteTransportMode('Hur reser jag från Tyresö till Gullmarsplan?'),null);
+ assert.equal(commuteTransportMode('Buss eller tunnelbana från Tyresö till Gullmarsplan?'),null);
 });
