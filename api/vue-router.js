@@ -6,7 +6,7 @@ import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-ev
 import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js';
 import {runRegionalRouterShadow,runRegionalRouterPublication} from '../core/commutevue-regional-router-shadow.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
-import {parseCommuteQuestion} from '../core/commutvue-query.js';
+import {parseCommuteQuestion,commuteTransportMode} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
 import {queryDisruptions} from '../core/commutvue-disruptions.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
@@ -133,7 +133,7 @@ export async function POST(request){
     liveDiagnostic='not_configured';
    }else{
     try{
-     const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to,transportMode:/pendeltåg|pendeltågen|pendeltågsavgång|commuter rail|commuter train/iu.test(question)?'TRAIN':undefined});
+     const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to,transportMode:commuteTransportMode(question)||undefined});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      if(raw.status==='scheduled')scheduled=raw;
      // Operational evidence only: fixed reason code, never station names, trip IDs, query text or API credentials.
