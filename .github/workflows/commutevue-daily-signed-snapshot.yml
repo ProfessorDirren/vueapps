@@ -1,0 +1,80 @@
+name: COMMUTVUE signed daily corridor snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 00:15 Stockholm winter / 01:15 summer; GitHub cron uses UTC.
+    - cron: '15 23 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: commutevue-daily-signed-corridor
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Download private GTFS
+        env:
+          TRAFIKLAB_REGIONAL_STATIC_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_STATIC_KEY }}
+        run: |
+          set -eu
+          test -n "$TRAFIKLAB_REGIONAL_STATIC_KEY"
+          node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/regional.zip"
+      - name: Build and authenticate current traffic-day snapshot
+        env:
+          COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
+        run: |
+          set -eu
+          test -n "$COMMUTEVUE_SNAPSHOT_SIGNING_KEY"
+          node scripts/commutevue-build-regional-snapshot.mjs "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/manifest.json"
+          node --input-type=module -e '
+            import {readFileSync,writeFileSync} from "node:fs";
+            import {gzipSync} from "node:zlib";
+            import {verifySignedRegionalSnapshot} from "./core/commutevue-regional-snapshot-auth.js";
+            import {stockholmServiceDate} from "./scripts/commutevue-build-regional-snapshot.mjs";
+            const envelope=readFileSync(process.env.RUNNER_TEMP+"/corridor.json");
+            const snapshot=verifySignedRegionalSnapshot(envelope.toString("utf8"),{key:process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,expectedServiceDate:stockholmServiceDate()});
+            if(snapshot.status!=="validated")throw Error("Signed snapshot verification failed");
+            const compressed=gzipSync(envelope,{level:9});
+            if(compressed.length>16*1024)throw Error("Signed snapshot too large for bounded runtime file");
+            writeFileSync(process.env.RUNNER_TEMP+"/corridor.gz",compressed,{mode:0o600,flag:"wx"});
+            console.log(JSON.stringify({status:"signed_daily_snapshot_validated",serviceDate:snapshot.serviceDate,trips:snapshot.tripStops.size,compressedBytes:compressed.length}));
+          '
+      - name: Verify live GTFS-RT join before publishing
+        env:
+          COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
+          TRAFIKLAB_REGIONAL_REALTIME_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_REALTIME_KEY }}
+        run: |
+          set -eu
+          test -n "$TRAFIKLAB_REGIONAL_REALTIME_KEY"
+          node scripts/commutevue-private-live-join-smoke.mjs "$RUNNER_TEMP/manifest.json"
+      - name: Publish signed data-only file to private repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          cp "$RUNNER_TEMP/corridor.gz" core/commutevue-regional-signed-snapshot.gz
+          git add core/commutevue-regional-signed-snapshot.gz
+          if git diff --cached --quiet; then
+            echo "Signed snapshot unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(COMMUTVUE): refresh signed regional corridor snapshot [skip ci]"
+          git push origin HEAD:main
+      - name: Remove private temporary files
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/regional.zip.partial" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/corridor.gz" "$RUNNER_TEMP/manifest.json"
