@@ -283,7 +283,10 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    const railAreas=new Set(exact.filter(rail).map(group=>group.id));
    if(railAreas.size===1){
     const selected=[...railAreas][0];
-    const stopIds=[...new Set(exact.filter(group=>group.id===selected).flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
+    const selectedGroups=exact.filter(group=>group.id===selected);
+    const stopIds=[...new Set(selectedGroups.flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
+    const selectedModes=[...new Set(selectedGroups.flatMap(group=>Array.isArray(group.transport_modes)?group.transport_modes.map(mode=>String(mode).toUpperCase()):[]))].sort();
+    console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:exact.length,rail_areas:railAreas.size,platform_count:stopIds.length,transport_modes:selectedModes,mode_metadata_present:selectedGroups.some(group=>Array.isArray(group.transport_modes))}));
     if(stopIds.length)return {id:selected,stopIds};
    }
    throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
