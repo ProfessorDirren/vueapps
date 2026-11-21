@@ -1,0 +1,36 @@
+name: COMMUTEVUE manual static GTFS inspection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commutevue-static-gtfs-inspection
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Download and inspect SL Regional GTFS privately
+        env:
+          TRAFIKLAB_REGIONAL_STATIC_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_STATIC_KEY }}
+        run: |
+          set -eu
+          if [ -z "$TRAFIKLAB_REGIONAL_STATIC_KEY" ]; then
+            echo 'Missing TRAFIKLAB_REGIONAL_STATIC_KEY secret' >&2
+            exit 1
+          fi
+          node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/commutevue-sl-regional.zip"
+      - name: Remove downloaded archive
+        if: always()
+        run: rm -f "$RUNNER_TEMP/commutevue-sl-regional.zip" "$RUNNER_TEMP/commutevue-sl-regional.zip.partial"
