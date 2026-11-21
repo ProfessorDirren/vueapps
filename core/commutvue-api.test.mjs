@@ -380,3 +380,15 @@ test('COMMUTEVUE POST exposes safe missing-realtime-time diagnostic with timetab
   if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
  }
 });
+
+
+test('COMMUTVUE recognizes Jordbro as origin and asks only for destination',async()=>{
+ const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'när går tågen från Jordbro?',language:'sv'})});
+ const response=await POST(request),data=await response.json();
+ assert.equal(data.domain,'commutvue');
+ assert.equal(data.clarify,true);
+ assert.equal(data.region,'stockholm');
+ assert.match(data.answer,/Vilken station vill du resa till från Jordbro/);
+ assert.doesNotMatch(data.answer,/Ange avreseort/);
+ assert.equal(data.verified,false);
+});
