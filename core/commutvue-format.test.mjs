@@ -17,3 +17,11 @@ test('verified time follows Stockholm DST rather than server timezone',()=>{
 test('missing verified time fails closed',()=>{
  assert.throws(()=>formatVerifiedDepartures([{line:'A',destination:'B'}]),/timestamp/);
 });
+
+test('cancelled departure shows scheduled time and localized cancellation, not prediction or delay',()=>{
+ const cancelled=[{line:'43',destination:'Bålsta',scheduled:'2026-11-11T15:05:00Z',expected:'2026-11-11T15:29:00Z',delayMinutes:24,cancelled:true}];
+ const sv=formatVerifiedDepartures(cancelled,'sv');
+ assert.match(sv,/^16:05 · 43 · Bålsta · Inställd$/);
+ assert.doesNotMatch(sv,/Försening|16:29/);
+ assert.match(formatVerifiedDepartures(cancelled,'en'),/Cancelled$/);
+});
