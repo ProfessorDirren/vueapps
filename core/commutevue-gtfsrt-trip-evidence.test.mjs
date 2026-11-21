@@ -54,3 +54,11 @@ test('excludes skipped and no-data stop updates while retaining valid stops',()=
   assert.deepEqual(data.trips[0].stops.map(x=>x.stopId),['next-stop']);
  }
 });
+
+test('excludes GTFS-RT FeedEntity.is_deleted even when a trip update remains',()=>{
+ const deletedEntity=field(2,[...field(1,ascii('e1')),...wireVarint(2,1),...update]);
+ const data=extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...deletedEntity]));
+ assert.deepEqual(data.trips,[]);
+ const activeEntity=field(2,[...field(1,ascii('e1')),...wireVarint(2,0),...update]);
+ assert.equal(extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...activeEntity])).trips.length,1);
+});
