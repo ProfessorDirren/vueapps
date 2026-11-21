@@ -39,7 +39,7 @@ export function decodeRegionalSnapshot(encoded,{now=Date.now(),expectedServiceDa
    if(!Array.isArray(entry)||entry.length!==2||typeof entry[0]!=='string'||!ID.test(entry[0])||tripStops.has(entry[0])||!Array.isArray(entry[1])||entry[1].length<2||entry[1].length>MAX_STOPS)throw new Error();
    const stops=entry[1].map(stop=>{
     if(value.version===1){if(typeof stop!=='string'||!ID.test(stop))throw new Error();return stop;}
-    if(typeof stop==='string'){if(!ID.test(stop))throw new Error();return {stop,arrivalTime:null,departureTime:null,sequence:null};}
+    if(typeof stop==='string'){if(!ID.test(stop))throw new Error();return stop;}
     if(!stop||typeof stop!=='object'||Array.isArray(stop)||typeof stop.stop!=='string'||!ID.test(stop.stop)||(stop.arrivalTime!==null&&stop.arrivalTime!==undefined&&(typeof stop.arrivalTime!=='string'||!GTFS_TIME.test(stop.arrivalTime)))||(stop.departureTime!==null&&stop.departureTime!==undefined&&(typeof stop.departureTime!=='string'||!GTFS_TIME.test(stop.departureTime)))||(stop.sequence!==null&&stop.sequence!==undefined&&(!Number.isSafeInteger(stop.sequence)||stop.sequence<0)))throw new Error();
     return {stop:stop.stop,arrivalTime:stop.arrivalTime||null,departureTime:stop.departureTime||null,sequence:Number.isSafeInteger(stop.sequence)?stop.sequence:null};
    });
