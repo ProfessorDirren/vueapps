@@ -901,3 +901,20 @@ test('missing destination diagnostic distinguishes Stockholm City named stop wit
   assert.doesNotMatch(JSON.stringify(data),/740000099|other|stop1|stop2/);
  }finally{console.info=previous;}
 });
+
+
+test('missing destination direction hint remains diagnostic only',async()=>{
+ const logs=[];const old=console.info;console.info=(...args)=>logs.push(args);
+ try{
+  const trip={...details,calls:[details.calls[0]]};
+  const directed={...departure,route:{...departure.route,direction:'Stockholm City'}};
+  const result=await make({...board,departures:[directed]},trip)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable');
+  assert.equal(result.reason,'realtime_destination_absent');
+  const d=JSON.parse(logs.find(entry=>entry[0]==='commutvue_destination_match_diagnostic')[1]);
+  assert.equal(d.destination_in_direction,1);
+  assert.equal(d.city_in_direction,1);
+  assert.equal(d.multiple_call_trips,0);
+  assert.deepEqual(result.departures,[]);
+ }finally{console.info=old;}
+});
