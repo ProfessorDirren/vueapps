@@ -93,3 +93,15 @@ test('keeps Bålsta and Kungsängen as train terminals when Stockholm City is th
  assert.deepEqual(result.departures.map(x=>x.tripHeadsign),['Bålsta','Kungsängen']);
  assert.deepEqual(result.departures.map(x=>x.destinationStopId),[destination,destination]);
 });
+
+test('rejects ambiguous repeated origin or destination in static stop sequence',()=>{
+ const repeatedOrigin=new Map([['trip-1',['J','S','J','C']]]);
+ const repeatedDestination=new Map([['trip-1',['J','C','S','C']]]);
+ for(const tripStops of [repeatedOrigin,repeatedDestination]){
+  const result=verifyRegionalJourney({...input,tripStops});
+  assert.equal(result.status,'unavailable');
+  assert.deepEqual(result.departures,[]);
+ }
+ const distinct=new Map([['trip-1',['J','S','C','D']]]);
+ assert.equal(verifyRegionalJourney({...input,tripStops:distinct}).status,'route_matched');
+});

@@ -16,9 +16,15 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const stops=tripStops.get(trip.tripId);
   if(!Array.isArray(stops)||stops.length<2||stops.length>300)continue;
   const ids=stops.map(s=>typeof s==='string'?s:s?.stop);
-  const originIndex=ids.findIndex(s=>originStopIds.has(s));
-  const destinationIndex=ids.findIndex((s,i)=>i>originIndex&&destinationStopIds.has(s));
-  if(originIndex<0||destinationIndex<=originIndex)continue;
+  // A repeated matching stop makes the selected platform/stop occurrence
+  // ambiguous without stop_sequence evidence. Fail closed rather than
+  // attaching a prediction to the wrong leg of a looping service.
+  const originMatches=ids.flatMap((id,i)=>originStopIds.has(id)?[i]:[]);
+  if(originMatches.length!==1)continue;
+  const originIndex=originMatches[0];
+  const destinationMatches=ids.flatMap((id,i)=>i>originIndex&&destinationStopIds.has(id)?[i]:[]);
+  if(destinationMatches.length!==1)continue;
+  const destinationIndex=destinationMatches[0];
   const originUpdates=trip.stops?.filter(s=>s?.stopId===ids[originIndex])||[];
   if(originUpdates.length!==1)continue;
   const update=originUpdates[0];
