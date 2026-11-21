@@ -6,7 +6,7 @@ const date='20261121',now=1763718000000;
 const trips=new Map([['active',['origin','destination']],['inactive',['origin','destination']]]);
 const serviceMetadata={
  tripById:new Map([['active',{routeId:'r',serviceId:'s'}],['inactive',{routeId:'r',serviceId:'off'}]]),
- routeTypes:new Map([['r',2]]),
+ routeTypes:new Map([['r',2]]),\n routeDetails:new Map([['r',{routeShortName:'43',routeLongName:'Pendeltåg'}]]),
  serviceCalendars:new Map([['s',{start_date:'20260101',end_date:'20261231',saturday:'1'}],['off',{start_date:'20260101',end_date:'20261231',saturday:'0'}]]),
  serviceExceptions:new Map()
 };
@@ -15,7 +15,7 @@ test('regional snapshot keeps only trips active on the service date',()=>{
  const result=buildRegionalServiceSnapshot({tripStops:trips,serviceMetadata,serviceDate:date,validatedAtMs:now,archiveVerified:true});
  assert.equal(result.status,'validated');
  assert.deepEqual([...result.tripStops.keys()],['active']);
- assert.equal(result.activeTripCount,1);
+ assert.equal(result.activeTripCount,1);\n assert.deepEqual(result.tripMetadata.get('active'),{routeShortName:'43',routeLongName:'Pendeltåg',tripHeadsign:null,tripShortName:null});
 });
 
 test('regional snapshot fails closed for unverified archive, bad date and no active trips',()=>{
