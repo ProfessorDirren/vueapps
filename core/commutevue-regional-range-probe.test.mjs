@@ -32,3 +32,23 @@ test('records only numeric HTTP status for unrecognized HTTP errors',async()=>{
  const result=await probeRegionalStaticRange({url,fetcher:async()=>({status:404,body:{cancel:async()=>{}}})});
  assert.deepEqual(result,{status:'http_error',httpStatus:404});
 });
+
+test('retries 406 with wildcard Accept while retaining one-byte Range',async()=>{
+ const calls=[];let cancelled=false;
+ const result=await probeRegionalStaticRange({url,fetcher:async(_url,opts)=>{
+  calls.push(opts.headers);
+  if(calls.length===1)return {status:406,body:{cancel:async()=>{cancelled=true;}}};
+  return {status:206,headers:{get:()=> 'bytes 0-0/1000'},arrayBuffer:async()=>Uint8Array.of(0x50).buffer};
+ }});
+ assert.equal(cancelled,true);
+ assert.deepEqual(calls,[{Range:'bytes=0-0',Accept:'application/zip'},{Range:'bytes=0-0',Accept:'*/*'}]);
+ assert.deepEqual(result,{status:'range_supported',archiveBytes:1000});
+});
+test('does not retry other errors or consume full response on 406 fallback',async()=>{
+ let calls=0,cancelled=0;
+ const result=await probeRegionalStaticRange({url,fetcher:async()=>{
+  calls++;return {status: calls===1?406:200,body:{cancel:async()=>{cancelled++;}}};
+ }});
+ assert.deepEqual(result,{status:'range_ignored',httpStatus:200});
+ assert.equal(calls,2);assert.equal(cancelled,2);
+});
