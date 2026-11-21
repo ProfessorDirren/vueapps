@@ -60,3 +60,31 @@ export function parseRegionalStopNames(csv,{matchTerms=['jordbro','stockholm cit
  }
  return matches;
 }
+
+
+/** Find same-trip, ordered origin-to-destination matches using exact station names and child platform IDs. */
+export function findRegionalDirectJourneys(trips, stops, {originName='Jordbro', destinationName='Stockholm City', maxExamples=10}={}) {
+ if (!(trips instanceof Map) || !Array.isArray(stops) || !Number.isSafeInteger(maxExamples) || maxExamples<1 || maxExamples>20) throw new Error('Invalid regional journey inputs');
+ const normalize=value=>String(value||'').trim().toLocaleLowerCase('en');
+ const collect=name=>{
+  const parents=new Set(stops.filter(s=>normalize(s.stopName)===normalize(name)&&String(s.locationType)==='1').map(s=>s.stopId));
+  const ids=new Set(parents);
+  for(const stop of stops) if(parents.has(stop.parentStation)) ids.add(stop.stopId);
+  return ids;
+ };
+ const origins=collect(originName),destinations=collect(destinationName);
+ if(!origins.size||!destinations.size) throw new Error('Requested GTFS station not found');
+ let matchingTripCount=0;const examples=[];
+ for(const [tripId,sequence] of trips){
+  let originIndex=-1,destinationIndex=-1;
+  for(let i=0;i<sequence.length;i++){
+   if(originIndex<0&&origins.has(sequence[i])) originIndex=i;
+   if(originIndex>=0&&destinations.has(sequence[i])) {destinationIndex=i;break;}
+  }
+  if(originIndex>=0&&destinationIndex>originIndex){
+   matchingTripCount++;
+   if(examples.length<maxExamples) examples.push({tripId,originStopId:sequence[originIndex],destinationStopId:sequence[destinationIndex],originSequence:originIndex+1,destinationSequence:destinationIndex+1});
+  }
+ }
+ return {originName,destinationName,originStopIdCount:origins.size,destinationStopIdCount:destinations.size,matchingTripCount,examples};
+}
