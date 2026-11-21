@@ -78,3 +78,15 @@ test('rejects malformed service date and missing trip metadata',()=>{
  assert.throws(()=>filterRegionalActiveRailTrips(new Map(),metadata,'2026-11-21'));
  assert.throws(()=>filterRegionalActiveRailTrips(new Map(),metadata,'20260230'));
 });
+
+test('parses regional service calendar metadata with CRLF line endings',()=>{
+ const metadata=parseRegionalServiceMetadata({
+  tripsCsv:'trip_id,route_id,service_id\r\nt1,r1,s1\r\n',
+  routesCsv:'route_id,route_type\r\nr1,2\r\n',
+  calendarCsv:'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\r\ns1,0,0,0,0,0,1,0,20260101,20261231\r\n',
+  calendarDatesCsv:'service_id,date,exception_type\r\ns1,20261121,2\r\n'
+ });
+ const result=filterRegionalActiveRailTrips(new Map([['t1',['J','C']]]),metadata,'20261121');
+ assert.equal(result.trips.size,0);
+ assert.equal(result.inactiveTripCount,1);
+});

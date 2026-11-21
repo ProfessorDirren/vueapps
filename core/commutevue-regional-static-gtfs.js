@@ -26,7 +26,7 @@ export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000,incl
  for(const line of lines){
   if(!line.trim())continue;
   if(++rows>maxRows)throw new Error('GTFS stop_times row limit');
-  const cells=parseCSV(line);
+  const cells=parseCSV(line.replaceAll(String.fromCharCode(13),''));
   const [trip,stop,sequence]=indexes.map(i=>cells[i]);
   const order=Number(sequence);
   if(!trip||!stop||!Number.isSafeInteger(order)||order<0)throw new Error('Invalid GTFS stop_times record');
@@ -56,7 +56,7 @@ export function parseRegionalStopNames(csv,{matchTerms=['jordbro','stockholm cit
  for(const line of lines){
   if(!line.trim())continue;
   if(++rows>maxRows)throw new Error('GTFS stops row limit');
-  const cells=parseCSV(line);const stopId=cells[indexes.id],stopName=cells[indexes.name]||'';
+  const cells=parseCSV(line.replaceAll(String.fromCharCode(13),''));const stopId=cells[indexes.id],stopName=cells[indexes.name]||'';
   if(!stopId||!stopName)throw new Error('Invalid GTFS stops record');
   if(terms.some(term=>stopName.toLocaleLowerCase('en').includes(term)))matches.push({stopId,stopName,parentStation:indexes.parent<0?'':cells[indexes.parent]||'',locationType:indexes.type<0?'':cells[indexes.type]||''});
  }
@@ -98,10 +98,10 @@ export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',
  const read=(csv,required,maxRows=300000)=>{
   if(typeof csv!=='string'||csv.length>32*1024*1024)throw new Error('Invalid regional GTFS metadata file');
   const normalized=csv.charCodeAt(0)===0xFEFF?csv.slice(1):csv;
-  const lines=normalized.split(String.fromCharCode(10));const header=parseCSV((lines.shift()||'').replace(/\\r$/,''));
+  const lines=normalized.split(String.fromCharCode(10));const header=parseCSV((lines.shift()||'').replaceAll(String.fromCharCode(13),''));
   const indexes=Object.fromEntries(required.map(k=>[k,header.indexOf(k)]));
   if(Object.values(indexes).some(i=>i<0))throw new Error('Missing regional GTFS metadata columns: '+required.filter(k=>indexes[k]<0).join(', '));
-  const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line);rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
+  const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line.replaceAll(String.fromCharCode(13),''));rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
   return rows;
  };
  const trips=read(tripsCsv,['trip_id','route_id','service_id']);
