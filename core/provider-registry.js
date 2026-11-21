@@ -9,7 +9,7 @@ export function createProviderRegistry({providers,normalize}){
  const supported=Object.freeze(Object.keys(providers));
  function register(region,adapter){
   if(!Object.hasOwn(providers,region))throw new TypeError('Unsupported provider region');
-  if(typeof adapter!=='function')throw new TypeError('Provider adapter must be a function');
+  if(typeof adapter!=='function'&&!(adapter&&typeof adapter.query==='function'))throw new TypeError('Provider adapter must be a function or provider instance');
   adapters.set(region,adapter);
  }
  async function query({region,from,to}){
@@ -18,7 +18,8 @@ export function createProviderRegistry({providers,normalize}){
   const adapter=adapters.get(region);
   if(!adapter)return {status:'unavailable',provider:region,departures:[]};
   try{
-   const raw=await adapter({provider:region,from:from.trim(),to:to.trim()});
+   const input={provider:region,from:from.trim(),to:to.trim()};
+   const raw=await (typeof adapter==='function'?adapter(input):adapter.query(input));
    if(!raw||raw.provider!==region||raw.status!=='ok')return {status:'unavailable',provider:region,departures:[]};
    return normalize(raw);
   }catch{return {status:'unavailable',provider:region,departures:[]};}
