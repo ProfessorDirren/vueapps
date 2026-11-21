@@ -30,3 +30,14 @@ test('router shadow never exposes credentials on upstream failure',async()=>{
  assert.equal(JSON.stringify(result).includes('private-key'),false);
  assert.equal(JSON.stringify(result).includes('secret-key'),false);
 });
+
+test('router shadow rejects malformed and duplicate station IDs before network access',async()=>{
+ let calls=0;
+ const source={tripUpdates:async()=>{calls++;return {bytes:new Uint8Array([1])};}};
+ const base={COMMUTVUE_REGIONAL_SHADOW_ENABLED:'true',COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS:'C',COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64:'opaque',COMMUTEVUE_SNAPSHOT_SIGNING_KEY:'key',TRAFIKLAB_REGIONAL_REALTIME_KEY:'private'};
+ for(const invalid of ['J,J','J/../../secret','',',J']){
+  const result=await runRegionalRouterShadow({env:{...base,COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS:invalid},from:'Jordbro',to:'Stockholm City',source});
+  assert.equal(result.reason,'missing_configuration');
+ }
+ assert.equal(calls,0);
+});
