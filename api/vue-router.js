@@ -76,7 +76,7 @@ export async function POST(request){
     const estimatedCount=departures.filter(d=>d.hasEstimatedTime===true).length;
     const actualCount=departures.filter(d=>d.hasActualTime===true).length;
     const modifiedCount=departures.filter(d=>d.hasModifiedTime===true).length;
-    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60),actualCount:Math.min(actualCount,60),modifiedCount:Math.min(modifiedCount,60)}));
+    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60),actualCount:Math.min(actualCount,60),modifiedCount:Math.min(modifiedCount,60),originCount:Math.min(probe.coverage?.originCount||0,60),destinationCount:Math.min(probe.coverage?.destinationCount||0,60),originEstimatedCount:Math.min(probe.coverage?.originEstimatedCount||0,60),destinationEstimatedCount:Math.min(probe.coverage?.destinationEstimatedCount||0,60),originActualCount:Math.min(probe.coverage?.originActualCount||0,60),originCancelledCount:Math.min(probe.coverage?.originCancelledCount||0,60)}));
    }catch{
     console.info('commutevue_trafikverket_shadow',JSON.stringify({status:'unavailable',reason:'unexpected_error',count:0}));
    }
