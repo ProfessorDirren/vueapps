@@ -73,9 +73,21 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   // Within each evidence tier, check the nearest upcoming departures first. Trafiklab
   // does not guarantee board order; the Trips request budget must not be spent
   // on later trains while an earlier relevant departure is waiting.
+  // Direction hints prioritize lookup budget only; a verified Trips stop sequence is still mandatory.
+  // Never prioritize a southbound hint for a journey to Stockholm City over a northbound hint.
+  const towardStockholm=destinationStops.includes('1617');
+  const directionTier=row=>{
+   if(!towardStockholm)return 0;
+   const hint=String(row?.route?.direction||row?.route?.destination?.name||'').toLocaleLowerCase('sv');
+   if(/stockholm|bålsta|märsta|uppsala|kungsängen|södertälje/.test(hint))return 0;
+   if(/nynäshamn|västerhaninge|krigslida|tungelsta/.test(hint))return 2;
+   return 1;
+  };
   const candidates=[...board.departures].sort((a,b)=>{
    const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
    if(tier)return tier;
+   const directionPriority=directionTier(a)-directionTier(b);
+   if(directionPriority)return directionPriority;
    const time=row=>swedishTime(row?.is_realtime===true?row?.realtime:row?.scheduled);
    const ta=time(a),tb=time(b);
    return (Number.isFinite(ta)?ta:Infinity)-(Number.isFinite(tb)?tb:Infinity);
