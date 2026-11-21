@@ -63,3 +63,13 @@ test('matches real-shaped SL Regional GTFS IDs only when trip, stop order and pr
  assert.equal(verifyRegionalJourney({...regional,evidence:{...regional.evidence,trips:[{...regional.evidence.trips[0],tripId:'different-trip'}]}}).status,'unavailable');
  assert.equal(verifyRegionalJourney({...regional,destinationStopIds:new Set(['1617'])}).status,'unavailable');
 });
+
+test('attaches scheduled time, route number and terminal destination to verified live departure',()=>{
+ const tripStops=new Map([['trip-1',[{stop:'J',departureTime:'17:24:00',sequence:1},{stop:'C',arrivalTime:'17:42:00',sequence:2}]]]);
+ const tripMetadata=new Map([['trip-1',{routeShortName:'43',tripHeadsign:'Bålsta'}]]);
+ const result=verifyRegionalJourney({...input,tripStops,tripMetadata});
+ assert.equal(result.status,'route_matched');
+ assert.equal(result.departures[0].scheduledDeparture,'17:24:00');
+ assert.equal(result.departures[0].routeShortName,'43');
+ assert.equal(result.departures[0].tripHeadsign,'Bålsta');
+});

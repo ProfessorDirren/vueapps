@@ -14,7 +14,7 @@ export function matchProvisionedRegionalJourney({
  const staticSnapshot=loadRegionalSnapshotFromEnvironment({encodedEnvelope,signingKey,expectedServiceDate:serviceDate,now});
  if(staticSnapshot.status!=='validated')return unavailable(staticSnapshot.reason);
  // Never accept station IDs absent from the authenticated trip sequences.
- const mappedIds=new Set([...staticSnapshot.tripStops.values()].flat());
+ const mappedIds=new Set([...staticSnapshot.tripStops.values()].flat().map(stop=>typeof stop==='string'?stop:stop?.stop).filter(Boolean));
  if(![...originStopIds].some(id=>mappedIds.has(id))||![...destinationStopIds].some(id=>mappedIds.has(id)))return unavailable('station_ids_not_in_snapshot');
  return matchRegionalRealtimeJourney({staticSnapshot,evidence,originStopIds,destinationStopIds,now});
 }

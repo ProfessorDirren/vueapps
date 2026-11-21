@@ -11,7 +11,7 @@ export function buildRegionalServiceSnapshot({tripStops,serviceMetadata,serviceD
  try{
   const active=filterRegionalActiveTrips(tripStops,serviceMetadata,serviceDate,{routeTypes});
   if(!active.trips.size)return {status:'unavailable',reason:'no_active_trips'};
-  return {status:'validated',validatedAtMs,serviceDate,tripStops:active.trips,activeTripCount:active.trips.size};
+  return {status:'validated',validatedAtMs,serviceDate,tripStops:active.trips,tripMetadata:active.tripMetadata,activeTripCount:active.trips.size};
  }catch{
   return {status:'unavailable',reason:'invalid_service_metadata'};
  }

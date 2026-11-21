@@ -48,9 +48,14 @@ jobs:
             if(snapshot.status!=="validated")throw Error("Runtime snapshot validation failed: "+snapshot.reason);
             const origin=new Set(manifest.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS.split(","));
             const dest=new Set(manifest.COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS.split(","));
-            const ids=new Set([...snapshot.tripStops.values()].flat());
+            const ids=new Set([...snapshot.tripStops.values()].flat().map(stop=>typeof stop==='string'?stop:stop?.stop).filter(Boolean));
             if(![...origin].some(x=>ids.has(x))||![...dest].some(x=>ids.has(x)))throw Error("Station IDs missing from signed trips");
-            console.log(JSON.stringify({status:"runtime_provisioning_verified",activeCorridorTrips:snapshot.tripStops.size,artifactBytes:Buffer.byteLength(readFileSync(process.env.RUNNER_TEMP+"/corridor.json"))}));
+            const headSigns=new Set([...snapshot.tripMetadata.values()].map(meta=>meta.tripHeadsign).filter(Boolean));
+            const terminalDestinations=["Bålsta","Kungsängen"];
+            if(terminalDestinations.some(name=>!headSigns.has(name)))throw Error("Expected Bålsta and Kungsängen terminal headsigns missing from static GTFS");
+            const scheduledOriginTripCount=[...snapshot.tripStops].filter(([tripId,stops])=>stops.some(stop=>origin.has(stop.stop)&&typeof stop.departureTime==="string"&&/^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$/.test(stop.departureTime))).length;
+            if(!scheduledOriginTripCount)throw Error("No scheduled origin departure times in signed snapshot");
+            console.log(JSON.stringify({status:"runtime_provisioning_verified",activeCorridorTrips:snapshot.tripStops.size,scheduledOriginTripCount,terminalDestinations,artifactBytes:Buffer.byteLength(readFileSync(process.env.RUNNER_TEMP+"/corridor.json"))}));
           '
       - name: Verify signed regional GTFS against actual live GTFS-RT
         env:

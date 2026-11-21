@@ -105,3 +105,13 @@ test('multimodal active trips retain buses, trains, ferries and extended GTFS ro
  assert.deepEqual([...onlyBus.trips.keys()],['tbus']);
  assert.equal(onlyBus.excludedRouteTypeTripCount,3);
 });
+
+test('retains route number and terminal trip headsign from GTFS metadata',()=>{
+ const metadata=parseRegionalServiceMetadata({
+  tripsCsv:'trip_id,route_id,service_id,trip_headsign,trip_short_name\nt1,r1,s1,Bålsta,\nt2,r1,s1,Kungsängen,\n',
+  routesCsv:'route_id,route_type,route_short_name,route_long_name\nr1,2,43,Stockholm commuter rail\n'
+ });
+ assert.equal(metadata.tripById.get('t1').tripHeadsign,'Bålsta');
+ assert.equal(metadata.tripById.get('t2').tripHeadsign,'Kungsängen');
+ assert.deepEqual(metadata.routeDetails.get('r1'),{routeShortName:'43',routeLongName:'Stockholm commuter rail'});
+});
