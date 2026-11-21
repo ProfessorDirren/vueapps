@@ -19,3 +19,17 @@ test('extracts trip and stop update evidence without verifying a journey',()=>{
 });
 test('fails closed when stop cap is exceeded',()=>assert.throws(()=>extractGTFSRealtimeTripEvidence(bytes,{maxStops:0}),GTFSRealtimeDecodeError));
 test('fails closed on malformed input',()=>assert.throws(()=>extractGTFSRealtimeTripEvidence(Uint8Array.from([1,2,3])),GTFSRealtimeDecodeError));
+
+const encodeVarint=value=>{let n=BigInt.asUintN(64,BigInt(value));const out=[];while(n>=128n){out.push(Number(n&127n)|128);n>>=7n;}out.push(Number(n));return out;};
+const wireVarint=(n,value)=>[n*8,...encodeVarint(value)];
+test('extracts feed timestamp and negative signed int32 delay',()=>{
+ const stampedHeader=field(1,[...field(1,ascii('2.0')),...wireVarint(3,1795250000)]);
+ const earlyDeparture=field(3,[...wireVarint(1,-45),...wireVarint(2,1795250060)]);
+ const earlyStop=field(2,[...field(4,ascii('Jordbro-stop')),...earlyDeparture]);
+ const earlyUpdate=field(3,[...descriptor,...earlyStop]);
+ const earlyEntity=field(2,[...field(1,ascii('e1')),...earlyUpdate]);
+ const data=extractGTFSRealtimeTripEvidence(Uint8Array.from([...stampedHeader,...earlyEntity]));
+ assert.equal(data.feedTimestampMs,1795250000000);
+ assert.equal(data.trips[0].stops[0].departure.delaySeconds,-45);
+ assert.equal(data.trips[0].stops[0].departure.unixTime,1795250060);
+});
