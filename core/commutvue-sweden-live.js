@@ -78,7 +78,13 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const code=String(row?.route?.transport_mode_code??'');
    if(code)boardCodeCounts[code]=(boardCodeCounts[code]||0)+1;
   }
-  console.info('commutvue_origin_board_modes',JSON.stringify({board_rows:Array.isArray(board.departures)?board.departures.length:0,origin_rows:boardOriginRows,origin_mode_counts:boardModeCounts,origin_mode_code_counts:boardCodeCounts,origin_rows_missing_mode:boardRowsMissingMode,origin_platform_count:originStops.length}));
+  const boardStopModeCounts={};let boardStops=0,boardStopsMissingMode=0;
+  for(const stop of Array.isArray(board.stops)?board.stops:[]){
+   boardStops++;
+   if(!Array.isArray(stop?.transport_modes)){boardStopsMissingMode++;continue;}
+   for(const mode of stop.transport_modes){const key=String(mode).toUpperCase();boardStopModeCounts[key]=(boardStopModeCounts[key]||0)+1;}
+  }
+  console.info('commutvue_origin_board_modes',JSON.stringify({board_rows:Array.isArray(board.departures)?board.departures.length:0,origin_rows:boardOriginRows,origin_mode_counts:boardModeCounts,origin_mode_code_counts:boardCodeCounts,origin_rows_missing_mode:boardRowsMissingMode,origin_platform_count:originStops.length,board_stops:boardStops,board_stop_mode_counts:boardStopModeCounts,board_stops_missing_mode_metadata:boardStopsMissingMode}));
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let destinationAreaSeen=0;let destinationNamedStopSeen=0;let cityNamedStopSeen=0;let originPresentWithoutDestination=0;let tripsWithEmptyCalls=0;let tripsWithMultipleCalls=0;let destinationNameInDirection=0;let cityNameInDirection=0;let verifiedDestinationCalls=0;let destinationBeforeOrigin=0;let tripOriginMissing=0;let invalidTripEvidence=0;let checkedRealtimeTrips=0;let checkedScheduledTrips=0;let realtimeTripsWithLaterCalls=0;let realtimeTripsWithoutLaterCalls=0;let realtimeTripsWithStopAreas=0;let realtimeTripsWithoutStopAreas=0;let realtimeTripsWithNorthboundHint=0;let realtimeTripsWithSouthboundHint=0;let realtimeTripsWithOtherDirectionHint=0;let northboundTerminalLooksRailEnd=0;let northboundTerminalLooksUnrelated=0;let northboundTerminalLooksMetro=0;let northboundTerminalHasName=0;let northboundTerminalHasArea=0;let northboundTerminalHasId=0;let northboundTerminalIsStockholmRail=0;let northboundTerminalCallsCountGtTen=0;let northboundTripsWithTerminalNorth=0;let northboundTripsWithTerminalSouth=0;let northboundTripsWithTerminalUnknown=0;let northboundTripsWithShortLaterSequence=0;let northboundTripsWithNorthOfJordbro=0;let northboundTripsWithSouthOfJordbro=0;let northboundTripsWithUnrecognizedStops=0;let northboundTripsWithStockholmArea=0;let northboundTripsWithCityChild=0;let northboundTripsWithLaterCalls=0;let northboundTripsWithNamedStockholm=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;const routeModeCounts={};const northboundHintModeCounts={};let tripsWithRouteDestination=0;let routeDestinationIdMatches=0;let routeDestinationNameMatches=0;let routeDestinationMetaAreaMatches=0;let routeDestinationOtherName=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
@@ -286,7 +292,12 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
     const selectedGroups=exact.filter(group=>group.id===selected);
     const stopIds=[...new Set(selectedGroups.flatMap(group=>(group.stops||[]).map(stop=>stop.id).filter(id=>typeof id==='string'&&id.length>0)))];
     const selectedModes=[...new Set(selectedGroups.flatMap(group=>Array.isArray(group.transport_modes)?group.transport_modes.map(mode=>String(mode).toUpperCase()):[]))].sort();
-    console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:exact.length,rail_areas:railAreas.size,platform_count:stopIds.length,transport_modes:selectedModes,mode_metadata_present:selectedGroups.some(group=>Array.isArray(group.transport_modes))}));
+    const platformModeCounts={};let platformModeMetadataMissing=0;
+    for(const platform of selectedGroups.flatMap(group=>Array.isArray(group.stops)?group.stops:[])){
+     if(!Array.isArray(platform.transport_modes)){platformModeMetadataMissing++;continue;}
+     for(const mode of platform.transport_modes){const key=String(mode).toUpperCase();platformModeCounts[key]=(platformModeCounts[key]||0)+1;}
+    }
+    console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:exact.length,rail_areas:railAreas.size,platform_count:stopIds.length,transport_modes:selectedModes,mode_metadata_present:selectedGroups.some(group=>Array.isArray(group.transport_modes)),platform_mode_counts:platformModeCounts,platforms_missing_mode_metadata:platformModeMetadataMissing}));
     if(stopIds.length)return {id:selected,stopIds};
    }
    throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
