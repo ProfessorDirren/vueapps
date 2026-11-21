@@ -67,7 +67,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let realtimeCallFlagMissing=0;
+  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
   const candidates=[...board.departures].sort((a,b)=>Number(b?.is_realtime===true)-Number(a?.is_realtime===true));
@@ -80,6 +80,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const realtime=d.is_realtime===true;
    // Reject stale/far-future departures before spending a Trips API request.
    const scheduled=swedishTime(d.scheduled),expected=realtime?swedishTime(d.realtime):NaN;
+   if(realtime&&Number.isFinite(scheduled)&&!Number.isFinite(expected))realtimeTimestampMissing++;
    const departureTime=realtime?expected:scheduled;
    if(!Number.isFinite(scheduled)||!Number.isFinite(departureTime)||departureTime<now()-120000||departureTime>now()+4*60*60*1000)continue;
    const line=String(d.route?.designation||d.route?.name||'').trim();
@@ -129,9 +130,9 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   }
   if(!departures.length&&scheduledDepartures.length){
    scheduledDepartures.sort((a,b)=>Date.parse(a.scheduled)-Date.parse(b.scheduled));
-   return {provider,status:'scheduled',reason:realtimeAtOrigin?(timeConflicts>0?'realtime_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':'realtime_unverified'):'no_realtime_at_origin',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
+   return {provider,status:'scheduled',reason:realtimeAtOrigin?(timeConflicts>0?'realtime_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':realtimeTimestampMissing>0?'realtime_timestamp_missing':'realtime_unverified'):'no_realtime_at_origin',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
   }
-  if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):timeConflicts>0?'provider_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':'route_not_verified',departures:[]};
+  if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(realtimeTimestampMissing>0?'realtime_timestamp_missing':scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):timeConflicts>0?'provider_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':'route_not_verified',departures:[]};
   departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
   // Evidence IDs must follow the same order as the departures presented to callers.
   ids.splice(0,ids.length,...departures.map(d=>d.id));
