@@ -56,7 +56,7 @@ test('COMMUTEVUE counts upstream estimate coverage before matching without expos
  };
  const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher,now:()=>Date.parse('2026-11-21T09:55:00+01:00')});
  const response=await probe({from:'Jordbro',to:'Stockholm City'});
- assert.deepEqual(response.coverage,{originCount:2,destinationCount:1,originEstimatedCount:1,destinationEstimatedCount:0,originActualCount:0,originCancelledCount:1});
+ assert.deepEqual(response.coverage,{originCount:2,destinationCount:1,originEstimatedCount:1,originPlannedEstimatedCount:0,destinationEstimatedCount:0,originActualCount:0,originCancelledCount:1});
  assert.equal(response.departures.length,1);
 });
 
