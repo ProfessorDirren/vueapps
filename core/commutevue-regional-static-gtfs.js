@@ -115,20 +115,32 @@ export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',
  return {tripById,routeTypes,serviceCalendars,serviceExceptions};
 }
 
-/** Keep only trips on rail routes (GTFS route_type 2) active on the requested service date. */
-export function filterRegionalActiveRailTrips(trips,metadata,serviceDate) {
+/** Filter any GTFS route_type, including extended GTFS types, by service calendar.
+ * Without routeTypes every route is eligible. Unknown route types are retained,
+ * never silently treated as buses or trains. */
+export function filterRegionalActiveTrips(trips,metadata,serviceDate,{routeTypes=null}={}) {
  if(!(trips instanceof Map)||!metadata||!/^[0-9]{8}$/.test(serviceDate))throw new Error('Invalid active regional service filter input');
+ if(routeTypes!==null&&(!(routeTypes instanceof Set)||[...routeTypes].some(x=>!Number.isSafeInteger(x)||x<0)))throw new Error('Invalid GTFS route type selection');
  const year=Number(serviceDate.slice(0,4)),month=Number(serviceDate.slice(4,6)),day=Number(serviceDate.slice(6,8));
  const date=new Date(Date.UTC(year,month-1,day));if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw new Error('Invalid service date');
  const weekdays=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
- const weekday=weekdays[date.getUTCDay()];const filtered=new Map();let inactive=0,nonRail=0,missing=0;
+ const weekday=weekdays[date.getUTCDay()];const filtered=new Map();let inactive=0,excluded=0,missing=0,unknown=0;
+ const activeByType={};
  for(const [tripId,sequence] of trips){
   const trip=metadata.tripById.get(tripId);if(!trip){missing++;continue;}
-  if(metadata.routeTypes.get(trip.routeId)!==2){nonRail++;continue;}
+  const type=metadata.routeTypes.get(trip.routeId);
+  if(type===undefined){unknown++;if(routeTypes!==null){excluded++;continue;}}
+  else if(routeTypes!==null&&!routeTypes.has(type)){excluded++;continue;}
   const exception=metadata.serviceExceptions.get(trip.serviceId)?.get(serviceDate);
   const calendar=metadata.serviceCalendars.get(trip.serviceId);
   const active=exception===1?true:exception===2?false:!!calendar&&serviceDate>=calendar.start_date&&serviceDate<=calendar.end_date&&calendar[weekday]==='1';
-  if(active)filtered.set(tripId,sequence);else inactive++;
+  if(active){filtered.set(tripId,sequence);const key=type===undefined?'unknown':String(type);activeByType[key]=(activeByType[key]||0)+1;}else inactive++;
  }
- return {trips:filtered,serviceDate,railTripCount:filtered.size,inactiveTripCount:inactive,nonRailTripCount:nonRail,missingMetadataTripCount:missing};
+ return {trips:filtered,serviceDate,activeTripCount:filtered.size,inactiveTripCount:inactive,excludedRouteTypeTripCount:excluded,missingMetadataTripCount:missing,unknownRouteTypeTripCount:unknown,activeByType};
+}
+
+/** Backwards-compatible rail-only filter; prefer filterRegionalActiveTrips for multimodal use. */
+export function filterRegionalActiveRailTrips(trips,metadata,serviceDate) {
+ const result=filterRegionalActiveTrips(trips,metadata,serviceDate,{routeTypes:new Set([2])});
+ return {...result,railTripCount:result.activeTripCount,nonRailTripCount:result.excludedRouteTypeTripCount};
 }
