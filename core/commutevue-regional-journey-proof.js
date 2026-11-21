@@ -5,6 +5,9 @@
  */
 export function verifyRegionalJourney({evidence,tripStops,originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000}={}){
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
+ // Reject stale, future-dated or missing feed timestamps before evaluating trips.
+ const feedAge=now-evidence.feedTimestampMs;
+ if(!Number.isFinite(feedAge)||feedAge<0||feedAge>maxAgeMs)return {status:'unavailable',reason:'stale_or_missing_feed',departures:[]};
  const departures=[];
  const counts=new Map();
  for(const trip of evidence.trips)if(typeof trip?.tripId==='string')counts.set(trip.tripId,(counts.get(trip.tripId)||0)+1);
@@ -27,8 +30,7 @@ export function verifyRegionalJourney({evidence,tripStops,originStopIds,destinat
   if(!Number.isSafeInteger(departureMs)||departureMs<now-120000||departureMs>now+7200000)continue;
   // An event timestamp is a prediction, not a feed freshness timestamp.
   // Do not claim live status until a verified feed header timestamp is supplied.
-  const age=now-evidence.feedTimestampMs;
-  if(!Number.isFinite(age)||age<0||age>maxAgeMs)continue;
+
   departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
  }
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',departures};
