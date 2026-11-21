@@ -97,9 +97,10 @@ export function findRegionalDirectJourneys(trips, stops, {originName='Jordbro', 
 export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',calendarDatesCsv=''}) {
  const read=(csv,required,maxRows=300000)=>{
   if(typeof csv!=='string'||csv.length>32*1024*1024)throw new Error('Invalid regional GTFS metadata file');
-  const lines=csv.replace(/^\\uFEFF/,'').split(/\\r?\\n/);const header=parseCSV(lines.shift()||'');
+  const normalized=csv.charCodeAt(0)===0xFEFF?csv.slice(1):csv;
+  const lines=normalized.split(String.fromCharCode(10));const header=parseCSV((lines.shift()||'').replace(/\\r$/,''));
   const indexes=Object.fromEntries(required.map(k=>[k,header.indexOf(k)]));
-  if(Object.values(indexes).some(i=>i<0))throw new Error('Missing regional GTFS metadata columns');
+  if(Object.values(indexes).some(i=>i<0))throw new Error('Missing regional GTFS metadata columns: '+required.filter(k=>indexes[k]<0).join(', '));
   const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line);rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
   return rows;
  };
