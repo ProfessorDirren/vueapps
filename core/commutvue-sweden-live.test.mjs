@@ -918,3 +918,16 @@ test('missing destination direction hint remains diagnostic only',async()=>{
   assert.deepEqual(result.departures,[]);
  }finally{console.info=old;}
 });
+
+
+test('T-Centralen alias accepts canonical Stockholm City area and name with a different platform ID',async()=>{
+ const alternate={...details,calls:[details.calls[0],{stop:{id:'alternate-city-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true}]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'T-Centralen',adapter:make(board,alternate)});
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures[0].delayMinutes,7);
+});
+test('T-Centralen alias rejects wrong stop name even within destination area',async()=>{
+ const alternate={...details,calls:[details.calls[0],{stop:{id:'alternate-platform',area_id:'740000002',name:'T-Centralen'},is_realtime:true}]};
+ const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'T-Centralen',adapter:make(board,alternate)});
+ assert.equal(result.status,'unavailable');
+});
