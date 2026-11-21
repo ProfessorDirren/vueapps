@@ -175,7 +175,7 @@ export async function POST(request){
   const regionalAnswer=regionalVerified?(regionalLabels[b.language]||regionalLabels.en)+'\n'+regionalPublished.departures.map(d=>{
    // GTFS service times can exceed 24:00; show the clock time without inventing a delay.
    const scheduledParts=typeof d.scheduledDeparture==='string'?d.scheduledDeparture.split(':'):[];
-   const scheduled=scheduledParts.length===3&&/^\\d{2,3}$/.test(scheduledParts[0])?String(Number(scheduledParts[0])%24).padStart(2,'0')+':'+scheduledParts[1]:'—';
+   const scheduled=scheduledParts.length===3&&/^[0-9]{2,3}$/.test(scheduledParts[0])?String(Number(scheduledParts[0])%24).padStart(2,'0')+':'+scheduledParts[1]:'—';
    return d.line+' · '+d.destination+' · '+regionalDetails.scheduled+' '+scheduled+' · '+regionalDetails.predicted+' '+regionalClock.format(new Date(d.predictedDeparture))+' · '+regionalDetails.delay;
   }).join('\n')+'\n'+regionalDetails.source:'';
   const scheduledLabels={en:'Verified timetable departures (not real-time):',es:'Salidas verificadas del horario (no en tiempo real):',sv:'Verifierade tidtabellsavgångar (inte realtid):',hi:'सत्यापित समय-सारणी प्रस्थान (रीयल-टाइम नहीं):','zh-CN':'已核实的时刻表发车时间（非实时）：',ru:'Подтверждённые отправления по расписанию (не в реальном времени):',ar:'مواعيد المغادرة المؤكدة وفق الجدول (ليست بيانات فورية):',el:'Επαληθευμένες αναχωρήσεις βάσει προγράμματος (όχι σε πραγματικό χρόνο):',tr:'Doğrulanmış tarifeli kalkışlar (gerçek zamanlı değil):',fa:'حرکت‌های تأییدشده طبق برنامه (نه اطلاعات لحظه‌ای):',fr:'Départs vérifiés selon les horaires (pas en temps réel) :'};
