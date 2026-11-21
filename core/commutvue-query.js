@@ -47,3 +47,19 @@ export function parseCommuteQuestion(question){
  }
  return result;
 }
+
+/** Shared Swedish transport-mode classification for the provider-neutral journey API.
+ * Null means no explicit mode: do not silently narrow a multimodal journey.
+ */
+export function commuteTransportMode(question){
+ const q=String(question||'');
+ const modes=[
+  ['BOAT',/\b(?:färj(?:a|an|or|orna)|pendelbåt(?:en|ar)?|båt(?:en|ar|arna)|ferry|boat)\b/iu],
+  ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
+  ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b/iu],
+  ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b/iu],
+  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?)\b/iu]
+ ];
+ const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
+ return found.length===1?found[0]:null;
+}
