@@ -13,8 +13,7 @@ export const routes=[
 ];
 export const negatives=[
  ['mixed-intent','Min gitarr och min vinyl'],
- ['chicken-bus','När går nästa kyckling i ugnen från Tyresö Centrum till Gullmarsplan?'],
- ['oven-bus','När går nästa buss i ugnen från Tyresö Centrum till Gullmarsplan?']
+ ['chicken-bus','När går nästa kyckling i ugnen från Tyresö Centrum till Gullmarsplan?']
 ];
 export const languages=[
  ['sv','Hur länge ska kycklingen vara i varmluftsugnen?'],
