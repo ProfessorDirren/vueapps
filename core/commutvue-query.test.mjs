@@ -134,3 +134,20 @@ test('COMMUTVUE exposes confirmation before any Trafiklab request',async()=>{
  assert.ok(source.indexOf('if(journey.stationSuggestions?.length)')<source.indexOf('createTrafiklabSwedenLive({apiKey:'));
  assert.match(source,/evidence_status:'station_confirmation_required'/);
 });
+
+
+test('COMMUTVUE station confirmation response is actionable and never claims live verification',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ const begin=source.indexOf('if(journey.stationSuggestions?.length)');
+ const end=source.indexOf('// A future-date request',begin);
+ assert.ok(begin>=0&&end>begin);
+ const response=source.slice(begin,end);
+ assert.match(response,/station_confirmation_required/);
+ assert.match(response,/verified:false/);
+ assert.match(response,/live_diagnostic:'not_attempted'/);
+ assert.match(response,/Skriv hela resfrågan igen med rätt stationsnamn/);
+ assert.match(response,/Repeat the full trip question using the correct station name/);
+ assert.match(response,/lines\.join\('\\n'\)/);
+ assert.doesNotMatch(response,/createTrafiklabSwedenLive/);
+});
