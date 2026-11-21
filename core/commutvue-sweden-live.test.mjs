@@ -981,6 +981,8 @@ test('each Swedish transport mode validates only its own verified departures',as
   const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City',transportMode:mode});
   assert.equal(result.status,'ok',mode);
   assert.deepEqual(seen,['mode-0'],mode);
+  assert.equal(result.departures.length,1,mode);
+  assert.equal(result.departures[0].line,'1',mode);
   const wrongOnly=await createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
    resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
    fetcher:async()=>({ok:true,text:async()=>JSON.stringify({...board,departures:[rows[1]]})})
