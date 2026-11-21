@@ -847,3 +847,23 @@ test('missing realtime timestamp remains diagnostic after unrelated trip was che
  assert.equal(result.reason,'realtime_timestamp_missing');
  assert.deepEqual(result.departures,[]);
 });
+
+
+test('bounded Trips lookups prioritize the nearest realtime train over unsorted later trains',async()=>{
+ const seen=[];
+ const late={...departure,trip:{trip_id:'late',start_date:'2026-11-10'},scheduled:'2026-11-10T12:00:00',realtime:'2026-11-10T12:07:00'};
+ const near={...departure,trip:{trip_id:'near',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:1,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const id=url.match(/\/trips\/([^/]+)\//)?.[1];
+   if(id)seen.push(id);
+   const payload=id?{...details,trip:{trip_id:id,start_date:'2026-11-10'},calls:id==='near'?details.calls:[details.calls[0]]}:{...board,departures:[late,near]};
+   return {ok:true,text:async()=>JSON.stringify(payload)};
+  }
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(seen,['near']);
+ assert.equal(result.status,'ok');
+ assert.equal(result.departures[0].id,'near|2026-11-10|stop1');
+});
