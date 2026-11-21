@@ -67,7 +67,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
-  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;
+  const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let destinationAreaSeen=0;let destinationNamedStopSeen=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
   // Within each evidence tier, check the nearest upcoming departures first. Trafiklab
@@ -112,7 +112,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     realtimeDestinationMissing++;
     const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)&&typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')));
     if(destinationCalls.length)realtimeDestinationBeforeOrigin++;
-    else if(calls.some(call=>call?.stop?.area_id===destination&&area(destination)))realtimeDestinationIdMismatch++;
+    else if(calls.some(call=>call?.stop?.area_id===destination&&area(destination))){realtimeDestinationIdMismatch++;destinationAreaSeen++;}
+    else if(calls.some(call=>typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')))destinationNamedStopSeen++;
     else realtimeDestinationAbsent++;
    }
    else if(realtime&&calls[i].is_realtime!==true)realtimeCallFlagMissing++;
@@ -137,6 +138,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const departure={id,line,destination:direction||to,scheduled:new Date(scheduled).toISOString(),expected:realtime?new Date(expected).toISOString():null,cancelled:false};
    if(realtime){departures.push(departure);ids.push(id);}else{scheduledDepartures.push(departure);}
   }
+  // Safe aggregate diagnostic: no station IDs, API keys, trip IDs or raw provider payloads.
+  if(realtimeDestinationAbsent>0||realtimeDestinationIdMismatch>0)console.info('commutvue_destination_match_diagnostic',JSON.stringify({checked_trips:tripRequests,missing_destination:realtimeDestinationAbsent,area_mismatch:realtimeDestinationIdMismatch,area_seen:destinationAreaSeen,named_stop_seen:destinationNamedStopSeen}));
   if(!departures.length&&scheduledDepartures.length){
    scheduledDepartures.sort((a,b)=>Date.parse(a.scheduled)-Date.parse(b.scheduled));
    return {provider,status:'scheduled',reason:realtimeAtOrigin?(timeConflicts>0?'realtime_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':realtimeTimestampMissing>0?'realtime_timestamp_missing':'realtime_unverified'):'no_realtime_at_origin',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
