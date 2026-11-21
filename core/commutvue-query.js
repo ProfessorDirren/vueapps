@@ -1,4 +1,4 @@
-import {interpretVueInput} from './vuecore-interpretation.js';
+import {interpretVueInput,suggestVueTerms} from './vuecore-interpretation.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 /** Deterministic extraction; never guess a station, route or region. */
 export const COMMUT_REGION_HINTS=Object.freeze({
@@ -6,6 +6,8 @@ export const COMMUT_REGION_HINTS=Object.freeze({
  santiago:/(?:^|[^\p{L}\p{N}])(?:chile|santiago(?: de chile)?|providencia|maipú|maipu|puente alto|las condes|estación central|estacion central|plaza de armas|baquedano|tobalaba|pajaritos|los héroes|los heroes|metro de santiago|red movilidad)(?=$|[^\p{L}\p{N}])/iu,
  paris:/(?:^|[^\p{L}\p{N}])(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)(?=$|[^\p{L}\p{N}])/iu
 });
+// Explicitly verified station names; do not treat region/city hints as station truth.
+const VERIFIED_STOCKHOLM_STATIONS=Object.freeze(['Jordbro','Handen','T-Centralen','Stockholm City','Södertälje','Märsta','Uppsala']);
 const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+ch:ch).join('');
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
@@ -35,5 +37,10 @@ export function parseCommuteQuestion(question){
  const result={region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
  const corrections=[...(origin?.corrections||[]).map(c=>({role:'from',...c})),...(destination?.corrections||[]).map(c=>({role:'to',...c}))];
  if(corrections.length)result.stationCorrections=corrections;
+ // Suggestions are metadata only: never silently route a trip using a guessed stop.
+ if(selected.length===1&&selected[0]==='stockholm'&&from&&to){
+  const suggestions=[...suggestVueTerms(from,VERIFIED_STOCKHOLM_STATIONS).map(x=>({role:'from',...x})),...suggestVueTerms(to,VERIFIED_STOCKHOLM_STATIONS).map(x=>({role:'to',...x}))];
+  if(suggestions.length){result.stationSuggestions=suggestions;result.needsClarification=true;}
+ }
  return result;
 }
