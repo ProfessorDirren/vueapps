@@ -36,7 +36,7 @@ export async function POST(request){
  // Ask before interpreting an uncertain domain-changing typo; never run a provider on a guess.
  if(!b.image&&!route.clarify){
   const candidates=suggestVueIntent(question);
-  if(candidates.length===1&&route.domain!==candidates[0].domain){
+  if(candidates.length===1){
    const candidate=candidates[0];
    const prompt=b.language==='sv'?'Menade du':b.language==='es'?'¿Quisiste decir':b.language==='fr'?'Vouliez-vous dire':'Did you mean';
    return respond(200,{domain:null,clarify:true,reason:'possible_typo',answer:prompt+' “'+candidate.suggested+'” istället för “'+candidate.original+'”?',suggestions:[candidate],verified:false});
