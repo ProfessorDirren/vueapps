@@ -73,3 +73,23 @@ test('attaches scheduled time, route number and terminal destination to verified
  assert.equal(result.departures[0].routeShortName,'43');
  assert.equal(result.departures[0].tripHeadsign,'Bålsta');
 });
+
+test('keeps Bålsta and Kungsängen as train terminals when Stockholm City is the requested stop',()=>{
+ const origin='J',destination='C';
+ const tripStops=new Map([
+  ['towards-balsta',[{stop:origin,sequence:1},{stop:destination,sequence:2},{stop:'B',sequence:3}]],
+  ['towards-kungsangen',[{stop:origin,sequence:1},{stop:destination,sequence:2},{stop:'K',sequence:3}]]
+ ]);
+ const tripMetadata=new Map([
+  ['towards-balsta',{routeShortName:'43',tripHeadsign:'Bålsta'}],
+  ['towards-kungsangen',{routeShortName:'43',tripHeadsign:'Kungsängen'}]
+ ]);
+ const evidence={status:'trip_evidence_unverified',feedTimestampMs:now-10000,trips:[
+  {tripId:'towards-balsta',stops:[{stopId:origin,departure:{unixTime:Math.floor(now/1000)+300}}]},
+  {tripId:'towards-kungsangen',stops:[{stopId:origin,departure:{unixTime:Math.floor(now/1000)+600}}]}
+ ]};
+ const result=verifyRegionalJourney({evidence,tripStops,tripMetadata,originStopIds:new Set([origin]),destinationStopIds:new Set([destination]),now});
+ assert.equal(result.status,'route_matched');
+ assert.deepEqual(result.departures.map(x=>x.tripHeadsign),['Bålsta','Kungsängen']);
+ assert.deepEqual(result.departures.map(x=>x.destinationStopId),[destination,destination]);
+});
