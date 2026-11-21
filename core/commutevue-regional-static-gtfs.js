@@ -46,7 +46,7 @@ export function parseRegionalStopNames(csv,{matchTerms=['jordbro','stockholm cit
  if(typeof csv!=='string'||csv.length>32*1024*1024||!Array.isArray(matchTerms)||!Number.isSafeInteger(maxRows)||maxRows<1||maxRows>200000)throw new Error('Invalid regional GTFS stops');
  const terms=matchTerms.map(x=>String(x).trim().toLocaleLowerCase('en')).filter(Boolean);
  if(!terms.length)throw new Error('Missing GTFS stop-name match terms');
- const lines=csv.replace(/^\\uFEFF/,'').split(/\\r?\\n/);
+ const lines=csv.replace(/^\uFEFF/,'').split(/\r?\n/);
  const header=parseCSV(lines.shift()||'');
  const indexes={id:header.indexOf('stop_id'),name:header.indexOf('stop_name'),parent:header.indexOf('parent_station'),type:header.indexOf('location_type')};
  if(indexes.id<0||indexes.name<0)throw new Error('Missing GTFS stops fields');
