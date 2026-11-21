@@ -48,8 +48,8 @@ export function normalizeTrafficResult({provider,sourceUrl,updatedAt,departures,
 }
 /** COMMUTEVUE configures CORE's generic provider lifecycle, never duplicates it. */
 export function createCommuteRegistry(){return createProviderRegistry({providers:COMMUT_PROVIDERS,normalize:normalizeTrafficResult});}
-export async function queryCommute({provider,from,to,adapter}){
+export async function queryCommute({provider,from,to,mode,adapter}){
  const registry=createCommuteRegistry();
- if(typeof adapter==='function')registry.register(provider,adapter);
- return registry.query({region:provider,from,to});
+ if(typeof adapter==='function'||(adapter&&typeof adapter.query==='function'))registry.register(provider,adapter);
+ return registry.query({region:provider,from,to,mode});
 }
