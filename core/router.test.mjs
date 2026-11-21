@@ -194,3 +194,20 @@ test('VUECORE does not interrupt correctly spelled public transport questions',a
  assert.equal(data.domain,'commutvue');
  assert.notEqual(data.reason,'possible_typo');
 });
+
+test('VUECORE switches from COMMUTE-VUE to FOOD-VUE for explicit oven cooking questions',()=>{
+ for(const question of [
+  'Hur länge ska kycklingen vara i varmluftsugnen?',
+  'Hur tillagar jag kyckling i ugnen?',
+  'Vilken temperatur ska ugnen ha när jag bakar?'
+ ]){
+  assert.equal(routeQuestion(question,'commutvue').domain,'foodvue',question);
+  assert.equal(routeQuestion(question,'commutvue').clarify,false,question);
+ }
+});
+test('VUECORE cooking terms do not steal an ordinary bus journey',()=>{
+ for(const question of [
+  'När går nästa buss från Tyresö Centrum till Gullmarsplan?',
+  'Vilken buss går till restaurangen med kyckling?'
+ ])assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
+});
