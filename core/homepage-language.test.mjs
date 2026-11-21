@@ -70,3 +70,17 @@ test("automatic language events cannot override a valid explicit user selection"
  assert.match(html,/if\(automatic\)\{try\{const explicit=sessionStorage\.getItem\(VUE_LANGUAGE_KEY\);if\(supportedLanguages\.has\(explicit\)\)\{picker\.value=explicit;return\}/);
  assert.match(html,/sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
 });
+
+test("COMMUTE-VUE portal description and action are localized in all eleven languages",()=>{
+ const languages=['en','sv','es','fr','el','tr','fa','hi','zh-CN','ru','ar'];
+ const block=html.slice(html.indexOf('const commutePortalTranslations='),html.indexOf('function setLanguage('));
+ assert.ok(block.includes('const commutePortalTranslations='));
+ for(const lang of languages){
+  const key=lang==='zh-CN'?"'zh-CN'":lang;
+  assert.match(block,new RegExp("(?:^|\\n) "+key.replace('-','\\-')+":\\{description:"));
+ }
+ assert.match(html,/commuteCard\.querySelector\('p'\)\.textContent=commute\.description/);
+ assert.match(html,/commuteCard\.querySelector\('a'\)\.textContent=commute\.ask/);
+ assert.match(html,/localizedVueName\('commutvue',lang\)/);
+ assert.match(html,/vueBrandName\('commutvue'\)/);
+});
