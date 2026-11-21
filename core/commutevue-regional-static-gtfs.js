@@ -39,3 +39,24 @@ export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000}={})
  }
  return trips;
 }
+
+
+/** Return only matching stop-name records; never emit the full regional stops table. */
+export function parseRegionalStopNames(csv,{matchTerms=['jordbro','stockholm city'],maxRows=200000}={}){
+ if(typeof csv!=='string'||csv.length>32*1024*1024||!Array.isArray(matchTerms)||!Number.isSafeInteger(maxRows)||maxRows<1||maxRows>200000)throw new Error('Invalid regional GTFS stops');
+ const terms=matchTerms.map(x=>String(x).trim().toLocaleLowerCase('en')).filter(Boolean);
+ if(!terms.length)throw new Error('Missing GTFS stop-name match terms');
+ const lines=csv.replace(/^\\uFEFF/,'').split(/\\r?\\n/);
+ const header=parseCSV(lines.shift()||'');
+ const indexes={id:header.indexOf('stop_id'),name:header.indexOf('stop_name'),parent:header.indexOf('parent_station'),type:header.indexOf('location_type')};
+ if(indexes.id<0||indexes.name<0)throw new Error('Missing GTFS stops fields');
+ const matches=[];let rows=0;
+ for(const line of lines){
+  if(!line.trim())continue;
+  if(++rows>maxRows)throw new Error('GTFS stops row limit');
+  const cells=parseCSV(line);const stopId=cells[indexes.id],stopName=cells[indexes.name]||'';
+  if(!stopId||!stopName)throw new Error('Invalid GTFS stops record');
+  if(terms.some(term=>stopName.toLocaleLowerCase('en').includes(term)))matches.push({stopId,stopName,parentStation:indexes.parent<0?'':cells[indexes.parent]||'',locationType:indexes.type<0?'':cells[indexes.type]||''});
+ }
+ return matches;
+}
