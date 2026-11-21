@@ -24,9 +24,9 @@ export async function runRegionalRouterShadow({env={},from,to,now=Date.now(),sou
  const originStopIds=parseRegionalStopIds(env.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS);
  const destinationStopIds=parseRegionalStopIds(env.COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS);
  const serviceDate=stockholmRegionalDay(now);
- if(!DAY.test(serviceDate)||!originStopIds||!destinationStopIds||!(env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE||env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64)||!env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY||!env.TRAFIKLAB_REGIONAL_REALTIME_KEY)return unavailable('missing_configuration');
+ if(!DAY.test(serviceDate)||!originStopIds||!destinationStopIds||!(env.COMMUTVUE_REGIONAL_SNAPSHOT_SOURCE==='bundled'||env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE||env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64)||!env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY||!env.TRAFIKLAB_REGIONAL_REALTIME_KEY)return unavailable('missing_configuration');
  try{
   const realtime=source||createSLRegionalRealtimeSource({apiKey:env.TRAFIKLAB_REGIONAL_REALTIME_KEY});
-  return await probeProvisionedRegionalJourney({source:realtime,encodedEnvelope:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,filePath:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE,signingKey:env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,serviceDate,originStopIds,destinationStopIds,now});
+  return await probeProvisionedRegionalJourney({source:realtime,encodedEnvelope:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,filePath:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE,useBundledSnapshot:env.COMMUTVUE_REGIONAL_SNAPSHOT_SOURCE==='bundled',signingKey:env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,serviceDate,originStopIds,destinationStopIds,now});
  }catch{return unavailable('verification_error');}
 }
