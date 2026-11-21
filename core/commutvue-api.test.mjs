@@ -325,3 +325,13 @@ test('COMMUTEVUE never presents today realtime for the day after tomorrow',async
   assert.match(data.answer,language==='sv'?/framtida datum/:/future date/);
  }
 });
+
+test('COMMUTEVUE router preserves missing realtime timestamp diagnostic in both fallback modes',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const {fileURLToPath}=await import('node:url');
+ const source=readFileSync(fileURLToPath(new URL('../api/vue-router.js',import.meta.url)),'utf8');
+ assert.match(source,/realtime_trip_flag_missing','realtime_timestamp_missing'\]\.includes\(raw\.reason\)/);
+ assert.match(source,/provider_time_conflict','realtime_timestamp_missing'\]\.includes\(raw\.reason\)/);
+ assert.match(source,/realtime_timestamp_missing:'Trafiklab markerar avgången som realtid/);
+ assert.match(source,/realtime_timestamp_missing:'Trafiklab marks the departure as real-time/);
+});
