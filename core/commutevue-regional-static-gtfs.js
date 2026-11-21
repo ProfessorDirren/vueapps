@@ -91,3 +91,43 @@ export function findRegionalDirectJourneys(trips, stops, {originName='Jordbro', 
  }
  return {originName,destinationName,originStopIdCount:origins.size,destinationStopIdCount:destinations.size,matchingTripCount,examples};
 }
+
+
+/** Parse bounded trip, route and service-calendar tables from the same regional feed. */
+export function parseRegionalServiceMetadata({tripsCsv,routesCsv,calendarCsv='',calendarDatesCsv=''}) {
+ const read=(csv,required,maxRows=300000)=>{
+  if(typeof csv!=='string'||csv.length>32*1024*1024)throw new Error('Invalid regional GTFS metadata file');
+  const lines=csv.replace(/^\\uFEFF/,'').split(/\\r?\\n/);const header=parseCSV(lines.shift()||'');
+  const indexes=Object.fromEntries(required.map(k=>[k,header.indexOf(k)]));
+  if(Object.values(indexes).some(i=>i<0))throw new Error('Missing regional GTFS metadata columns');
+  const rows=[];for(const line of lines){if(!line.trim())continue;if(rows.length>=maxRows)throw new Error('Regional GTFS metadata row limit');const cells=parseCSV(line);rows.push(Object.fromEntries(Object.entries(indexes).map(([k,i])=>[k,cells[i]||''])));}
+  return rows;
+ };
+ const trips=read(tripsCsv,['trip_id','route_id','service_id']);
+ const routes=read(routesCsv,['route_id','route_type'],10000);
+ const calendars=calendarCsv?read(calendarCsv,['service_id','monday','tuesday','wednesday','thursday','friday','saturday','sunday','start_date','end_date'],10000):[];
+ const exceptions=calendarDatesCsv?read(calendarDatesCsv,['service_id','date','exception_type'],100000):[];
+ const tripById=new Map();for(const row of trips){if(!row.trip_id||!row.route_id||!row.service_id||tripById.has(row.trip_id))throw new Error('Invalid or duplicate GTFS trip metadata');tripById.set(row.trip_id,{routeId:row.route_id,serviceId:row.service_id});}
+ const routeTypes=new Map();for(const row of routes){if(!row.route_id||routeTypes.has(row.route_id)||!/^\\d+$/.test(row.route_type))throw new Error('Invalid or duplicate GTFS route metadata');routeTypes.set(row.route_id,Number(row.route_type));}
+ const serviceCalendars=new Map();for(const row of calendars){if(!/^\\d{8}$/.test(row.start_date)||!/^\\d{8}$/.test(row.end_date)||serviceCalendars.has(row.service_id))throw new Error('Invalid GTFS service calendar');serviceCalendars.set(row.service_id,row);}
+ const serviceExceptions=new Map();for(const row of exceptions){if(!/^\\d{8}$/.test(row.date)||!['1','2'].includes(row.exception_type))throw new Error('Invalid GTFS service exception');if(!serviceExceptions.has(row.service_id))serviceExceptions.set(row.service_id,new Map());serviceExceptions.get(row.service_id).set(row.date,Number(row.exception_type));}
+ return {tripById,routeTypes,serviceCalendars,serviceExceptions};
+}
+
+/** Keep only trips on rail routes (GTFS route_type 2) active on the requested service date. */
+export function filterRegionalActiveRailTrips(trips,metadata,serviceDate) {
+ if(!(trips instanceof Map)||!metadata||!/^\\d{8}$/.test(serviceDate))throw new Error('Invalid active regional service filter input');
+ const year=Number(serviceDate.slice(0,4)),month=Number(serviceDate.slice(4,6)),day=Number(serviceDate.slice(6,8));
+ const date=new Date(Date.UTC(year,month-1,day));if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)throw new Error('Invalid service date');
+ const weekdays=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+ const weekday=weekdays[date.getUTCDay()];const filtered=new Map();let inactive=0,nonRail=0,missing=0;
+ for(const [tripId,sequence] of trips){
+  const trip=metadata.tripById.get(tripId);if(!trip){missing++;continue;}
+  if(metadata.routeTypes.get(trip.routeId)!==2){nonRail++;continue;}
+  const exception=metadata.serviceExceptions.get(trip.serviceId)?.get(serviceDate);
+  const calendar=metadata.serviceCalendars.get(trip.serviceId);
+  const active=exception===1?true:exception===2?false:!!calendar&&serviceDate>=calendar.start_date&&serviceDate<=calendar.end_date&&calendar[weekday]==='1';
+  if(active)filtered.set(tripId,sequence);else inactive++;
+ }
+ return {trips:filtered,serviceDate,railTripCount:filtered.size,inactiveTripCount:inactive,nonRailTripCount:nonRail,missingMetadataTripCount:missing};
+}
