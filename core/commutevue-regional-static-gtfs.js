@@ -56,7 +56,7 @@ export function parseRegionalStopNames(csv,{matchTerms=['jordbro','stockholm cit
  for(const line of lines){
   if(!line.trim())continue;
   if(++rows>maxRows)throw new Error('GTFS stops row limit');
-  const cells=parseCSV(line);const stopId=cells[indexes.id],stopName=cells[indexes.name]||'';
+  const cells=parseCSV(line.replaceAll(String.fromCharCode(13),''));const stopId=cells[indexes.id],stopName=cells[indexes.name]||'';
   if(!stopId||!stopName)throw new Error('Invalid GTFS stops record');
   if(terms.some(term=>stopName.toLocaleLowerCase('en').includes(term)))matches.push({stopId,stopName,parentStation:indexes.parent<0?'':cells[indexes.parent]||'',locationType:indexes.type<0?'':cells[indexes.type]||''});
  }
