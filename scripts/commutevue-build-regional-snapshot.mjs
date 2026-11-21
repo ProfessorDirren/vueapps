@@ -39,6 +39,22 @@ export function buildSignedRegionalCorridorSnapshot({archive,serviceDate=stockho
  const originStopIds=resolveRegionalStationStopIds(stops,originName);
  const destinationStopIds=resolveRegionalStationStopIds(stops,destinationName);
  const allowedTripIds=selectDirectRegionalTrips(snapshot.tripStops,originStopIds,destinationStopIds);
+ // Resolve each selected trip's actual final stop from the same GTFS archive.
+ // GTFS trip_headsign may be absent. Never assume the destination from line number.
+ const terminalStopIds=[...allowedTripIds].map(id=>{
+  const sequence=snapshot.tripStops.get(id);
+  const last=sequence?.at(-1);
+  return typeof last==='string'?last:last?.stop;
+ }).filter(Boolean);
+ const terminalStops=parseRegionalGTFSStopsZip(archive,{matchTerms:[],matchStopIds:[...new Set(terminalStopIds)]});
+ const terminalNames=new Map(terminalStops.map(s=>[s.stopId,s.stopName]));
+ for(const id of allowedTripIds){
+  const sequence=snapshot.tripStops.get(id),last=sequence?.at(-1);
+  const terminalId=typeof last==='string'?last:last?.stop;
+  const terminalName=terminalNames.get(terminalId)||null;
+  const meta=snapshot.tripMetadata.get(id)||{};
+  if(!meta.tripHeadsign&&terminalName)snapshot.tripMetadata.set(id,{...meta,tripHeadsign:terminalName});
+ }
  const payload=encodeRegionalSnapshot(snapshot,{allowedTripIds});
  if(!allowedTripIds.size)throw new Error('No direct active corridor trips');
  const envelope=signRegionalSnapshot(payload,{key:signingKey});

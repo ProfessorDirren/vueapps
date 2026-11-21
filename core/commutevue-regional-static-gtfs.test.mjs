@@ -115,3 +115,10 @@ test('retains route number and terminal trip headsign from GTFS metadata',()=>{
  assert.equal(metadata.tripById.get('t2').tripHeadsign,'Kungsängen');
  assert.deepEqual(metadata.routeDetails.get('r1'),{routeShortName:'43',routeLongName:'Stockholm commuter rail'});
 });
+
+test('resolves verified final-stop names by exact GTFS stop ID without guessing from line number',()=>{
+ const rows='stop_id,stop_name,location_type,parent_station\nJ,Jordbro,1,\nC,Stockholm City,1,\nB1,Bålsta,0,B\nK1,Kungsängen,0,K\nX1,Other terminus,0,X\n';
+ const names=parseRegionalStopNames(rows,{matchTerms:[],matchStopIds:['B1','K1']});
+ assert.deepEqual(names.map(s=>[s.stopId,s.stopName]),[['B1','Bålsta'],['K1','Kungsängen']]);
+ assert.deepEqual(parseRegionalStopNames(rows,{matchTerms:[],matchStopIds:['not-present']}),[]);
+});

@@ -59,7 +59,7 @@ export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE,includeT
 
 
 /** Extract only bounded stops.txt and return requested station-name matches. */
-export function parseRegionalGTFSStopsZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
+export function parseRegionalGTFSStopsZip(input,{maxArchiveBytes=MAX_ARCHIVE,matchTerms=['jordbro','stockholm city'],matchStopIds=[]}={}){
  const bytes=input instanceof Uint8Array?input:null;
  if(!bytes||bytes.length<22||bytes.length>maxArchiveBytes)throw new Error('Invalid regional GTFS archive');
  const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.byteLength);
@@ -78,7 +78,7 @@ export function parseRegionalGTFSStopsZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}
   const start=offset+30+buffer.readUInt16LE(offset+26)+buffer.readUInt16LE(offset+28);if(start+compressed>directoryOffset)throw new Error('Invalid GTFS ZIP payload');
   const zipped=buffer.subarray(start,start+compressed);const decoded=method===0?zipped:inflateRawSync(zipped,{maxOutputLength:32*1024*1024});
   if(decoded.length!==uncompressed)throw new Error('GTFS stops ZIP size mismatch');
-  return parseRegionalStopNames(decoded.toString('utf8'));
+  return parseRegionalStopNames(decoded.toString('utf8'),{matchTerms,matchStopIds});
  }
  throw new Error('Regional GTFS stops.txt missing');
 }
