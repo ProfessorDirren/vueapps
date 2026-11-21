@@ -6,7 +6,10 @@ export function joinRegionalTripEvidence({tripStops,evidence,originStopId,destin
   if(typeof update?.tripId!=='string'||!Array.isArray(update.stops))continue;
   const sequence=tripStops.get(update.tripId);
   if(!Array.isArray(sequence)||sequence.length<2||sequence.length>300)continue;
-  const originIndex=sequence.indexOf(originStopId),destinationIndex=sequence.indexOf(destinationStopId);
+  // The actual SL Regional parser emits timed stop objects; legacy fixtures
+  // use strings. Match both without losing station order or trip identity.
+  const ids=sequence.map(stop=>typeof stop==='string'?stop:stop?.stop);
+  const originIndex=ids.indexOf(originStopId),destinationIndex=ids.indexOf(destinationStopId);
   if(originIndex<0||destinationIndex<=originIndex)continue;
   const matchingStops=update.stops.filter(s=>s?.stopId===originStopId);
   if(matchingStops.length!==1)continue;

@@ -15,3 +15,10 @@ test('rejects missing static map and same origin/destination',()=>{
  assert.throws(()=>joinRegionalTripEvidence({tripStops:null,evidence,originStopId:'Jordbro',destinationStopId:'StockholmCity'}),TypeError);
  assert.throws(()=>joinRegionalTripEvidence({tripStops,evidence,originStopId:'Jordbro',destinationStopId:'Jordbro'}),TypeError);
 });
+
+test('joins timed SL Regional GTFS static stops to matching realtime trip updates',()=>{
+ const timedTrips=new Map([['sl-real-trip',[{stop:'9022001006161002',departureTime:'08:54:00',sequence:10},{stop:'intermediate',sequence:11},{stop:'9022001005310001',arrivalTime:'09:24:00',sequence:19}]]]);
+ const live={trips:[{tripId:'sl-real-trip',stops:[{stopId:'9022001006161002',departure:{unixTime:1795250000,delaySeconds:120}}]}]};
+ assert.deepEqual(joinRegionalTripEvidence({tripStops:timedTrips,evidence:live,originStopId:'9022001006161002',destinationStopId:'9022001005310001'}).matches,[{tripId:'sl-real-trip',originStopId:'9022001006161002',destinationStopId:'9022001005310001',departureUnixTime:1795250000,delaySeconds:120}]);
+ assert.equal(joinRegionalTripEvidence({tripStops:timedTrips,evidence:live,originStopId:'9022001005310001',destinationStopId:'9022001006161002'}).matches.length,0);
+});
