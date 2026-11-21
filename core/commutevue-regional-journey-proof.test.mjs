@@ -13,3 +13,16 @@ test('rejects unknown regional static trip',()=>assert.equal(verifyRegionalJourn
 test('rejects stale feed timestamp',()=>assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,feedTimestampMs:now-180000}}).status,'unavailable'));
 test('rejects missing feed timestamp',()=>assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,feedTimestampMs:undefined}}).status,'unavailable'));
 test('rejects missing stop mappings',()=>assert.equal(verifyRegionalJourney({...input,originStopIds:undefined}).status,'unavailable'));
+
+test('verifies a fresh SL realtime prediction against timed static GTFS stop objects',()=>{
+ const timed=new Map([['trip-1',[{stop:'J',departureTime:'08:54:00',sequence:10},{stop:'S',sequence:11},{stop:'C',arrivalTime:'09:24:00',sequence:19}]]]);
+ const result=verifyRegionalJourney({...input,tripStops:timed});
+ assert.equal(result.status,'route_matched');
+ assert.equal(result.departures[0].originStopId,'J');
+ assert.equal(result.departures[0].destinationStopId,'C');
+});
+test('rejects duplicate trip updates and ambiguous repeated origin stop updates',()=>{
+ const trip=input.evidence.trips[0];
+ assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,trips:[trip,{...trip}]}}).status,'unavailable');
+ assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,trips:[{...trip,stops:[...trip.stops,...trip.stops]}]}}).status,'unavailable');
+});
