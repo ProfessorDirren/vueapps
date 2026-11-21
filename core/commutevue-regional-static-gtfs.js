@@ -14,8 +14,8 @@ function parseCSV(line){
  if(quoted)throw new Error('Invalid GTFS CSV');
  result.push(value);return result;
 }
-export function parseRegionalStopTimes(csv,{maxRows=2000000,maxTrips=100000}={}){
- if(typeof csv!=='string'||csv.length>256*1024*1024||!Number.isSafeInteger(maxRows)||maxRows<1||maxRows>2000000||!Number.isSafeInteger(maxTrips)||maxTrips<1||maxTrips>100000)throw new Error('Invalid regional GTFS stop_times');
+export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000}={}){
+ if(typeof csv!=='string'||csv.length>256*1024*1024||!Number.isSafeInteger(maxRows)||maxRows<1||maxRows>5000000||!Number.isSafeInteger(maxTrips)||maxTrips<1||maxTrips>250000)throw new Error('Invalid regional GTFS stop_times');
  const lines=csv.replace(/^\uFEFF/,'').split(/\r?\n/);
  const header=parseCSV(lines.shift()||'');
  const indexes=['trip_id','stop_id','stop_sequence'].map(name=>header.indexOf(name));
