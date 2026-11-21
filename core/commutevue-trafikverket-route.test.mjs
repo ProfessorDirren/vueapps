@@ -37,3 +37,13 @@ test('COMMUTEVUE does not count invalid time evidence',()=>{
  assert.equal(matched[0].hasActualTime,false);
  assert.equal(matched[0].hasModifiedTime,false);
 });
+
+test('Swedish local midnight service date matches trains crossing UTC date boundaries',()=>{
+ const late={...origin,AdvertisedTimeAtLocation:'2026-11-21T00:15:00+01:00'};
+ const arrival={...dest,AdvertisedTimeAtLocation:'2026-11-21T00:40:00+01:00'};
+ const now=Date.parse('2026-11-21T00:10:00+01:00');
+ assert.equal(matchTrafikverketTrainRoute({...args,origin:[late],destination:[arrival],now}).length,1);
+ // A different Swedish service date must not match even when the train ID repeats.
+ const nextDay={...arrival,AdvertisedTimeAtLocation:'2026-11-22T00:40:00+01:00'};
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[late],destination:[nextDay],now}),[]);
+});
