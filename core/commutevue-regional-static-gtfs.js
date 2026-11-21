@@ -14,11 +14,13 @@ function parseCSV(line){
  if(quoted)throw new Error('Invalid GTFS CSV');
  result.push(value);return result;
 }
-export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000}={}){
+export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000,includeTimes=false}={}){
  if(typeof csv!=='string'||csv.length>256*1024*1024||!Number.isSafeInteger(maxRows)||maxRows<1||maxRows>5000000||!Number.isSafeInteger(maxTrips)||maxTrips<1||maxTrips>250000)throw new Error('Invalid regional GTFS stop_times');
  const lines=csv.replace(/^\uFEFF/,'').split(/\r?\n/);
  const header=parseCSV(lines.shift()||'');
  const indexes=['trip_id','stop_id','stop_sequence'].map(name=>header.indexOf(name));
+ const arrivalIndex=header.indexOf('arrival_time'),departureIndex=header.indexOf('departure_time');
+ if(includeTimes&&(arrivalIndex<0||departureIndex<0))throw new Error('Missing GTFS arrival/departure fields');
  if(indexes.some(i=>i<0)||new Set(indexes).size!==3)throw new Error('Missing GTFS stop_times fields');
  const records=new Map();let rows=0;
  for(const line of lines){
@@ -29,13 +31,13 @@ export function parseRegionalStopTimes(csv,{maxRows=5000000,maxTrips=250000}={})
   const order=Number(sequence);
   if(!trip||!stop||!Number.isSafeInteger(order)||order<0)throw new Error('Invalid GTFS stop_times record');
   if(!records.has(trip)){if(records.size>=maxTrips)throw new Error('GTFS trip limit');records.set(trip,[]);}
-  records.get(trip).push({stop,order});
+  records.get(trip).push({stop,order,arrivalTime:includeTimes?cells[arrivalIndex]:'',departureTime:includeTimes?cells[departureIndex]:''});
  }
  const trips=new Map();
  for(const [trip,stops] of records){
   stops.sort((a,b)=>a.order-b.order);
   if(stops.length>300||stops.some((s,i)=>i>0&&s.order===stops[i-1].order))throw new Error('Invalid GTFS stop sequence');
-  trips.set(trip,stops.map(s=>s.stop));
+  trips.set(trip,includeTimes?stops.map(s=>({stop:s.stop,arrivalTime:s.arrivalTime,departureTime:s.departureTime,sequence:s.order})):stops.map(s=>s.stop));
  }
  return trips;
 }
@@ -69,7 +71,7 @@ export function findRegionalDirectJourneys(trips, stops, {originName='Jordbro', 
  const collect=name=>{
   const parents=new Set(stops.filter(s=>normalize(s.stopName)===normalize(name)&&String(s.locationType)==='1').map(s=>s.stopId));
   const ids=new Set(parents);
-  for(const stop of stops) if(parents.has(stop.parentStation)) ids.add(stop.stopId);
+  for(const stop of stops) if(String(stop.locationType)==='0'&&parents.has(stop.parentStation)) ids.add(stop.stopId);
   return ids;
  };
  const origins=collect(originName),destinations=collect(destinationName);
@@ -78,12 +80,13 @@ export function findRegionalDirectJourneys(trips, stops, {originName='Jordbro', 
  for(const [tripId,sequence] of trips){
   let originIndex=-1,destinationIndex=-1;
   for(let i=0;i<sequence.length;i++){
-   if(originIndex<0&&origins.has(sequence[i])) originIndex=i;
-   if(originIndex>=0&&destinations.has(sequence[i])) {destinationIndex=i;break;}
+   const stopId=typeof sequence[i]==='string'?sequence[i]:sequence[i]?.stop;
+   if(originIndex<0&&origins.has(stopId)) originIndex=i;
+   if(originIndex>=0&&destinations.has(stopId)) {destinationIndex=i;break;}
   }
   if(originIndex>=0&&destinationIndex>originIndex){
    matchingTripCount++;
-   if(examples.length<maxExamples) examples.push({tripId,originStopId:sequence[originIndex],destinationStopId:sequence[destinationIndex],originSequence:originIndex+1,destinationSequence:destinationIndex+1});
+   if(examples.length<maxExamples) examples.push({tripId,originStopId:typeof sequence[originIndex]==='string'?sequence[originIndex]:sequence[originIndex].stop,destinationStopId:typeof sequence[destinationIndex]==='string'?sequence[destinationIndex]:sequence[destinationIndex].stop,originSequence:originIndex+1,destinationSequence:destinationIndex+1,departureTime:sequence[originIndex]?.departureTime||null,arrivalTime:sequence[destinationIndex]?.arrivalTime||null});
   }
  }
  return {originName,destinationName,originStopIdCount:origins.size,destinationStopIdCount:destinations.size,matchingTripCount,examples};
