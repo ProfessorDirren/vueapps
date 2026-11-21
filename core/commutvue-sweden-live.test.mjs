@@ -3,10 +3,23 @@ import assert from 'node:assert/strict';
 import {createVerifiedSwedenAdapter,createTrafiklabStopResolver,TrafiklabRequestError} from './commutvue-sweden-live.js';
 import {queryCommute} from './commutvue.js';
 const clock=()=>Date.parse('2026-11-10T08:59:00Z');
-const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},is_realtime:true,scheduled:'2026-11-10T09:59:00',realtime:'2026-11-10T10:06:00',route:{designation:'43',direction:'Stockholm City'},canceled:false};
+const departure={trip:{trip_id:'t1',start_date:'2026-11-10'},stop:{id:'stop1'},is_realtime:true,scheduled:'2026-11-10T09:59:00',realtime:'2026-11-10T10:06:00',route:{designation:'43',direction:'Stockholm City',transport_mode:'TRAIN',transport_mode_code:106},canceled:false};
 const board={timestamp:'2026-11-10T09:58:00',departures:[departure]};
 const details={timestamp:'2026-11-10T09:58:00',trip:{trip_id:'t1',start_date:'2026-11-10'},calls:[{stop:{id:'stop1',area_id:'740000001'},is_realtime:true},{stop:{id:'stop2',area_id:'740000002'},is_realtime:true}]};
 const make=(boardPayload=board,tripPayload=details)=>createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?tripPayload:boardPayload)})});
+test('all documented Trafiklab transport modes are retained and unknown modes are rejected',async()=>{
+ const modes=[['BUS',700],['BUS',714],['METRO',401],['TRAIN',100],['TRAIN',106],['TRAM',900],['TAXI',1501],['BOAT',1000]];
+ const rows=modes.map(([mode,code],i)=>({...departure,trip:{trip_id:'mode'+i,start_date:'2026-11-10'},route:{designation:String(i),direction:'Stockholm City',transport_mode:mode,transport_mode_code:code}}));
+ rows.push({...departure,trip:{trip_id:'unknown',start_date:'2026-11-10'},route:{designation:'?',direction:'Stockholm City',transport_mode:'UNKNOWN'}});
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{const id=url.includes('/trips/')?url.split('/trips/')[1].split('/')[0]:null;if(id)seen.push(id);return {ok:true,text:async()=>JSON.stringify(id?{...details,trip:{trip_id:id,start_date:'2026-11-10'}}:{...board,departures:rows})};}
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(seen,modes.map((_,i)=>'mode'+i));assert.equal(result.status,'ok');
+});
+
 test('verified Swedish realtime delay requires origin-before-destination trip calls',async()=>{
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make()});
  assert.equal(result.status,'ok');assert.equal(result.departures[0].delayMinutes,7);
@@ -447,7 +460,7 @@ test('Trafiklab Trips documented call shape verifies exact destination area with
 
 
 test('missing provider direction is safe only after destination trip is verified',async()=>{
- const withoutDirection={...departure,route:{designation:'43'}};
+ const withoutDirection={...departure,route:{designation:'43',transport_mode:'TRAIN',transport_mode_code:106}};
  const verified=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make({...board,departures:[withoutDirection]},details)});
  assert.equal(verified.status,'ok');
  assert.equal(verified.departures[0].destination,'Stockholm City');
