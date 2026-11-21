@@ -19,7 +19,7 @@ test('NEGATIVE: one-edit typos produce explicit unexecuted suggestions',()=>{
  }
 });
 test('NEGATIVE: multiple fuzzy candidates never auto-select a winner',()=>{
- assert.deepEqual(suggestVueTerms('bussa',['buss','bussar']),[]);
+ assert.deepEqual(suggestVueTerms('bussa',['bussar','bussan']),[]);
  assert.deepEqual(suggestVueTerms('buss',['buss']),[]);
  assert.deepEqual(suggestVueIntent('buss kyckling'),[]);
 });
