@@ -63,9 +63,9 @@ test('Repeated identical Swedish departure announcements do not duplicate a trai
  const matched=matchTrafikverketTrainRoute({...args,origin:[origin,{...origin}],destination:[dest]});
  assert.equal(matched.length,1);
 });
-test('Distinct departure times of a reused train ID remain independent',()=>{
+test('Ambiguous reused train IDs are rejected instead of guessing a destination',()=>{
  const second={...origin,AdvertisedTimeAtLocation:'2026-11-21T11:00:00+01:00'};
  const secondArrival={...dest,AdvertisedTimeAtLocation:'2026-11-21T11:25:00+01:00'};
  const matched=matchTrafikverketTrainRoute({...args,origin:[origin,second],destination:[dest,secondArrival]});
- assert.equal(matched.length,2);
+ assert.equal(matched.length,1);
 });
