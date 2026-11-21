@@ -841,7 +841,7 @@ test('missing realtime timestamp survives another checked but unverified trip',a
 test('missing realtime timestamp remains diagnostic after unrelated trip was checked',async()=>{
  const invalid={...departure,trip:{trip_id:'missing-time',start_date:'2026-11-10'},realtime:undefined};
  const other={...departure,trip:{trip_id:'wrong-route',start_date:'2026-11-10'}};
- const otherDetails={...details,trip:{trip_id:'wrong-route',start_date:'2026-11-10'},calls:[],timestamp:details.timestamp};
+ const otherDetails={...details,trip:{trip_id:'wrong-route',start_date:'2026-11-10'},calls:details.calls,timestamp:'2026-11-10T09:50:00'};
  const result=await make({...board,departures:[invalid,other]},otherDetails)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
  assert.equal(result.status,'unavailable');
  assert.equal(result.reason,'realtime_timestamp_missing');
