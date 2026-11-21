@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalGTFSZip} from './commutevue-regional-gtfs-zip.js';
+import {parseRegionalGTFSZip,inspectRegionalGTFSZip} from './commutevue-regional-gtfs-zip.js';
 function storedZip(name,text){
  const filename=Buffer.from(name),data=Buffer.from(text);
  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50,0);local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(filename.length,26);
@@ -22,4 +22,12 @@ test('offline explicit archive limit is bounded and runtime default unchanged',(
  assert.deepEqual(parseRegionalGTFSZip(zip,{maxArchiveBytes:80*1024*1024}).get('t1'),['Jordbro']);
  assert.throws(()=>parseRegionalGTFSZip(zip,{maxArchiveBytes:81*1024*1024}));
  assert.throws(()=>parseRegionalGTFSZip(zip,{maxArchiveBytes:1}));
+});
+
+test('preflight reports compressed and uncompressed stop_times sizes',()=>{
+ const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\nt1,Jordbro,1\n');
+ const metadata=inspectRegionalGTFSZip(zip);
+ assert.equal(metadata.archiveBytes,zip.length);
+ assert.equal(metadata.compressedBytes,metadata.uncompressedBytes);
+ assert.equal(metadata.name,'stop_times.txt');
 });
