@@ -34,7 +34,7 @@ export async function POST(request){
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
  // Ask before interpreting an uncertain domain-changing typo; never run a provider on a guess.
- if(!b.image&&!route.clarify){
+ if(!b.image&&!route.clarify&&!(route.domain==='anivue'&&urgentFollowup('anivue',question,routingFields('anivue',question),b.language))){
   const candidates=suggestVueIntent(question);
   if(candidates.length===1){
    const candidate=candidates[0];
