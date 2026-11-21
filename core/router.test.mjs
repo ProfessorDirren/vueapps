@@ -202,3 +202,12 @@ test('CORE preserves valid bus questions and chicken recipes without cross-domai
   'Hur tillagar jag kyckling i varmluftsugn?'
  ])assert.equal(routeQuestion(question,'foodvue').domain,'foodvue',question);
 });
+
+test('VUECORE contradiction clarification never attempts live transport lookup',async()=>{
+ const response=await POST(req({question:'När går nästa buss i ugnen från Tyresö Centrum till Gullmarsplan?',language:'sv',previous:'commutvue'}));
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.clarify,true);
+ assert.equal(data.domain,null);
+ assert.match(data.answer,/vilken del|hjälp med/i);
+});
