@@ -39,7 +39,7 @@ export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
  if(metadata.uncompressedBytes>MAX_UNCOMPRESSED)throw new Error('GTFS stop_times exceeds safe decompression limit');
  const buffer=Buffer.from(input.buffer,input.byteOffset,input.byteLength);
  let end=-1;
- for(let i=buffer.length-22;i>=Math.max(0,buffer.length-65557);i--){if(buffer.readUInt32LE(i)===0x06054b50){end=i;break;}}
+ for(let i=buffer.length-22;i>=Math.max(0,buffer.length-65557);i--){if(buffer.readUInt32LE(i)===0x06054b50&&i+22+buffer.readUInt16LE(i+20)===buffer.length){end=i;break;}}
  if(end<0)throw new Error('Missing ZIP directory');
  const directoryOffset=buffer.readUInt32LE(end+16),count=buffer.readUInt16LE(end+10);
  let pos=directoryOffset;
