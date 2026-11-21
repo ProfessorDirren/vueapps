@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalGTFSZip,inspectRegionalGTFSZip,parseRegionalGTFSStopsZip} from './commutevue-regional-gtfs-zip.js';
+import {parseRegionalGTFSZip,inspectRegionalGTFSZip,parseRegionalGTFSStopsZip,parseRegionalGTFSServiceMetadataZip} from './commutevue-regional-gtfs-zip.js';
 function storedZip(name,text){
  const filename=Buffer.from(name),data=Buffer.from(text);
  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50,0);local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(filename.length,26);
@@ -55,4 +55,30 @@ test('extracts scheduled arrival and departure times from GTFS ZIP',()=>{
   {stop:'J1',arrivalTime:'08:01:00',departureTime:'08:02:00',sequence:1},
   {stop:'C1',arrivalTime:'08:25:00',departureTime:'08:25:00',sequence:9}
  ]);
+});
+
+function storedZipMany(entries){
+ const locals=[],centrals=[];let offset=0;
+ for(const [name,text] of entries){
+  const filename=Buffer.from(name),data=Buffer.from(text);
+  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50,0);local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(filename.length,26);
+  locals.push(local,filename,data);
+  const central=Buffer.alloc(46);central.writeUInt32LE(0x02014b50,0);central.writeUInt32LE(data.length,20);central.writeUInt32LE(data.length,24);central.writeUInt16LE(filename.length,28);central.writeUInt32LE(offset,42);
+  centrals.push(central,filename);offset+=local.length+filename.length+data.length;
+ }
+ const centralData=Buffer.concat(centrals),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50,0);end.writeUInt16LE(entries.length,8);end.writeUInt16LE(entries.length,10);end.writeUInt32LE(centralData.length,12);end.writeUInt32LE(offset,16);
+ return Buffer.concat([...locals,centralData,end]);
+}
+test('extracts bounded trip, route and service calendar metadata from the regional ZIP',()=>{
+ const zip=storedZipMany([
+  ['trips.txt','route_id,service_id,trip_id\nr1,s1,t1\n'],
+  ['routes.txt','route_id,route_type\nr1,2\n'],
+  ['calendar.txt','service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\ns1,0,0,0,0,0,1,0,20260101,20261231\n'],
+  ['calendar_dates.txt','service_id,date,exception_type\ns1,20261121,2\n']
+ ]);
+ const files=parseRegionalGTFSServiceMetadataZip(zip);
+ assert.match(files.tripsCsv,/t1/);
+ assert.match(files.routesCsv,/r1,2/);
+ assert.match(files.calendarCsv,/20261231/);
+ assert.match(files.calendarDatesCsv,/20261121/);
 });
