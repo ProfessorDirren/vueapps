@@ -72,7 +72,9 @@ export async function POST(request){
     const probe=await createTrafikverketJourneyProbe({apiKey:process.env.TRAFIKVERKET_API_KEY})({from:journey.from,to:journey.to});
     // Only bounded reason codes and counts; no key, station, trip or personal text.
     const reason=typeof probe.reason==='string'&&/^[a-z_]{1,60}$/.test(probe.reason)?probe.reason:'unknown';
-    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Array.isArray(probe.departures)?Math.min(probe.departures.length,60):0}));
+    const departures=Array.isArray(probe.departures)?probe.departures:[];
+    const estimatedCount=departures.filter(d=>d.hasEstimatedTime===true).length;
+    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60)}));
    }catch{
     console.info('commutevue_trafikverket_shadow',JSON.stringify({status:'unavailable',reason:'unexpected_error',count:0}));
    }
