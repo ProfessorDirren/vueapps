@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {deflateRawSync} from 'node:zlib';
 import {downloadRegionalGTFS} from './commutevue-download-regional-gtfs.mjs';
+import {inspectRegionalGTFSZip,parseRegionalGTFSZip} from '../core/commutevue-regional-gtfs-zip.js';
 function archive(){
  const name=Buffer.from('stop_times.txt'),data=Buffer.from('trip_id,stop_id,stop_sequence\nt1,J,1\n');
  const compressed=deflateRawSync(data);
@@ -32,4 +33,18 @@ test('offline downloader refuses oversized archive from content-length',async()=
  try{
   await assert.rejects(downloadRegionalGTFS({key:'fake-test-key',outputPath:join(dir,'sl.zip'),fetchImpl:async()=>new Response('x',{status:200,headers:{'content-length':String(81*1024*1024)}})}),/exceeds 80 MiB/);
  }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+test('ZIP inspector and parser accept a 57 MiB archive, above the old 45 MiB cap',()=>{
+ const small=archive();
+ const centralLength=46+Buffer.byteLength('stop_times.txt');
+ const centralStart=small.length-22-centralLength;
+ const padding=Buffer.alloc(57*1024*1024-small.length);
+ const large=Buffer.concat([small.subarray(0,centralStart),padding,small.subarray(centralStart)]);
+ // Central directory moves after padding; local stop_times offset stays unchanged.
+ large.writeUInt32LE(centralStart+padding.length,large.length-22+16);
+ const metadata=inspectRegionalGTFSZip(large);
+ assert.equal(metadata.archiveBytes,57*1024*1024);
+ assert.equal(metadata.name,'stop_times.txt');
+ assert.deepEqual(parseRegionalGTFSZip(large).get('t1'),['J']);
 });
