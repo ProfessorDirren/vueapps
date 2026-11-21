@@ -4,6 +4,7 @@ import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-ad
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
 import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
 import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js';
+import {runRegionalRouterShadow} from '../core/commutevue-regional-router-shadow.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -98,6 +99,14 @@ export async function POST(request){
    }catch{
     console.info('commutvue_regional_head_probe',JSON.stringify({status:'unexpected_error'}));
    }
+  }
+  // Signed static + regional GTFS-RT proof, strictly shadow-only and opt-in.
+  // Runs only for the configured corridor; never changes user-facing departures.
+  if(!journey.needsClarification&&journey.region==='stockholm'&&
+     process.env.COMMUTVUE_REGIONAL_SHADOW_ENABLED==='true'&&
+     journey.from==='Jordbro'&&journey.to==='Stockholm City'){
+   const proof=await runRegionalRouterShadow({env:process.env,from:journey.from,to:journey.to});
+   console.info('commutvue_regional_signed_shadow',JSON.stringify(proof));
   }
   // Shadow-only authorization check. Never publish unjoined GTFS-RT as verified departures.
   // Avoid duplicate requests on the same warm serverless instance for 15 minutes.
