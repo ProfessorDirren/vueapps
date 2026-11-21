@@ -176,3 +176,29 @@ test('all Swedish public transport questions route to COMMUTE-VUE from unrelated
   assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
  }
 });
+
+test('CORE refuses contradictory bus and chicken cooking instructions across prior VUEs',()=>{
+ const contradictory=[
+  'När går nästa buss i ugnen från Tyresö Centrum till Gullmarsplan?',
+  'När går nästa kycklingbuss i ugnen från Tyresö Centrum till Gullmarsplan?',
+  'När ska jag grädda kycklingen och när avgår bussen från Tyresö Centrum till Gullmarsplan?'
+ ];
+ for(const question of contradictory){
+  for(const previous of [null,'foodvue','commutvue']){
+   const result=routeQuestion(question,previous);
+   assert.equal(result.clarify,true,question);
+   assert.equal(result.domain,null,question);
+  }
+ }
+});
+test('CORE preserves valid bus questions and chicken recipes without cross-domain confusion',()=>{
+ for(const question of [
+  'När går nästa buss från Tyresö Centrum till Gullmarsplan?',
+  'Vilken buss tar jag till kycklingrestaurangen från Tyresö Centrum?',
+  'När avgår buss 873 från Tyresö Centrum?'
+ ])assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
+ for(const question of [
+  'Hur länge ska kycklingen vara i ugnen?',
+  'Hur tillagar jag kyckling i varmluftsugn?'
+ ])assert.equal(routeQuestion(question,'foodvue').domain,'foodvue',question);
+});
