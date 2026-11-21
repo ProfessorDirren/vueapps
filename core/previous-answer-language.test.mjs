@@ -15,3 +15,8 @@ test('response language is captured at submit and old turns are not restored aut
  assert.match(source,/reply\(question,data\.answer,data\.domain\|\|'CORE-VUE',data\.kind,true,requestedLanguage,\{askedAt,answeredAt:new Date\(\)\.toISOString\(\),updatedAt:data\.domain==='commutvue'\?data\.updated_at:null\}\)/);
  assert.doesNotMatch(source,/reply\(previous\.question/);
 });
+
+test('VUECORE avoids repeating the specialist heading above an existing answer',()=>{
+ assert.match(router,/vue-router-specialist'\)\.hidden=!!\$\('vue-router-replies'\)\.firstElementChild/);
+ assert.match(router,/replies\.insertBefore\(article,replies\.firstChild\);\$\('vue-router-specialist'\)\.hidden=true/);
+});
