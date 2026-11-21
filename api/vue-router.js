@@ -164,7 +164,20 @@ export async function POST(request){
   const regionalVerified=!verified&&regionalPublished?.status==='ready'&&regionalPublished.departures.length>0;
   const scheduledVerified=!verified&&!regionalVerified&&scheduled?.status==='scheduled'&&Array.isArray(scheduled.departures)&&scheduled.departures.length>0;
   const regionalLabels={sv:'Verifierade regionala realtidsavgångar:',en:'Verified regional real-time departures:',es:'Salidas regionales verificadas en tiempo real:',fr:'Départs régionaux vérifiés en temps réel :'};
-  const regionalAnswer=regionalVerified?(regionalLabels[b.language]||regionalLabels.en)+'\n'+regionalPublished.departures.map(d=>new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}).format(new Date(d.predictedDeparture))+' · '+d.line+' · '+d.destination).join('\n'):'';
+  const regionalDetailLabels={
+   sv:{scheduled:'Planerad',predicted:'Realtid',delay:'Försening ej verifierad',source:'Källa: SL Regional GTFS-RT'},
+   en:{scheduled:'Scheduled',predicted:'Real-time',delay:'Delay not verified',source:'Source: SL Regional GTFS-RT'},
+   es:{scheduled:'Programada',predicted:'Tiempo real',delay:'Retraso no verificado',source:'Fuente: SL Regional GTFS-RT'},
+   fr:{scheduled:'Prévue',predicted:'Temps réel',delay:'Retard non vérifié',source:'Source : SL Regional GTFS-RT'}
+  };
+  const regionalDetails=regionalDetailLabels[b.language]||regionalDetailLabels.en;
+  const regionalClock=new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
+  const regionalAnswer=regionalVerified?(regionalLabels[b.language]||regionalLabels.en)+'\n'+regionalPublished.departures.map(d=>{
+   // GTFS service times can exceed 24:00; show the clock time without inventing a delay.
+   const scheduledParts=typeof d.scheduledDeparture==='string'?d.scheduledDeparture.split(':'):[];
+   const scheduled=scheduledParts.length===3&&/^[0-9]{2,3}$/.test(scheduledParts[0])?String(Number(scheduledParts[0])%24).padStart(2,'0')+':'+scheduledParts[1]:'—';
+   return d.line+' · '+d.destination+' · '+regionalDetails.scheduled+' '+scheduled+' · '+regionalDetails.predicted+' '+regionalClock.format(new Date(d.predictedDeparture))+' · '+regionalDetails.delay;
+  }).join('\n')+'\n'+regionalDetails.source:'';
   const scheduledLabels={en:'Verified timetable departures (not real-time):',es:'Salidas verificadas del horario (no en tiempo real):',sv:'Verifierade tidtabellsavgångar (inte realtid):',hi:'सत्यापित समय-सारणी प्रस्थान (रीयल-टाइम नहीं):','zh-CN':'已核实的时刻表发车时间（非实时）：',ru:'Подтверждённые отправления по расписанию (не в реальном времени):',ar:'مواعيد المغادرة المؤكدة وفق الجدول (ليست بيانات فورية):',el:'Επαληθευμένες αναχωρήσεις βάσει προγράμματος (όχι σε πραγματικό χρόνο):',tr:'Doğrulanmış tarifeli kalkışlar (gerçek zamanlı değil):',fa:'حرکت‌های تأییدشده طبق برنامه (نه اطلاعات لحظه‌ای):',fr:'Départs vérifiés selon les horaires (pas en temps réel) :'};
   // A timetable-only response cannot establish whether a train is delayed.
   const delayUnknown={en:'Delay status cannot be determined without real-time data.',sv:'Det går inte att avgöra om tåget är försenat utan realtidsdata.',es:'No se puede determinar si hay retrasos sin datos en tiempo real.',fr:'Impossible de déterminer les retards sans données en temps réel.',hi:'रीयल-टाइम डेटा के बिना देरी की पुष्टि नहीं की जा सकती।','zh-CN':'没有实时数据，无法确定列车是否晚点。',ru:'Без данных в реальном времени нельзя определить задержку.',ar:'لا يمكن تحديد التأخير دون بيانات فورية.',el:'Δεν είναι δυνατό να διαπιστωθεί καθυστέρηση χωρίς δεδομένα πραγματικού χρόνου.',tr:'Gerçek zamanlı veri olmadan gecikme belirlenemez.',fa:'بدون دادهٔ لحظه‌ای نمی‌توان تأخیر را تعیین کرد.'};
