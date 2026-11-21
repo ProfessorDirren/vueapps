@@ -12,6 +12,6 @@ test('previous answers retain their original text and are marked on language cha
 test('response language is captured at submit and old turns are not restored automatically',()=>{
  assert.match(source,/const requestedLanguage=document\.documentElement\.lang/);
  assert.match(source,/language:requestedLanguage,previous:active\?\.domain/);
- assert.match(source,/reply\(question,data\.answer,data\.domain\|\|'CORE-VUE',data\.kind,true,requestedLanguage\)/);
+ assert.match(source,/reply\(question,data\.answer,data\.domain\|\|'CORE-VUE',data\.kind,true,requestedLanguage,\{askedAt,answeredAt:new Date\(\)\.toISOString\(\),updatedAt:data\.domain==='commutvue'\?data\.updated_at:null\}\)/);
  assert.doesNotMatch(source,/reply\(previous\.question/);
 });
