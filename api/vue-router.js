@@ -1,5 +1,6 @@
 import {interpretVueInput,vueCorrectionNotice} from '../core/vuecore-interpretation.js';
 import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
+import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -61,6 +62,21 @@ export async function POST(request){
   let scheduled=null;
   let liveAlerts=null;
   let liveDiagnostic='not_attempted';
+  // Shadow-only Trafikverket verification: never changes user-facing departures.
+  // Explicit opt-in prevents unverified upstream contracts from affecting production.
+  if(!journey.needsClarification&&journey.region==='stockholm'&&
+     process.env.COMMUTVUE_TRAFIKVERKET_SHADOW_ENABLED==='true'&&
+     process.env.TRAFIKVERKET_API_KEY&&
+     /pendeltåg|pendeltågen|pendeltågsavgång|commuter rail|commuter train/iu.test(question)){
+   try{
+    const probe=await createTrafikverketJourneyProbe({apiKey:process.env.TRAFIKVERKET_API_KEY})({from:journey.from,to:journey.to});
+    // Only bounded reason codes and counts; no key, station, trip or personal text.
+    const reason=typeof probe.reason==='string'&&/^[a-z_]{1,60}$/.test(probe.reason)?probe.reason:'unknown';
+    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Array.isArray(probe.departures)?Math.min(probe.departures.length,60):0}));
+   }catch{
+    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:'unavailable',reason:'unexpected_error',count:0}));
+   }
+  }
   if(!journey.needsClarification&&journey.region==='stockholm'){
    if(process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED!=='true'||!process.env.TRAFIKLAB_API_KEY){
     liveDiagnostic='not_configured';
