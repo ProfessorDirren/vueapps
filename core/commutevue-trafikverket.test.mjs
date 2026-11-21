@@ -27,3 +27,14 @@ test('COMMUTEVUE Trafikverket client escapes XML in station lookup',async()=>{
  await assert.rejects(client.station('A" & <B>'));
  assert.match(body,/A&quot; &amp; &lt;B&gt;/);
 });
+
+test('COMMUTEVUE rejects provider-level errors and omits unverified schema fields',async()=>{
+ let query='';
+ const errorClient=createTrafikverketClient({apiKey:'test',fetcher:async(_url,options)=>{
+  query=options.body;
+  return new Response(JSON.stringify({RESPONSE:{RESULT:[{ERROR:{MESSAGE:'invalid query'}}]}}),{status:200});
+ }});
+ await assert.rejects(errorClient.departuresAt('J'),e=>e instanceof TrafikverketError&&e.reason==='provider_error');
+ assert.doesNotMatch(query,/ScheduledDepartureDateTime/);
+ assert.match(query,/TrainAnnouncement/);
+});
