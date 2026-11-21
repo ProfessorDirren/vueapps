@@ -16,5 +16,5 @@ test('rejects oversized archive before body download',async()=>{
 });
 test('does not trust a non-ZIP response',async()=>{
  const download=createRegionalStaticGTFSDownloader({url,fetcher:async()=>({ok:true,headers:{get:()=>null},arrayBuffer:async()=>Uint8Array.from([1,2,3]).buffer})});
- await assert.rejects(download(),e=>e instanceof RegionalStaticDownloadError&&e.reason==='invalid_archive');
+ await assert.rejects(download(),e=>e instanceof RegionalStaticDownloadError&&e.reason==='non_zip_response');
 });
