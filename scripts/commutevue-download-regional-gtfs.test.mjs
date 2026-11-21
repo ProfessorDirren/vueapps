@@ -53,6 +53,8 @@ test('GTFS ZIP parser ignores fake end-of-directory signatures inside ZIP commen
  const base=archive();
  const fakeEnd=Buffer.alloc(22);
  fakeEnd.writeUInt32LE(0x06054b50);
+ // A fake marker must not itself be a valid EOCD candidate.
+ fakeEnd.writeUInt16LE(1,20);
  const withComment=Buffer.concat([base,fakeEnd]);
  withComment.writeUInt16LE(fakeEnd.length,base.length-2);
  assert.equal(inspectRegionalGTFSZip(withComment).name,'stop_times.txt');
