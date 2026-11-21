@@ -33,6 +33,9 @@ const actionIntents=Object.freeze([
  {domain:'foodvue',pattern:/\b(?:kyckling|chicken|pollo|poulet)\s+(?:i|in|en|dans)\s+(?:ugnen|the\s+oven|el\s+horno|le\s+four)\b|\b(?:tillaga|baka|grädda|cook|bake|roast|cocinar|hornear|cuire)\b/iu}
 ]);
 function conflictingActionIntents(question){
+ // Impossible combinations and two independently requested actions need clarification.
+ if(/\\b(?:buss|kycklingbuss)\\s+i\\s+ugnen\\b/iu.test(question))return ['commutvue','foodvue'];
+ if(/\\b(?:när\\s+avgår\\s+bussen|när\\s+går\\s+bussen)\\b/iu.test(question)&&/\\b(?:grädda|tillaga|baka|laga)\\b/iu.test(question))return ['commutvue','foodvue'];
  const found=actionIntents.filter(({pattern})=>pattern.test(question)).map(({domain})=>domain);
  return found.length>1?found:[];
 }
