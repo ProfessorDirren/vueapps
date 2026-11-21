@@ -25,7 +25,8 @@
       "maxDuration": 10
     },
     "api/vue-router.js": {
-      "maxDuration": 90
+      "maxDuration": 90,
+      "includeFiles": "core/commutevue-regional-signed-snapshot.gz"
     },
     "api/core-api.js": {
       "maxDuration": 120
