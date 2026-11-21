@@ -22,11 +22,11 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
  }
  const matched=[];
  for(const o of origin){
-  const advertised=timestamp(o?.AdvertisedTimeAtLocation),estimated=timestamp(o?.EstimatedTimeAtLocation),train=id(o?.AdvertisedTrainIdent);
+  const advertised=timestamp(o?.AdvertisedTimeAtLocation),estimated=timestamp(o?.EstimatedTimeAtLocation),actual=timestamp(o?.TimeAtLocation),modified=timestamp(o?.ModifiedTime),train=id(o?.AdvertisedTrainIdent);
   if(o?.LocationSignature!==originSignature||o?.ActivityType!=='Avgang'||o?.Canceled===true||!validTrain(train)||!Number.isFinite(advertised)||advertised<now-120000||advertised>now+7200000)continue;
   const later=(destinationByTrain.get(train+'|'+serviceDate(o))||[]).filter(t=>t>advertised&&t-advertised<=10800000);
   if(later.length!==1)continue;
-  matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0]).toISOString(),hasEstimatedTime:Number.isFinite(estimated)});
+  matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0]).toISOString(),hasEstimatedTime:Number.isFinite(estimated),hasActualTime:Number.isFinite(actual),hasModifiedTime:Number.isFinite(modified)});
  }
  return matched;
 }
