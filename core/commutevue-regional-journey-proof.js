@@ -31,7 +31,8 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   // An event timestamp is a prediction, not a feed freshness timestamp.
   // Do not claim live status until a verified feed header timestamp is supplied.
 
-  const scheduledStop=stops[originIndex],meta=tripMetadata instanceof Map?tripMetadata.get(trip.tripId)||{}:{};\n  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
+  const scheduledStop=stops[originIndex],meta=tripMetadata instanceof Map?tripMetadata.get(trip.tripId)||{}:{};
+  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
  }
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',departures};
 }
