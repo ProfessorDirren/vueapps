@@ -1,13 +1,14 @@
 import {readFile} from 'node:fs/promises';
 import {findRegionalDirectJourneys} from '../core/commutevue-regional-static-gtfs.js';
-import {inspectRegionalGTFSZip,parseRegionalGTFSZip,parseRegionalGTFSStopsZip} from '../core/commutevue-regional-gtfs-zip.js';
+import {inspectRegionalGTFSZip,parseRegionalGTFSZip,parseRegionalGTFSStopsZip,parseRegionalGTFSServiceMetadataZip} from '../core/commutevue-regional-gtfs-zip.js';
+import {filterRegionalActiveRailTrips,parseRegionalServiceMetadata} from '../core/commutevue-regional-static-gtfs.js';
 const path=process.argv[2];
 if(!path)throw new Error('GTFS archive path required');
 const archive=await readFile(path);
 const metadata=inspectRegionalGTFSZip(archive);
 const trips=parseRegionalGTFSZip(archive,{includeTimes:true});
 const matchingStops=parseRegionalGTFSStopsZip(archive);
-const directJourneys=findRegionalDirectJourneys(trips,matchingStops);
+const rawDirectJourneys=findRegionalDirectJourneys(trips,matchingStops);\nconst serviceDate=process.env.GTFS_SERVICE_DATE||new Date().toISOString().slice(0,10).replaceAll('-','');\nconst serviceMetadata=parseRegionalServiceMetadata(parseRegionalGTFSServiceMetadataZip(archive));\nconst activeRail=filterRegionalActiveRailTrips(trips,serviceMetadata,serviceDate);\nconst directJourneys=findRegionalDirectJourneys(activeRail.trips,matchingStops);
 const stopIds=new Set();
 for(const sequence of trips.values())for(const item of sequence)stopIds.add(typeof item==='string'?item:item.stop);
-console.info(JSON.stringify({archiveBytes:metadata.archiveBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,tripCount:trips.size,uniqueStopIdCount:stopIds.size,matchingStops,directJourneys}));
+console.info(JSON.stringify({archiveBytes:metadata.archiveBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,tripCount:trips.size,uniqueStopIdCount:stopIds.size,matchingStops,rawDirectJourneys,serviceFilter:{serviceDate,railTripCount:activeRail.railTripCount,inactiveTripCount:activeRail.inactiveTripCount,nonRailTripCount:activeRail.nonRailTripCount,missingMetadataTripCount:activeRail.missingMetadataTripCount},directJourneys}));
