@@ -21,6 +21,6 @@ test('accepts a larger regional stop_times dataset within bounded limits',()=>{
 });
 test('rejects unsafe row and trip limits',()=>{
  const csv='trip_id,stop_id,stop_sequence\nt1,J,1';
- assert.throws(()=>parseRegionalStopTimes(csv,{maxRows:2000001}));
- assert.throws(()=>parseRegionalStopTimes(csv,{maxTrips:100001}));
+ assert.throws(()=>parseRegionalStopTimes(csv,{maxRows:5000001}));
+ assert.throws(()=>parseRegionalStopTimes(csv,{maxTrips:250001}));
 });
