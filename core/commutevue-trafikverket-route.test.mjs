@@ -74,3 +74,12 @@ test('Two distinct destination arrival times remain ambiguous, never guessed',()
  const second={...dest,AdvertisedTimeAtLocation:'2026-11-21T10:35:00+01:00'};
  assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[dest,second]}),[]);
 });
+
+test('Conflicting duplicate forecasts are not published as verified Swedish train times',()=>{
+ const conflicting={...origin,EstimatedTimeAtLocation:'2026-11-21T10:08:00+01:00'};
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[origin,conflicting],destination:[dest]}),[]);
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[conflicting,origin],destination:[dest]}),[]);
+});
+test('Repeated identical forecasts still yield exactly one verified departure',()=>{
+ assert.equal(matchTrafikverketTrainRoute({...args,origin:[origin,{...origin}],destination:[dest]}).length,1);
+});
