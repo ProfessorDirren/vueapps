@@ -1,4 +1,5 @@
 import {readFile} from 'node:fs/promises';
+import {findRegionalDirectJourneys} from '../core/commutevue-regional-static-gtfs.js';
 import {inspectRegionalGTFSZip,parseRegionalGTFSZip,parseRegionalGTFSStopsZip} from '../core/commutevue-regional-gtfs-zip.js';
 const path=process.argv[2];
 if(!path)throw new Error('GTFS archive path required');
@@ -6,6 +7,6 @@ const archive=await readFile(path);
 const metadata=inspectRegionalGTFSZip(archive);
 const trips=parseRegionalGTFSZip(archive);
 const matchingStops=parseRegionalGTFSStopsZip(archive);
-const stopIds=new Set();
+const directJourneys=findRegionalDirectJourneys(trips,matchingStops);\nconst stopIds=new Set();
 for(const sequence of trips.values())for(const stopId of sequence)stopIds.add(stopId);
-console.info(JSON.stringify({archiveBytes:metadata.archiveBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,tripCount:trips.size,uniqueStopIdCount:stopIds.size,matchingStops}));
+console.info(JSON.stringify({archiveBytes:metadata.archiveBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,tripCount:trips.size,uniqueStopIdCount:stopIds.size,matchingStops,directJourneys}));

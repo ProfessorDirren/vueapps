@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalStopTimes,parseRegionalStopNames} from './commutevue-regional-static-gtfs.js';
+import {parseRegionalStopTimes,parseRegionalStopNames,findRegionalDirectJourneys} from './commutevue-regional-static-gtfs.js';
 test('builds stop sequence sorted by GTFS stop_sequence',()=>{
  const map=parseRegionalStopTimes('trip_id,stop_id,stop_sequence\nt1,StockholmCity,3\nt1,Jordbro,1\nt1,Handen,2\n');
  assert.deepEqual(map.get('t1'),['Jordbro','Handen','StockholmCity']);
@@ -31,4 +31,20 @@ test('matches Jordbro and Stockholm City stops and returns GTFS IDs',()=>{
   {stopId:'100',stopName:'Jordbro',parentStation:'',locationType:'1'},
   {stopId:'200',stopName:'Stockholm City',parentStation:'',locationType:'1'}
  ]);
+});
+
+
+test('matches direct ordered Jordbro to Stockholm City trips via platform IDs',()=>{
+ const stops=[
+  {stopId:'J',stopName:'Jordbro',locationType:'1',parentStation:''},
+  {stopId:'J1',stopName:'Jordbro',locationType:'0',parentStation:'J'},
+  {stopId:'C',stopName:'Stockholm City',locationType:'1',parentStation:''},
+  {stopId:'C1',stopName:'Stockholm City',locationType:'0',parentStation:'C'},
+  {stopId:'S',stopName:'Södra Jordbrovägen',locationType:'1',parentStation:''}
+ ];
+ const trips=new Map([['direct',['J1','H','C1']],['reverse',['C1','H','J1']],['bus',['J1','H']]]);
+ assert.deepEqual(findRegionalDirectJourneys(trips,stops),{
+  originName:'Jordbro',destinationName:'Stockholm City',originStopIdCount:2,destinationStopIdCount:2,
+  matchingTripCount:1,examples:[{tripId:'direct',originStopId:'J1',destinationStopId:'C1',originSequence:1,destinationSequence:3}]
+ });
 });
