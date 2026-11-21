@@ -13,7 +13,7 @@ const serviceDate=entry=>{
  // UTC conversion can shift late-night Swedish trains to the previous day.
  if(!Number.isFinite(time))return null;
  const raw=entry.AdvertisedTimeAtLocation;
- return /^\\d{4}-\\d{2}-\\d{2}T/.test(raw)?raw.slice(0,10):new Date(time).toISOString().slice(0,10);
+ return /^\d{4}-\d{2}-\d{2}T/.test(raw)?raw.slice(0,10):new Date(time).toISOString().slice(0,10);
 };
 export function matchTrafikverketTrainRoute({origin,destination,originSignature,destinationSignature,now=Date.now()}={}){
  if(!Array.isArray(origin)||!Array.isArray(destination)||!validStation(originSignature)||!validStation(destinationSignature)||originSignature===destinationSignature||!Number.isFinite(now))return [];
