@@ -83,7 +83,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    if(/nynäshamn|västerhaninge|krigslida|tungelsta/.test(hint))return 2;
    return 1;
   };
-  const candidates=[...board.departures].sort((a,b)=>{
+  // Trips lookup budget is for commuter rail only. Trafiklab route.transport_mode
+  // is the documented mode label; direction text and route names are not reliable
+  // substitutes. Unknown modes fail closed instead of spending calls on buses.
+  const candidates=board.departures.filter(row=>String(row?.route?.transport_mode||'').toUpperCase()==='TRAIN').sort((a,b)=>{
    // For a trip toward Stockholm City, avoid exhausting the bounded Trips budget
    // on realtime departures explicitly marked southbound while scheduled
    // northbound candidates remain unchecked. Direction is never proof of arrival.
