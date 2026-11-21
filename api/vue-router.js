@@ -34,7 +34,18 @@ export async function POST(request){
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return respond(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  if(route.domain==='commutvue'){
-  const journey=parseCommuteQuestion(question);
+  let journey=parseCommuteQuestion(question);
+  // A destination-only reply may complete the immediately preceding journey question.
+  // Never infer a route from unrelated history or from an unrecognized station.
+  if(!journey.from&&!journey.to&&Array.isArray(b.history)&&b.history.length){
+   const last=b.history[b.history.length-1];
+   const previous=typeof last?.question==='string'?parseCommuteQuestion(last.question):null;
+   const destination=question.trim();
+   const knownDestinations=['Stockholm City','T-Centralen','Jordbro','Handen','Södertälje','Märsta','Uppsala'];
+   if(previous?.from&&!previous.to&&previous.region==='stockholm'&&knownDestinations.some(x=>x.toLowerCase()===destination.toLowerCase())&&typeof last.answer==='string'&&/vilken station vill du resa till|which station are you traveling to/i.test(last.answer)){
+    journey=parseCommuteQuestion('från '+previous.from+' till '+destination);
+   }
+  }
   if(journey.stationSuggestions?.length){
    const prompt={sv:'Menade du',en:'Did you mean',es:'¿Quisiste decir',fr:'Vouliez-vous dire',hi:'क्या आपका मतलब था', 'zh-CN':'你是指',ru:'Вы имели в виду',ar:'هل تقصد',el:'Εννοούσατε',tr:'Şunu mu demek istediniz',fa:'منظورتان این بود'};
    const suggestions=journey.stationSuggestions.map(x=>({role:x.role,original:x.original,suggested:x.suggested,requiresConfirmation:true}));

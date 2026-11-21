@@ -392,3 +392,13 @@ test('COMMUTVUE recognizes Jordbro as origin and asks only for destination',asyn
  assert.doesNotMatch(data.answer,/Ange avreseort/);
  assert.equal(data.verified,false);
 });
+
+test('COMMUTVUE destination-only follow-up retains Jordbro without inventing live departures',async()=>{
+ const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Stockholm City',previous:'commutvue',language:'sv',history:[{question:'när går tågen från Jordbro?',answer:'Vilken station vill du resa till från Jordbro?'}]})});
+ const response=await POST(request),data=await response.json();
+ assert.equal(data.domain,'commutvue');
+ assert.equal(data.region,'stockholm');
+ assert.notEqual(data.evidence_status,'needs_stations');
+ assert.equal(data.clarify,false);
+ assert.equal(data.verified,false);
+});
