@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalGTFSZip,inspectRegionalGTFSZip} from './commutevue-regional-gtfs-zip.js';
+import {parseRegionalGTFSZip,inspectRegionalGTFSZip,parseRegionalGTFSStopsZip} from './commutevue-regional-gtfs-zip.js';
 function storedZip(name,text){
  const filename=Buffer.from(name),data=Buffer.from(text);
  const local=Buffer.alloc(30);local.writeUInt32LE(0x04034b50,0);local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);local.writeUInt16LE(filename.length,26);
@@ -39,4 +39,12 @@ test('preflight reports oversized uncompressed entry but extraction refuses it',
  const metadata=inspectRegionalGTFSZip(zip);
  assert.equal(metadata.uncompressedBytes,257*1024*1024);
  assert.throws(()=>parseRegionalGTFSZip(zip),/safe decompression limit/);
+});
+
+test('extracts only matching station names from regional stops.txt',()=>{
+ const zip=storedZip('stops.txt','stop_id,stop_name\\n100,Jordbro\\n200,Stockholm City\\n300,Handen\\n');
+ assert.deepEqual(parseRegionalGTFSStopsZip(zip),[
+  {stopId:'100',stopName:'Jordbro',parentStation:'',locationType:''},
+  {stopId:'200',stopName:'Stockholm City',parentStation:'',locationType:''}
+ ]);
 });
