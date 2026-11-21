@@ -31,3 +31,12 @@ test('preflight reports compressed and uncompressed stop_times sizes',()=>{
  assert.equal(metadata.compressedBytes,metadata.uncompressedBytes);
  assert.equal(metadata.name,'stop_times.txt');
 });
+
+test('preflight reports oversized uncompressed entry but extraction refuses it',()=>{
+ const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\\nt1,Jordbro,1\\n');
+ const central=zip.indexOf(Buffer.from([0x50,0x4b,0x01,0x02]));
+ zip.writeUInt32LE(61*1024*1024,central+24);
+ const metadata=inspectRegionalGTFSZip(zip);
+ assert.equal(metadata.uncompressedBytes,61*1024*1024);
+ assert.throws(()=>parseRegionalGTFSZip(zip),/safe decompression limit/);
+});
