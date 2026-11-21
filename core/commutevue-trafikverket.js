@@ -20,7 +20,7 @@ export function createTrafikverketClient({apiKey,fetcher=fetch}={}){
   let json;try{json=JSON.parse(raw);}catch{throw new TrafikverketError('invalid_json');}
   if(!Array.isArray(json?.RESPONSE?.RESULT))throw new TrafikverketError('invalid_response');
   const result=json.RESPONSE.RESULT[0]||{};
-  if(result.ERROR||json.RESPONSE.ERROR)throw new TrafikverketError('provider_error');
+  if(result.ERROR||json.RESPONSE.ERROR||json.ERROR)throw new TrafikverketError('provider_error');
   return Array.isArray(result[objecttype])?result[objecttype]:[];
  }
  async function station(name){
@@ -32,7 +32,7 @@ export function createTrafikverketClient({apiKey,fetcher=fetch}={}){
  }
  async function departuresAt(signature){
   if(!/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(signature))throw new TrafikverketError('invalid_signature');
-  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="Avgang"/><GT name="AdvertisedTimeAtLocation" value="$dateadd(-00:02:00)"/><LT name="AdvertisedTimeAtLocation" value="$dateadd(02:00:00)"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','TimeAtLocation','LocationSignature','ScheduledDepartureDateTime','Canceled','ToLocation','ViaToLocation','ModifiedTime'],60);
+  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="Avgang"/><GT name="AdvertisedTimeAtLocation" value="$dateadd(-00:02:00)"/><LT name="AdvertisedTimeAtLocation" value="$dateadd(02:00:00)"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','TimeAtLocation','LocationSignature','Canceled','ToLocation' ,'ViaToLocation','ModifiedTime'],60);
  }
  return {station,departuresAt};
 }
