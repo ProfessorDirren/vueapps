@@ -23,3 +23,17 @@ test('COMMUTEVUE does not treat a timetable-only announcement as estimated realt
  assert.equal(matched[0].hasEstimatedTime,false);
  assert.equal(matched[0].estimatedTime,null);
 });
+
+test('COMMUTEVUE distinguishes actual and modified timestamps from estimated departures',()=>{
+ const matched=matchTrafikverketTrainRoute({...args,origin:[{...origin,EstimatedTimeAtLocation:undefined,TimeAtLocation:'2026-11-21T10:02:00+01:00',ModifiedTime:'2026-11-21T09:58:00+01:00'}]});
+ assert.equal(matched.length,1);
+ assert.equal(matched[0].hasEstimatedTime,false);
+ assert.equal(matched[0].hasActualTime,true);
+ assert.equal(matched[0].hasModifiedTime,true);
+ assert.equal(matched[0].estimatedTime,null);
+});
+test('COMMUTEVUE does not count invalid time evidence',()=>{
+ const matched=matchTrafikverketTrainRoute({...args,origin:[{...origin,EstimatedTimeAtLocation:null,TimeAtLocation:'invalid',ModifiedTime:''}]});
+ assert.equal(matched[0].hasActualTime,false);
+ assert.equal(matched[0].hasModifiedTime,false);
+});
