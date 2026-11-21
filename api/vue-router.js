@@ -55,7 +55,7 @@ export async function POST(request){
     liveDiagnostic='not_configured';
    }else{
     try{
-     const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to});
+     const raw=await createTrafiklabSwedenLive({apiKey:process.env.TRAFIKLAB_API_KEY})({provider:'stockholm',from:journey.from,to:journey.to,transportMode:/pendeltåg|pendeltågen|pendeltågsavgång|commuter rail|commuter train/iu.test(question)?'TRAIN':undefined});
      live=raw.status==='ok'?normalizeTrafficResult(raw):{status:'unavailable',departures:[]};
      if(raw.status==='scheduled')scheduled=raw;
      // Operational evidence only: fixed reason code, never station names, trip IDs, query text or API credentials.
