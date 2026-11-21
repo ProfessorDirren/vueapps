@@ -4,7 +4,7 @@
  */
 import {inflateRawSync} from 'node:zlib';
 import {parseRegionalStopTimes} from './commutevue-regional-static-gtfs.js';
-const MAX_ARCHIVE=80*1024*1024,MAX_UNCOMPRESSED=60*1024*1024;
+const MAX_ARCHIVE=80*1024*1024,MAX_UNCOMPRESSED=256*1024*1024;
 export function inspectRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
  if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<22||maxArchiveBytes>80*1024*1024)throw new Error('Invalid GTFS archive limit');
  const bytes=input instanceof Uint8Array?input:null;
