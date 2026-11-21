@@ -16,7 +16,8 @@ test('regional snapshot keeps only trips active on the service date',()=>{
  const result=buildRegionalServiceSnapshot({tripStops:trips,serviceMetadata,serviceDate:date,validatedAtMs:now,archiveVerified:true});
  assert.equal(result.status,'validated');
  assert.deepEqual([...result.tripStops.keys()],['active']);
- assert.equal(result.activeTripCount,1);\n assert.deepEqual(result.tripMetadata.get('active'),{routeShortName:'43',routeLongName:'Pendeltåg',tripHeadsign:null,tripShortName:null});
+ assert.equal(result.activeTripCount,1);
+ assert.deepEqual(result.tripMetadata.get('active'),{routeShortName:'43',routeLongName:'Pendeltåg',tripHeadsign:null,tripShortName:null});
 });
 
 test('regional snapshot fails closed for unverified archive, bad date and no active trips',()=>{
