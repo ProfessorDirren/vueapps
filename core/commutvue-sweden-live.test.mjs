@@ -20,6 +20,27 @@ test('all documented Trafiklab transport modes are retained and unknown modes ar
  assert.deepEqual(seen,modes.map((_,i)=>'mode'+i));assert.equal(result.status,'ok');
 });
 
+test('an explicit commuter-rail request never validates bus departures from a mixed-mode station',async()=>{
+ const rows=[
+  {...departure,trip:{trip_id:'bus1',start_date:'2026-11-10'},route:{...departure.route,transport_mode:'BUS',transport_mode_code:700}},
+  {...departure,trip:{trip_id:'train1',start_date:'2026-11-10'},route:{...departure.route,transport_mode:'TRAIN',transport_mode_code:106}}
+ ];
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['bus-platform','rail-platform']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{
+   const tripId=url.match(/\\/trips\\/([^/]+)\\//)?.[1];
+   if(tripId)seen.push(tripId);
+   return {ok:true,text:async()=>JSON.stringify(tripId?{...details,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:rows})};
+  }
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City',transportMode:'TRAIN'});
+ assert.equal(result.status,'ok');
+ assert.deepEqual(seen,['train1']);
+ const noTrain=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City',transportMode:'TRAIN'});
+ assert.equal(noTrain.status,'ok');
+});
+ 
 test('verified Swedish realtime delay requires origin-before-destination trip calls',async()=>{
  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make()});
  assert.equal(result.status,'ok');assert.equal(result.departures[0].delayMinutes,7);
