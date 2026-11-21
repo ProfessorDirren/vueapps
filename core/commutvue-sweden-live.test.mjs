@@ -33,7 +33,7 @@ test('an explicit commuter-rail request never validates bus departures from a mi
  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
   resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['bus-platform','rail-platform']}:{id:'740000002',stopIds:['stop2']},
   fetcher:async url=>{
-   const tripId=url.match(/\\/trips\\/([^/]+)\\//)?.[1];
+   const tripId=url.match(/\/trips\/([^/]+)\//)?.[1];
    if(tripId)seen.push(tripId);
    return {ok:true,text:async()=>JSON.stringify(tripId?{...trainDetails,trip:{trip_id:tripId,start_date:'2026-11-10'}}:{...board,departures:rows})};
   }
