@@ -990,3 +990,20 @@ test('each Swedish transport mode validates only its own verified departures',as
   assert.equal(wrongOnly.status,'unavailable',mode);
  }
 });
+
+test('OFFLINE REGRESSION: destination evidence is verified from stop order, never the route label',async()=>{
+ const cases=[
+  {name:'direction label alone is not a destination',calls:[details.calls[0],{stop:{id:'other-stop',area_id:'740000003',name:'Other stop'},is_realtime:true}],ok:false},
+  {name:'destination before origin is not a valid journey',calls:[details.calls[1],details.calls[0]],ok:false},
+  {name:'matching destination area with wrong stop name is not enough',calls:[details.calls[0],{stop:{id:'other-platform',area_id:'740000002',name:'Other stop'},is_realtime:true}],ok:false},
+  {name:'matching destination area and exact station name supports alternate platform',calls:[details.calls[0],{stop:{id:'other-platform',area_id:'740000002',name:'Stockholm City'},is_realtime:true}],ok:true},
+  {name:'exact destination child stop supports journey',calls:details.calls,ok:true}
+ ];
+ for(const c of cases){
+  const adapter=make(board,{...details,calls:c.calls});
+  const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter});
+  assert.equal(result.status,c.ok?'ok':'unavailable',c.name);
+  if(c.ok)assert.equal(result.departures[0].delayMinutes,7,c.name);
+  else assert.equal(result.departures?.length??0,0,c.name);
+ }
+});
