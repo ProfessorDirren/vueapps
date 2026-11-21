@@ -38,3 +38,16 @@ test('COMMUTEVUE rejects provider-level errors and omits unverified schema field
  assert.doesNotMatch(query,/ScheduledDepartureDateTime/);
  assert.match(query,/TrainAnnouncement/);
 });
+
+test('COMMUTEVUE independently requests arrival announcements for destination',async()=>{
+ const bodies=[];
+ const client=createTrafikverketClient({apiKey:'test',fetcher:async(_url,options)=>{
+  bodies.push(options.body);
+  return result('TrainAnnouncement',[]);
+ }});
+ await client.departuresAt('J');
+ await client.arrivalsAt('Sci');
+ assert.match(bodies[0],/ActivityType" value="Avgang"/);
+ assert.match(bodies[1],/ActivityType" value="Ankomst"/);
+ assert.match(bodies[1],/LocationSignature" value="Sci"/);
+});
