@@ -85,7 +85,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    for(const mode of stop.transport_modes){const key=String(mode).toUpperCase();boardStopModeCounts[key]=(boardStopModeCounts[key]||0)+1;}
   }
   const boardStopModesById=new Map((Array.isArray(board.stops)?board.stops:[]).filter(stop=>typeof stop?.id==='string').map(stop=>[stop.id,Array.isArray(stop.transport_modes)?stop.transport_modes.map(mode=>String(mode).toUpperCase()):[]]));
-  const departureRowsByStopMode={},departureRowsWithoutBoardStop=0;
+  const departureRowsByStopMode={};let departureRowsWithoutBoardStop=0;
   for(const row of board.departures){
    if(!originStopIds.has(row?.stop?.id))continue;
    const modes=boardStopModesById.get(row.stop.id);
