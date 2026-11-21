@@ -21,7 +21,9 @@ export function createRegionalStaticGTFSDownloader({url,fetcher=fetch}={}){
   if(Number.isFinite(length)&&length>MAX_BYTES)throw new RegionalStaticDownloadError('oversized_archive');
   let bytes;
   try{bytes=new Uint8Array(await response.arrayBuffer());}catch{throw new RegionalStaticDownloadError('invalid_body');}
-  if(!bytes.length||bytes.length>MAX_BYTES)throw new RegionalStaticDownloadError('invalid_size');
+  if(!bytes.length)throw new RegionalStaticDownloadError('empty_archive');
+  if(bytes.length>MAX_BYTES)throw new RegionalStaticDownloadError('oversized_archive');
+  if(bytes.length<4||bytes[0]!==0x50||bytes[1]!==0x4b||![0x03,0x05,0x07].includes(bytes[2])||![0x04,0x06,0x08].includes(bytes[3]))throw new RegionalStaticDownloadError('non_zip_response');
   try{return {status:'static_trip_stops_unverified',tripStops:parseRegionalGTFSZip(bytes)};}
   catch{throw new RegionalStaticDownloadError('invalid_archive');}
  };
