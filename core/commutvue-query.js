@@ -32,7 +32,7 @@ export function parseCommuteQuestion(question){
  const match=PATTERNS.map(re=>re.exec(text)).find(Boolean);
  const singleOrigin=!match?/(?:\bfrån|\bfrom)\s+([\p{L}\p{N} -]+?)(?=[?.!,]|$)/iu.exec(text):null;
  const rawFrom=match?clean(match[1]):singleOrigin?clean(singleOrigin[1]):null,rawTo=match?clean(match[2]):null;
- const origin=rawFrom?interpretVueInput(rawFrom):null,destination=rawTo?interpretVueInput(rawTo.replace(/\\s+(?:visa|show|mostrar|afficher)\\s+(?:linjenummer|line|planned|planerad|realtid|real[- ]?time).*$/iu,'').trim()):null;
+ const origin=rawFrom?interpretVueInput(rawFrom):null,destination=rawTo?interpretVueInput(rawTo.replace(/\s+(?:visa|show|mostrar|afficher)\s+(?:linjenummer|line|planned|planerad|realtid|real[- ]?time).*$/iu,'').trim()):null;
  const from=origin?.question||null,to=destination?.question||null;
  // Region must be grounded in an endpoint, not incidental context in the question.
  const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
