@@ -2,7 +2,7 @@ import {interpretVueInput,suggestVueTerms} from './vuecore-interpretation.js';
 import {COMMUT_EXPANSION_REGIONS} from './commutvue-regions.js';
 /** Deterministic extraction; never guess a station, route or region. */
 export const COMMUT_REGION_HINTS=Object.freeze({
- stockholm:/(?:^|[^\p{L}\p{N}])(?:stockholm|jordbro|handen|haninge|södertälje|uppsala|märsta|solna|sundbyberg|t-centralen|stockholm city|sl pendeltåg)(?=$|[^\p{L}\p{N}])/iu,
+ stockholm:/(?:^|[^\p{L}\p{N}])(?:stockholm|jordbro|handen|haninge|tyresö|gullmarsplan|södertälje|uppsala|märsta|solna|sundbyberg|t-centralen|stockholm city|sl pendeltåg)(?=$|[^\p{L}\p{N}])/iu,
  santiago:/(?:^|[^\p{L}\p{N}])(?:chile|santiago(?: de chile)?|providencia|maipú|maipu|puente alto|las condes|estación central|estacion central|plaza de armas|baquedano|tobalaba|pajaritos|los héroes|los heroes|metro de santiago|red movilidad)(?=$|[^\p{L}\p{N}])/iu,
  paris:/(?:^|[^\p{L}\p{N}])(?:paris|châtelet|chatelet|gare du nord|saint-lazare|la défense|la defense|rer\s*[a-e]|transilien)(?=$|[^\p{L}\p{N}])/iu
 });
@@ -32,7 +32,7 @@ export function parseCommuteQuestion(question){
  const match=PATTERNS.map(re=>re.exec(text)).find(Boolean);
  const singleOrigin=!match?/(?:\bfrån|\bfrom)\s+([\p{L}\p{N} -]+?)(?=[?.!,]|$)/iu.exec(text):null;
  const rawFrom=match?clean(match[1]):singleOrigin?clean(singleOrigin[1]):null,rawTo=match?clean(match[2]):null;
- const origin=rawFrom?interpretVueInput(rawFrom):null,destination=rawTo?interpretVueInput(rawTo):null;
+ const origin=rawFrom?interpretVueInput(rawFrom):null,destination=rawTo?interpretVueInput(rawTo.replace(/\\s+(?:visa|show|mostrar|afficher)\\s+(?:linjenummer|line|planned|planerad|realtid|real[- ]?time).*$/iu,'').trim()):null;
  const from=origin?.question||null,to=destination?.question||null;
  // Region must be grounded in an endpoint, not incidental context in the question.
  const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
