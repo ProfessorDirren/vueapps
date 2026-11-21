@@ -1,5 +1,6 @@
 import {verifySignedRegionalSnapshot} from './commutevue-regional-snapshot-auth.js';
 import {gunzipSync} from 'node:zlib';
+import {readFileSync,statSync} from 'node:fs';
 
 /**
  * Server-only runtime loader for a pre-provisioned signed snapshot.
@@ -24,4 +25,26 @@ export function loadRegionalSnapshotFromEnvironment({
   const envelope=raw[0]===0x1f&&raw[1]===0x8b?gunzipSync(raw,{maxOutputLength:4*1024*1024+512}).toString('utf8'):raw.toString('utf8');
   return verifySignedRegionalSnapshot(envelope,{key:signingKey,expectedServiceDate,now});
  }catch{return unavailable('invalid_artifact_encoding');}
+}
+
+
+/**
+ * Server-only alternative to large environment variables.
+ * Read a bounded signed envelope from a deployment-local file.
+ * The signing key remains exclusively in the environment; never in the file.
+ * Caller supplies a trusted, deployment-controlled absolute path, not user input.
+ */
+export function loadRegionalSnapshotFromFile({
+ filePath,signingKey,expectedServiceDate,now=Date.now()
+}={}){
+ const unavailable=reason=>({status:'unavailable',reason});
+ if(typeof filePath!=='string'||!filePath.startsWith('/')||filePath.length>1024)return unavailable('missing_snapshot_file');
+ try{
+  const stat=statSync(filePath);
+  if(!stat.isFile()||stat.size<1||stat.size>MAX_ENVELOPE_BYTES)return unavailable('missing_or_oversized_artifact');
+  const raw=readFileSync(filePath);
+  if(raw.length>MAX_ENVELOPE_BYTES)return unavailable('missing_or_oversized_artifact');
+  const envelope=raw[0]===0x1f&&raw[1]===0x8b?gunzipSync(raw,{maxOutputLength:4*1024*1024+512}).toString('utf8'):raw.toString('utf8');
+  return verifySignedRegionalSnapshot(envelope,{key:signingKey,expectedServiceDate,now});
+ }catch{return unavailable('invalid_or_missing_snapshot_file');}
 }
