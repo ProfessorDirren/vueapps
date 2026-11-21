@@ -26,3 +26,10 @@ test('rejects duplicate trip updates and ambiguous repeated origin stop updates'
  assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,trips:[trip,{...trip}]}}).status,'unavailable');
  assert.equal(verifyRegionalJourney({...input,evidence:{...input.evidence,trips:[{...trip,stops:[...trip.stops,...trip.stops]}]}}).status,'unavailable');
 });
+
+test('rejects old and distant realtime departures even when feed timestamp is fresh',()=>{
+ const withTime=unixTime=>({...input,evidence:{...input.evidence,trips:[{tripId:'trip-1',stops:[{stopId:'J',departure:{unixTime}}]}]}});
+ assert.equal(verifyRegionalJourney(withTime(Math.floor((now-180000)/1000))).status,'unavailable');
+ assert.equal(verifyRegionalJourney(withTime(Math.floor((now+10800000)/1000))).status,'unavailable');
+ assert.equal(verifyRegionalJourney(withTime(Math.floor((now+300000)/1000))).status,'route_matched');
+});
