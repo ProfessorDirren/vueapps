@@ -67,6 +67,18 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
+  // Diagnose the actual departure board before candidate validation: aggregate
+  // service modes only for rows belonging to the resolved origin platforms.
+  const boardModeCounts={},boardCodeCounts={};let boardOriginRows=0,boardRowsMissingMode=0;
+  for(const row of board.departures){
+   if(!originStopIds.has(row?.stop?.id))continue;
+   boardOriginRows++;
+   const mode=String(row?.route?.transport_mode||'').toUpperCase();
+   if(mode)boardModeCounts[mode]=(boardModeCounts[mode]||0)+1;else boardRowsMissingMode++;
+   const code=String(row?.route?.transport_mode_code??'');
+   if(code)boardCodeCounts[code]=(boardCodeCounts[code]||0)+1;
+  }
+  console.info('commutvue_origin_board_modes',JSON.stringify({board_rows:Array.isArray(board.departures)?board.departures.length:0,origin_rows:boardOriginRows,origin_mode_counts:boardModeCounts,origin_mode_code_counts:boardCodeCounts,origin_rows_missing_mode:boardRowsMissingMode,origin_platform_count:originStops.length}));
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let destinationAreaSeen=0;let destinationNamedStopSeen=0;let cityNamedStopSeen=0;let originPresentWithoutDestination=0;let tripsWithEmptyCalls=0;let tripsWithMultipleCalls=0;let destinationNameInDirection=0;let cityNameInDirection=0;let verifiedDestinationCalls=0;let destinationBeforeOrigin=0;let tripOriginMissing=0;let invalidTripEvidence=0;let checkedRealtimeTrips=0;let checkedScheduledTrips=0;let realtimeTripsWithLaterCalls=0;let realtimeTripsWithoutLaterCalls=0;let realtimeTripsWithStopAreas=0;let realtimeTripsWithoutStopAreas=0;let realtimeTripsWithNorthboundHint=0;let realtimeTripsWithSouthboundHint=0;let realtimeTripsWithOtherDirectionHint=0;let northboundTerminalLooksRailEnd=0;let northboundTerminalLooksUnrelated=0;let northboundTerminalLooksMetro=0;let northboundTerminalHasName=0;let northboundTerminalHasArea=0;let northboundTerminalHasId=0;let northboundTerminalIsStockholmRail=0;let northboundTerminalCallsCountGtTen=0;let northboundTripsWithTerminalNorth=0;let northboundTripsWithTerminalSouth=0;let northboundTripsWithTerminalUnknown=0;let northboundTripsWithShortLaterSequence=0;let northboundTripsWithNorthOfJordbro=0;let northboundTripsWithSouthOfJordbro=0;let northboundTripsWithUnrecognizedStops=0;let northboundTripsWithStockholmArea=0;let northboundTripsWithCityChild=0;let northboundTripsWithLaterCalls=0;let northboundTripsWithNamedStockholm=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;const routeModeCounts={};const northboundHintModeCounts={};let tripsWithRouteDestination=0;let routeDestinationIdMatches=0;let routeDestinationNameMatches=0;let routeDestinationMetaAreaMatches=0;let routeDestinationOtherName=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
