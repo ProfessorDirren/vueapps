@@ -3,7 +3,7 @@ import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue
 import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
 import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
-import {probeRegionalStaticRange} from '../core/commutevue-regional-range-probe.js';
+import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -93,10 +93,10 @@ export async function POST(request){
    try{
     const url=new URL('https://opendata.samtrafiken.se/gtfs/sl/sl.zip');
     url.searchParams.set('key',process.env.TRAFIKLAB_REGIONAL_STATIC_KEY);
-    const result=await probeRegionalStaticRange({url:url.toString()});
-    console.info('commutvue_regional_range_probe',JSON.stringify({status:result.status,archiveBytes:result.archiveBytes??null,httpStatus:result.httpStatus??null}));
+    const result=await probeRegionalStaticHead({url:url.toString()});
+    console.info('commutvue_regional_head_probe',JSON.stringify({status:result.status,archiveBytes:result.archiveBytes??null,httpStatus:result.httpStatus??null}));
    }catch{
-    console.info('commutvue_regional_range_probe',JSON.stringify({status:'unexpected_error'}));
+    console.info('commutvue_regional_head_probe',JSON.stringify({status:'unexpected_error'}));
    }
   }
   // Shadow-only authorization check. Never publish unjoined GTFS-RT as verified departures.
