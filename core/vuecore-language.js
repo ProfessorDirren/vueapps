@@ -1,7 +1,7 @@
 /** Shared VUECORE input-language detection. Conservative: retain UI locale when uncertain. */
 const markers=Object.freeze({
- sv:['hur','länge','ska','från','till','nästa','kycklingen','ugnen','varmluftsugnen','vilken','bussen','försenad','min','hund','svårt','andas'],
- en:['how','long','should','from','next','chicken','oven','when','does','train','where','please'],
+ sv:['hur','länge','ska','från','till','nästa','kycklingen','ugnen','varmluftsugnen','vilken','bussen','försenad','min','hund','svårt','andas','när','går','buss','tåg','tåget','pendeltåg','förseningar','station','avgår','var','är','trafiken'],
+ en:['how','long','should','from','next','chicken','oven','when','does','train','where','please','bus','departure','late','station','is','the','today'],
  es:['cuánto','cuándo','desde','hasta','pollo','horno','dónde','necesito','quiero'],
  fr:['combien','quand','depuis','poulet','four','où','pourquoi','avec'],
  tr:['ne','zaman','nereden','nereye','tavuk','fırında','nasıl','kaç'],

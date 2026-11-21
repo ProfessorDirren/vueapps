@@ -29,3 +29,14 @@ test('Urgent ANI-VUE uses detected Swedish response language even when UI is Eng
  assert.equal(data.domain,'anivue');
  assert.match(data.answer,/veterinärvård/i);
 });
+
+test('Short Swedish transit questions retain their spoken language in English UI',()=>{
+ for(const question of ['När går nästa buss?','Är tåget försenat?','Var är bussen?']){
+  assert.equal(detectVueInputLanguage(question,'en'),'sv',question);
+ }
+});
+test('Short English transit questions retain their spoken language in Swedish UI',()=>{
+ for(const question of ['When does the bus leave?','Is the train late?']){
+  assert.equal(detectVueInputLanguage(question,'sv'),'en',question);
+ }
+});
