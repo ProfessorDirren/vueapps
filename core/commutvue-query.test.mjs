@@ -127,3 +127,10 @@ test('COMMUTVUE uses VUECORE suggestions without silently changing unknown stati
  assert.equal(trip.needsClarification,true);
  assert.deepEqual(trip.stationSuggestions,[{role:'from',original:'Jordbrp',suggested:'Jordbro',requiresConfirmation:true}]);
 });
+
+test('COMMUTVUE exposes confirmation before any Trafiklab request',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ assert.ok(source.indexOf('if(journey.stationSuggestions?.length)')<source.indexOf('createTrafiklabSwedenLive({apiKey:'));
+ assert.match(source,/evidence_status:'station_confirmation_required'/);
+});
