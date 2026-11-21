@@ -65,6 +65,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   if(!area(origin)||!area(destination)||!originStops.length||!destinationStops.length||originStops.some(id=>destinationStops.includes(id)))return {provider,status:'unavailable',reason:'stop_resolution',departures:[]};
   const board=await get('departures/'+origin);
   if(!Array.isArray(board?.departures)||!fresh(board?.timestamp,now()))return {provider,status:'unavailable',reason:'board_unavailable',departures:[]};
+  const requestedMode=typeof transportMode==='string'?transportMode.toUpperCase():null;
+  if(requestedMode&&!['BUS','METRO','TRAIN','TRAM','TAXI','BOAT'].includes(requestedMode))throw new TypeError('Unsupported requested transport mode');
   const originStopIds=new Set(originStops);
   const destinationStopIds=new Set(destinationStops);
   // Diagnose the actual departure board before candidate validation: aggregate
@@ -114,8 +116,6 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   // commuter rail: COMMUTEVUE also serves bus, metro, tram, taxi and boat.
   // Unknown/missing modes fail closed because their service type is unverified.
   const supportedModes=new Set(['BUS','METRO','TRAIN','TRAM','TAXI','BOAT']);
-  const requestedMode=typeof transportMode==='string'?transportMode.toUpperCase():null;
-  if(requestedMode&&!supportedModes.has(requestedMode))throw new TypeError('Unsupported requested transport mode');
   const candidates=board.departures.filter(row=>{
    const mode=String(row?.route?.transport_mode||'').toUpperCase();
    return supportedModes.has(mode)&&(!requestedMode||mode===requestedMode);
