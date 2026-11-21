@@ -33,7 +33,7 @@ test('preflight reports compressed and uncompressed stop_times sizes',()=>{
 });
 
 test('preflight reports oversized uncompressed entry but extraction refuses it',()=>{
- const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\\nt1,Jordbro,1\\n');
+ const zip=storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\nt1,Jordbro,1\n');
  const central=zip.indexOf(Buffer.from([0x50,0x4b,0x01,0x02]));
  zip.writeUInt32LE(257*1024*1024,central+24);
  const metadata=inspectRegionalGTFSZip(zip);
@@ -42,7 +42,7 @@ test('preflight reports oversized uncompressed entry but extraction refuses it',
 });
 
 test('extracts only matching station names from regional stops.txt',()=>{
- const zip=storedZip('stops.txt','stop_id,stop_name\\n100,Jordbro\\n200,Stockholm City\\n300,Handen\\n');
+ const zip=storedZip('stops.txt','stop_id,stop_name\n100,Jordbro\n200,Stockholm City\n300,Handen\n');
  assert.deepEqual(parseRegionalGTFSStopsZip(zip),[
   {stopId:'100',stopName:'Jordbro',parentStation:'',locationType:''},
   {stopId:'200',stopName:'Stockholm City',parentStation:'',locationType:''}
