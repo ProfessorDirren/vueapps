@@ -22,3 +22,12 @@ test('joins timed SL Regional GTFS static stops to matching realtime trip update
  assert.deepEqual(joinRegionalTripEvidence({tripStops:timedTrips,evidence:live,originStopId:'9022001006161002',destinationStopId:'9022001005310001'}).matches,[{tripId:'sl-real-trip',originStopId:'9022001006161002',destinationStopId:'9022001005310001',departureUnixTime:1795250000,delaySeconds:120}]);
  assert.equal(joinRegionalTripEvidence({tripStops:timedTrips,evidence:live,originStopId:'9022001005310001',destinationStopId:'9022001006161002'}).matches.length,0);
 });
+
+test('rejects duplicate realtime updates for one trip regardless of update order',()=>{
+ const first={tripId:'trip-1',stops:[{stopId:'Jordbro',departure:{unixTime:1795250000,delaySeconds:120}}]};
+ const second={tripId:'trip-1',stops:[{stopId:'Jordbro',departure:{unixTime:1795250060,delaySeconds:180}}]};
+ for(const trips of [[first,second],[second,first],[first,{...first}]]){
+  const result=joinRegionalTripEvidence({tripStops,evidence:{trips},originStopId:'Jordbro',destinationStopId:'StockholmCity'});
+  assert.deepEqual(result.matches,[]);
+ }
+});

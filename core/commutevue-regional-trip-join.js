@@ -2,8 +2,17 @@
 export function joinRegionalTripEvidence({tripStops,evidence,originStopId,destinationStopId}={}){
  if(!(tripStops instanceof Map)||!Array.isArray(evidence?.trips)||typeof originStopId!=='string'||!originStopId||typeof destinationStopId!=='string'||!destinationStopId||originStopId===destinationStopId)throw new TypeError('Verified static trip map, realtime evidence and distinct stop IDs required');
  const matches=[];
+ const seenTripIds=new Set();
+ const duplicateTripIds=new Set();
  for(const update of evidence.trips){
-  if(typeof update?.tripId!=='string'||!Array.isArray(update.stops))continue;
+  if(typeof update?.tripId!=='string')continue;
+  if(seenTripIds.has(update.tripId))duplicateTripIds.add(update.tripId);
+  seenTripIds.add(update.tripId);
+ }
+ for(const update of evidence.trips){
+  // Multiple TripUpdates for the same trip can contradict each other;
+  // never publish an arbitrary first or last update as verified evidence.
+  if(typeof update?.tripId!=='string'||duplicateTripIds.has(update.tripId)||!Array.isArray(update.stops))continue;
   const sequence=tripStops.get(update.tripId);
   if(!Array.isArray(sequence)||sequence.length<2||sequence.length>300)continue;
   // The actual SL Regional parser emits timed stop objects; legacy fixtures
