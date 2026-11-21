@@ -9,6 +9,7 @@ import {parseRegionalServiceMetadata} from '../core/commutevue-regional-static-g
 import {buildRegionalServiceSnapshot,resolveRegionalStationStopIds} from '../core/commutevue-regional-snapshot.js';
 import {encodeRegionalSnapshot} from '../core/commutevue-regional-snapshot-codec.js';
 import {signRegionalSnapshot} from '../core/commutevue-regional-snapshot-auth.js';
+import {regionalCorridorProvisioning} from '../core/commutevue-regional-provisioning.js';
 
 export function stockholmServiceDate(now=new Date()){
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).map(p=>[p.type,p.value]));
@@ -38,13 +39,20 @@ export function buildSignedRegionalCorridorSnapshot({archive,serviceDate=stockho
  const destinationStopIds=resolveRegionalStationStopIds(stops,destinationName);
  const allowedTripIds=selectDirectRegionalTrips(snapshot.tripStops,originStopIds,destinationStopIds);
  const payload=encodeRegionalSnapshot(snapshot,{allowedTripIds});
- return {envelope:signRegionalSnapshot(payload,{key:signingKey}),selectedTripCount:allowedTripIds.size,serviceDate};
+ if(!allowedTripIds.size)throw new Error('No direct active corridor trips');
+ const envelope=signRegionalSnapshot(payload,{key:signingKey});
+ return {envelope,selectedTripCount:allowedTripIds.size,serviceDate,originStopIds,destinationStopIds};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
- const [, ,input,output]=process.argv;
+ const [, ,input,output,manifestPath]=process.argv;
  if(!input||!output)throw new Error('Input archive and output file paths required');
  const archive=await readFile(input);
  const result=buildSignedRegionalCorridorSnapshot({archive,signingKey:process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY});
+ const provisioning=regionalCorridorProvisioning(result);
+ if(manifestPath){
+  if(manifestPath===output)throw new Error('Manifest path must differ from envelope path');
+  await writeFile(manifestPath,JSON.stringify(provisioning,null,2)+'\n',{flag:'wx',mode:0o600});
+ }
  await writeFile(output,result.envelope,{flag:'wx',mode:0o600});
  console.info(JSON.stringify({status:'signed_offline_artifact',serviceDate:result.serviceDate,selectedTripCount:result.selectedTripCount}));
 }
