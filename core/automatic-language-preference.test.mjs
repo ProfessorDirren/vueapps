@@ -24,3 +24,7 @@ test('explicit manual selection takes precedence over automatic detection for ev
  assert.match(router,/language:requestedLanguage,previous:active\?\.domain/);
  assert.match(html,/sessionStorage\.setItem\(VUE_LANGUAGE_KEY,picker\.value\)/);
 });
+
+test('router API requests auto-detect language only when no explicit manual preference exists',()=>{
+ assert.match(router,/auto_language:!sessionStorage\.getItem\('vue-language'\)/);
+});
