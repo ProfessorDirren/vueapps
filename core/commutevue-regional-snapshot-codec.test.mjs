@@ -22,3 +22,21 @@ test('regional codec refuses unverified input and empty selections',()=>{
  assert.throws(()=>encodeRegionalSnapshot({...snapshot,status:'unavailable'},{allowedTripIds:new Set(['trip-1'])}));
  assert.throws(()=>encodeRegionalSnapshot(snapshot,{allowedTripIds:new Set(['missing'])}));
 });
+
+test('regional codec retains GTFS scheduled arrival and departure times',()=>{
+ const timed={status:'validated',serviceDate:date,validatedAtMs:now-1000,tripStops:new Map([['timed-trip',[
+  {stop:'stop-1',arrivalTime:'17:24:00',departureTime:'17:25:00',sequence:4},
+  {stop:'stop-2',arrivalTime:'17:58:00',departureTime:'17:58:00',sequence:9}
+ ]]])};
+ const encoded=encodeRegionalSnapshot(timed,{allowedTripIds:new Set(['timed-trip'])});
+ const decoded=decodeRegionalSnapshot(encoded,{now,expectedServiceDate:date});
+ assert.equal(decoded.status,'validated');
+ assert.deepEqual(decoded.tripStops.get('timed-trip'),[
+  {stop:'stop-1',arrivalTime:'17:24:00',departureTime:'17:25:00',sequence:4},
+  {stop:'stop-2',arrivalTime:'17:58:00',departureTime:'17:58:00',sequence:9}
+ ]);
+});
+test('regional codec rejects malformed GTFS times',()=>{
+ const timed={...snapshot,tripStops:new Map([['bad-time',[{stop:'stop-1',arrivalTime:'25:99:00',departureTime:null},{stop:'stop-2'}]]])};
+ assert.throws(()=>encodeRegionalSnapshot(timed,{allowedTripIds:new Set(['bad-time'])}));
+});
