@@ -64,3 +64,16 @@ test('regional publication adapter never leaks upstream secrets on errors',async
  assert.deepEqual(result.departures,[]);
  assert.doesNotMatch(JSON.stringify(result),/private-key|secret-key/);
 });
+
+test('regional publication rejects missing or duplicate station IDs without provider requests',async()=>{
+ let calls=0;
+ const source={tripUpdates:async()=>{calls++;throw Error('unexpected network request');}};
+ const base={COMMUTVUE_REGIONAL_PUBLICATION_ENABLED:'true',COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS:'J',COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS:'C',COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64:'opaque',COMMUTEVUE_SNAPSHOT_SIGNING_KEY:'key',TRAFIKLAB_REGIONAL_REALTIME_KEY:'private'};
+ for(const overrides of [{COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS:'J,J'},{COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS:'C,C'},{COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS:''},{COMMUTEVUE_SNAPSHOT_SIGNING_KEY:''},{TRAFIKLAB_REGIONAL_REALTIME_KEY:''}]){
+  const result=await runRegionalRouterPublication({env:{...base,...overrides},from:'Jordbro',to:'Stockholm City',source});
+  assert.equal(result.status,'unavailable');
+  assert.equal(result.reason,'missing_configuration');
+  assert.deepEqual(result.departures,[]);
+ }
+ assert.equal(calls,0);
+});
