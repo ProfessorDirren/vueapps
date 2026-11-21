@@ -44,3 +44,25 @@ export function vueCorrectionNotice(corrections,language='en'){
   return 'I interpreted “'+original+'” as “'+corrected+'” and corrected the spelling.';
  }).join('\n');
 }
+
+/** Conservative shared intent suggestions. A candidate is never auto-executed. */
+const INTENT_TERMS=Object.freeze([
+ ['commutvue',['buss','tunnelbana','pendeltåg','spårvagn','färja','regionaltåg']],
+ ['foodvue',['kyckling','recept','matlagning']],
+ ['anivue',['veterinär','hund','katt']],
+ ['medivue',['medicin','läkemedel']]
+]);
+export function suggestVueIntent(question){
+ const words=String(question??'').match(/[\p{L}]+/gu)||[];
+ if(words.length>100)return [];
+ const candidates=[];
+ for(const word of words){
+  if(word.length<3||word.length>30)continue;
+  for(const [domain,terms] of INTENT_TERMS){
+   for(const term of terms){
+    if(distanceOne(word,term))candidates.push({original:word,suggested:term,domain,requiresConfirmation:true});
+   }
+  }
+ }
+ return candidates.length===1?candidates:[];
+}

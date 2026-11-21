@@ -1,4 +1,4 @@
-import {interpretVueInput,vueCorrectionNotice} from '../core/vuecore-interpretation.js';
+import {interpretVueInput,vueCorrectionNotice,suggestVueIntent} from '../core/vuecore-interpretation.js';
 import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
 import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
@@ -33,6 +33,15 @@ export async function POST(request){
  const respond=(status,data)=>json(status,correctionNotice&&data&&typeof data.answer==='string'?{...data,answer:correctionNotice+'\n'+data.answer,input_corrections:interpreted.corrections}:data);
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
+ // Ask before interpreting an uncertain domain-changing typo; never run a provider on a guess.
+ if(!b.image&&!route.clarify&&!(route.domain==='anivue'&&urgentFollowup('anivue',question,routingFields('anivue',question),b.language))){
+  const candidates=suggestVueIntent(question);
+  if(candidates.length===1){
+   const candidate=candidates[0];
+   const prompt=b.language==='sv'?'Menade du':b.language==='es'?'¿Quisiste decir':b.language==='fr'?'Vouliez-vous dire':'Did you mean';
+   return respond(200,{domain:null,clarify:true,reason:'possible_typo',answer:prompt+' “'+candidate.suggested+'” istället för “'+candidate.original+'”?',suggestions:[candidate],verified:false});
+  }
+ }
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
  if(route.domain==='anivue'&&urgent)return json(200,{domain:'anivue',answer:urgent,kind:'safety_rule',emergency:true,workspace:'./?vue=anivue#vue-router',image_analyzed:false});
  try{if(b.image&&!urgent)route=await classifyImage(b.image,question)}catch(e){return json(e instanceof ImageRoutingError?e.status:502,{error:'Image routing unavailable'})}
