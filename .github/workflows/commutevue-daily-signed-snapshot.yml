@@ -60,6 +60,7 @@ jobs:
           test -n "$TRAFIKLAB_REGIONAL_REALTIME_KEY"
           node scripts/commutevue-private-live-join-smoke.mjs "$RUNNER_TEMP/manifest.json"
       - name: Publish signed data-only file to private repository
+        id: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -68,12 +69,34 @@ jobs:
           git add core/commutevue-regional-signed-snapshot.gz
           if git diff --cached --quiet; then
             echo "Signed snapshot unchanged"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "data(COMMUTVUE): refresh signed regional corridor snapshot"
           git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      # GitHub Actions commits made with GITHUB_TOKEN do not trigger other
+      # GitHub workflows. A separately configured Vercel Deploy Hook can
+      # request a production rebuild when the daily signed file changes.
+      # Leave the secret unset until the free-tier deployment budget is safe.
+      - name: Request Vercel rebuild when deploy hook is configured
+        if: ${{ steps.publish.outputs.changed == 'true' }}
+        env:
+          COMMUTVUE_VERCEL_DEPLOY_HOOK: ${{ secrets.COMMUTVUE_VERCEL_DEPLOY_HOOK }}
+        run: |
+          set -eu
+          if [ -z "$COMMUTVUE_VERCEL_DEPLOY_HOOK" ]; then
+            echo "Deploy hook not configured; signed snapshot committed without automatic Vercel rebuild"
+            exit 0
+          fi
+          case "$COMMUTVUE_VERCEL_DEPLOY_HOOK" in
+            https://api.vercel.com/v1/integrations/deploy/*) ;;
+            *) echo "Invalid Vercel deploy hook URL"; exit 1 ;;
+          esac
+          curl --fail --silent --show-error --max-time 20 --retry 2 --request POST "$COMMUTVUE_VERCEL_DEPLOY_HOOK" >/dev/null
+          echo "Vercel deploy hook invoked"
       - name: Remove private temporary files
         if: always()
         run: |
