@@ -25,7 +25,7 @@ export async function POST(request){
  if(b.question!==undefined&&typeof b.question!=='string')return json(400,{error:'Invalid question'});
  const text=ROUTER_TEXT[b.language];const interpreted=interpretVueInput(b.question?.trim()|| (b.image?text[24]:''));const question=interpreted.question;
  const correctionNotice=vueCorrectionNotice(interpreted.corrections,b.language);
- const respond=(status,data)=>json(status,correctionNotice&&data&&typeof data.answer==='string'?{...data,answer:correctionNotice+'\\n'+data.answer,input_corrections:interpreted.corrections}:data);
+ const respond=(status,data)=>json(status,correctionNotice&&data&&typeof data.answer==='string'?{...data,answer:correctionNotice+'\n'+data.answer,input_corrections:interpreted.corrections}:data);
  if(question.length<3||question.length>3000||obviousIdentifier(question))return json(400,{error:'Invalid public question'});
  let route=routeQuestion(question,b.previous);
  const urgent=route.domain&&urgentFollowup(route.domain,question,routingFields(route.domain,question),b.language);
