@@ -293,8 +293,10 @@ function setLanguage(lang,{automatic=false}={}){
    : (link.dataset.vueOriginalLabel ||= link.textContent);
   for(const domain of localizedLinkDomains){
    const brand=vueBrandName(domain);
-   if(current.includes(brand)){
-    link.textContent=current.replace(brand,localizedVueName(domain,lang)+' ('+brand+')');
+   const legacyBrand=brand.replace('-','');
+   const matchedBrand=current.includes(brand)?brand:current.includes(legacyBrand)?legacyBrand:null;
+   if(matchedBrand){
+    link.textContent=current.replace(matchedBrand,localizedVueName(domain,lang)+' ('+brand+')');
     break;
    }
   }
