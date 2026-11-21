@@ -7,28 +7,23 @@ const timestamp=value=>typeof value==='string'&&value.trim()?Date.parse(value):N
 const id=value=>typeof value==='string'||typeof value==='number'?String(value).trim():'';
 const validTrain=value=>/^\d{1,8}$/.test(id(value));
 const validStation=value=>typeof value==='string'&&/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(value);
-const serviceDate=entry=>{
- const time=timestamp(entry?.AdvertisedTimeAtLocation);
- // The Swedish service day follows the provider's local offset, not UTC.
- // UTC conversion can shift late-night Swedish trains to the previous day.
- if(!Number.isFinite(time))return null;
- const raw=entry.AdvertisedTimeAtLocation;
- return /^\d{4}-\d{2}-\d{2}T/.test(raw)?raw.slice(0,10):new Date(time).toISOString().slice(0,10);
-};
 export function matchTrafikverketTrainRoute({origin,destination,originSignature,destinationSignature,now=Date.now()}={}){
  if(!Array.isArray(origin)||!Array.isArray(destination)||!validStation(originSignature)||!validStation(destinationSignature)||originSignature===destinationSignature||!Number.isFinite(now))return [];
  const destinationByTrain=new Map();
  for(const d of destination){
   const t=timestamp(d?.AdvertisedTimeAtLocation),train=id(d?.AdvertisedTrainIdent);
   if(d?.LocationSignature!==destinationSignature||d?.ActivityType!=='Ankomst'||d?.Canceled===true||!validTrain(train)||!Number.isFinite(t))continue;
-  const key=train+'|'+serviceDate(d);
+  const key=train;
   const entries=destinationByTrain.get(key)||[];entries.push(t);destinationByTrain.set(key,entries);
  }
  const matched=[];
  for(const o of origin){
   const advertised=timestamp(o?.AdvertisedTimeAtLocation),estimated=timestamp(o?.EstimatedTimeAtLocation),actual=timestamp(o?.TimeAtLocation),modified=timestamp(o?.ModifiedTime),train=id(o?.AdvertisedTrainIdent);
   if(o?.LocationSignature!==originSignature||o?.ActivityType!=='Avgang'||o?.Canceled===true||!validTrain(train)||!Number.isFinite(advertised)||advertised<now-120000||advertised>now+7200000)continue;
-  const later=(destinationByTrain.get(train+'|'+serviceDate(o))||[]).filter(t=>t>advertised&&t-advertised<=10800000);
+  // Train identity and chronological stop order establish the same journey,
+  // including services that legitimately cross Swedish midnight.
+  // A strict calendar-date equality would discard those journeys.
+  const later=(destinationByTrain.get(train)||[]).filter(t=>t>advertised&&t-advertised<=10800000);
   if(later.length!==1)continue;
   matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0]).toISOString(),hasEstimatedTime:Number.isFinite(estimated),hasActualTime:Number.isFinite(actual),hasModifiedTime:Number.isFinite(modified)});
  }
