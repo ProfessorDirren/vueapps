@@ -8,8 +8,8 @@ const board={timestamp:'2026-11-10T09:58:00',departures:[departure]};
 const details={timestamp:'2026-11-10T09:58:00',trip:{trip_id:'t1',start_date:'2026-11-10'},calls:[{stop:{id:'stop1',area_id:'740000001'},is_realtime:true},{stop:{id:'stop2',area_id:'740000002'},is_realtime:true}]};
 const make=(boardPayload=board,tripPayload=details)=>createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,resolveStop:async s=>s==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?tripPayload:boardPayload)})});
 test('all documented Trafiklab transport modes are retained and unknown modes are rejected',async()=>{
- const modes=['BUS','METRO','TRAIN','TRAM','TAXI','BOAT'];
- const rows=modes.map((mode,i)=>({...departure,trip:{trip_id:'mode'+i,start_date:'2026-11-10'},route:{designation:String(i),direction:'Stockholm City',transport_mode:mode,transport_mode_code:[700,401,106,0,0,0][i]}}));
+ const modes=[['BUS',700],['BUS',714],['METRO',401],['TRAIN',100],['TRAIN',106],['TRAM',900],['TAXI',1501],['BOAT',1000]];
+ const rows=modes.map(([mode,code],i)=>({...departure,trip:{trip_id:'mode'+i,start_date:'2026-11-10'},route:{designation:String(i),direction:'Stockholm City',transport_mode:mode,transport_mode_code:code}}));
  rows.push({...departure,trip:{trip_id:'unknown',start_date:'2026-11-10'},route:{designation:'?',direction:'Stockholm City',transport_mode:'UNKNOWN'}});
  const seen=[];
  const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:8,
