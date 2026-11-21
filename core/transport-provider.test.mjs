@@ -33,3 +33,15 @@ test('adapter inheritance preserves existing registry region and fails closed',a
  assert.equal(result.status,'unavailable');
  assert.equal(JSON.stringify(result).includes('secret-key'),false);
 });
+
+test('COMMUTEVUE mode query reaches inherited provider and rejects unsupported modes',async()=>{
+ const {queryCommute}=await import('./commutvue.js');
+ class Fixture extends TransportProvider{
+  async queryJourney({mode}){return {status:'ok',sourceUrl:'https://example.org/gtfs',updatedAt:'2026-11-21T12:00:00Z',journeyEvidence:{verified:true,originId:'A',destinationId:'B',departureIds:['trip1']},departures:[{id:'trip1',line:'SJ',destination:'B',scheduled:'2026-11-21T12:30:00Z'}],mode};}
+ }
+ const provider=new Fixture({country:'SE',operator:'SJ',modes:['train']});
+ const ok=await queryCommute({provider:'stockholm',from:'A',to:'B',mode:'TRAIN',adapter:provider});
+ assert.equal(ok.status,'ok');
+ const no=await queryCommute({provider:'stockholm',from:'A',to:'B',mode:'bus',adapter:provider});
+ assert.equal(no.status,'unavailable');
+});
