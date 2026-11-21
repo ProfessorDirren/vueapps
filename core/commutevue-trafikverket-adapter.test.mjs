@@ -46,3 +46,16 @@ test('COMMUTEVUE probe fails closed when announcement provider is unavailable',a
  assert.equal(response.reason,'http_error');
  assert.deepEqual(response.departures,[]);
 });
+
+test('COMMUTEVUE counts upstream estimate coverage before matching without exposing announcements',async()=>{
+ const fetcher=async(_url,options)=>{
+  const body=options.body;
+  if(body.includes('TrainStation'))return result('TrainStation',[body.includes('Jordbro')?{AdvertisedLocationName:'Jordbro',LocationSignature:'J'}:{AdvertisedLocationName:'Stockholm City',LocationSignature:'Sci'}]);
+  if(body.includes('value="Avgang"'))return result('TrainAnnouncement',[origin,{...origin,AdvertisedTrainIdent:'44',EstimatedTimeAtLocation:undefined,Canceled:true}]);
+  return result('TrainAnnouncement',[destination]);
+ };
+ const probe=createTrafikverketJourneyProbe({apiKey:'fake',fetcher,now:()=>Date.parse('2026-11-21T09:55:00+01:00')});
+ const response=await probe({from:'Jordbro',to:'Stockholm City'});
+ assert.deepEqual(response.coverage,{originCount:2,destinationCount:1,originEstimatedCount:1,destinationEstimatedCount:0,originActualCount:0,originCancelledCount:1});
+ assert.equal(response.departures.length,1);
+});
