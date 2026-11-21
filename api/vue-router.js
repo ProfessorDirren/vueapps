@@ -96,7 +96,7 @@ export async function POST(request){
     const result=await createRegionalStaticGTFSDownloader({url:url.toString()})();
     console.info('commutvue_regional_static_probe',JSON.stringify({status:result.status,tripCount:result.tripStops.size}));
    }catch(e){
-    const reasons=['authorization','rate_limited','http_error','network_or_timeout','oversized_archive','invalid_body','invalid_size','invalid_archive'];
+    const reasons=['authorization','rate_limited','http_error','network_or_timeout','oversized_archive','invalid_body','invalid_size','empty_archive','non_zip_response','invalid_archive'];
     console.info('commutvue_regional_static_probe',JSON.stringify({status:'unavailable',reason:reasons.includes(e?.reason)?e.reason:'unknown'}));
    }
   }
