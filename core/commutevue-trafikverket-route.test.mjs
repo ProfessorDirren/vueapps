@@ -47,3 +47,14 @@ test('Swedish local midnight service date matches trains crossing UTC date bound
  const nextDay={...arrival,AdvertisedTimeAtLocation:'2026-11-22T00:40:00+01:00'};
  assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[late],destination:[nextDay],now}),[]);
 });
+
+test('Swedish train travelling across midnight retains verified destination',()=>{
+ const late={...origin,AdvertisedTimeAtLocation:'2026-11-21T23:55:00+01:00'};
+ const nextDayArrival={...dest,AdvertisedTimeAtLocation:'2026-11-22T00:20:00+01:00'};
+ const now=Date.parse('2026-11-21T23:50:00+01:00');
+ const matched=matchTrafikverketTrainRoute({...args,origin:[late],destination:[nextDayArrival],now});
+ assert.equal(matched.length,1);
+ assert.equal(matched[0].destinationArrival,new Date(nextDayArrival.AdvertisedTimeAtLocation).toISOString());
+ const tooLate={...nextDayArrival,AdvertisedTimeAtLocation:'2026-11-22T03:30:00+01:00'};
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[late],destination:[tooLate],now}),[]);
+});
