@@ -16,7 +16,7 @@ test('offline extractor writes ordered trip-to-stops JSON from ZIP fixture',asyn
  const dir=await mkdtemp(join(tmpdir(),'commutevue-gtfs-'));
  try{
   const input=join(dir,'sample.zip'),output=join(dir,'stops.json');
-  await writeFile(input,storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\\nt2,StockholmCity,2\\nt2,Jordbro,1\\n'));
+  await writeFile(input,storedZip('stop_times.txt','trip_id,stop_id,stop_sequence\nt2,StockholmCity,2\nt2,Jordbro,1\n'));
   const result=await extractOfflineRegionalStops(input,output);
   assert.equal(result.tripCount,1);
   const data=JSON.parse(await readFile(output,'utf8'));
