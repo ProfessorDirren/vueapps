@@ -59,3 +59,22 @@ for(const [id,question] of negatives)test('REGRESSION API negative '+id+' must c
   assert.equal(calls,0,id+' called a provider before clarification');
  }finally{globalThis.fetch=previousFetch}
 });
+
+test('REGRESSION: clarification must remain stable regardless of previous specialist',()=>{
+ for(const [id,question] of negatives){
+  for(const previous of ['commutvue','foodvue','anivue','anyvue']){
+   const result=routeQuestion(question,previous);
+   assert.equal(result.clarify,true,id+' previous='+previous);
+   assert.equal(result.domain,null,id+' previous='+previous);
+  }
+ }
+});
+test('REGRESSION: unrelated previous specialist cannot hijack a new explicit topic',()=>{
+ for(const [id,question,expected] of routes){
+  for(const previous of ['commutvue','foodvue','anivue','anyvue']){
+   const result=routeQuestion(question,previous);
+   assert.equal(result.domain,expected,id+' previous='+previous);
+   assert.notEqual(result.clarify,true,id+' previous='+previous);
+  }
+ }
+});
