@@ -23,12 +23,20 @@ export function extractGTFSRealtimeTripEvidence(bytes,{maxTrips=20000,maxStops=1
    const update=find(children(bytes,entity),3,2);if(!update)continue;
    const fields=children(bytes,update),descriptor=find(fields,1,2);
    if(!descriptor)continue;
-   const trip=str(bytes,find(children(bytes,descriptor),1,2));
+   const descriptorFields=children(bytes,descriptor);
+   const trip=str(bytes,find(descriptorFields,1,2));
+   // GTFS-RT TripDescriptor.schedule_relationship: CANCELED=3, DELETED=7.
+   // Never present cancelled/deleted services as live departures.
+   const relationship=find(descriptorFields,4,0);
+   if(relationship&&(relationship.value===3n||relationship.value===7n))continue;
    if(!trip||trip.length>200)continue;
    const stops=[];
    for(const entry of fields.filter(f=>f.number===2&&f.wire===2)){
     if(++stopCount>maxStops)throw new GTFSRealtimeDecodeError();
     const stopFields=children(bytes,entry),stopId=str(bytes,find(stopFields,4,2));
+    // GTFS-RT StopTimeUpdate.schedule_relationship: SKIPPED=1, NO_DATA=2.
+    const stopRelationship=find(stopFields,5,0);
+    if(stopRelationship&&(stopRelationship.value===1n||stopRelationship.value===2n))continue;
     if(!stopId||stopId.length>200)continue;
     const event=kind=>{const f=find(stopFields,kind,2);if(!f)return null;const parts=children(bytes,f);const delay=find(parts,1,0),time=find(parts,2,0);return {delaySeconds:delay?Number(BigInt.asIntN(32,delay.value)):null,unixTime:time&&time.value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(time.value):null};};
     stops.push({stopId,arrival:event(2),departure:event(3)});

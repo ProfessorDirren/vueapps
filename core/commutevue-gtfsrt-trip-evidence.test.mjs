@@ -33,3 +33,24 @@ test('extracts feed timestamp and negative signed int32 delay',()=>{
  assert.equal(data.trips[0].stops[0].departure.delaySeconds,-45);
  assert.equal(data.trips[0].stops[0].departure.unixTime,1795250060);
 });
+
+test('never treats GTFS-RT cancelled or deleted trips as active departures',()=>{
+ for(const relationship of [3,7]){
+  const cancelledDescriptor=field(1,[...field(1,ascii('trip-42')),...wireVarint(4,relationship)]);
+  const cancelledUpdate=field(3,[...cancelledDescriptor,...stop]);
+  const cancelledEntity=field(2,[...field(1,ascii('e1')),...cancelledUpdate]);
+  const data=extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...cancelledEntity]));
+  assert.deepEqual(data.trips,[]);
+ }
+});
+test('excludes skipped and no-data stop updates while retaining valid stops',()=>{
+ for(const relationship of [1,2]){
+  const ignoredStop=field(2,[...field(4,ascii('Jordbro-stop')),...wireVarint(5,relationship),...departure]);
+  const validStop=field(2,[...field(4,ascii('next-stop')),...departure]);
+  const updateWithSkipped=field(3,[...descriptor,...ignoredStop,...validStop]);
+  const entityWithSkipped=field(2,[...field(1,ascii('e1')),...updateWithSkipped]);
+  const data=extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...entityWithSkipped]));
+  assert.equal(data.trips.length,1);
+  assert.deepEqual(data.trips[0].stops.map(x=>x.stopId),['next-stop']);
+ }
+});
