@@ -84,10 +84,13 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    return 1;
   };
   const candidates=[...board.departures].sort((a,b)=>{
-   const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
-   if(tier)return tier;
+   // For a trip toward Stockholm City, avoid exhausting the bounded Trips budget
+   // on realtime departures explicitly marked southbound while scheduled
+   // northbound candidates remain unchecked. Direction is never proof of arrival.
    const directionPriority=directionTier(a)-directionTier(b);
    if(directionPriority)return directionPriority;
+   const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
+   if(tier)return tier;
    const time=row=>swedishTime(row?.is_realtime===true?row?.realtime:row?.scheduled);
    const ta=time(a),tb=time(b);
    return (Number.isFinite(ta)?ta:Infinity)-(Number.isFinite(tb)?tb:Infinity);
