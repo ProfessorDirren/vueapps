@@ -3,7 +3,7 @@ import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue
 import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
 import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
-import {createRegionalStaticGTFSDownloader} from '../core/commutevue-regional-static-download.js';
+import {probeRegionalStaticRange} from '../core/commutevue-regional-range-probe.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -93,11 +93,10 @@ export async function POST(request){
    try{
     const url=new URL('https://opendata.samtrafiken.se/gtfs/sl/sl.zip');
     url.searchParams.set('key',process.env.TRAFIKLAB_REGIONAL_STATIC_KEY);
-    const result=await createRegionalStaticGTFSDownloader({url:url.toString()})();
-    console.info('commutvue_regional_static_probe',JSON.stringify({status:result.status,tripCount:result.tripStops.size}));
-   }catch(e){
-    const reasons=['authorization','rate_limited','http_error','network_or_timeout','oversized_archive','invalid_body','invalid_size','empty_archive','non_zip_response','invalid_archive'];
-    console.info('commutvue_regional_static_probe',JSON.stringify({status:'unavailable',reason:reasons.includes(e?.reason)?e.reason:'unknown'}));
+    const result=await probeRegionalStaticRange({url:url.toString()});
+    console.info('commutvue_regional_range_probe',JSON.stringify({status:result.status,archiveBytes:result.archiveBytes??null}));
+   }catch{
+    console.info('commutvue_regional_range_probe',JSON.stringify({status:'unexpected_error'}));
    }
   }
   // Shadow-only authorization check. Never publish unjoined GTFS-RT as verified departures.
