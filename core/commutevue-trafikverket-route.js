@@ -1,6 +1,6 @@
 /**
  * Fail-closed evidence matching for Trafikverket train announcements.
- * Both station boards must independently report the same train and service date.
+ * Both station boards must independently report the same train, with arrival\n * after departure inside a bounded journey window (including midnight).
  * An estimated departure is never inferred from the destination board.
  */
 const timestamp=value=>typeof value==='string'&&value.trim()?Date.parse(value):NaN;
