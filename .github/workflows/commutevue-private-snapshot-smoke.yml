@@ -52,6 +52,14 @@ jobs:
             if(![...origin].some(x=>ids.has(x))||![...dest].some(x=>ids.has(x)))throw Error("Station IDs missing from signed trips");
             console.log(JSON.stringify({status:"runtime_provisioning_verified",activeCorridorTrips:snapshot.tripStops.size,artifactBytes:Buffer.byteLength(readFileSync(process.env.RUNNER_TEMP+"/corridor.json"))}));
           '
+      - name: Verify signed regional GTFS against actual live GTFS-RT
+        env:
+          COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
+          TRAFIKLAB_REGIONAL_REALTIME_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_REALTIME_KEY }}
+        run: |
+          set -eu
+          test -n "$TRAFIKLAB_REGIONAL_REALTIME_KEY" || { echo 'Missing realtime key'; exit 1; }
+          node scripts/commutevue-private-live-join-smoke.mjs "$RUNNER_TEMP/manifest.json"
       - name: Delete private archive and signed artifacts
         if: always()
         run: |
