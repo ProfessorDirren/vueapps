@@ -33,7 +33,12 @@ export function localizedVueName(domain,language='en'){
  const index=VUE_NAMES.indexOf(domain);
  return (names[locale][index]||names.en[index])+'-VUE';
 }
-export function vueBrandName(domain){return domain==='commutvue'?'COMMUTEVUE':String(domain).toUpperCase();}
+/** Public-facing specialist brand; stable domain IDs, paths and API keys are unchanged. */
+export function vueBrandName(domain){
+ if(!VUE_NAMES.includes(domain))return '';
+ const prefix=domain==='commutvue'?'COMMUTE':domain.slice(0,-3).toUpperCase();
+ return prefix+'-VUE';
+}
 /** Render the selected-language name first; retain a small stable brand for recognition. */
 export function renderVueNames(document,language){
  for(const domain of VUE_NAMES){
