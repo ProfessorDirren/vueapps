@@ -15,7 +15,7 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   const t=timestamp(d?.AdvertisedTimeAtLocation),train=id(d?.AdvertisedTrainIdent);
   if(d?.LocationSignature!==destinationSignature||d?.ActivityType!=='Ankomst'||d?.Canceled===true||!validTrain(train)||!Number.isFinite(t))continue;
   const key=train;
-  const entries=destinationByTrain.get(key)||[];entries.push(t);destinationByTrain.set(key,entries);
+  const entries=destinationByTrain.get(key)||new Set();entries.add(t);destinationByTrain.set(key,entries);
  }
  const matched=[];
  const seenOrigin=new Set();
@@ -25,7 +25,7 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   // Train identity and chronological stop order establish the same journey,
   // including services that legitimately cross Swedish midnight.
   // A strict calendar-date equality would discard those journeys.
-  const later=(destinationByTrain.get(train)||[]).filter(t=>t>advertised&&t-advertised<=10800000);
+  const later=[...(destinationByTrain.get(train)||[])].filter(t=>t>advertised&&t-advertised<=10800000);
   if(later.length!==1)continue;
   const originKey=train+'|'+advertised;
   if(seenOrigin.has(originKey))continue;
