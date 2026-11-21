@@ -3,8 +3,8 @@ name: COMMUTVUE signed daily corridor snapshot
 on:
   workflow_dispatch:
   schedule:
-    # 00:15 Stockholm winter / 01:15 summer; GitHub cron uses UTC.
-    - cron: '15 23 * * *'
+    # 05:15 Stockholm winter / 06:15 summer; higher chance of live commuter trains.
+    - cron: '15 4 * * *'
 
 permissions:
   contents: write
