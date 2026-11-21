@@ -14,7 +14,7 @@ test('COMMUTEVUE matches two station announcements without inventing delay',()=>
 test('COMMUTEVUE refuses destination without matching train, arrival order or unique proof',()=>{
  assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[{...dest,AdvertisedTrainIdent:'44'}]}),[]);
  assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[{...dest,AdvertisedTimeAtLocation:'2026-11-21T09:50:00+01:00'}]}),[]);
- assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[dest,dest]}),[]);
+ assert.equal(matchTrafikverketTrainRoute({...args,destination:[dest,dest]}).length,1);
  assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[{...origin,Canceled:true}]}),[]);
 });
 test('COMMUTEVUE does not treat a timetable-only announcement as estimated realtime',()=>{
@@ -68,4 +68,9 @@ test('Ambiguous reused train IDs are rejected instead of guessing a destination'
  const secondArrival={...dest,AdvertisedTimeAtLocation:'2026-11-21T11:25:00+01:00'};
  const matched=matchTrafikverketTrainRoute({...args,origin:[origin,second],destination:[dest,secondArrival]});
  assert.equal(matched.length,1);
+});
+
+test('Two distinct destination arrival times remain ambiguous, never guessed',()=>{
+ const second={...dest,AdvertisedTimeAtLocation:'2026-11-21T10:35:00+01:00'};
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[dest,second]}),[]);
 });
