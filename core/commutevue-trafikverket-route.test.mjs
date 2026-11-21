@@ -58,3 +58,14 @@ test('Swedish train travelling across midnight retains verified destination',()=
  const tooLate={...nextDayArrival,AdvertisedTimeAtLocation:'2026-11-22T03:30:00+01:00'};
  assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[late],destination:[tooLate],now}),[]);
 });
+
+test('Repeated identical Swedish departure announcements do not duplicate a train',()=>{
+ const matched=matchTrafikverketTrainRoute({...args,origin:[origin,{...origin}],destination:[dest]});
+ assert.equal(matched.length,1);
+});
+test('Distinct departure times of a reused train ID remain independent',()=>{
+ const second={...origin,AdvertisedTimeAtLocation:'2026-11-21T11:00:00+01:00'};
+ const secondArrival={...dest,AdvertisedTimeAtLocation:'2026-11-21T11:25:00+01:00'};
+ const matched=matchTrafikverketTrainRoute({...args,origin:[origin,second],destination:[dest,secondArrival]});
+ assert.equal(matched.length,2);
+});
