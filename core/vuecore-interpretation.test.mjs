@@ -32,6 +32,6 @@ test('VUECORE refuses ambiguous or unverified fuzzy corrections',()=>{
 });
 test('multiple corrections are separated by actual newlines',()=>{
  const text=vueCorrectionNotice([{original:'A',corrected:'B'},{original:'C',corrected:'D'}],'sv');
- assert.ok(text.includes('\\n'));
+ assert.ok(text.includes('\n'));
  assert.equal(text.includes('\\\\n'),false);
 });
