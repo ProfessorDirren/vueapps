@@ -20,7 +20,12 @@ export function extractGTFSRealtimeTripEvidence(bytes,{maxTrips=20000,maxStops=1
   const header=find(readFields(bytes),1,2);const headerFields=header?children(bytes,header):[];const timestamp=find(headerFields,3,0);const timestampSeconds=timestamp?Number(timestamp.value):NaN;const feedTimestampMs=Number.isSafeInteger(timestampSeconds)&&timestampSeconds>0?timestampSeconds*1000:null;
   const trips=[];let stopCount=0;
   for(const entity of readFields(bytes).filter(f=>f.number===2&&f.wire===2)){
-   const update=find(children(bytes,entity),3,2);if(!update)continue;
+   const entityFields=children(bytes,entity);
+   // GTFS-RT FeedEntity.is_deleted indicates a removed entity, even when
+   // a stale TripUpdate payload is still present. Never surface it as live.
+   const deleted=find(entityFields,2,0);
+   if(deleted&&deleted.value!==0n)continue;
+   const update=find(entityFields,3,2);if(!update)continue;
    const fields=children(bytes,update),descriptor=find(fields,1,2);
    if(!descriptor)continue;
    const descriptorFields=children(bytes,descriptor);
