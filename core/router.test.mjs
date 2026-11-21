@@ -176,3 +176,21 @@ test('all Swedish public transport questions route to COMMUTE-VUE from unrelated
   assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
  }
 });
+
+test('VUECORE asks before acting on domain-changing spelling mistakes',async()=>{
+ const response=await POST(req({question:'När går nästa busss från Tyresö Centrum till Gullmarsplan?',language:'sv',previous:'foodvue'}));
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.clarify,true);
+ assert.equal(data.domain,null);
+ assert.equal(data.reason,'possible_typo');
+ assert.match(data.answer,/Menade du.*buss/i);
+ assert.equal(data.suggestions[0].requiresConfirmation,true);
+});
+test('VUECORE does not interrupt correctly spelled public transport questions',async()=>{
+ const response=await POST(req({question:'När går nästa buss från Tyresö Centrum till Gullmarsplan?',language:'sv',previous:'foodvue'}));
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.domain,'commutvue');
+ assert.notEqual(data.reason,'possible_typo');
+});
