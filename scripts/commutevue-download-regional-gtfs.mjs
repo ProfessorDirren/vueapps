@@ -26,7 +26,7 @@ export async function downloadRegionalGTFS({key,outputPath,fetchImpl=fetch}={}){
   tempPath=outputPath+'.partial';
   await writeFile(tempPath,archive,{flag:'wx',mode:0o600});
   await rename(tempPath,outputPath);tempPath=undefined;
-  return {archiveBytes:archive.length,stopTimesCompressedBytes:metadata.compressedBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,stopTimesWithinParserLimit:metadata.uncompressedBytes<=60*1024*1024};
+  return {archiveBytes:archive.length,stopTimesCompressedBytes:metadata.compressedBytes,stopTimesUncompressedBytes:metadata.uncompressedBytes,stopTimesWithinParserLimit:metadata.uncompressedBytes<=256*1024*1024};
  }finally{
   clearTimeout(timeout);
   if(tempPath)await unlink(tempPath).catch(()=>{});
