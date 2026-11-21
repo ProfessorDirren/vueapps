@@ -26,7 +26,7 @@ test('rejects unsafe row and trip limits',()=>{
 });
 
 test('matches Jordbro and Stockholm City stops and returns GTFS IDs',()=>{
- const rows='stop_id,stop_name,location_type,parent_station\\n100,Jordbro,1,\\n200,Stockholm City,1,\\n300,Handen,1,\\n';
+ const rows='stop_id,stop_name,location_type,parent_station\n100,Jordbro,1,\n200,Stockholm City,1,\n300,Handen,1,\n';
  assert.deepEqual(parseRegionalStopNames(rows),[
   {stopId:'100',stopName:'Jordbro',parentStation:'',locationType:'1'},
   {stopId:'200',stopName:'Stockholm City',parentStation:'',locationType:'1'}
