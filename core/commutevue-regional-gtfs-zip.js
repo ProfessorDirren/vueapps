@@ -34,7 +34,7 @@ export function inspectRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
  }
  throw new Error('Regional GTFS stop_times.txt missing');
 }
-export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
+export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE,includeTimes=false}={}){
  const metadata=inspectRegionalGTFSZip(input,{maxArchiveBytes});
  if(metadata.uncompressedBytes>MAX_UNCOMPRESSED)throw new Error('GTFS stop_times exceeds safe decompression limit');
  const buffer=Buffer.from(input.buffer,input.byteOffset,input.byteLength);
@@ -52,7 +52,7 @@ export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
   const zipped=buffer.subarray(start,start+compressed);
   const decoded=metadata.method===0?zipped:inflateRawSync(zipped,{maxOutputLength:MAX_UNCOMPRESSED});
   if(decoded.length!==metadata.uncompressedBytes)throw new Error('GTFS ZIP size mismatch');
-  return parseRegionalStopTimes(decoded.toString('utf8'));
+  return parseRegionalStopTimes(decoded.toString('utf8'),{includeTimes});
  }
  throw new Error('Regional GTFS stop_times.txt missing');
 }
