@@ -71,8 +71,8 @@ test('actual portal link localizer survives Swedish, Spanish, English, then Swed
  for(const lang of ['sv','es','en','sv']){
   const localize=new Function('localizedVueName','vueBrandName','lang','localizedLinkDomains',functionSource+';return localizeVueLink;')(localizedVueName,vueBrandName,lang,domains);
   localize(link);
-  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTEVUE) via VUECORE →');
-  assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1);
+  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTE-VUE) via VUECORE →');
+  assert.equal((link.textContent.match(/COMMUTE-VUE/g)||[]).length,1);
  }
 });
 
@@ -87,8 +87,8 @@ test('all eleven language switches update COMMUTEVUE links without accumulating 
  for(const lang of ['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','en','es']){
   const localize=new Function('localizedVueName','vueBrandName','lang','localizedLinkDomains',portal.slice(start,end)+';return localizeVueLink;')(localizedVueName,vueBrandName,lang,domains);
   localize(link);
-  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTEVUE) via VUECORE →',lang);
-  assert.equal((link.textContent.match(/COMMUTEVUE/g)||[]).length,1,lang);
+  assert.equal(link.textContent,'Ask '+localizedVueName('commutvue',lang)+' (COMMUTE-VUE) via VUECORE →',lang);
+  assert.equal((link.textContent.match(/COMMUTE-VUE/g)||[]).length,1,lang);
  }
 });
 
