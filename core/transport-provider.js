@@ -15,7 +15,7 @@ export class TransportProvider {
   if(!this.supports(mode))return {provider,status:'unavailable',departures:[]};
   if(typeof from!=='string'||!from.trim()||typeof to!=='string'||!to.trim())return {provider,status:'needs_stations',departures:[]};
   try{
-   const result=await this.queryJourney({from:from.trim(),to:to.trim(),mode});
+   const result=await this.queryJourney({provider,from:from.trim(),to:to.trim(),mode});
    if(!result||result.status!=='ok'||!Array.isArray(result.departures))return {provider,status:'unavailable',departures:[]};
    return {...result,provider};
   }catch{return {provider,status:'unavailable',departures:[]};}
@@ -24,5 +24,5 @@ export class TransportProvider {
 /** Wrap an existing provider adapter without duplicating its transport logic. */
 export class AdapterTransportProvider extends TransportProvider {
  constructor({adapter,...identity}={}){super(identity);if(typeof adapter!=='function')throw new TypeError('Provider adapter required');this.adapter=adapter;}
- async queryJourney({from,to,mode}){return this.adapter({provider:this.operator,from,to,mode});}
+ async queryJourney({provider,from,to,mode}){return this.adapter({provider,from,to,mode});}
 }
