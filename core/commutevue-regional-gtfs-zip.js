@@ -27,7 +27,7 @@ export function inspectRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
   const name=buffer.toString('utf8',pos+46,pos+46+nameLen);
   pos=next;
   if(name!=='stop_times.txt')continue;
-  if(flags&1||![0,8].includes(method)||uncompressed>MAX_UNCOMPRESSED||compressed>maxArchiveBytes||offset+30>directoryOffset||buffer.readUInt32LE(offset)!==0x04034b50)throw new Error('Unsafe GTFS stop_times ZIP entry');
+  if(flags&1||![0,8].includes(method)||compressed>maxArchiveBytes||offset+30>directoryOffset||buffer.readUInt32LE(offset)!==0x04034b50)throw new Error('Unsafe GTFS stop_times ZIP entry');
   const start=offset+30+buffer.readUInt16LE(offset+26)+buffer.readUInt16LE(offset+28);
   if(start+compressed>directoryOffset)throw new Error('Invalid GTFS ZIP payload');
   return {name,compressedBytes:compressed,uncompressedBytes:uncompressed,method,archiveBytes:bytes.length};
@@ -36,6 +36,7 @@ export function inspectRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
 }
 export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
  const metadata=inspectRegionalGTFSZip(input,{maxArchiveBytes});
+ if(metadata.uncompressedBytes>MAX_UNCOMPRESSED)throw new Error('GTFS stop_times exceeds safe decompression limit');
  const buffer=Buffer.from(input.buffer,input.byteOffset,input.byteLength);
  let end=-1;
  for(let i=buffer.length-22;i>=Math.max(0,buffer.length-65557);i--){if(buffer.readUInt32LE(i)===0x06054b50){end=i;break;}}
