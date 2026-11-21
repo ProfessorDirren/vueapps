@@ -803,3 +803,27 @@ test('unavailable realtime reports verified route failure without inventing a sc
   assert.deepEqual(result.departures,[]);
  }
 });
+
+test('realtime board row without a valid realtime timestamp fails closed with precise diagnostic',async()=>{
+ for(const realtime of [undefined,'not-a-time']){
+  const row={...departure,realtime};
+  const result=await make({...board,departures:[row]})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable');
+  assert.equal(result.reason,'realtime_timestamp_missing');
+  assert.deepEqual(result.departures,[]);
+ }
+});
+
+test('missing realtime timestamp does not contaminate a verified scheduled fallback',async()=>{
+ const live={...departure,realtime:undefined,trip:{trip_id:'live',start_date:'2026-11-10'}};
+ const schedule={...departure,is_realtime:false,trip:{trip_id:'schedule',start_date:'2026-11-10'}};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?{...details,trip:{trip_id:'schedule',start_date:'2026-11-10'},calls:details.calls.map(call=>({...call,is_realtime:false}))}:{...board,departures:[live,schedule]})})
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'scheduled');
+ assert.equal(result.reason,'realtime_timestamp_missing');
+ assert.equal(result.departures.length,1);
+ assert.equal(result.departures[0].expected,null);
+});
