@@ -38,13 +38,23 @@ test('matches direct ordered Jordbro to Stockholm City trips via platform IDs',(
  const stops=[
   {stopId:'J',stopName:'Jordbro',locationType:'1',parentStation:''},
   {stopId:'J1',stopName:'Jordbro',locationType:'0',parentStation:'J'},
+  {stopId:'JB',stopName:'Jordbro centrum Bussar',locationType:'2',parentStation:'J'},
   {stopId:'C',stopName:'Stockholm City',locationType:'1',parentStation:''},
   {stopId:'C1',stopName:'Stockholm City',locationType:'0',parentStation:'C'},
   {stopId:'S',stopName:'Södra Jordbrovägen',locationType:'1',parentStation:''}
  ];
- const trips=new Map([['direct',['J1','H','C1']],['reverse',['C1','H','J1']],['bus',['J1','H']]]);
+ const trips=new Map([['direct',['J1','H','C1']],['reverse',['C1','H','J1']],['bus',['JB','H','C1']]]);
  assert.deepEqual(findRegionalDirectJourneys(trips,stops),{
   originName:'Jordbro',destinationName:'Stockholm City',originStopIdCount:2,destinationStopIdCount:2,
-  matchingTripCount:1,examples:[{tripId:'direct',originStopId:'J1',destinationStopId:'C1',originSequence:1,destinationSequence:3}]
+  matchingTripCount:1,examples:[{tripId:'direct',originStopId:'J1',destinationStopId:'C1',originSequence:1,destinationSequence:3,departureTime:null,arrivalTime:null}]
  });
+});
+
+test('retains scheduled departure and arrival times when requested',()=>{
+ const csv='trip_id,arrival_time,departure_time,stop_id,stop_sequence\nt1,08:01:00,08:02:00,J1,1\nt1,08:25:00,08:25:00,C1,9\n';
+ const map=parseRegionalStopTimes(csv,{includeTimes:true});
+ assert.deepEqual(map.get('t1'),[
+  {stop:'J1',arrivalTime:'08:01:00',departureTime:'08:02:00',sequence:1},
+  {stop:'C1',arrivalTime:'08:25:00',departureTime:'08:25:00',sequence:9}
+ ]);
 });
