@@ -119,3 +119,18 @@ test('known T-Centralen typos are corrected transparently without guessing other
  const exact=parseCommuteQuestion('Är tågen från Jordbro till T-Centralen försenade?');
  assert.equal(exact.stationCorrections,undefined);
 });
+
+
+test('COMMUTVUE uses VUECORE suggestions without silently changing unknown station names',()=>{
+ const trip=parseCommuteQuestion('från Jordbrp till T-Centralen');
+ assert.equal(trip.from,'Jordbrp');
+ assert.equal(trip.needsClarification,true);
+ assert.deepEqual(trip.stationSuggestions,[{role:'from',original:'Jordbrp',suggested:'Jordbro',requiresConfirmation:true}]);
+});
+
+test('COMMUTVUE exposes confirmation before any Trafiklab request',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+ assert.ok(source.indexOf('if(journey.stationSuggestions?.length)')<source.indexOf('createTrafiklabSwedenLive({apiKey:'));
+ assert.match(source,/evidence_status:'station_confirmation_required'/);
+});
