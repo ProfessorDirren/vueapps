@@ -33,7 +33,7 @@ export function createTrafikverketClient({apiKey,fetcher=fetch}={}){
  async function announcementsAt(signature,activity){
   if(!/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(signature))throw new TrafikverketError('invalid_signature');
   if(!['Avgang','Ankomst'].includes(activity))throw new TrafikverketError('invalid_activity');
-  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="'+activity+'"/><GT name="AdvertisedTimeAtLocation" value="$dateadd(-00:02:00)"/><LT name="AdvertisedTimeAtLocation" value="$dateadd(02:00:00)"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','TimeAtLocation','LocationSignature','Canceled','ToLocation' ,'ViaToLocation','ModifiedTime'],60);
+  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="'+activity+'"/><GT name="AdvertisedTimeAtLocation" value="$dateadd(-00:02:00)"/><LT name="AdvertisedTimeAtLocation" value="$dateadd(02:00:00)"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','PlannedEstimatedTimeAtLocation','PlannedEstimatedTimeAtLocationIsValid','TimeAtLocation','LocationSignature','Canceled','ToLocation' ,'ViaToLocation','ModifiedTime'],60);
  }
  return {station,departuresAt:signature=>announcementsAt(signature,'Avgang'),arrivalsAt:signature=>announcementsAt(signature,'Ankomst')};
 }
