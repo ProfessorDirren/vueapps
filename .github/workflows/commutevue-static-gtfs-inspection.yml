@@ -31,6 +31,6 @@ jobs:
             exit 1
           fi
           node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/commutevue-sl-regional.zip"
-      - name: Remove downloaded archive
+      - name: Parse bounded SL Regional stop_times\n        run: node scripts/commutevue-inspect-regional-gtfs.mjs "$RUNNER_TEMP/commutevue-sl-regional.zip"\n      - name: Remove downloaded archive
         if: always()
         run: rm -f "$RUNNER_TEMP/commutevue-sl-regional.zip" "$RUNNER_TEMP/commutevue-sl-regional.zip.partial"
