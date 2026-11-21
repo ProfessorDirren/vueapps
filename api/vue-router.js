@@ -2,6 +2,7 @@ import {interpretVueInput,vueCorrectionNotice} from '../core/vuecore-interpretat
 import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
 import {createTrafikverketJourneyProbe} from '../core/commutevue-trafikverket-adapter.js';
 import {createSLRegionalRealtimeSource} from '../core/commutevue-sl-regional-realtime.js';
+import {extractGTFSRealtimeTripEvidence} from '../core/commutevue-gtfsrt-trip-evidence.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion} from '../core/commutvue-query.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
@@ -92,7 +93,9 @@ export async function POST(request){
     globalThis.__commutvueRegionalProbeAt=now;
     try{
      const feed=await createSLRegionalRealtimeSource({apiKey:process.env.TRAFIKLAB_REGIONAL_REALTIME_KEY}).tripUpdates();
-     console.info('commutvue_regional_auth_probe',JSON.stringify({status:feed.bytes.length?'authorized_raw_unverified':'empty'}));
+     const evidence=extractGTFSRealtimeTripEvidence(feed.bytes);
+     const ageMs=evidence.feedTimestampMs===null?null:Date.now()-evidence.feedTimestampMs;
+     console.info('commutvue_regional_auth_probe',JSON.stringify({status:'decoded_unverified',tripCount:evidence.trips.length,stopEventCount:evidence.trips.reduce((n,t)=>n+t.stops.length,0),feedAgeSeconds:ageMs===null?null:Math.round(ageMs/1000),fresh:ageMs!==null&&ageMs>=0&&ageMs<=120000}));
     }catch(e){
      const reasons=['authorization','rate_limited','http_error','network_or_timeout','oversized_feed','invalid_body','invalid_size'];
      console.info('commutvue_regional_auth_probe',JSON.stringify({status:'unavailable',reason:reasons.includes(e?.reason)?e.reason:'unknown'}));
