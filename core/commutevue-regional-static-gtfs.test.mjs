@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRegionalStopTimes} from './commutevue-regional-static-gtfs.js';
+import {parseRegionalStopTimes,parseRegionalStopNames} from './commutevue-regional-static-gtfs.js';
 test('builds stop sequence sorted by GTFS stop_sequence',()=>{
  const map=parseRegionalStopTimes('trip_id,stop_id,stop_sequence\nt1,StockholmCity,3\nt1,Jordbro,1\nt1,Handen,2\n');
  assert.deepEqual(map.get('t1'),['Jordbro','Handen','StockholmCity']);
@@ -23,4 +23,12 @@ test('rejects unsafe row and trip limits',()=>{
  const csv='trip_id,stop_id,stop_sequence\nt1,J,1';
  assert.throws(()=>parseRegionalStopTimes(csv,{maxRows:5000001}));
  assert.throws(()=>parseRegionalStopTimes(csv,{maxTrips:250001}));
+});
+
+test('matches Jordbro and Stockholm City stops and returns GTFS IDs',()=>{
+ const rows='stop_id,stop_name,location_type,parent_station\n100,Jordbro,1,\n200,Stockholm City,1,\n300,Handen,1,\n';
+ assert.deepEqual(parseRegionalStopNames(rows),[
+  {stopId:'100',stopName:'Jordbro',parentStation:'',locationType:'1'},
+  {stopId:'200',stopName:'Stockholm City',parentStation:'',locationType:'1'}
+ ]);
 });
