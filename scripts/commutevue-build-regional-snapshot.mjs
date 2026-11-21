@@ -1,0 +1,50 @@
+/**
+ * Offline-only builder. Usage:
+ *   COMMUTEVUE_SNAPSHOT_SIGNING_KEY=... node scripts/commutevue-build-regional-snapshot.mjs input.zip output.json
+ * Downloads and production API calls are intentionally out of scope.
+ */
+import {readFile,writeFile} from 'node:fs/promises';
+import {parseRegionalGTFSZip,parseRegionalGTFSStopsZip,parseRegionalGTFSServiceMetadataZip,inspectRegionalGTFSZip} from '../core/commutevue-regional-gtfs-zip.js';
+import {parseRegionalServiceMetadata} from '../core/commutevue-regional-static-gtfs.js';
+import {buildRegionalServiceSnapshot,resolveRegionalStationStopIds} from '../core/commutevue-regional-snapshot.js';
+import {encodeRegionalSnapshot} from '../core/commutevue-regional-snapshot-codec.js';
+import {signRegionalSnapshot} from '../core/commutevue-regional-snapshot-auth.js';
+
+export function stockholmServiceDate(now=new Date()){
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).map(p=>[p.type,p.value]));
+ return parts.year+parts.month+parts.day;
+}
+export function selectDirectRegionalTrips(tripStops,originStopIds,destinationStopIds){
+ if(!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!originStopIds.size||!destinationStopIds.size)throw new Error('Missing route stops');
+ const ids=new Set();
+ for(const [tripId,sequence] of tripStops){
+  let originSeen=false;
+  for(const entry of sequence){
+   const stop=typeof entry==='string'?entry:entry?.stop;
+   if(originSeen&&destinationStopIds.has(stop)){ids.add(tripId);break;}
+   if(originStopIds.has(stop))originSeen=true;
+  }
+ }
+ return ids;
+}
+export function buildSignedRegionalCorridorSnapshot({archive,serviceDate=stockholmServiceDate(),validatedAtMs=Date.now(),signingKey,originName='Jordbro',destinationName='Stockholm City'}={}){
+ inspectRegionalGTFSZip(archive);
+ const stops=parseRegionalGTFSStopsZip(archive);
+ const tripStops=parseRegionalGTFSZip(archive);
+ const metadata=parseRegionalServiceMetadata(parseRegionalGTFSServiceMetadataZip(archive));
+ const snapshot=buildRegionalServiceSnapshot({tripStops,serviceMetadata:metadata,serviceDate,validatedAtMs,archiveVerified:true});
+ if(snapshot.status!=='validated')throw new Error('No validated regional service snapshot');
+ const originStopIds=resolveRegionalStationStopIds(stops,originName);
+ const destinationStopIds=resolveRegionalStationStopIds(stops,destinationName);
+ const allowedTripIds=selectDirectRegionalTrips(snapshot.tripStops,originStopIds,destinationStopIds);
+ const payload=encodeRegionalSnapshot(snapshot,{allowedTripIds});
+ return {envelope:signRegionalSnapshot(payload,{key:signingKey}),selectedTripCount:allowedTripIds.size,serviceDate};
+}
+if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+ const [, ,input,output]=process.argv;
+ if(!input||!output)throw new Error('Input archive and output file paths required');
+ const archive=await readFile(input);
+ const result=buildSignedRegionalCorridorSnapshot({archive,signingKey:process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY});
+ await writeFile(output,result.envelope,{flag:'wx',mode:0o600});
+ console.info(JSON.stringify({status:'signed_offline_artifact',serviceDate:result.serviceDate,selectedTripCount:result.selectedTripCount}));
+}
