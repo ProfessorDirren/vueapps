@@ -38,11 +38,12 @@ jobs:
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             import {loadRegionalSnapshotFromEnvironment} from "./core/commutevue-regional-runtime-artifact.js";
+            import {stockholmServiceDate} from "./scripts/commutevue-build-regional-snapshot.mjs";
             const manifest=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/manifest.json","utf8"));
             const snapshot=loadRegionalSnapshotFromEnvironment({
               encodedEnvelope:manifest.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,
               signingKey:process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,
-              expectedServiceDate:new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Stockholm",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-","")
+              expectedServiceDate:stockholmServiceDate()
             });
             if(snapshot.status!=="validated")throw Error("Runtime snapshot validation failed: "+snapshot.reason);
             const origin=new Set(manifest.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS.split(","));
