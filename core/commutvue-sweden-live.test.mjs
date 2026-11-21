@@ -884,3 +884,20 @@ test('missing destination emits only aggregate safe diagnostic, never provider I
   assert.doesNotMatch(JSON.stringify(diagnostic),/stop1|stop2|740000002|fixture|t1/);
  }finally{console.info=old;}
 });
+
+
+test('missing destination diagnostic distinguishes Stockholm City named stop without trusting alias',async()=>{
+ const logs=[];const previous=console.info;
+ console.info=(...args)=>logs.push(args);
+ try{
+  const mismatched={...details,calls:[details.calls[0],{stop:{id:'other',name:'Stockholm City',area_id:'740000099'},is_realtime:true}]};
+  const result=await make(board,mismatched)({provider:'stockholm',from:'Jordbro',to:'T-Centralen'});
+  assert.equal(result.status,'unavailable');
+  assert.equal(result.reason,'realtime_destination_absent');
+  const data=JSON.parse(logs.find(entry=>entry[0]==='commutvue_destination_match_diagnostic')[1]);
+  assert.equal(data.city_named_stop_seen,1);
+  assert.equal(data.origin_without_destination,1);
+  assert.equal(data.empty_trip_calls,0);
+  assert.doesNotMatch(JSON.stringify(data),/740000099|other|stop1|stop2/);
+ }finally{console.info=previous;}
+});
