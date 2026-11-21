@@ -29,8 +29,8 @@ export function routeRegisteredQuestion(question,previous=null){
 // Shared CORE guard: contradictory *actions*, not incidental topic words, require clarification.
 // A journey to a restaurant is still a journey; mentioning food alone is not a conflict.
 const actionIntents=Object.freeze([
- {domain:'commutvue',pattern:/\\b(?:när\\s+går\\s+(?:nästa|bussen|tåget)|nästa\\s+(?:buss|tåg)|next\\s+(?:bus|train)|when\\s+(?:does|is)\\s+the\\s+(?:next\\s+)?(?:bus|train))\\b/iu},
- {domain:'foodvue',pattern:/\\b(?:kyckling|chicken|pollo|poulet)\\s+(?:i|in|en|dans)\\s+(?:ugnen|the\\s+oven|el\\s+horno|le\\s+four)\\b|\\b(?:tillaga|baka|grädda|cook|bake|roast|cocinar|hornear|cuire)\\b/iu}
+ {domain:'commutvue',pattern:/\b(?:när\s+går\s+(?:nästa|bussen|tåget)(?:[^?]{0,120}\bfrån\b[^?]{0,120}\btill\b)?|nästa\s+(?:buss|tåg)|next\s+(?:bus|train)|when\s+(?:does|is)\s+the\s+(?:next\s+)?(?:bus|train))\b/iu},
+ {domain:'foodvue',pattern:/\b(?:kyckling|chicken|pollo|poulet)\s+(?:i|in|en|dans)\s+(?:ugnen|the\s+oven|el\s+horno|le\s+four)\b|\b(?:tillaga|baka|grädda|cook|bake|roast|cocinar|hornear|cuire)\b/iu}
 ]);
 function conflictingActionIntents(question){
  const found=actionIntents.filter(({pattern})=>pattern.test(question)).map(({domain})=>domain);
