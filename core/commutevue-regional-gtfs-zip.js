@@ -5,9 +5,10 @@
 import {inflateRawSync} from 'node:zlib';
 import {parseRegionalStopTimes} from './commutevue-regional-static-gtfs.js';
 const MAX_ARCHIVE=45*1024*1024,MAX_UNCOMPRESSED=60*1024*1024;
-export function parseRegionalGTFSZip(input){
+export function parseRegionalGTFSZip(input,{maxArchiveBytes=MAX_ARCHIVE}={}){
+ if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<22||maxArchiveBytes>80*1024*1024)throw new Error('Invalid GTFS archive limit');
  const bytes=input instanceof Uint8Array?input:null;
- if(!bytes||bytes.length<22||bytes.length>MAX_ARCHIVE)throw new Error('Invalid regional GTFS archive');
+ if(!bytes||bytes.length<22||bytes.length>maxArchiveBytes)throw new Error('Invalid regional GTFS archive');
  const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.byteLength);
  // End-of-central-directory signature may be followed by a ZIP comment.
  let end=-1;
@@ -26,7 +27,7 @@ export function parseRegionalGTFSZip(input){
   const name=buffer.toString('utf8',pos+46,pos+46+nameLen);
   pos=next;
   if(name!=='stop_times.txt')continue;
-  if(flags&1||![0,8].includes(method)||uncompressed>MAX_UNCOMPRESSED||compressed>MAX_ARCHIVE||offset+30>directoryOffset||buffer.readUInt32LE(offset)!==0x04034b50)throw new Error('Unsafe GTFS stop_times ZIP entry');
+  if(flags&1||![0,8].includes(method)||uncompressed>MAX_UNCOMPRESSED||compressed>maxArchiveBytes||offset+30>directoryOffset||buffer.readUInt32LE(offset)!==0x04034b50)throw new Error('Unsafe GTFS stop_times ZIP entry');
   const start=offset+30+buffer.readUInt16LE(offset+26)+buffer.readUInt16LE(offset+28);
   if(start+compressed>directoryOffset)throw new Error('Invalid GTFS ZIP payload');
   const zipped=buffer.subarray(start,start+compressed);
