@@ -70,7 +70,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
-  const candidates=[...board.departures].sort((a,b)=>Number(b?.is_realtime===true)-Number(a?.is_realtime===true));
+  // Within each evidence tier, check the nearest upcoming departures first. Trafiklab
+  // does not guarantee board order; the Trips request budget must not be spent
+  // on later trains while an earlier relevant departure is waiting.
+  const candidates=[...board.departures].sort((a,b)=>{
+   const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
+   if(tier)return tier;
+   const time=row=>swedishTime(row?.is_realtime===true?row?.realtime:row?.scheduled);
+   const ta=time(a),tb=time(b);
+   return (Number.isFinite(ta)?ta:Infinity)-(Number.isFinite(tb)?tb:Infinity);
+  });
   for(const d of candidates){
    if(departures.length>=maxTrips)break;
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
