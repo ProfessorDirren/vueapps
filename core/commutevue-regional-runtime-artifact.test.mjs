@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {encodeRegionalSnapshot} from './commutevue-regional-snapshot-codec.js';
 import {signRegionalSnapshot} from './commutevue-regional-snapshot-auth.js';
-import {loadRegionalSnapshotFromEnvironment,loadRegionalSnapshotFromFile} from './commutevue-regional-runtime-artifact.js';
+import {loadRegionalSnapshotFromEnvironment,loadRegionalSnapshotFromFile,loadBundledRegionalSnapshot} from './commutevue-regional-runtime-artifact.js';
 const now=1763718000000,day='20261121',key='test-only-signing-secret-that-is-long-enough';
 const payload=encodeRegionalSnapshot({status:'validated',serviceDate:day,validatedAtMs:now-1000,tripStops:new Map([['trip-1',['stop-1','stop-2']]])},{allowedTripIds:new Set(['trip-1'])});
 const encodedEnvelope=Buffer.from(signRegionalSnapshot(payload,{key}),'utf8').toString('base64');
@@ -42,4 +42,10 @@ test('signed file loader verifies authenticated raw envelope and rejects tamperi
   assert.equal(loadRegionalSnapshotFromFile({filePath,signingKey:key,expectedServiceDate:day,now}).status,'unavailable');
   assert.equal(loadRegionalSnapshotFromFile({filePath:join(dir,'missing'),signingKey:key,expectedServiceDate:day,now}).status,'unavailable');
  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('bundled snapshot fails closed when no daily file has been published',()=>{
+ const result=loadBundledRegionalSnapshot({signingKey:key,expectedServiceDate:day,now});
+ assert.equal(result.status,'unavailable');
+ assert.ok(['invalid_or_missing_snapshot_file','unauthenticated_snapshot','stale_static_snapshot'].includes(result.reason));
 });
