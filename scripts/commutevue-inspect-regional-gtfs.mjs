@@ -8,7 +8,9 @@ const metadata=inspectRegionalGTFSZip(archive);
 const trips=parseRegionalGTFSZip(archive,{includeTimes:true});
 const matchingStops=parseRegionalGTFSStopsZip(archive);
 const rawDirectJourneys=findRegionalDirectJourneys(trips,matchingStops);
-const serviceDate=process.env.GTFS_SERVICE_DATE||new Date().toISOString().slice(0,10).replaceAll('-','');
+// GitHub Actions runners use UTC; SL service dates must follow Sweden's local date.
+const stockholmDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
+const serviceDate=process.env.GTFS_SERVICE_DATE||stockholmDate;
 const serviceMetadata=parseRegionalServiceMetadata(parseRegionalGTFSServiceMetadataZip(archive));
 const routeTypeCounts={};
 for(const [tripId] of trips){const trip=serviceMetadata.tripById.get(tripId);const type=trip?serviceMetadata.routeTypes.get(trip.routeId):undefined;const key=type===undefined?'unknown':String(type);routeTypeCounts[key]=(routeTypeCounts[key]||0)+1;}
