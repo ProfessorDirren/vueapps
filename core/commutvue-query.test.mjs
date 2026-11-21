@@ -119,3 +119,11 @@ test('known T-Centralen typos are corrected transparently without guessing other
  const exact=parseCommuteQuestion('Är tågen från Jordbro till T-Centralen försenade?');
  assert.equal(exact.stationCorrections,undefined);
 });
+
+
+test('COMMUTVUE uses VUECORE suggestions without silently changing unknown station names',()=>{
+ const trip=parseCommuteQuestion('från Jordbrp till T-Centralen');
+ assert.equal(trip.from,'Jordbrp');
+ assert.equal(trip.needsClarification,true);
+ assert.deepEqual(trip.stationSuggestions,[{role:'from',original:'Jordbrp',suggested:'Jordbro',requiresConfirmation:true}]);
+});
