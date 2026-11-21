@@ -354,11 +354,11 @@ test('COMMUTEVUE POST exposes safe missing-realtime-time diagnostic with timetab
     data={stop_groups:[{id:name==='Jordbro'?'740000001':'740000002',name,stops:[{id:name==='Jordbro'?'stop1':'stop2',name}]}]};
    }else if(path.includes('/departures/')){
     data={timestamp:wall(now),departures:[
-     {trip:{trip_id:'missing',start_date:day},stop:{id:'stop1'},is_realtime:true,scheduled,route:{designation:'43',direction:'Stockholm City'}},
-     {trip:{trip_id:'scheduled',start_date:day},stop:{id:'stop1'},is_realtime:false,scheduled,route:{designation:'43',direction:'Stockholm City'}}
+     {trip:{trip_id:'missing',start_date:day},stop:{id:'stop1'},is_realtime:true,scheduled,route:{designation:'43',direction:'Stockholm City',transport_mode:'TRAIN',transport_mode_code:106}},
+     {trip:{trip_id:'scheduled',start_date:day},stop:{id:'stop1'},is_realtime:false,scheduled,route:{designation:'43',direction:'Stockholm City',transport_mode:'TRAIN',transport_mode_code:106}}
     ]};
    }else{
-    data={timestamp:wall(now),trip:{trip_id:'scheduled',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001'}},{stop:{id:'stop2',area_id:'740000002'}}]};
+    data={timestamp:wall(now),trip:{trip_id:'scheduled',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001',name:'Jordbro'}},{stop:{id:'stop2',area_id:'740000002',name:'Stockholm City'}}]};
    }
    return {ok:true,text:async()=>JSON.stringify(data)};
   };
