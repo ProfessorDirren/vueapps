@@ -24,6 +24,11 @@ test('categorizes authorization, unsatisfiable range and rate limits without lea
  for(const [code,expected] of [[401,'authorization'],[403,'authorization'],[416,'range_not_satisfiable'],[429,'rate_limited'],[404,'http_error']]){
   let cancelled=false;
   const result=await probeRegionalStaticRange({url,fetcher:async()=>({status:code,body:{cancel:async()=>{cancelled=true;}}})});
-  assert.deepEqual(result,{status:expected});assert.equal(cancelled,true);
+  assert.deepEqual(result,{status:expected,httpStatus:code});assert.equal(cancelled,true);
  }
+});
+
+test('records only numeric HTTP status for unrecognized HTTP errors',async()=>{
+ const result=await probeRegionalStaticRange({url,fetcher:async()=>({status:404,body:{cancel:async()=>{}}})});
+ assert.deepEqual(result,{status:'http_error',httpStatus:404});
 });
