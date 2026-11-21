@@ -48,3 +48,15 @@ test('ZIP inspector and parser accept a 57 MiB archive, above the old 45 MiB cap
  assert.equal(metadata.name,'stop_times.txt');
  assert.deepEqual(parseRegionalGTFSZip(large).get('t1'),['J']);
 });
+
+test('GTFS ZIP parser ignores fake end-of-directory signatures inside ZIP comments',()=>{
+ const base=archive();
+ const fakeEnd=Buffer.alloc(22);
+ fakeEnd.writeUInt32LE(0x06054b50);
+ // A fake marker must not itself be a valid EOCD candidate.
+ fakeEnd.writeUInt16LE(1,20);
+ const withComment=Buffer.concat([base,fakeEnd]);
+ withComment.writeUInt16LE(fakeEnd.length,base.length-2);
+ assert.equal(inspectRegionalGTFSZip(withComment).name,'stop_times.txt');
+ assert.deepEqual(parseRegionalGTFSZip(withComment).get('t1'),['J']);
+});
