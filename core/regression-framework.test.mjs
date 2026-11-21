@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {SPECIALISTS} from './specialists.js';
 import {VUE_NAMES,localizedVueName,hasLocalizedVueName} from './vue-names.js';
 import {routeQuestion} from './router.js';
+import {POST} from '../api/vue-router.js';
 import {detectVueInputLanguage} from './vuecore-language.js';
 import {RELEASE_LANGUAGES} from '../scripts/vue-release-check.mjs';
 import {routes,negatives,languages} from './regression-cases.mjs';
@@ -41,4 +42,20 @@ test('REGRESSION ambiguous input never guesses a language',()=>{
   assert.equal(detectVueInputLanguage('OK',lang),lang);
   assert.equal(detectVueInputLanguage('12345',lang),lang);
  }
+});
+
+for(const [id,question] of negatives)test('REGRESSION API negative '+id+' must clarify without a provider call',async()=>{
+ const previousFetch=globalThis.fetch;
+ let calls=0;
+ globalThis.fetch=async()=>{calls++;throw new Error('Provider must not be called for contradictory intent')};
+ try{
+  const response=await POST(new Request('https://local/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'sv',previous:'commutvue',auto_language:true})}));
+  assert.equal(response.status,200,id);
+  const result=await response.json();
+  assert.equal(result.clarify,true,id);
+  assert.equal(result.domain,null,id);
+  assert.equal(typeof result.answer,'string',id);
+  assert.ok(result.answer.trim().length>0,id);
+  assert.equal(calls,0,id+' called a provider before clarification');
+ }finally{globalThis.fetch=previousFetch}
 });
