@@ -1,0 +1,57 @@
+name: COMMUTEVUE private signed corridor smoke test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commutevue-private-snapshot-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Download private SL regional GTFS
+        env:
+          TRAFIKLAB_REGIONAL_STATIC_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_STATIC_KEY }}
+        run: |
+          set -eu
+          test -n "$TRAFIKLAB_REGIONAL_STATIC_KEY" || { echo 'Missing static key'; exit 1; }
+          node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/regional.zip"
+      - name: Build signed corridor and validate runtime provisioning
+        env:
+          COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
+        run: |
+          set -eu
+          test -n "$COMMUTEVUE_SNAPSHOT_SIGNING_KEY" || { echo 'Missing signing key'; exit 1; }
+          node scripts/commutevue-build-regional-snapshot.mjs "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/manifest.json"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import {loadRegionalSnapshotFromEnvironment} from "./core/commutevue-regional-runtime-artifact.js";
+            const manifest=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/manifest.json","utf8"));
+            const snapshot=loadRegionalSnapshotFromEnvironment({
+              encodedEnvelope:manifest.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,
+              signingKey:process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,
+              expectedServiceDate:new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Stockholm",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).replaceAll("-","")
+            });
+            if(snapshot.status!=="validated")throw Error("Runtime snapshot validation failed: "+snapshot.reason);
+            const origin=new Set(manifest.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS.split(","));
+            const dest=new Set(manifest.COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS.split(","));
+            const ids=new Set([...snapshot.tripStops.values()].flat());
+            if(![...origin].some(x=>ids.has(x))||![...dest].some(x=>ids.has(x)))throw Error("Station IDs missing from signed trips");
+            console.log(JSON.stringify({status:"runtime_provisioning_verified",activeCorridorTrips:snapshot.tripStops.size,artifactBytes:Buffer.byteLength(readFileSync(process.env.RUNNER_TEMP+"/corridor.json"))}));
+          '
+      - name: Delete private archive and signed artifacts
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/regional.zip" "$RUNNER_TEMP/regional.zip.partial" "$RUNNER_TEMP/corridor.json" "$RUNNER_TEMP/manifest.json"
