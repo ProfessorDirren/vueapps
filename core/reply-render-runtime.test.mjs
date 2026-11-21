@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const source=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
-function extract(name,next){const start=source.indexOf('function '+name+'(');assert.ok(start>=0);const end=source.indexOf('\nfunction '+next+'(',start);assert.ok(end>start);return source.slice(start,end)}
+function extract(name,next){const start=source.indexOf(name==='reply'?'const replyTimestampLabels=':'function '+name+'(');assert.ok(start>=0);const end=source.indexOf('\nfunction '+next+'(',start);assert.ok(end>start);return source.slice(start,end)}
 test('reply creates question and answer elements in strict mode and preserves their content',()=>{
  const replySource=extract('reply','syncInputLanguage');
  const articles=[];
