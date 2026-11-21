@@ -74,7 +74,9 @@ export async function POST(request){
     const reason=typeof probe.reason==='string'&&/^[a-z_]{1,60}$/.test(probe.reason)?probe.reason:'unknown';
     const departures=Array.isArray(probe.departures)?probe.departures:[];
     const estimatedCount=departures.filter(d=>d.hasEstimatedTime===true).length;
-    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60)}));
+    const actualCount=departures.filter(d=>d.hasActualTime===true).length;
+    const modifiedCount=departures.filter(d=>d.hasModifiedTime===true).length;
+    console.info('commutevue_trafikverket_shadow',JSON.stringify({status:probe.status==='matched'?'matched':'unavailable',reason,count:Math.min(departures.length,60),estimatedCount:Math.min(estimatedCount,60),actualCount:Math.min(actualCount,60),modifiedCount:Math.min(modifiedCount,60)}));
    }catch{
     console.info('commutevue_trafikverket_shadow',JSON.stringify({status:'unavailable',reason:'unexpected_error',count:0}));
    }
