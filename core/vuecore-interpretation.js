@@ -4,7 +4,7 @@ export function interpretVueInput(input){
  const original=String(input??'');
  const corrections=[];
  // Only whole station-name tokens, never arbitrary substrings or fuzzy guesses.
- const question=original.replace(/(?<![\\p{L}\\p{N}])(?:t-tentralen|c-tentralen)(?![\\p{L}\\p{N}])/giu,match=>{
+ const question=original.replace(/(?<![\p{L}\p{N}])(?:t-tentralen|c-tentralen)(?![\p{L}\p{N}])/giu,match=>{
   const corrected=ALIASES[match.toLocaleLowerCase('sv')];
   if(corrected)corrections.push({original:match,corrected});
   return corrected||match;
