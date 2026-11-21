@@ -6,7 +6,8 @@ const date='20261121',now=1763718000000;
 const trips=new Map([['active',['origin','destination']],['inactive',['origin','destination']]]);
 const serviceMetadata={
  tripById:new Map([['active',{routeId:'r',serviceId:'s'}],['inactive',{routeId:'r',serviceId:'off'}]]),
- routeTypes:new Map([['r',2]]),\n routeDetails:new Map([['r',{routeShortName:'43',routeLongName:'Pendeltåg'}]]),
+ routeTypes:new Map([['r',2]]),
+ routeDetails:new Map([['r',{routeShortName:'43',routeLongName:'Pendeltåg'}]]),
  serviceCalendars:new Map([['s',{start_date:'20260101',end_date:'20261231',saturday:'1'}],['off',{start_date:'20260101',end_date:'20261231',saturday:'0'}]]),
  serviceExceptions:new Map()
 };
