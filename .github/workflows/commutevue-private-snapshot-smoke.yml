@@ -60,6 +60,29 @@ jobs:
             if(!scheduledOriginTripCount)throw Error("No scheduled origin departure times in signed snapshot");
             console.log(JSON.stringify({status:"runtime_provisioning_verified",activeCorridorTrips:snapshot.tripStops.size,scheduledOriginTripCount,presentDestinations,missingDestinations,artifactBytes:Buffer.byteLength(readFileSync(process.env.RUNNER_TEMP+"/corridor.json"))}));
           '
+      - name: Verify bundled production snapshot is valid for today's corridor
+        env:
+          COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
+        run: |
+          set -eu
+          node --input-type=module -e '
+            import {loadBundledRegionalSnapshot,loadRegionalSnapshotFromEnvironment} from "./core/commutevue-regional-runtime-artifact.js";
+            import {stockholmServiceDate} from "./scripts/commutevue-build-regional-snapshot.mjs";
+            import {readFileSync} from "node:fs";
+            const key=process.env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY;
+            const serviceDate=stockholmServiceDate();
+            const bundled=loadBundledRegionalSnapshot({signingKey:key,expectedServiceDate:serviceDate});
+            const manifest=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/manifest.json","utf8"));
+            const fresh=loadRegionalSnapshotFromEnvironment({encodedEnvelope:manifest.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,signingKey:key,expectedServiceDate:serviceDate});
+            if(fresh.status!=="validated")throw Error("Fresh corridor validation failed");
+            console.log(JSON.stringify({status:"bundled_snapshot_validation",bundledStatus:bundled.status,bundledReason:bundled.reason??null,bundledTrips:bundled.status==="validated"?bundled.tripStops.size:0,freshTrips:fresh.tripStops.size,serviceDate}));
+            if(bundled.status!=="validated")throw Error("Production-bundled corridor snapshot is not valid for the current service day");
+            const origin=new Set(manifest.COMMUTVUE_REGIONAL_ORIGIN_STOP_IDS.split(","));
+            const destination=new Set(manifest.COMMUTVUE_REGIONAL_DESTINATION_STOP_IDS.split(","));
+            const corridor=(snapshot)=>[...snapshot.tripStops.values()].filter(stops=>stops.some((stop,i)=>origin.has(stop.stop)&&stops.slice(i+1).some(next=>destination.has(next.stop)))).length;
+            if(!corridor(bundled))throw Error("Production-bundled snapshot lacks the requested corridor");
+            console.log(JSON.stringify({status:"bundled_corridor_ready",bundledCorridorTrips:corridor(bundled),freshCorridorTrips:corridor(fresh)}));
+          '
       - name: Verify signed regional GTFS against actual live GTFS-RT
         env:
           COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
