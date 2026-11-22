@@ -20,8 +20,10 @@ export function joinNationalTrainEvidence(leg,probe,{originSignature,destination
  const found=matches[0];
  // The experimental Trafikverket adapter exposes only the planned destination
  // arrival, not a destination realtime forecast. Do not invent one.
- if(typeof found.estimatedDestinationArrival!=='string'||!Number.isFinite(timestamp(found.estimatedDestinationArrival)))return null;
  if(!sameMinute(found.destinationArrival,leg.arrival))return null;
+ // A cancelled service has no meaningful arrival forecast. Report cancellation
+ // only after all identity, station and planned-timing checks succeeded.
  if(found.cancelled===true)return {...leg,verified:true,cancelled:true};
+ if(typeof found.estimatedDestinationArrival!=='string'||!Number.isFinite(timestamp(found.estimatedDestinationArrival)))return null;
  return {...leg,verified:true,estimatedDeparture:found.estimatedTime||null,estimatedArrival:found.estimatedDestinationArrival};
 }

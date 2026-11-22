@@ -60,3 +60,16 @@ test('destination mismatch across autumn DST fold is rejected',()=>{
  const foldTrain={...train,advertisedTime:'2026-10-24T23:30:00.000Z',destinationArrival:'2026-10-25T01:30:00.000Z'};
  assert.equal(joinNationalTrainEvidence(foldLeg,{...probe,departures:[foldTrain]},opts),null);
 });
+
+test('uniquely verified cancellation needs no arrival forecast',()=>{
+ const cancelled={...train,cancelled:true,estimatedDestinationArrival:null};
+ const result=joinNationalTrainEvidence(leg,{...probe,departures:[cancelled]},opts);
+ assert.equal(result?.verified,true);
+ assert.equal(result?.cancelled,true);
+});
+test('cancelled service still requires matching train, station and planned destination',()=>{
+ const cancelled={...train,cancelled:true,estimatedDestinationArrival:null};
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...cancelled,train:'9999'}]},opts),null);
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...cancelled,destinationArrival:'2026-11-23T10:20:00Z'}]},opts),null);
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[cancelled]}, {...opts,stationMap:{}}),null);
+});
