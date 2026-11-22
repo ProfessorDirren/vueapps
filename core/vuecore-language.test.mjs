@@ -40,3 +40,7 @@ test('Short English transit questions retain their spoken language in Swedish UI
   assert.equal(detectVueInputLanguage(question,'sv'),'en',question);
  }
 });
+
+test('Italian VUEAPPS help language is detected centrally',()=>{
+ assert.equal(detectVueInputLanguage('Ciao! Come posso usare VUEAPPS in italiano?','en'),'it');
+});
