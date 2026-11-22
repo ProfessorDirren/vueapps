@@ -15,10 +15,10 @@ test('national planner resolves exact stops and returns schedule, not realtime',
   const path=url.pathname;
   if(path.endsWith('location.name')){
    const input=url.searchParams.get('input');
-   return {ok:true,json:async()=>({StopLocation:[{id:input==='Tyresö Centrum'?'origin':'destination',name:input}]})};
+   return {ok:true,json:async()=>({StopLocation:[{id:'internal-'+input,extId:input==='Tyresö Centrum'?'740098001':'740098002',name:input}]})};
   }
-  assert.equal(url.searchParams.get('originId'),'origin');
-  assert.equal(url.searchParams.get('destId'),'destination');
+  assert.equal(url.searchParams.get('originId'),'740098001');
+  assert.equal(url.searchParams.get('destId'),'740098002');
   return {ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'Tyresö Centrum',date:'2026-11-22',time:'12:00:00'},Destination:{name:'Göteborg Centralstation',date:'2026-11-22',time:'16:00:00'}}]}}]})};
  };
  const result=await planNationalSwedenJourney('Tyresö Centrum','Göteborg Centralstation',{apiKey:'dummy',fetchImpl});
@@ -26,7 +26,7 @@ test('national planner resolves exact stops and returns schedule, not realtime',
 });
 test('ambiguous stops do not trigger trip request',async()=>{
  let calls=0;
- const fetchImpl=async url=>{calls++;assert.ok(url.pathname.endsWith('location.name'));return {ok:true,json:async()=>({StopLocation:[{id:'a',name:'Tyresö Centrum'},{id:'b',name:'Tyresö Centrum'}]})};};
+ const fetchImpl=async url=>{calls++;assert.ok(url.pathname.endsWith('location.name'));return {ok:true,json:async()=>({StopLocation:[{id:'internal-a',extId:'740098001',name:'Tyresö Centrum'},{id:'internal-b',extId:'740098002',name:'Tyresö Centrum'}]})};};
  const result=await planNationalSwedenJourney('Tyresö Centrum','Göteborg Centralstation',{apiKey:'dummy',fetchImpl});
  assert.equal(result.status,'ambiguous_stop');assert.equal(calls,2);
 });
@@ -108,7 +108,7 @@ test('national planner refuses identical resolved stop IDs without trip API call
  let tripCalls=0;
  const fetchImpl=async url=>{
   if(url.pathname.endsWith('/trip')){tripCalls++;throw new Error('must not request a journey to the same stop');}
-  return {ok:true,json:async()=>({StopLocation:[{id:'same-id',name:url.searchParams.get('input')}]})};
+  return {ok:true,json:async()=>({StopLocation:[{id:'internal-same',extId:url.searchParams.get('input')==='Tyresö Centrum'?'740098001':'740098002',name:url.searchParams.get('input')}]})};
  };
  const result=await planNationalSwedenJourney('Stockholm Central','Stockholm Central',{apiKey:'dummy',fetchImpl});
  assert.equal(result.status,'same_stop');
@@ -125,7 +125,7 @@ test('Swedish arrive-by request parses exact date and minute without guessing re
 test('national arrive-by query asks provider for arrival search and rejects late options',async()=>{
  let tripCalls=0;
  const fetchImpl=async url=>{
-  if(url.pathname.endsWith('location.name'))return {ok:true,json:async()=>({StopLocation:[{id:url.searchParams.get('input'),name:url.searchParams.get('input')}]})};
+  if(url.pathname.endsWith('location.name'))return {ok:true,json:async()=>({StopLocation:[{id:'internal-'+url.searchParams.get('input'),extId:url.searchParams.get('input')==='Tyresö Centrum'?'740098001':'740098002',name:url.searchParams.get('input')}]})};
   tripCalls++;
   assert.equal(url.searchParams.get('searchForArrival'),'1');
   assert.equal(url.searchParams.get('date'),'2026-11-23');
@@ -141,7 +141,7 @@ test('national arrive-by query asks provider for arrival search and rejects late
  assert.equal(result.trips[0].arrival,'2026-11-23T10:30:00');
 });
 test('national arrive-by query fails closed if all arrivals miss deadline',async()=>{
- const fetchImpl=async url=>url.pathname.endsWith('location.name')?{ok:true,json:async()=>({StopLocation:[{id:url.searchParams.get('input'),name:url.searchParams.get('input')}]})}:{ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'A',date:'2026-11-23',time:'06:00:00'},Destination:{name:'B',date:'2026-11-23',time:'10:47:00'}}]}}]})};
+ const fetchImpl=async url=>url.pathname.endsWith('location.name')?{ok:true,json:async()=>({StopLocation:[{id:'internal-'+url.searchParams.get('input'),extId:url.searchParams.get('input')==='A'?'740098001':'740098002',name:url.searchParams.get('input')}]})}:{ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'A',date:'2026-11-23',time:'06:00:00'},Destination:{name:'B',date:'2026-11-23',time:'10:47:00'}}]}}]})};
  const arriveBy={date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'};
  const result=await planNationalSwedenJourney('A','B',{apiKey:'dummy',fetchImpl,arriveBy});
  assert.equal(result.status,'no_journeys');

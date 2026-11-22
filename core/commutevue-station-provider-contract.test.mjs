@@ -10,7 +10,7 @@ test('station verification uses actual Trafikverket client query shape',async()=
   const name=options.body.includes('value="Jordbro"')?'Jordbro':'Stockholm City';
   return response([{AdvertisedLocationName:name,LocationSignature:name==='Jordbro'?'J':'Sci'}]);
  }});
- const verified=await verifyStationCandidates([{resRobotName:'Jordbro',resRobotStopId:'A=740000001@',trafikverketSignature:'J'},{resRobotName:'Stockholm City',resRobotStopId:'A=740000002@',trafikverketSignature:'Sci'}],client);
+ const verified=await verifyStationCandidates([{resRobotName:'Jordbro',resRobotStopId:'740000001',trafikverketSignature:'J'},{resRobotName:'Stockholm City',resRobotStopId:'740000002',trafikverketSignature:'Sci'}],client);
  assert.equal(verified?.length,2);
  assert.equal(requests.length,2);
  assert.ok(requests.every(body=>body.includes('objecttype="TrainStation"')));
