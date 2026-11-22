@@ -85,12 +85,12 @@ export async function POST(request){
     apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline
    });
    if(schedule.status==='schedule_available'){
-    const clock=iso=>typeof iso==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(iso)?iso.slice(11,16):'—';
+    const clock=iso=>typeof iso==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso)?iso.slice(11,16):'—';
     const intro={sv:'Tidtabellsresor för angivet datum (inte realtid):',es:'Viajes según el horario para la fecha solicitada (no en tiempo real):',en:'Timetable journeys for the requested date (not real-time):'};
     const rows=schedule.trips.map((trip,i)=>(i+1)+'. '+clock(trip.departure)+' Jordbro → '+clock(trip.arrival)+' Stockholm City'+
      (trip.legs.length>1?' ('+trip.legs.length+' etapper)':''));
     const note={sv:'Kontrollera trafikläget igen på resdagen. Stockholm City och T-Centralen är anslutna men inte identiska plattformar.',es:'Vuelve a comprobar el tráfico el día del viaje. Stockholm City y T-Centralen están conectadas, pero no son el mismo andén.',en:'Check traffic again on the travel day. Stockholm City and T-Centralen are connected but are not the same platform.'};
-    return respond(200,{domain:'commutvue',answer:(intro[b.language]||intro.en)+'\\n'+rows.join('\\n')+'\\n'+(note[b.language]||note.en),kind:'verified_schedule',verified:false,evidence_status:'schedule_verified',live_diagnostic:'future_schedule_only',departures:[],source_url:'https://www.trafiklab.se/',updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+    return respond(200,{domain:'commutvue',answer:(intro[b.language]||intro.en)+'\n'+rows.join('\n')+'\n'+(note[b.language]||note.en),kind:'verified_schedule',verified:false,evidence_status:'schedule_verified',live_diagnostic:'future_schedule_only',departures:[],source_url:'https://www.trafiklab.se/',updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
    }
   }
   // A future-date request must never be answered with today's realtime board.
