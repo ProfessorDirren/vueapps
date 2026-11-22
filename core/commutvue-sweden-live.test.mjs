@@ -1007,3 +1007,14 @@ test('OFFLINE REGRESSION: destination evidence is verified from stop order, neve
   else assert.equal(result.departures?.length??0,0,c.name);
  }
 });
+
+test('verified destination area accepts a different platform label but rejects a different area',async()=>{
+ const station={...details,calls:[details.calls[0],{stop:{id:'unlisted-platform',area_id:'740000002',name:'Stockholm City pendeltågsplattform'},is_realtime:true}]};
+ const ok=await make(board,station)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(ok.status,'ok');
+ assert.equal(ok.departures.length,1);
+ const wrong={...station,calls:[station.calls[0],{stop:{id:'unlisted-platform',area_id:'740000099',name:'Stockholm City pendeltågsplattform'},is_realtime:true}]};
+ const rejected=await make(board,wrong)({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(rejected.status,'unavailable');
+ assert.equal(rejected.reason,'realtime_destination_absent');
+});
