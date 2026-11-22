@@ -8,6 +8,7 @@ import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js
 import {runRegionalRouterShadow,runRegionalRouterPublication} from '../core/commutevue-regional-router-shadow.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion,commuteTransportMode} from '../core/commutvue-query.js';
+import {planNationalSwedenJourney} from '../core/commutvue-resrobot.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
 import {queryDisruptions} from '../core/commutvue-disruptions.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
@@ -76,6 +77,21 @@ export async function POST(request){
   if(/(?:^|[^\p{L}\p{N}])(?:imorgon|i morgon|övermorgon|i övermorgon|tomorrow|day after tomorrow)(?=$|[^\p{L}\p{N}])/iu.test(question)){
    const futureMessages={sv:'Realtidsavgångar för ett framtida datum kan inte verifieras idag. Fråga igen på resdagen.',en:'Real-time departures for a future date cannot be verified today. Please check again on the travel day.',es:'No se pueden verificar hoy las salidas en tiempo real de una fecha futura. Consulta de nuevo el día del viaje.',fr:'Les départs en temps réel pour une date future ne peuvent pas être vérifiés aujourd’hui. Vérifiez le jour du voyage.',hi:'भविष्य की तारीख की रीयल-टाइम ट्रेन जानकारी आज सत्यापित नहीं की जा सकती। यात्रा के दिन फिर जाँचें।','zh-CN':'今天无法核实未来日期的列车实时发车信息。请在出行当天再次查询。',ru:'Сегодня невозможно проверить отправления в реальном времени на будущую дату. Проверьте снова в день поездки.',ar:'لا يمكن التحقق اليوم من مواعيد القطارات الفورية لتاريخ مستقبلي. يُرجى التحقق مجددًا يوم السفر.',el:'Οι αναχωρήσεις σε πραγματικό χρόνο για μελλοντική ημερομηνία δεν μπορούν να επαληθευτούν σήμερα. Ελέγξτε ξανά την ημέρα του ταξιδιού.',tr:'Gelecekteki bir tarihin gerçek zamanlı tren kalkışları bugün doğrulanamaz. Seyahat günü tekrar kontrol edin.',fa:'اطلاعات لحظه‌ای حرکت قطارهای یک تاریخ آینده را نمی‌توان امروز تأیید کرد. روز سفر دوباره بررسی کنید.'};
    return respond(200,{domain:'commutvue',answer:futureMessages[b.language]||futureMessages.en,kind:'local_guidance',verified:false,evidence_status:'future_date_unavailable',live_diagnostic:'future_date',departures:[],source_url:null,updated_at:null,disruptions:{status:'unknown',alerts:[]},photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+  }
+  // National journeys use ResRobot timetable evidence; never label these as realtime.
+  // Keep the existing regional provider path unchanged.
+  if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
+   const national=await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY});
+   const clock=value=>/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(value)?value.slice(11,16):'—';
+   const messages={
+    sv:{intro:'ResRobot visar följande planerade resa (inte verifierad realtid):',via:' → ',unavailable:'ResRobot kunde inte verifiera en nationell resa med entydiga hållplatser just nu. Jag hittar inte på byten eller avgångar.'},
+    en:{intro:'ResRobot provides this scheduled journey (not verified real-time):',via:' → ',unavailable:'ResRobot could not verify a national journey with unambiguous stops right now. I will not invent connections or departures.'},
+    es:{intro:'ResRobot muestra este viaje programado (sin datos en tiempo real verificados):',via:' → ',unavailable:'ResRobot no pudo verificar un viaje nacional con paradas inequívocas.'},
+    fr:{intro:'ResRobot propose ce trajet prévu (sans temps réel vérifié) :',via:' → ',unavailable:'ResRobot ne peut pas confirmer un trajet national avec des arrêts sans ambiguïté.'}
+   };
+   const labels=messages[b.language]||messages.en;
+   const answer=national.status==='schedule_available'?labels.intro+'\\n'+national.trips.map((trip,i)=>(i+1)+'. '+trip.legs.map(leg=>leg.from+' '+clock(leg.departure)+labels.via+leg.to+' '+clock(leg.arrival)).join(' | ')).join('\\n'):labels.unavailable;
+   return respond(200,{domain:'commutvue',answer,kind:national.status==='schedule_available'?'verified_schedule':'local_guidance',verified:false,evidence_status:national.status==='schedule_available'?'schedule_verified':'national_'+national.status,live_diagnostic:'not_attempted',departures:[],source_url:national.status==='schedule_available'?'https://www.trafiklab.se/':null,updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:national.status==='ambiguous_stop',region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
   let live=null;
   let scheduled=null;
