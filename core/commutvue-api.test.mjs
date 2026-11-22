@@ -402,3 +402,35 @@ test('COMMUTVUE destination-only follow-up retains Jordbro without inventing liv
  assert.equal(data.clarify,false);
  assert.equal(data.verified,false);
 });
+
+test('Maria Spanish arrive-by routes through ResRobot and returns provider timetable only',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.RESROBOT_API_KEY;
+ const question='Mañana, lunes 23 de noviembre de 2026, necesito viajar en tren de cercanías desde la estación de Jordbro hasta T-Centralen, en Estocolmo. Tengo que llegar a más tardar a las 10:30 de la mañana. ¿Qué tren debo tomar y a qué hora tengo que salir de Jordbro? Comprueba los horarios, los datos en tiempo real, los retrasos y las cancelaciones. Respóndeme completamente en español.';
+ const calls=[];
+ try{
+  process.env.RESROBOT_API_KEY='fixture-secret';
+  globalThis.fetch=async url=>{
+   const u=new URL(url);calls.push(u);
+   if(u.pathname.endsWith('/location.name')){
+    const name=u.searchParams.get('input');
+    return {ok:true,json:async()=>({StopLocation:[{name,extId:name==='Jordbro'?'740000001':'740000002'}]})};
+   }
+   if(u.pathname.endsWith('/trip'))return {ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'Jordbro',date:'2026-11-23',time:'09:45:00'},Destination:{name:'Stockholm City',date:'2026-11-23',time:'10:15:00'},Product:[{num:'43',catOut:'TRAIN'}]}]}}]})};
+   throw Error('Unexpected URL '+u.pathname);
+  };
+  const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'es'})}));
+  const body=await response.json();
+  assert.equal(response.status,200);
+  assert.equal(body.domain,'commutvue');
+  assert.equal(body.kind,'verified_schedule');
+  assert.equal(body.verified,false);
+  assert.match(body.answer,/09:45/);
+  assert.match(body.answer,/10:15/);
+  assert.match(body.answer,/no en tiempo real/);
+  assert.ok(calls.some(u=>u.pathname.endsWith('/trip')&&u.searchParams.get('date')==='2026-11-23'&&u.searchParams.get('time')==='10:30'&&u.searchParams.get('searchForArrival')==='1'));
+  assert.doesNotMatch(JSON.stringify(body),/fixture-secret/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
+ }
+});
