@@ -38,7 +38,7 @@ export function parseCommuteQuestion(question){
  // Region must be grounded in an endpoint, not incidental context in the question.
  const endpointRegions=from&&to?Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(from)||re.test(to)).map(([region])=>region):[];
  const selected=endpointRegions.length?endpointRegions:regions;
- const result={region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length!==1||!from||!to};
+ const result={region:selected.length===1?selected[0]:null,from:from||null,to:to||null,needsClarification:selected.length===0||!from||!to,unsupportedIntercity:selected.length>1&&!!from&&!!to};
  const corrections=[...(origin?.corrections||[]).map(c=>({role:'from',...c})),...(destination?.corrections||[]).map(c=>({role:'to',...c}))];
  if(corrections.length)result.stationCorrections=corrections;
  // Suggestions are metadata only: never silently route a trip using a guessed stop.
