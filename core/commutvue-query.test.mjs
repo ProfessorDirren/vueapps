@@ -156,3 +156,9 @@ test('all supported Swedish modes classify without inventing live departures',()
  assert.equal(commuteTransportMode('Hur reser jag från Tyresö till Gullmarsplan?'),null);
  assert.equal(commuteTransportMode('Buss eller tunnelbana från Tyresö till Gullmarsplan?'),null);
 });
+
+test('Spanish station wording preserves exact Jordbro and Stockholm City corridor',()=>{
+ const q='Muéstrame los próximos trenes de cercanías desde la estación de Jordbro hasta Stockholm City. Comprueba las salidas en tiempo real, los retrasos y los trenes cancelados. Responde en español.';
+ assert.deepEqual(parseCommuteQuestion(q),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+ assert.equal(commuteTransportMode(q),'TRAIN');
+});
