@@ -44,12 +44,30 @@ export async function lookupResRobotStops(query,{apiKey,fetchImpl=fetch}={}){
   return stop?.id&&stop?.name?[{id:stop.id,name:stop.name}]:[];
  });
 }
-export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch}={}){
+// Parse only an explicit Swedish arrive-by instruction; unsupported dates fail closed.
+export function parseSwedishArrivalDeadline(question,{now=new Date()}={}){
+ const text=String(question||'');
+ const match=/\b(?:framme|ankomma|anlända)\s+senast\s+(?:kl\.?\s*)?(\d{1,2})[.:](\d{2})\s+den\s+(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)(?:\s+(\d{4}))?/iu.exec(text);
+ if(!match)return null;
+ const months=['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
+ const hour=Number(match[1]),minute=Number(match[2]),day=Number(match[3]),month=months.indexOf(match[4].toLocaleLowerCase('sv-SE'))+1;
+ if(hour>23||minute>59||!month)return {invalid:true};
+ const stockholm=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+ const yearNow=Number(stockholm.find(part=>part.type==='year').value);
+ const year=match[5]?Number(match[5]):yearNow;
+ const valid=new Date(Date.UTC(year,month-1,day));
+ if(valid.getUTCFullYear()!==year||valid.getUTCMonth()!==month-1||valid.getUTCDate()!==day)return {invalid:true};
+ const date=String(year).padStart(4,'0')+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+ const time=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
+ return {date,time,cutoff:date+'T'+time,explicitYear:!!match[5]};
+}
+export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch,arriveBy=null}={}){
  if(!apiKey)throw new Error('resrobot_not_configured');
  if(!fromId||!toId)throw new Error('missing_stop_id');
  const url=new URL(BASE+'/trip');
  url.searchParams.set('originId',fromId);
  url.searchParams.set('destId',toId);
+ if(arriveBy){url.searchParams.set('date',arriveBy.date);url.searchParams.set('time',arriveBy.time);url.searchParams.set('searchForArrival','1');}
  url.searchParams.set('format','json');
  url.searchParams.set('accessId',apiKey);
  const response=await fetchImpl(url,{signal:AbortSignal.timeout(10000)});
@@ -100,7 +118,7 @@ export function rankResRobotTrips(trips){
   return [item.trip];
  });
 }
-export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}={}){
+export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,arriveBy=null}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};
  try{
   const [origins,destinations]=await Promise.all([
@@ -111,8 +129,8 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}
   if(!origin||!destination)return {status:'ambiguous_stop',trips:[]};
   // A resolved identical stop ID is not a journey; never request or display one.
   if(origin.id===destination.id)return {status:'same_stop',trips:[]};
-  const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl});
-  const ranked=rankResRobotTrips(trips);
+  const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl,arriveBy});
+  const ranked=rankResRobotTrips(trips).filter(trip=>!arriveBy||(trip.arrival.slice(0,16)<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
   return {status:ranked.length?'schedule_available':'no_journeys',trips:ranked.slice(0,3)};
  }catch{return {status:'provider_unavailable',trips:[]};}
 }
