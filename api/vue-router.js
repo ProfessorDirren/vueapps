@@ -215,13 +215,16 @@ export async function POST(request){
    fr:{scheduled:'Horaire',predicted:'Départ actualisé',delay:'Retard/annulation non vérifiés',source:'Source : SL Regional GTFS-RT'},
    it:{scheduled:'Orario',predicted:'Partenza aggiornata',delay:'Ritardo/cancellazione non verificati',source:'Fonte: SL Regional GTFS-RT'}
   };
+  // Destination arrivals are optional and must originate from the same authenticated
+  // regional trip update; never derive them from the timetable or journey duration.
+  const arrivalLabels={sv:'Verifierad ankomst Stockholm City',en:'Verified arrival Stockholm City',es:'Llegada verificada a Stockholm City',fr:'Arrivée vérifiée à Stockholm City',it:'Arrivo verificato a Stockholm City',hi:'Stockholm City पर सत्यापित आगमन','zh-CN':'Stockholm City 已核实到达',ru:'Подтверждённое прибытие Stockholm City',ar:'وصول مؤكد إلى Stockholm City',el:'Επαληθευμένη άφιξη Stockholm City',tr:'Stockholm City doğrulanmış varış',fa:'ورود تأییدشده به Stockholm City'};
   const regionalDetails=regionalDetailLabels[b.language]||regionalDetailLabels.en;
   const regionalClock=new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
-  const regionalAnswer=regionalVerified?(regionalLabels[b.language]||regionalLabels.en)+'\n'+regionalPublished.departures.map(d=>{
+  const regionalAnswer=regionalVerified?(regionalPublished.departures.some(d=>d.predictedArrival)?({sv:'Realtidsuppdaterade avgångar (ankomst visas endast när verifierad):',en:'Regional real-time departures (arrival shown only when verified):',es:'Salidas en tiempo real (llegada mostrada solo si está verificada):',fr:'Départs en temps réel (arrivée affichée uniquement si vérifiée) :',it:'Partenze in tempo reale (arrivo mostrato solo se verificato):'}[b.language]||'Regional real-time departures (arrival shown only when verified):'):(regionalLabels[b.language]||regionalLabels.en))+'\n'+regionalPublished.departures.map(d=>{
    // GTFS service times can exceed 24:00; show the clock time without inventing a delay.
    const scheduledParts=typeof d.scheduledDeparture==='string'?d.scheduledDeparture.split(':'):[];
    const scheduled=scheduledParts.length===3&&/^[0-9]{2,3}$/.test(scheduledParts[0])?String(Number(scheduledParts[0])%24).padStart(2,'0')+':'+scheduledParts[1]:'—';
-   return d.line+' · '+d.destination+' · '+regionalDetails.scheduled+' '+scheduled+' · '+regionalDetails.predicted+' '+regionalClock.format(new Date(d.predictedDeparture))+' · '+regionalDetails.delay;
+   return d.line+' · '+d.destination+' · '+regionalDetails.scheduled+' '+scheduled+' · '+regionalDetails.predicted+' '+regionalClock.format(new Date(d.predictedDeparture))+(d.predictedArrival?' · '+(arrivalLabels[b.language]||arrivalLabels.en)+' '+regionalClock.format(new Date(d.predictedArrival)):'')+' · '+regionalDetails.delay;
   }).join('\n')+'\n'+regionalDetails.source:'';
   const scheduledLabels={en:'Verified timetable departures (not real-time):',es:'Salidas verificadas del horario (no en tiempo real):',sv:'Verifierade tidtabellsavgångar (inte realtid):',hi:'सत्यापित समय-सारणी प्रस्थान (रीयल-टाइम नहीं):','zh-CN':'已核实的时刻表发车时间（非实时）：',ru:'Подтверждённые отправления по расписанию (не в реальном времени):',ar:'مواعيد المغادرة المؤكدة وفق الجدول (ليست بيانات فورية):',el:'Επαληθευμένες αναχωρήσεις βάσει προγράμματος (όχι σε πραγματικό χρόνο):',tr:'Doğrulanmış tarifeli kalkışlar (gerçek zamanlı değil):',fa:'حرکت‌های تأییدشده طبق برنامه (نه اطلاعات لحظه‌ای):',fr:'Départs vérifiés selon les horaires (pas en temps réel) :'};
   // A timetable-only response cannot establish whether a train is delayed.
