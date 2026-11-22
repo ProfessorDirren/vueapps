@@ -117,7 +117,30 @@
     }
     @media(max-width:480px) { .vue-brain { left:52%;width:62px;height:45px; } .logo { font-size:20px; } .lang-picker { max-width:36%; } }
     @media(prefers-reduced-motion:reduce) { .vue-brain-core,.vue-brain-glint { animation:none !important; } }
+
+    /* Shared G&D specialist navigation: links only, VUECORE retains all routing and state. */
+    .gd-workspace { display:grid;grid-template-columns:minmax(190px,230px) minmax(0,1fr);gap:18px;align-items:start; }
+    .gd-specialists { position:sticky;top:14px;padding:18px 12px;border:1px solid #26616b;border-radius:15px;background:#071b25;box-shadow:inset 0 1px 0 #7ef8e216; }
+    .gd-specialists h2 { margin:0 0 14px;color:#77e9e1;font-size:15px;letter-spacing:.03em; }
+    .gd-specialists nav { display:grid;gap:5px; }
+    .gd-specialists a { display:flex;gap:11px;align-items:center;padding:10px;border:1px solid transparent;border-radius:10px;text-decoration:none;color:#e9f4f5;font-weight:700;font-size:13px; }
+    .gd-specialists a:hover,.gd-specialists a:focus-visible { border-color:#55dcd1;background:#123945;outline-offset:2px; }
+    .gd-specialists a[aria-current="page"] { border-color:#53e3d7;background:#087e81;color:white; }
+    .gd-specialists .gd-symbol { width:24px;text-align:center;font-size:18px;flex-shrink:0; }
+    .gd-specialists .gd-more { color:#8edbd7;font-size:12px; }
+    .gd-workspace .hero { min-width:0; }
+    #vue-router-replies { display:grid;gap:12px;margin-top:12px; }
+    #vue-router-replies > * { border:1px solid #287b7f;border-radius:13px;background:linear-gradient(160deg,#10333e,#0b202b);padding:14px;box-shadow:0 5px 16px #0003;overflow-wrap:anywhere; }
+    @media(max-width:850px) { .gd-workspace { grid-template-columns:1fr;gap:8px; } .gd-specialists { position:static;padding:10px; } .gd-specialists nav { display:flex;overflow-x:auto;gap:7px;scrollbar-width:thin; } .gd-specialists a { white-space:nowrap;flex-shrink:0; } .gd-specialists h2 { font-size:12px;margin-bottom:7px; } }
   </style>
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      const active=new URLSearchParams(location.search).get('vue');
+      for(const link of document.querySelectorAll('[data-gd-vue]')){
+        if(link.dataset.gdVue===active)link.setAttribute('aria-current','page');
+      }
+    });
+  </script>
   <script src="./analytics.js" defer></script>
   <script type="module" src="./apps/router.js"></script>
   <script type="module" src="./apps/help.js"></script>
@@ -125,6 +148,22 @@
 <body>
   <header><select class="lang-picker" id="language" aria-label="Select language"><option value="en">English</option><option value="es">Español</option><option value="sv">Svenska</option><option value="hi">हिन्दी (Hindi)</option><option value="zh-CN">简体中文 (Chinese)</option><option value="ru">Русский (Russian)</option><option value="ar">العربية (Arabic)</option><option value="el">Ελληνικά (Greek)</option><option value="tr">Türkçe (Turkish)</option><option value="fa">فارسی (Persian)</option><option value="fr">Français (French)</option><option value="it">Italiano (Italian)</option></select><div class="logo">VUEAPPS</div><div class="vue-brain" role="img" aria-label="Gray brain with pink neon orbit"><img class="vue-brain-core" src="./assets/vue-brain-realistic.webp" alt="" aria-hidden="true"><span class="vue-brain-glint" aria-hidden="true"></span></div><div id="vuecore-help"></div></header>
   <main>
+    <div class="gd-workspace">
+    <aside class="gd-specialists" aria-label="VUE specialists">
+      <h2>VUE-SPECIALISTER</h2>
+      <nav aria-label="VUE navigation">
+        <a href="./?vue=anivue#vue-router" data-gd-vue="anivue"><span class="gd-symbol" aria-hidden="true">🐾</span>ANI-VUE</a>
+        <a href="./anyvue.html" data-gd-vue="anyvue"><span class="gd-symbol" aria-hidden="true">◈</span>ANY-VUE</a>
+        <a href="./?vue=commutvue#vue-router" data-gd-vue="commutvue"><span class="gd-symbol" aria-hidden="true">▣</span>COMMUTE-VUE</a>
+        <a href="./foodvue.html" data-gd-vue="foodvue"><span class="gd-symbol" aria-hidden="true">♜</span>FOOD-VUE</a>
+        <a href="./musicgearvue.html" data-gd-vue="musicgearvue"><span class="gd-symbol" aria-hidden="true">♫</span>MUSICGEAR-VUE</a>
+        <a href="./vinylvue.html" data-gd-vue="vinylvue"><span class="gd-symbol" aria-hidden="true">◉</span>VINYL-VUE</a>
+        <a href="./motovue.html" data-gd-vue="motovue"><span class="gd-symbol" aria-hidden="true">⚙</span>MOTO-VUE</a>
+        <a href="./medivue.html" data-gd-vue="medivue"><span class="gd-symbol" aria-hidden="true">✚</span>MEDI-VUE</a>
+        <a href="./estatevue.html" data-gd-vue="estatevue"><span class="gd-symbol" aria-hidden="true">⌂</span>ESTATE-VUE</a>
+        <a class="gd-more" href="#ecosystem-title"><span class="gd-symbol" aria-hidden="true">⌄</span>Visa fler …</a>
+      </nav>
+    </aside>
     <section class="hero" aria-labelledby="hero-title">
       <p class="hero-mark">VUEAPPS.se</p>
       <h1 class="hero-title" id="hero-title">THE PORTAL TO KNOWLEDGE</h1>
@@ -159,6 +198,7 @@
         <a id="vue-router-workspace" hidden></a><p data-router="15" style="font-size:13px;color:#90a3ac"></p><p data-router="6" style="font-size:13px;color:#90a3ac"></p>
       </section>
     </section>
+    </div>
     <p class="intro">A New Perspective. Intelligent applications designed to help you understand the world around you. One ecosystem. Endless possibilities.</p>
 
     <section aria-labelledby="ecosystem-title">
