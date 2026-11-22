@@ -42,3 +42,21 @@ test('ambiguous fall-back hour and nonexistent spring-forward hour fail closed',
  assert.equal(joinNationalTrainEvidence(autumn,probe,opts),null);
  assert.equal(joinNationalTrainEvidence(spring,probe,opts),null);
 });
+
+test('summer CEST train matches provider UTC timestamps two hours behind',()=>{
+ const summerLeg={...leg,departure:'2026-07-23T07:00:00',arrival:'2026-07-23T10:20:00'};
+ const summerTrain={...train,advertisedTime:'2026-07-23T05:00:00.000Z',destinationArrival:'2026-07-23T08:20:00.000Z',estimatedDestinationArrival:'2026-07-23T08:27:00.000Z'};
+ const matched=joinNationalTrainEvidence(summerLeg,{...probe,departures:[summerTrain]},opts);
+ assert.equal(matched?.verified,true);
+ assert.equal(matched?.estimatedArrival,'2026-07-23T08:27:00.000Z');
+});
+test('provider departure matching refuses wrong UTC offset in summer',()=>{
+ const summerLeg={...leg,departure:'2026-07-23T07:00:00',arrival:'2026-07-23T10:20:00'};
+ const wrong={...train,advertisedTime:'2026-07-23T06:00:00.000Z',destinationArrival:'2026-07-23T08:20:00.000Z',estimatedDestinationArrival:'2026-07-23T08:27:00.000Z'};
+ assert.equal(joinNationalTrainEvidence(summerLeg,{...probe,departures:[wrong]},opts),null);
+});
+test('destination mismatch across autumn DST fold is rejected',()=>{
+ const foldLeg={...leg,departure:'2026-10-25T01:30:00',arrival:'2026-10-25T02:30:00'};
+ const foldTrain={...train,advertisedTime:'2026-10-24T23:30:00.000Z',destinationArrival:'2026-10-25T01:30:00.000Z'};
+ assert.equal(joinNationalTrainEvidence(foldLeg,{...probe,departures:[foldTrain]},opts),null);
+});
