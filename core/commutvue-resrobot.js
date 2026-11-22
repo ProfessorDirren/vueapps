@@ -53,7 +53,8 @@ export async function lookupResRobotStops(query,{apiKey,fetchImpl=fetch}={}){
  return entries.flatMap(item=>{
   const stop=item?.StopLocation||item;
   // ResRobot documents extId as the public stop ID for other APIs; id is internal.
-  return stop?.extId&&stop?.name?[{id:String(stop.extId),name:stop.name}]:[];
+  const publicId=typeof stop?.extId==='string'?stop.extId:'';
+  return /^\d{9}$/.test(publicId)&&typeof stop.name==='string'&&stop.name.trim()?[{id:publicId,name:stop.name}]:[];
  });
 }
 // Parse only an explicit Swedish arrive-by instruction; unsupported dates fail closed.
