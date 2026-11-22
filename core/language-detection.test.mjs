@@ -71,3 +71,8 @@ test('unambiguous questions in additional supported languages select their own l
   ['مرحبا أحتاج إلى المساعدة','ar']
  ])assert.equal(detect(question),expected,question);
 });
+
+test('Italian questions are recognized without switching a saved explicit locale',()=>{
+ assert.equal(detect('Ciao! Come posso usare VUEAPPS in italiano?'),'it');
+ assert.equal(detect('Come posso usare VUEAPPS in italiano?'),'it');
+});
