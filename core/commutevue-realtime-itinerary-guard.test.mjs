@@ -58,3 +58,12 @@ test('connecting train with no departure forecast is not claimed realtime-verifi
  const result=assessRealtimeJourney({legs:[a,second]},[...evidence(),{...second,verified:true,estimatedArrival:'2026-11-23T10:35'}]);
  assert.equal(result.status,'unverified');
 });
+
+test('verified cancellation cannot certify a malformed planned journey',()=>{
+ const invalid={...a,arrival:'2026-11-23T06:30'};
+ assert.equal(assessRealtimeJourney({legs:[invalid]},[{...invalid,verified:true,cancelled:true}]).status,'unverified');
+});
+test('verified cancellation cannot override ambiguous DST planned time',()=>{
+ const ambiguous={...a,departure:'2026-10-25T02:30',arrival:'2026-10-25T03:30'};
+ assert.equal(assessRealtimeJourney({legs:[ambiguous]},[{...ambiguous,verified:true,cancelled:true}]).status,'unverified');
+});
