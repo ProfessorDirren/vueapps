@@ -82,7 +82,7 @@ export async function POST(request){
   // Keep the existing regional provider path unchanged.
   if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
    const national=await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY});
-   const clock=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(value)?value.slice(11,16):'—';
+   const clock=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)?value.slice(11,16):'—';
    const messages={
     sv:{intro:'Planerade resor enligt ResRobot (inte realtid)',unavailable:'ResRobot kunde inte verifiera en nationell resa med entydiga hållplatser just nu.'},
     en:{intro:'Scheduled journeys from ResRobot (not real-time)',unavailable:'ResRobot could not verify an unambiguous national journey right now.'},
@@ -90,14 +90,14 @@ export async function POST(request){
     fr:{intro:'Trajets prévus par ResRobot (pas en temps réel)',unavailable:'ResRobot ne peut pas confirmer un trajet national sans ambiguïté.'}
    };
    const labels=messages[b.language]||messages.en;
-   const cleanStop=name=>String(name||'').replace(/\\s*\\([^)]*\\)\\s*$/,'').trim();
+   const cleanStop=name=>String(name||'').replace(/\s*\([^)]*\)\s*$/,'').trim();
    const formatTrip=(trip,i)=>{
     const legs=trip.legs.filter(leg=>cleanStop(leg.from)!==cleanStop(leg.to));
     if(!legs.length)return '';
     const header=(i+1)+'. '+clock(trip.departure)+'–'+clock(trip.arrival);
-    return header+'\\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+leg.mode+')':'')).join('\\n');
+    return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+leg.mode+')':'')).join('\n');
    };
-   const answer=national.status==='schedule_available'?labels.intro+'\\n\\n'+national.trips.map(formatTrip).filter(Boolean).join('\\n\\n'):labels.unavailable;
+   const answer=national.status==='schedule_available'?labels.intro+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n'):labels.unavailable;
    return respond(200,{domain:'commutvue',answer,kind:national.status==='schedule_available'?'verified_schedule':'local_guidance',verified:false,evidence_status:national.status==='schedule_available'?'schedule_verified':'national_'+national.status,live_diagnostic:'not_attempted',departures:[],source_url:national.status==='schedule_available'?'https://www.trafiklab.se/':null,updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:national.status==='ambiguous_stop',region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
   let live=null;
