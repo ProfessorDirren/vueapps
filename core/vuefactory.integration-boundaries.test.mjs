@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {SPECIALISTS} from './specialists.js';
 import {MEMORY_DOMAINS} from './memory.js';
 import {ROUTED_SPECIALIST_IDS,routeQuestion} from './router.js';
-import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,validateVueActivation,prepareVueActivation,previewVueCoreSourcePatch} from './vuefactory.js';
+import {FACTORY_LANGUAGES,createFactoryTestRegistry,createFactoryTestApi,validateVueActivation,prepareVueActivation,previewVueCoreSourcePatch,auditVueRoutingPrecedence} from './vuefactory.js';
 import {POST as routeApi} from '../api/vue-router.js';
 
 const labels=Object.fromEntries(FACTORY_LANGUAGES.map(lang=>[lang,'Education '+lang]));
@@ -283,4 +283,19 @@ test('factory API integration preview verifies the real registration gate withou
  assert.equal(await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8'),originals['api/vue-router.js']);
  assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'api/vue-router.js':originals['api/vue-router.js'].replace('isRegisteredSpecialist(route.domain)','true')},Object.keys(SPECIALISTS)),/Invalid API dispatch source/);
  assert.throws(()=>previewVueCoreSourcePatch(definition,{...originals,'api/vue-router.js':'export async function POST(request) {}'},Object.keys(SPECIALISTS)),/Invalid API dispatch source/);
+});
+
+test('phase 2 routing audit protects real specialists and only claims ANYVUE fallbacks',()=>{
+ const proposed={...definition,routingKeywords:['study planning','medication leaflet']};
+ const report=auditVueRoutingPrecedence(proposed,['study planning','medication leaflet','help me with something else'],routeQuestion);
+ assert.equal(report.precedencePreserved,true);
+ assert.equal(report.productionReady,false);
+ assert.equal(report.automaticApply,false);
+ assert.equal(report.cases[0].existingDomain,'anyvue');
+ assert.equal(report.cases[0].proposedDomain,'learningvue');
+ assert.equal(report.cases[1].existingDomain,'medivue');
+ assert.equal(report.cases[1].proposedDomain,'medivue');
+ assert.equal(report.cases[1].protectedRoute,true);
+ assert.equal(report.cases[2].proposedDomain,'anyvue');
+ assert.throws(()=>auditVueRoutingPrecedence(proposed,['Email me at person@example.com'],routeQuestion),/Invalid public/);
 });
