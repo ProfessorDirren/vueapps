@@ -462,7 +462,7 @@ test('Maria short Spanish antes de las deadline reaches provider and shows safe 
  try{
   process.env.RESROBOT_API_KEY='fixture-antes-de-las-secret';
   globalThis.fetch=async()=>({ok:true,json:async()=>({StopLocation:[]})});
-  const question='Mañana, 23 de noviembre de 2026, necesito viajar desde Jordbro hasta T-Centralen y llegar antes de las 10:30. ¿Qué tren debo tomar?';
+  const question='Mañana, 23 de noviembre de 2026, necesito viajar en tren de cercanías desde la estación de Jordbro hasta T-Centralen, en Estocolmo, y llegar antes de las 10:30. ¿Qué tren debo tomar?';
   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'es'})}));
   const body=await response.json();
   assert.equal(response.status,200);
