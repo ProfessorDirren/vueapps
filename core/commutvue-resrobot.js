@@ -61,8 +61,16 @@ const cleanName=value=>String(value||'').toLocaleLowerCase('sv-SE').normalize('N
 export function chooseResRobotStop(stops,requested){
  const name=cleanName(requested);
  const exact=stops.filter(stop=>cleanName(stop.name)===name);
- // Never pick the first fuzzy hit when two stations could share a name.
- return exact.length===1?exact[0]:null;
+ if(exact.length===1)return exact[0];
+ if(exact.length>1)return null;
+ // Trafiklab may append a municipality in parentheses to the station name.
+ // Match only this explicit suffix form and only when unique.
+ const qualified=stops.filter(stop=>{
+  const label=String(stop.name||'');
+  const match=/^(.+?)\\s*\\(([^()]*)\\)\\s*$/.exec(label);
+  return match&&cleanName(match[1])===name;
+ });
+ return qualified.length===1?qualified[0]:null;
 }
 export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};
