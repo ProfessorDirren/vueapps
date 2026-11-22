@@ -27,3 +27,6 @@ test('unverified train never becomes realtime-verified just because walking is p
  const walk={from:'Göteborg C',to:'Göteborg C spår 4',departure:'2026-11-23T10:21',arrival:'2026-11-23T10:26',mode:'WALK'};
  assert.equal(assessRealtimeJourney({legs:[a,walk]},[]).status,'unverified');
 });
+test('verified train identity without an arrival forecast is still unverified',()=>{
+ assert.equal(assessRealtimeJourney(trip,[{...a,verified:true}],{arriveBy:deadline}).status,'unverified');
+});
