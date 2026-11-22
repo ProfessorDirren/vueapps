@@ -50,3 +50,13 @@ test('Italian ANY-VUE follow-up passes shared language validation',async()=>{
  const response=await specialistFollowup(req({domain:'anyvue',question:'Ciao! Come posso usare VUEAPPS in italiano?',language:'it'}));
  assert.notEqual(response.status,400,'Italian must not be rejected as an unsupported language');
 });
+
+test('COMMUTE-VUE reply timestamps have translations for every portal language',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const router=readFileSync(new URL('../apps/router.js',import.meta.url),'utf8');
+ const labels=router.match(/const replyTimestampLabels=\{([\s\S]*?)\n\};/)?.[1];
+ assert.ok(labels,'shared timestamp labels must exist');
+ for(const locale of ['en','es','sv','hi','zh-CN','ru','ar','el','tr','fa','fr','it']){
+  assert.match(labels,new RegExp('(?:^|\\n)\\s*(?:\\x27'+locale+'\\x27|'+locale.replace('-','\\-')+')\\s*:'),'missing '+locale+' traffic timestamp labels');
+ }
+});
