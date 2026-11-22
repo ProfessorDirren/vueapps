@@ -30,3 +30,15 @@ test('ambiguous stops do not trigger trip request',async()=>{
  const result=await planNationalSwedenJourney('Tyresö Centrum','Göteborg Centralstation',{apiKey:'dummy',fetchImpl});
  assert.equal(result.status,'ambiguous_stop');assert.equal(calls,2);
 });
+
+test('unique municipality-qualified station resolves without guessing',()=>{
+ const stop=chooseResRobotStop([{id:'a',name:'Tyresö Centrum (Tyresö kn)'}],'Tyresö Centrum');
+ assert.equal(stop?.id,'a');
+});
+test('multiple municipality-qualified stations still require clarification',()=>{
+ const stops=[{id:'a',name:'Centrum (Tyresö kn)'},{id:'b',name:'Centrum (Haninge kn)'}];
+ assert.equal(chooseResRobotStop(stops,'Centrum'),null);
+});
+test('a fuzzy prefix must not silently resolve to the wrong station',()=>{
+ assert.equal(chooseResRobotStop([{id:'a',name:'Göteborg Centralstation norra'}],'Göteborg Centralstation'),null);
+});
