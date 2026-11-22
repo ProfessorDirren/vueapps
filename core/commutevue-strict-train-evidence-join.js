@@ -4,7 +4,7 @@
  * Do not match stations by fuzzy display names or infer arrival forecasts.
  */
 const numeric=value=>typeof value==='string'&&/^[0-9]{1,8}$/.test(value);
-const timestamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(value)?Date.parse(value):NaN;
+const timestamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/.test(value)?Date.parse(value):NaN;
 const sameMinute=(a,b)=>Number.isFinite(timestamp(a))&&Number.isFinite(timestamp(b))&&Math.floor(timestamp(a)/60000)===Math.floor(timestamp(b)/60000);
 export function joinNationalTrainEvidence(leg,probe,{originSignature,destinationSignature,stationMap}={}){
  if(!leg||!numeric(leg.serviceId)||!Array.isArray(probe?.departures)||probe.status!=='matched')return null;
