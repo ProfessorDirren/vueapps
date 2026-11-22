@@ -108,7 +108,7 @@ test('national planner refuses identical resolved stop IDs without trip API call
  let tripCalls=0;
  const fetchImpl=async url=>{
   if(url.pathname.endsWith('/trip')){tripCalls++;throw new Error('must not request a journey to the same stop');}
-  return {ok:true,json:async()=>({StopLocation:[{id:'same-id',name:url.searchParams.get('input')}]})};
+  return {ok:true,json:async()=>({StopLocation:[{id:'internal-same',extId:'740098001',name:url.searchParams.get('input')}]})};
  };
  const result=await planNationalSwedenJourney('Stockholm Central','Stockholm Central',{apiKey:'dummy',fetchImpl});
  assert.equal(result.status,'same_stop');
@@ -141,7 +141,7 @@ test('national arrive-by query asks provider for arrival search and rejects late
  assert.equal(result.trips[0].arrival,'2026-11-23T10:30:00');
 });
 test('national arrive-by query fails closed if all arrivals miss deadline',async()=>{
- const fetchImpl=async url=>url.pathname.endsWith('location.name')?{ok:true,json:async()=>({StopLocation:[{id:url.searchParams.get('input'),name:url.searchParams.get('input')}]})}:{ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'A',date:'2026-11-23',time:'06:00:00'},Destination:{name:'B',date:'2026-11-23',time:'10:47:00'}}]}}]})};
+ const fetchImpl=async url=>url.pathname.endsWith('location.name')?{ok:true,json:async()=>({StopLocation:[{id:'internal-'+url.searchParams.get('input'),extId:url.searchParams.get('input')==='Tyresö Centrum'?'740098001':'740098002',name:url.searchParams.get('input')}]})}:{ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'A',date:'2026-11-23',time:'06:00:00'},Destination:{name:'B',date:'2026-11-23',time:'10:47:00'}}]}}]})};
  const arriveBy={date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'};
  const result=await planNationalSwedenJourney('A','B',{apiKey:'dummy',fetchImpl,arriveBy});
  assert.equal(result.status,'no_journeys');
