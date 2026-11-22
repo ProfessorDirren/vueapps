@@ -456,3 +456,23 @@ test('future Spanish arrival request exposes safe ResRobot stop resolution diagn
   if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
  }
 });
+
+test('Maria short Spanish antes de las deadline reaches provider and shows safe failure',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.RESROBOT_API_KEY;
+ try{
+  process.env.RESROBOT_API_KEY='fixture-antes-de-las-secret';
+  globalThis.fetch=async()=>({ok:true,json:async()=>({StopLocation:[]})});
+  const question='Mañana, 23 de noviembre de 2026, necesito viajar desde Jordbro hasta T-Centralen y llegar antes de las 10:30. ¿Qué tren debo tomar?';
+  const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'es'})}));
+  const body=await response.json();
+  assert.equal(response.status,200);
+  assert.equal(body.domain,'commutvue');
+  assert.equal(body.live_diagnostic,'resrobot_ambiguous_stop');
+  assert.match(body.answer,/Diagnóstico del horario: resrobot_ambiguous_stop/);
+  assert.equal(body.verified,false);
+  assert.doesNotMatch(JSON.stringify(body),/fixture-antes-de-las-secret/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
+ }
+});
