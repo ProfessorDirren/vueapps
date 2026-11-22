@@ -427,6 +427,7 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
+ if(lang==="it")document.querySelector(".intro").textContent="Una nuova prospettiva. Applicazioni intelligenti per aiutarti a comprendere il mondo che ti circonda. Un unico ecosistema, infinite possibilità.";
  const localizedLinkDomains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
  function localizeVueLink(link){
   if(!link)return;

@@ -13,8 +13,10 @@ test('video input shared limits and supported formats',()=>{
  assert.equal(isValidVideo({type:'video/mp4',size:1.5}),false);
  assert.equal(isValidVideo({type:'video/mp4',size:'1024'}),false);
 });
-test('video controls localized across all seven VUECORE languages',()=>{
- assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar'].sort());
+test('video controls localized across supported VUECORE languages',()=>{
+ assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar','it'].sort());
+ assert.equal(VIDEO_LABELS.it[0],'Registra un video');
+ assert.equal(VIDEO_LABELS.it[1],'Scegli un video');
  for(const labels of Object.values(VIDEO_LABELS)){assert.equal(labels.length,6);assert.ok(labels.every(s=>typeof s==='string'&&s.trim().length>0));}
 });
 

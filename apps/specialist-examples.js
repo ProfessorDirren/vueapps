@@ -3,6 +3,16 @@ import {isRegisteredSpecialist} from '../core/specialists.js';
 // VUECORE-owned, locale-specific examples for every registered specialist.
 // Examples deliberately avoid local place names, brands, currencies and regional assumptions.
 export const SPECIALIST_EXAMPLES=Object.freeze({
+ "it": {
+  "anivue":"Puoi aiutarmi a valutare i sintomi di un animale domestico?",
+  "anyvue":"Puoi aiutarmi a confrontare le prove su una questione complessa?",
+  "commutvue":"Puoi aiutarmi a controllare le partenze dei mezzi pubblici tra due stazioni?",
+  "foodvue":"Puoi aiutarmi a capire gli ingredienti su un’etichetta alimentare?",
+  "medivue":"Puoi aiutarmi a leggere il foglietto illustrativo di un medicinale?",
+  "motovue":"Puoi aiutarmi a controllare una moto usata prima di acquistarla?",
+  "musicgearvue":"Puoi aiutarmi a identificare e valutare uno strumento musicale?",
+  "vinylvue":"Puoi aiutarmi a identificare l’edizione di un disco in vinile?"
+ },
  "en": {
   "anivue": "Can you help me assess symptoms in a pet?",
   "anyvue": "Can you help me compare evidence on a complex question?",
