@@ -1,10 +1,17 @@
+import {stockholmWallClockToInstant} from './commutevue-stockholm-clock.js';
 /**
  * Pure, provider-neutral safety gate for planned national journeys.
  * Evidence is supplied by separately verified realtime adapters; never guess a
  * match from a station name or train number alone.
  * No external calls or production routing occur here.
  */
-const minute=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(value)?Date.parse(value):NaN;
+const minute=value=>{
+ if(typeof value!=='string')return NaN;
+ const local=stockholmWallClockToInstant(value);
+ if(local!==null)return Date.parse(local);
+ if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))return Date.parse(value);
+ return NaN;
+};
 const identity=leg=>typeof leg?.serviceId==='string'&&leg.serviceId.trim()&&typeof leg?.departure==='string'&&typeof leg?.from==='string'&&typeof leg?.to==='string'?JSON.stringify([leg.serviceId.trim(),leg.from,leg.to,leg.departure]):null;
 export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
  if(!Array.isArray(trip?.legs)||!trip.legs.length||!Array.isArray(evidence))return {status:'unverified',reason:'missing_journey_or_evidence'};
