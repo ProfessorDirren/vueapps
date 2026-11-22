@@ -22,19 +22,20 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   if(matches.length!==1){hasUnverified=true;details.push({status:'unverified'});lastArrival=plannedArrival;continue;}
   const matched=matches[0];
   if(matched.cancelled===true){hasCancellation=true;details.push({status:'cancelled'});continue;}
+  if(!matched.estimatedArrival){hasUnverified=true;details.push({status:'unverified',reason:'missing_arrival_forecast'});lastArrival=plannedArrival;continue;}
   const predictedDeparture=minute(matched.estimatedDeparture||leg.departure);
-  const predictedArrival=minute(matched.estimatedArrival||leg.arrival);
+  const predictedArrival=minute(matched.estimatedArrival);
   if(!Number.isFinite(predictedDeparture)||!Number.isFinite(predictedArrival)||predictedArrival<predictedDeparture)return {status:'unverified',reason:'invalid_realtime_times'};
   if(predictedDeparture<lastArrival)return {status:'connection_at_risk',reason:'missed_transfer'};
   if(predictedArrival>plannedArrival)hasDelay=true;
   lastArrival=predictedArrival;details.push({status:'matched',estimatedArrival:matched.estimatedArrival||null});
  }
  if(hasCancellation)return {status:'cancelled',reason:'verified_cancellation',details};
+ if(hasUnverified)return {status:'unverified',reason:'incomplete_realtime_coverage',details};
  if(arriveBy){
   const deadline=minute(arriveBy.cutoff);
   if(!Number.isFinite(deadline))return {status:'unverified',reason:'invalid_deadline'};
   if(lastArrival>deadline)return {status:'arrival_deadline_missed',reason:'late_arrival',details};
  }
- if(hasUnverified)return {status:'unverified',reason:'incomplete_realtime_coverage',details};
  return {status:hasDelay?'delayed':'on_time',reason:'verified_evidence',details};
 }
