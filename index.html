@@ -426,11 +426,6 @@ function setLanguage(lang,{automatic=false}={}){
  document.querySelector("#app-antiqvue p").textContent=antiqTranslations[lang]||antiqTranslations.en;
  document.querySelector("#app-musicgearvue p").textContent=musicTranslations[lang]||musicTranslations.en;
  const t=translations[lang]||translations.en;
- // Shared portal copy must follow the selected language, including Italian.
- if(lang==="it"){
-  const intro=document.querySelector(".intro");
-  if(intro)intro.textContent="Una nuova prospettiva. Applicazioni intelligenti per aiutarti a comprendere il mondo che ti circonda. Un unico ecosistema, infinite possibilità.";
- }
  selectors.forEach((selector,i)=>{const el=document.querySelector(selector);if(el)el.textContent=t[i]});
  if(lang==="it")document.querySelector(".intro").textContent="Una nuova prospettiva. Applicazioni intelligenti per aiutarti a comprendere il mondo che ti circonda. Un unico ecosistema, infinite possibilità.";
  const localizedLinkDomains=['anyvue','anivue','motovue','slumpvue','commutvue','martialartsvue','antiqvue','musicgearvue','vinylvue','estatevue','wardrobevue','medivue'];
