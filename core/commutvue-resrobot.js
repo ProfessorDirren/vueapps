@@ -57,7 +57,7 @@ export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch}={}){
  return normalizeResRobotTrips(await response.json());
 }
 
-const cleanName=value=>String(value||'').toLocaleLowerCase('sv-SE').normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const cleanName=value=>String(value||'').toLocaleLowerCase('sv-SE').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 export function chooseResRobotStop(stops,requested){
  const name=cleanName(requested);
  const exact=stops.filter(stop=>cleanName(stop.name)===name);
@@ -67,7 +67,7 @@ export function chooseResRobotStop(stops,requested){
  // Match only this explicit suffix form and only when unique.
  const qualified=stops.filter(stop=>{
   const label=String(stop.name||'');
-  const match=/^(.+?)\\s*\\(([^()]*)\\)\\s*$/.exec(label);
+  const match=/^(.+?)\s*\(([^()]*)\)\s*$/.exec(label);
   return match&&cleanName(match[1])===name;
  });
  return qualified.length===1?qualified[0]:null;
