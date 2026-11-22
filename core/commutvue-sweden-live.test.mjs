@@ -1007,3 +1007,19 @@ test('OFFLINE REGRESSION: destination evidence is verified from stop order, neve
   else assert.equal(result.departures?.length??0,0,c.name);
  }
 });
+
+
+test('T-Centralen rail alias accepts only verified Stockholm City area and ordered call',async()=>{
+ const cityCall={stop:{id:'alternate-city-platform',area_id:'740098000',name:'Stockholm City'},is_realtime:true};
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740098000',stopIds:['1617']},
+  fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?{...details,calls:[details.calls[0],cityCall]}:board)})
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'T-Centralen'});
+ assert.equal(result.status,'ok');
+ const reversed=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740098000',stopIds:['1617']},
+  fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?{...details,calls:[cityCall,details.calls[0]]}:board)})
+ });
+ assert.equal((await reversed({provider:'stockholm',from:'Jordbro',to:'T-Centralen'})).status,'unavailable');
+});
