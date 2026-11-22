@@ -85,6 +85,38 @@
     @keyframes vue-brain-orbit { from { transform:rotate(-20deg) } to { transform:rotate(340deg) } }
     @media(max-width:600px) { header { min-height:188px; } .vue-brain { left:50%;top:125px;width:150px;height:81px;transform:translate(-50%,-50%); } .vue-brain-glint { animation:none; } }
     @media(prefers-reduced-motion:reduce) { .vue-brain-core,.vue-brain-orbit,.vue-brain-glint { animation:none; } }
+
+    /* G&D design foundation: presentation only; all VUECORE IDs and handlers stay intact. */
+    :root { --gd-aqua:#62dfd1;--gd-gold:#e3b85b;--gd-surface:#102532;--gd-outline:#245964; }
+    body { background:radial-gradient(ellipse at 50% -15%,#143541 0%,#091620 58%,#08121b 100%); }
+    header { min-height:112px;padding:22px clamp(18px,4vw,58px);border-bottom:1px solid var(--gd-outline);background:#091923; }
+    .logo { letter-spacing:.06em;font-size:clamp(23px,3vw,34px);color:#f7fbfc; }
+    .logo::after { content:"NO MORE CLICKING";display:block;margin-top:5px;font-size:10px;font-weight:700;letter-spacing:.22em;color:#c0d3d7; }
+    main { max-width:1440px;padding:30px clamp(14px,3vw,44px) 85px; }
+    .hero { padding:28px clamp(14px,3vw,42px) 38px;border-radius:22px;background:linear-gradient(145deg,#102c37 0%,#0a1d29 55%,#091722 100%);border:1px solid var(--gd-gold); }
+    .hero-mark { font-size:clamp(36px,5.5vw,66px);letter-spacing:.04em;background:linear-gradient(180deg,#ffffff,#c7f5f1);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 10px #39d9cc26); }
+    .hero-mark::before,.hero-mark::after { display:none; }
+    .hero-title { font-size:clamp(12px,1.8vw,17px);letter-spacing:.28em;margin-bottom:10px;color:#c2d8da; }
+    .hero-swedish { font-size:clamp(17px,2.5vw,26px);letter-spacing:.07em;margin-bottom:10px;color:var(--gd-aqua); }
+    .hero-tagline { font-size:clamp(13px,1.7vw,16px); }
+    #vue-router { margin-top:26px !important; }
+    #vue-router-photo-first button { border-radius:11px !important;background:var(--gd-aqua) !important;color:#08222b !important;min-height:46px; }
+    #vue-router-question { border:1px solid #a18b60 !important;background:#091c27 !important;min-height:105px;box-shadow:inset 0 1px 7px #0005; }
+    #vue-router-question:focus-visible { outline:2px solid var(--gd-aqua);outline-offset:2px; }
+    #vue-router-send { background:var(--gd-aqua) !important;color:#06242b !important;font-weight:700 !important; }
+    #vue-router-replies > * { border-color:var(--gd-outline); }
+    .vue-brain { top:54px;left:50%;width:142px;height:82px; }
+    .vue-brain-core { filter:sepia(1) saturate(4) hue-rotate(275deg) drop-shadow(0 0 7px #ff70c2);animation-duration:24s; }
+    .vue-brain-glint { animation-duration:18s; }
+    @media(max-width:800px) {
+      header { min-height:108px;padding:16px 18px; }
+      .vue-brain { width:84px;height:56px;left:52%;top:53px; }
+      .hero { padding:22px 12px; }
+      #vue-router-photo-first { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+      #vue-router-photo-first button { width:100%;min-width:0;padding:10px 5px !important;font-size:13px !important; }
+    }
+    @media(max-width:480px) { .vue-brain { left:52%;width:62px;height:45px; } .logo { font-size:20px; } .lang-picker { max-width:36%; } }
+    @media(prefers-reduced-motion:reduce) { .vue-brain-core,.vue-brain-glint { animation:none !important; } }
   </style>
   <script src="./analytics.js" defer></script>
   <script type="module" src="./apps/router.js"></script>
@@ -96,7 +128,7 @@
     <section class="hero" aria-labelledby="hero-title">
       <p class="hero-mark">VUEAPPS.se</p>
       <h1 class="hero-title" id="hero-title">THE PORTAL TO KNOWLEDGE</h1>
-      <p class="hero-swedish" lang="en">NO MORE DAMN CLICKING AROUND!</p>
+      <p class="hero-swedish" lang="en">NO MORE CLICKING</p>
       <p class="hero-tagline">Stop Clicking Around. VUE Does It for You.</p>
       <section id="vue-router" style="max-width:960px;margin:28px auto 0;text-align:start">
         <div id="vue-router-photo-first" style="margin-bottom:24px">
