@@ -25,5 +25,6 @@ export function joinNationalTrainEvidence(leg,probe,{originSignature,destination
  // only after all identity, station and planned-timing checks succeeded.
  if(found.cancelled===true)return {...leg,verified:true,cancelled:true};
  if(typeof found.estimatedDestinationArrival!=='string'||!Number.isFinite(timestamp(found.estimatedDestinationArrival)))return null;
+ if(found.estimatedTime!=null&&(!Number.isFinite(timestamp(found.estimatedTime))))return null;
  return {...leg,verified:true,estimatedDeparture:found.estimatedTime||null,estimatedArrival:found.estimatedDestinationArrival};
 }
