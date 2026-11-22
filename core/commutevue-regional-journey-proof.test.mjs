@@ -105,3 +105,15 @@ test('rejects ambiguous repeated origin or destination in static stop sequence',
  const distinct=new Map([['trip-1',['J','S','C','D']]]);
  assert.equal(verifyRegionalJourney({...input,tripStops:distinct}).status,'route_matched');
 });
+
+test('only exact unique downstream realtime stop can verify destination arrival',()=>{
+ const departure=Math.floor(now/1000)+300;
+ const arrival=departure+1200;
+ const trip={tripId:'trip-1',stops:[{stopId:'J',departure:{unixTime:departure}},{stopId:'C',arrival:{unixTime:arrival}}]};
+ const withTrip=t=>verifyRegionalJourney({...input,evidence:{...input.evidence,trips:[t]}}).departures[0];
+ assert.equal(withTrip(trip).predictedArrival,new Date(arrival*1000).toISOString());
+ assert.equal(withTrip({...trip,stops:[trip.stops[0]]}).predictedArrival,null);
+ assert.equal(withTrip({...trip,stops:[...trip.stops,trip.stops[1]]}).predictedArrival,null);
+ assert.equal(withTrip({...trip,stops:[trip.stops[0],{stopId:'S',arrival:{unixTime:arrival}}]}).predictedArrival,null);
+ assert.equal(withTrip({...trip,stops:[trip.stops[0],{stopId:'C',arrival:{unixTime:departure-1}}]}).predictedArrival,null);
+});

@@ -38,7 +38,13 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   // Do not claim live status until a verified feed header timestamp is supplied.
 
   const scheduledStop=stops[originIndex],meta=tripMetadata instanceof Map?tripMetadata.get(trip.tripId)||{}:{};
-  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),evidence:'regional_trip_update'});
+  // Destination arrival is optional: only accept a unique GTFS-RT stop update
+  // for the exact downstream stop in the authenticated static trip sequence.
+  const destinationUpdates=trip.stops?.filter(s=>s?.stopId===ids[destinationIndex])||[];
+  const arrivalSeconds=destinationUpdates.length===1?destinationUpdates[0]?.arrival?.unixTime:null;
+  const arrivalMs=Number.isSafeInteger(arrivalSeconds)&&arrivalSeconds>0?arrivalSeconds*1000:null;
+  const predictedArrival=Number.isSafeInteger(arrivalMs)&&arrivalMs>=departureMs&&arrivalMs<=departureMs+4*60*60*1000?new Date(arrivalMs).toISOString():null;
+  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),predictedArrival,evidence:'regional_trip_update'});
  }
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',departures};
 }
