@@ -83,3 +83,19 @@ test('Conflicting duplicate forecasts are not published as verified Swedish trai
 test('Repeated identical forecasts still yield exactly one verified departure',()=>{
  assert.equal(matchTrafikverketTrainRoute({...args,origin:[origin,{...origin}],destination:[dest]}).length,1);
 });
+
+test('destination board estimate is preserved independently of departure forecast',()=>{
+ const predicted='2026-11-21T10:32:00+01:00';
+ const matched=matchTrafikverketTrainRoute({...args,destination:[{...dest,EstimatedTimeAtLocation:predicted}]});
+ assert.equal(matched.length,1);
+ assert.equal(matched[0].estimatedDestinationArrival,new Date(predicted).toISOString());
+});
+test('missing destination forecast is null, never inferred from origin or timetable',()=>{
+ const matched=matchTrafikverketTrainRoute(args);
+ assert.equal(matched[0].estimatedDestinationArrival,null);
+});
+test('conflicting destination forecasts fail closed',()=>{
+ const a={...dest,EstimatedTimeAtLocation:'2026-11-21T10:32:00+01:00'};
+ const b={...dest,EstimatedTimeAtLocation:'2026-11-21T10:37:00+01:00'};
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[a,b]}),[]);
+});
