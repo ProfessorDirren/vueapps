@@ -162,3 +162,13 @@ test('Spanish station wording preserves exact Jordbro and Stockholm City corrido
  assert.deepEqual(parseCommuteQuestion(q),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
  assert.equal(commuteTransportMode(q),'TRAIN');
 });
+
+test('Maria Spanish full future arrive-by question resolves exact stations without guessing',()=>{
+ const question='Mañana, lunes 23 de noviembre de 2026, necesito viajar en tren de cercanías desde la estación de Jordbro hasta T-Centralen, en Estocolmo. Tengo que llegar a más tardar a las 10:30 de la mañana. ¿Qué tren debo tomar y a qué hora tengo que salir de Jordbro? Comprueba los horarios, los datos en tiempo real, los retrasos y las cancelaciones. Respóndeme completamente en español.';
+ const journey=parseCommuteQuestion(question);
+ assert.equal(journey.region,'stockholm');
+ assert.equal(journey.from,'Jordbro');
+ assert.equal(journey.to,'T-Centralen');
+ assert.equal(journey.needsClarification,false);
+ assert.equal(commuteTransportMode(question),'TRAIN');
+});

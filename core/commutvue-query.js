@@ -13,6 +13,8 @@ const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
+ // Spanish station-to-station phrasing; anchor at the actual travel preposition, not 'de' in 'estación de'.
+ /(?:desde|de)\s+(?:(?:la|el)\s+)?(?:estación|estacion)\s+de\s+(.+?)\s+hasta\s+(.+?)(?=\s*,|[?.!]|$)/iu,
  // Natural Swedish shorthand: explicitly named verified origin and destination, no 'från' required.
  /^\s*(Jordbro|Handen|T-Centralen|Stockholm City|Södertälje|Märsta|Uppsala)\s+till\s+(Jordbro|Handen|T-Centralen|Stockholm City|Södertälje|Märsta|Uppsala)(?=\s*(?:[,?.!]|$))/iu,
  /(.+?)\s+से\s+(.+?)\s+तक(?=[?.!,।]|$)/iu,
@@ -61,7 +63,7 @@ export function commuteTransportMode(question){
   ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
   ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b/iu],
   ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b/iu],
-  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|trenes?\s+de\s+cercanías|trenes?)\b/iu]
+  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|tren(?:es)?\s+de\s+cercanías|tren(?:es)?)(?=$|[^\p{L}\p{N}])/iu]
  ];
  const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
  return found.length===1?found[0]:null;
