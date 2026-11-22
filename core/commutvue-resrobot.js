@@ -4,6 +4,16 @@ const BASE='https://api.resrobot.se/v2.1';
 export function resRobotConfigured(env=process.env){
  return typeof env.RESROBOT_API_KEY==='string'&&env.RESROBOT_API_KEY.trim().length>0;
 }
+// Preserve provider train identity only when a single explicit product identifier
+// exists. Never derive it from a display name, mode or station pair.
+export function resRobotServiceIdentity(leg){
+ const products=Array.isArray(leg?.Product)?leg.Product:leg?.Product&&typeof leg.Product==='object'?[leg.Product]:[];
+ if(products.length!==1)return null;
+ const value=products[0]?.num;
+ if(typeof value!=='string'&&typeof value!=='number')return null;
+ const id=String(value).trim();
+ return /^[0-9]{1,8}$/.test(id)?id:null;
+}
 export function normalizeResRobotLeg(leg){
  if(!leg||typeof leg!=='object')return null;
  const origin=leg.Origin||leg.origin;
@@ -11,7 +21,7 @@ export function normalizeResRobotLeg(leg){
  const departure=origin?.date&&origin?.time?origin.date+'T'+origin.time:null;
  const arrival=destination?.date&&destination?.time?destination.date+'T'+destination.time:null;
  if(!origin?.name||!destination?.name||!departure||!arrival)return null;
- return {from:origin.name,to:destination.name,departure,arrival,mode:leg.Product?.[0]?.catOut||leg.Product?.catOut||(/^walk$/i.test(String(leg.type||''))?'WALK':null)};
+ return {from:origin.name,to:destination.name,departure,arrival,mode:leg.Product?.[0]?.catOut||leg.Product?.catOut||(/^walk$/i.test(String(leg.type||''))?'WALK':null),serviceId:resRobotServiceIdentity(leg)};
 }
 export function normalizeResRobotTrips(payload){
  if(payload?.errorCode)return [];

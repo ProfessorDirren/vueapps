@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chooseResRobotStop,normalizeResRobotLeg,parseSwedishArrivalDeadline,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
+import {chooseResRobotStop,normalizeResRobotLeg,resRobotServiceIdentity,parseSwedishArrivalDeadline,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
 test('station resolution never guesses among ambiguous matches',()=>{
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'},{id:'b',name:'Tyresö Centrum'}],'Tyresö Centrum'),null);
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'}],'Tyresö Centrum').id,'a');
@@ -152,4 +152,15 @@ test('ResRobot walking legs preserve provider-declared WALK mode',()=>{
  const leg={type:'WALK',Origin:{name:'T-Centralen T-bana',date:'2026-11-22',time:'06:53:00'},Destination:{name:'Stockholm Centralstation',date:'2026-11-22',time:'07:13:00'}};
  assert.equal(normalizeResRobotLeg(leg).mode,'WALK');
  assert.equal(normalizeResRobotLeg({...leg,type:'unknown'}).mode,null);
+});
+
+test('ResRobot service identity uses only a unique explicit numeric product number',()=>{
+ assert.equal(resRobotServiceIdentity({Product:[{num:'1234',catOut:'JST'}]}),'1234');
+ assert.equal(resRobotServiceIdentity({Product:{num:456}}),'456');
+ assert.equal(resRobotServiceIdentity({Product:[{num:'SJ 1234'}]}),null);
+ assert.equal(resRobotServiceIdentity({Product:[{num:'123'},{num:'456'}]}),null);
+ assert.equal(resRobotServiceIdentity({Product:[{catOut:'JST'}]}),null);
+ assert.equal(resRobotServiceIdentity({type:'WALK'}),null);
+ const leg=normalizeResRobotLeg({Origin:{name:'Stockholm Centralstation',date:'2026-11-23',time:'07:00:00'},Destination:{name:'Göteborg Centralstation',date:'2026-11-23',time:'10:20:00'},Product:[{num:'1234',catOut:'JST'}]});
+ assert.equal(leg.serviceId,'1234');
 });
