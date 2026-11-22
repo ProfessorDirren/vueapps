@@ -74,6 +74,20 @@ export function parseSwedishArrivalDeadline(question,{now=new Date()}={}){
  const time=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
  return {date,time,cutoff:date+'T'+time,explicitYear:!!match[5]};
 }
+// Parse an explicit Spanish arrival deadline without interpreting it as a live query.
+// A date must be fully specified; never infer tomorrow's timetable from today's board.
+export function parseSpanishArrivalDeadline(question){
+ const q=String(question||'');
+ const m=/\\b(?:llegar|estar|llegue|llegada)\\s+(?:a\\s+)?m[aá]s\\s+tardar\\s+(?:a\\s+)?(?:las?\\s+)?(\\d{1,2})[.:](\\d{2})\\s+(?:de\\s+la\\s+ma[ñn]ana\\s+)?(?:el\\s+)?(?:d[ií]a\\s+)?(\\d{1,2})\\s+de\\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+(\\d{4})/iu.exec(q);
+ if(!m)return null;
+ const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const hour=Number(m[1]),minute=Number(m[2]),day=Number(m[3]),month=months.indexOf(m[4].toLowerCase())+1,year=Number(m[5]);
+ const valid=new Date(Date.UTC(year,month-1,day));
+ if(hour>23||minute>59||year<2020||year>2100||valid.getUTCFullYear()!==year||valid.getUTCMonth()!==month-1||valid.getUTCDate()!==day)return {invalid:true};
+ const date=String(year)+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+ const time=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
+ return {date,time,cutoff:date+'T'+time,explicitYear:true};
+}
 export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch,arriveBy=null}={}){
  if(!apiKey)throw new Error('resrobot_not_configured');
  if(!fromId||!toId)throw new Error('missing_stop_id');
