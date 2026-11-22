@@ -12,7 +12,7 @@ export function resRobotServiceIdentity(leg){
  const value=products[0]?.num;
  if(typeof value!=='string'&&typeof value!=='number')return null;
  const id=String(value).trim();
- return /^\\d{1,8}$/.test(id)?id:null;
+ return /^[0-9]{1,8}$/.test(id)?id:null;
 }
 export function normalizeResRobotLeg(leg){
  if(!leg||typeof leg!=='object')return null;
