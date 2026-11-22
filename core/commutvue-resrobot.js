@@ -104,19 +104,20 @@ export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch,arriv
 }
 
 const cleanName=value=>String(value||'').toLocaleLowerCase('sv-SE').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+// ResRobot station labels can contain the Swedish station suffix and a municipality.
+// Strip only explicit provider formatting, not arbitrary extra words or place names.
+const stationLabel=value=>String(value||'')
+ .replace(/\s*\([^()]*\)\s*$/u,'')
+ .replace(/\s+(?:station|stn)\s*$/iu,'')
+ .trim();
 export function chooseResRobotStop(stops,requested){
  const name=cleanName(requested);
+ if(!name||!Array.isArray(stops))return null;
  const exact=stops.filter(stop=>cleanName(stop.name)===name);
- if(exact.length===1)return exact[0];
- if(exact.length>1)return null;
- // Trafiklab may append a municipality in parentheses to the station name.
- // Match only this explicit suffix form and only when unique.
- const qualified=stops.filter(stop=>{
-  const label=String(stop.name||'');
-  const match=/^(.+?)\s*\(([^()]*)\)\s*$/.exec(label);
-  return match&&cleanName(match[1])===name;
- });
- return qualified.length===1?qualified[0]:null;
+ const candidates=exact.length?exact:stops.filter(stop=>cleanName(stationLabel(stop.name))===name);
+ // Duplicate names for one public stop ID are not an ambiguity. Distinct IDs are.
+ const byId=new Map(candidates.filter(stop=>typeof stop?.id==='string'&&stop.id.length>0).map(stop=>[stop.id,stop]));
+ return byId.size===1?[...byId.values()][0]:null;
 }
 // Rank only chronologically valid provider journeys; never invent an alternative.
 export function rankResRobotTrips(trips){
