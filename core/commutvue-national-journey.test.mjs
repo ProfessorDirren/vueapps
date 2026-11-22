@@ -125,7 +125,7 @@ test('Swedish arrive-by request parses exact date and minute without guessing re
 test('national arrive-by query asks provider for arrival search and rejects late options',async()=>{
  let tripCalls=0;
  const fetchImpl=async url=>{
-  if(url.pathname.endsWith('location.name'))return {ok:true,json:async()=>({StopLocation:[{id:'internal-'+url.searchParams.get('input'),extId:'740098001',name:url.searchParams.get('input')}]})};
+  if(url.pathname.endsWith('location.name'))return {ok:true,json:async()=>({StopLocation:[{id:'internal-'+url.searchParams.get('input'),extId:url.searchParams.get('input')==='Tyresö Centrum'?'740098001':'740098002',name:url.searchParams.get('input')}]})};
   tripCalls++;
   assert.equal(url.searchParams.get('searchForArrival'),'1');
   assert.equal(url.searchParams.get('date'),'2026-11-23');
