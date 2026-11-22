@@ -54,3 +54,24 @@ export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch}={}){
  if(!response.ok)throw new Error('resrobot_trip_unavailable');
  return normalizeResRobotTrips(await response.json());
 }
+
+const cleanName=value=>String(value||'').toLocaleLowerCase('sv-SE').normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+export function chooseResRobotStop(stops,requested){
+ const name=cleanName(requested);
+ const exact=stops.filter(stop=>cleanName(stop.name)===name);
+ // Never pick the first fuzzy hit when two stations could share a name.
+ return exact.length===1?exact[0]:null;
+}
+export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}={}){
+ if(!apiKey)return {status:'not_configured',trips:[]};
+ try{
+  const [origins,destinations]=await Promise.all([
+   lookupResRobotStops(from,{apiKey,fetchImpl}),
+   lookupResRobotStops(to,{apiKey,fetchImpl})
+  ]);
+  const origin=chooseResRobotStop(origins,from),destination=chooseResRobotStop(destinations,to);
+  if(!origin||!destination)return {status:'ambiguous_stop',trips:[]};
+  const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl});
+  return {status:trips.length?'schedule_available':'no_journeys',trips:trips.slice(0,3)};
+ }catch{return {status:'provider_unavailable',trips:[]};}
+}
