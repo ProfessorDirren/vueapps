@@ -24,9 +24,13 @@ test('valid provider legs remain explicitly unverified',()=>{
 });
 
 test('documented StopLocation response yields national stop identifiers',async()=>{
- const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:[{id:'740098001',name:'GÖTEBORG'}]})});
+ const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:[{id:'internal-123',extId:'740098001',name:'GÖTEBORG'}]})});
  const stops=await lookupResRobotStops('Göteborg',{apiKey:'test',fetchImpl});
  assert.deepEqual(stops,[{id:'740098001',name:'GÖTEBORG'}]);
+});
+test('internal ResRobot id is never substituted when public extId is missing',async()=>{
+ const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:[{id:'internal-123',name:'GÖTEBORG'}]})});
+ assert.deepEqual(await lookupResRobotStops('Göteborg',{apiKey:'test',fetchImpl}),[]);
 });
 test('HTTP 200 service errors fail closed instead of inventing a trip',async()=>{
  const fetchImpl=async()=>({ok:true,json:async()=>({errorCode:'SVC_NO_RESULT'})});
