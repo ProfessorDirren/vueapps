@@ -19,18 +19,25 @@ test('missing terminal, line, schedule or evidence fails closed',()=>{
 });
 test('stale prediction and duplicate trip IDs fail closed',()=>{
  const stale={...departure,predictedDeparture:new Date(now-180000).toISOString()};
- assert.equal(prepareRegionalPublication({proof:{...proof,departures:[stale]},enabled:true,now}).status,'unavailable');
+ assert.equal(prepareRegionalPublication({proof:{...proof,departures:[stale]},enabled:true,now}).reason,'no_upcoming_departures');
  assert.equal(prepareRegionalPublication({proof:{...proof,departures:[departure,departure]},enabled:true,now}).reason,'duplicate_trip');
 });
 
 test('publication enforces precise live departure window boundaries',()=>{
  const at=ms=>({...departure,predictedDeparture:new Date(ms).toISOString()});
- for(const ms of [now-120000,now,now+7200000]){
+ for(const ms of [now,now+7200000]){
   assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).status,'ready');
  }
- for(const ms of [now-120001,now+7200001]){
+ for(const ms of [now+7200001]){
   assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).reason,'invalid_prediction');
  }
+});
+test('publication excludes passed departures while retaining upcoming trains',()=>{
+ const passed={...departure,tripId:'passed',predictedDeparture:new Date(now-60000).toISOString()};
+ const result=prepareRegionalPublication({proof:{status:'route_matched',departures:[passed,departure]},enabled:true,now});
+ assert.equal(result.status,'ready');
+ assert.deepEqual(result.departures.map(d=>d.tripId),['t1']);
+ assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[passed]},enabled:true,now}).reason,'no_upcoming_departures');
 });
 test('publication sorts verified departures by predicted time without changing their destination headsigns',()=>{
  const later={...departure,tripId:'later',tripHeadsign:'Kungsängen',predictedDeparture:new Date(now+900000).toISOString()};
