@@ -80,6 +80,10 @@ export function rankResRobotTrips(trips){
   const times=legs.map(leg=>[Date.parse(leg.departure),Date.parse(leg.arrival)]);
   if(times.some(([start,end])=>!Number.isFinite(start)||!Number.isFinite(end)||end<start))return [];
   if(times.some(([start],i)=>i>0&&start<times[i-1][1]))return [];
+  // A transfer must connect at the same named stop. Otherwise the itinerary
+  // may silently teleport between stations and must not be presented as valid.
+  if(legs.some((leg,i)=>i>0&&cleanName(legs[i-1].to)!==cleanName(leg.from)))return [];
+
   const minutes=(times.at(-1)[1]-times[0][0])/60000;
   if(minutes<=0||minutes>1440)return [];
   const transfers=Math.max(0,legs.filter(leg=>leg.from!==leg.to).length-1);

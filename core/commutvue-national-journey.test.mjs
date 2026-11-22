@@ -64,3 +64,19 @@ test('national ranking is deterministic across input order',()=>{
  const a=trip('10:00'),b=trip('10:12'),c=trip('10:25');
  assert.deepEqual(rankResRobotTrips([a,b,c]),rankResRobotTrips([c,a,b]));
 });
+
+test('national journey rejects disconnected transfers even with valid times',()=>{
+ const disconnected={legs:[
+  {from:'Tyresö Centrum',to:'Gullmarsplan',departure:'2026-11-22T08:00',arrival:'2026-11-22T08:30'},
+  {from:'Stockholm Central',to:'Göteborg Centralstation',departure:'2026-11-22T09:00',arrival:'2026-11-22T12:00'}
+ ]};
+ assert.deepEqual(rankResRobotTrips([disconnected]),[]);
+});
+test('national journey accepts connected transfer legs',()=>{
+ const connected={legs:[
+  {from:'Tyresö Centrum',to:'Gullmarsplan',departure:'2026-11-22T08:00',arrival:'2026-11-22T08:30'},
+  {from:'Gullmarsplan',to:'Stockholm Central',departure:'2026-11-22T08:35',arrival:'2026-11-22T08:50'},
+  {from:'Stockholm Central',to:'Göteborg Centralstation',departure:'2026-11-22T09:00',arrival:'2026-11-22T12:00'}
+ ]};
+ assert.equal(rankResRobotTrips([connected]).length,1);
+});
