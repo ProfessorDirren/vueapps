@@ -4,8 +4,8 @@ import { LANGUAGES, validateLanguage, languageDirection, VueCoreError } from './
 import { AniVueDomain } from './anivue.js';
 import { AniVueHelp } from './anivue-help.js';
 
-const expected=['en','sv','es','fr','hi','zh-CN','ru','ar','el','tr','fa'];
-test('VUECORE centrally validates all eleven supported languages',()=>{
+const expected=['en','sv','es','fr','hi','zh-CN','ru','ar','el','tr','fa','it'];
+test('VUECORE centrally validates all twelve supported languages',()=>{
  assert.deepEqual([...LANGUAGES],expected);
  for(const language of expected)assert.equal(validateLanguage(language),language);
  assert.throws(()=>validateLanguage('xx'),e=>e instanceof VueCoreError&&e.code==='invalid_language');
