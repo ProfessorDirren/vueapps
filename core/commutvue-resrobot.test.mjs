@@ -32,6 +32,19 @@ test('internal ResRobot id is never substituted when public extId is missing',as
  const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:[{id:'internal-123',name:'GÖTEBORG'}]})});
  assert.deepEqual(await lookupResRobotStops('Göteborg',{apiKey:'test',fetchImpl}),[]);
 });
+test('malformed public stop identifiers fail closed before trip planning',async()=>{
+ const entries=[
+  {id:'internal',extId:'A=740098001@',name:'Jordbro'},
+  {id:'internal',extId:'740098001 ',name:'Jordbro'},
+  {id:'internal',extId:'74009800',name:'Jordbro'},
+  {id:'internal',extId:740098001,name:'Jordbro'},
+  {id:'internal',name:'Jordbro'},
+  {id:'internal',extId:'740098001',name:'  '},
+  {id:'internal',extId:'740098002',name:'Stockholm City'}
+ ];
+ const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:entries})});
+ assert.deepEqual(await lookupResRobotStops('Jordbro',{apiKey:'test',fetchImpl}),[{id:'740098002',name:'Stockholm City'}]);
+});
 test('HTTP 200 service errors fail closed instead of inventing a trip',async()=>{
  const fetchImpl=async()=>({ok:true,json:async()=>({errorCode:'SVC_NO_RESULT'})});
  assert.deepEqual(await planResRobotTrip('a','b',{apiKey:'test',fetchImpl}),[]);
