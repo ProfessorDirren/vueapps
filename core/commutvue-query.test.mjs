@@ -5,6 +5,12 @@ test('extract Stockholm commute without inventing stops',()=>{
  const q=parseCommuteQuestion('Är pendeltågen från Jordbro till T-Centralen försenade?');
  assert.deepEqual(q,{region:'stockholm',from:'Jordbro',to:'T-Centralen',needsClarification:false});
 });
+test('Swedish mot destination is extracted without unnecessary clarification',()=>{
+ const question='Visa nästa pendeltåg från Jordbro station mot Stockholm City.';
+ assert.deepEqual(parseCommuteQuestion(question),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+ assert.equal(commuteTransportMode(question),'TRAIN');
+});
+
 test('recognize Paris region and stations',()=>{
  const q=parseCommuteQuestion('Train from Gare du Nord to Châtelet delayed?');
  assert.equal(q.region,'paris');
