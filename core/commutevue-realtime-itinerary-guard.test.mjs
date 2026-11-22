@@ -39,3 +39,16 @@ test('duplicate or unverified cancellation is never promoted to verified',()=>{
  assert.equal(assessRealtimeJourney(trip,[...evidence({cancelled:true}),...evidence({cancelled:true})]).status,'unverified');
  assert.equal(assessRealtimeJourney(trip,evidence({cancelled:true,verified:false})).status,'unverified');
 });
+
+test('UTC realtime arrival is compared against Sweden-local arrival deadline',()=>{
+ const result=assessRealtimeJourney(trip,evidence({estimatedDeparture:'2026-11-23T06:00:00.000Z',estimatedArrival:'2026-11-23T09:45:00.000Z'}),{arriveBy:deadline});
+ assert.equal(result.status,'arrival_deadline_missed');
+});
+test('UTC realtime punctual forecast is not mistaken for an hour early',()=>{
+ const result=assessRealtimeJourney(trip,evidence({estimatedDeparture:'2026-11-23T06:00:00.000Z',estimatedArrival:'2026-11-23T09:20:00.000Z'}),{arriveBy:deadline});
+ assert.equal(result.status,'on_time');
+});
+test('ambiguous Stockholm winter-time departure fails closed',()=>{
+ const ambiguous={...a,departure:'2026-10-25T02:30',arrival:'2026-10-25T03:30'};
+ assert.equal(assessRealtimeJourney({legs:[ambiguous]},[{...ambiguous,verified:true,cancelled:false,estimatedArrival:'2026-10-25T02:30:00Z'}]).status,'unverified');
+});
