@@ -85,3 +85,13 @@ test('verified on-time record with unverified duplicate fails closed',()=>{
  const conflicting=[...evidence(),...evidence({verified:false,estimatedArrival:'2026-11-23T10:45'})];
  assert.equal(assessRealtimeJourney(trip,conflicting).status,'unverified');
 });
+
+test('unverified incoming train cannot establish missed walking transfer',()=>{
+ const walk={from:'Göteborg C',to:'Göteborg C spår 4',departure:'2026-11-23T10:19',arrival:'2026-11-23T10:26',mode:'WALK'};
+ assert.equal(assessRealtimeJourney({legs:[a,walk]},[]).status,'unverified');
+});
+test('unverified incoming train cannot establish missed connecting train',()=>{
+ const second={serviceId:'SJ-456',from:'Göteborg C',to:'Mölndal',departure:'2026-11-23T10:25',arrival:'2026-11-23T10:35',mode:'TRAIN'};
+ const secondEvidence={...second,verified:true,estimatedDeparture:'2026-11-23T10:19',estimatedArrival:'2026-11-23T10:35'};
+ assert.equal(assessRealtimeJourney({legs:[a,second]},[secondEvidence]).status,'unverified');
+});

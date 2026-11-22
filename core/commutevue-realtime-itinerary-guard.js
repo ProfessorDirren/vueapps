@@ -41,7 +41,7 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   const plannedDeparture=minute(leg?.departure),plannedArrival=minute(leg?.arrival);
   if(!Number.isFinite(plannedDeparture)||!Number.isFinite(plannedArrival)||plannedArrival<plannedDeparture)return {status:'unverified',reason:'invalid_planned_times'};
   if(leg.mode==='WALK'){
-   if(plannedDeparture<lastArrival)return {status:'connection_at_risk',reason:'missed_walking_transfer'};
+   if(plannedDeparture<lastArrival)return hasUnverified?{status:'unverified',reason:'incomplete_realtime_coverage',details}:{status:'connection_at_risk',reason:'missed_walking_transfer'};
    lastArrival=plannedArrival;details.push({status:'planned_walk'});continue;
   }
   const key=identity(leg);
@@ -56,7 +56,7 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   const predictedDeparture=minute(matched.estimatedDeparture||leg.departure);
   const predictedArrival=minute(matched.estimatedArrival);
   if(!Number.isFinite(predictedDeparture)||!Number.isFinite(predictedArrival)||predictedArrival<predictedDeparture)return {status:'unverified',reason:'invalid_realtime_times'};
-  if(predictedDeparture<lastArrival)return {status:'connection_at_risk',reason:'missed_transfer'};
+  if(predictedDeparture<lastArrival)return hasUnverified?{status:'unverified',reason:'incomplete_realtime_coverage',details}:{status:'connection_at_risk',reason:'missed_transfer'};
   if(predictedArrival>plannedArrival)hasDelay=true;
   lastArrival=predictedArrival;details.push({status:'matched',estimatedArrival:matched.estimatedArrival||null});
  }
