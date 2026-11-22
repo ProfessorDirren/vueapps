@@ -27,7 +27,7 @@ const PATTERNS=[
  /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|hasta)\s+(.+?)(?=\s+(?:försenad(?:e|t)?|delayed|late|en retard|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
  /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
 ];
-const clean=s=>s.trim().replace(/^.*\bdesde\s+/iu,'').replace(/^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').replace(/\s+(?:idag|imorgon|i morgon|ikväll|i kväll)$/iu,'').trim();
+const clean=s=>s.trim().replace(/^.*\bdesde\s+/iu,'').replace(/^(?:(?:la|el)\s+)?(?:estación|estacion)\s+de\s+|^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').replace(/\s+(?:idag|imorgon|i morgon|ikväll|i kväll)$/iu,'').trim();
 export function parseCommuteQuestion(question){
  const text=String(question||'').trim();
  const regions=Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(text)).map(([region])=>region);
@@ -61,7 +61,7 @@ export function commuteTransportMode(question){
   ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
   ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b/iu],
   ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b/iu],
-  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?)\b/iu]
+  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|trenes?\s+de\s+cercanías|trenes?)\b/iu]
  ];
  const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
  return found.length===1?found[0]:null;
