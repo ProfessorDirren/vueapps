@@ -97,7 +97,7 @@ export async function POST(request){
     const durationMinutes=Math.round((Date.parse(trip.arrival)-Date.parse(trip.departure))/60000);
     const duration=Number.isFinite(durationMinutes)&&durationMinutes>0?' ('+Math.floor(durationMinutes/60)+' h '+String(durationMinutes%60).padStart(2,'0')+' min)':'';
     const header=(i+1)+'. '+clock(trip.departure)+'–'+clock(trip.arrival)+duration;
-    return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+({'BLT':'Buss','ULT':'Tunnelbana','JST':'Tåg'}[leg.mode]||leg.mode)+')':'')).join('\n');
+    return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+({'BLT':'Buss','ULT':'Tunnelbana','JST':'Tåg','WALK':({'sv':'Gång','en':'Walk','es':'A pie','fr':'À pied'}[b.language]||'Walk')}[leg.mode]||leg.mode)+')':'')).join('\n');
    };
    const answer=national.status==='schedule_available'?labels.intro+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n'):labels.unavailable;
    return respond(200,{domain:'commutvue',answer,kind:national.status==='schedule_available'?'verified_schedule':'local_guidance',verified:false,evidence_status:national.status==='schedule_available'?'schedule_verified':'national_'+national.status,live_diagnostic:'not_attempted',departures:[],source_url:national.status==='schedule_available'?'https://www.trafiklab.se/':null,updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:national.status==='ambiguous_stop',region:journey.region,workspace:'./?vue=commutvue#vue-router'});
