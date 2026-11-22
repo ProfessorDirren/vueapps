@@ -8,7 +8,7 @@ import {probeRegionalStaticHead} from '../core/commutevue-regional-head-probe.js
 import {runRegionalRouterShadow,runRegionalRouterPublication} from '../core/commutevue-regional-router-shadow.js';
 import {normalizeTrafficResult,COMMUT_MESSAGES,commuteLocale} from '../core/commutvue.js';
 import {parseCommuteQuestion,commuteTransportMode} from '../core/commutvue-query.js';
-import {planNationalSwedenJourney} from '../core/commutvue-resrobot.js';
+import {planNationalSwedenJourney,parseSwedishArrivalDeadline} from '../core/commutvue-resrobot.js';
 import {formatVerifiedDepartures} from '../core/commutvue-format.js';
 import {queryDisruptions} from '../core/commutvue-disruptions.js';
 import {POST as analyzeAnimal} from '../core/anivue-vision.js';
@@ -55,7 +55,10 @@ export async function POST(request){
  if(!route.clarify&&!isRegisteredSpecialist(route.domain))return json(422,{error:'Unregistered VUE specialist'});
  if(route.clarify)return respond(200,{domain:null,answer:text[route.private?6:9],clarify:true,private:!!route.private});
  if(route.domain==='commutvue'){
-  let journey=parseCommuteQuestion(question);
+  const arrivalDeadline=parseSwedishArrivalDeadline(question);
+  // Keep the arrival constraint out of the station-name parser.
+  const routeQuestion=arrivalDeadline?question.replace(/\b(?:jag\s+vill\s+vara\s+)?(?:framme|ankomma|anlända)\s+senast\s+(?:kl\.?\s*)?\d{1,2}[.:]\d{2}\s+den\s+\d{1,2}\s+\p{L}+(?:\s+\d{4})?/iu,'').trim():question;
+  let journey=parseCommuteQuestion(routeQuestion);
   // A destination-only reply may complete the immediately preceding journey question.
   // Never infer a route from unrelated history or from an unrecognized station.
   if(!journey.from&&!journey.to&&Array.isArray(b.history)&&b.history.length){
@@ -81,7 +84,7 @@ export async function POST(request){
   // National journeys use ResRobot timetable evidence; never label these as realtime.
   // Keep the existing regional provider path unchanged.
   if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
-   const national=await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY});
+   const national=arrivalDeadline?.invalid?{status:'invalid_arrival_date',trips:[]}:await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline});
    const clock=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)?value.slice(11,16):'—';
    const messages={
     sv:{intro:'Planerade resor enligt ResRobot (inte realtid)',unavailable:'ResRobot kunde inte verifiera en nationell resa med entydiga hållplatser just nu.'},
@@ -99,7 +102,7 @@ export async function POST(request){
     const header=(i+1)+'. '+clock(trip.departure)+'–'+clock(trip.arrival)+duration;
     return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+({'BLT':'Buss','ULT':'Tunnelbana','JST':'Tåg','WALK':({'sv':'Gång','en':'Walk','es':'A pie','fr':'À pied'}[b.language]||'Walk')}[leg.mode]||leg.mode)+')':'')).join('\n');
    };
-   const answer=national.status==='schedule_available'?labels.intro+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n'):labels.unavailable;
+   const answer=national.status==='schedule_available'?labels.intro+(arrivalDeadline?' — ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time:'')+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n'):national.status==='no_journeys'&&arrivalDeadline?'Inga verifierade tidtabellsresor uppfyller ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time+'.':national.status==='invalid_arrival_date'?'Ogiltigt ankomstdatum eller klockslag. Ange ett giltigt datum och en tid.':labels.unavailable;
    return respond(200,{domain:'commutvue',answer,kind:national.status==='schedule_available'?'verified_schedule':'local_guidance',verified:false,evidence_status:national.status==='schedule_available'?'schedule_verified':'national_'+national.status,live_diagnostic:'not_attempted',departures:[],source_url:national.status==='schedule_available'?'https://www.trafiklab.se/':null,updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:national.status==='ambiguous_stop',region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
   let live=null;
