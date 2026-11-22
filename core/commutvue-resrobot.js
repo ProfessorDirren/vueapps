@@ -1,3 +1,4 @@
+import {stockholmWallClockToInstant} from './commutevue-stockholm-clock.js';
 // National journey-planner boundary. This module is not wired into production until
 // credentials, provider response shapes and end-to-end verification are tested.
 const BASE='https://api.resrobot.se/v2.1';
@@ -105,7 +106,10 @@ export function rankResRobotTrips(trips){
  const candidates=trips.flatMap(trip=>{
   if(!Array.isArray(trip?.legs)||!trip.legs.length)return [];
   const legs=trip.legs;
-  const times=legs.map(leg=>[Date.parse(leg.departure),Date.parse(leg.arrival)]);
+  // ResRobot times are Swedish wall-clock values, not UTC or server-local times.
+  // Reject nonexistent or ambiguous DST wall clocks rather than silently guessing.
+  const instant=value=>{const iso=stockholmWallClockToInstant(value);return iso===null?NaN:Date.parse(iso);};
+  const times=legs.map(leg=>[instant(leg.departure),instant(leg.arrival)]);
   if(times.some(([start,end])=>!Number.isFinite(start)||!Number.isFinite(end)||end<start))return [];
   if(times.some(([start],i)=>i>0&&start<times[i-1][1]))return [];
   // A transfer must connect at the same named stop. Otherwise the itinerary
