@@ -61,7 +61,7 @@ export async function lookupResRobotStops(query,{apiKey,fetchImpl=fetch}={}){
 export function parseSwedishArrivalDeadline(question,{now=new Date()}={}){
  const text=String(question||'');
  const monthPattern='januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december';
- const timeFirst=/\b(?:framme|ankomma|anlända)\s+senast\s+(?:kl\.?\s*)?(\d{1,2})[.:](\d{2})\s+den\s+(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|december)(?:\s+(\d{4}))?/iu.exec(text);
+ const timeFirst=/\b(?:framme|ankomma|anlända)\s+senast\s+(?:kl\.?\s*)?(\d{1,2})[.:](\d{2})\s+den\s+(\d{1,2})\s+(januari|februari|mars|april|maj|juni|juli|augusti|september|oktober|november|december)(?:\s+(\d{4}))?/iu.exec(text);
  const dateFirst=new RegExp('\\b(?:den\\s+)?(\\d{1,2})\\s+('+monthPattern+')(?:\\s+(\\d{4}))?[\\s\\S]{0,180}?\\b(?:framme|ankomma|anlända)\\s+senast\\s+(?:kl\\.?\\s*)?(\\d{1,2})[.:](\\d{2})','iu').exec(text);
  const match=timeFirst||(dateFirst?[dateFirst[0],dateFirst[4],dateFirst[5],dateFirst[1],dateFirst[2],dateFirst[3]]:null);
  if(!match)return null;
