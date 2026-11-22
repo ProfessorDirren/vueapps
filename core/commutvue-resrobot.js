@@ -11,7 +11,7 @@ export function normalizeResRobotLeg(leg){
  const departure=origin?.date&&origin?.time?origin.date+'T'+origin.time:null;
  const arrival=destination?.date&&destination?.time?destination.date+'T'+destination.time:null;
  if(!origin?.name||!destination?.name||!departure||!arrival)return null;
- return {from:origin.name,to:destination.name,departure,arrival,mode:leg.Product?.[0]?.catOut||leg.Product?.catOut||null};
+ return {from:origin.name,to:destination.name,departure,arrival,mode:leg.Product?.[0]?.catOut||leg.Product?.catOut||(/^walk$/i.test(String(leg.type||''))?'WALK':null)};
 }
 export function normalizeResRobotTrips(payload){
  if(payload?.errorCode)return [];

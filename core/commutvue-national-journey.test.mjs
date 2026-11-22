@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chooseResRobotStop,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
+import {chooseResRobotStop,normalizeResRobotLeg,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
 test('station resolution never guesses among ambiguous matches',()=>{
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'},{id:'b',name:'Tyresö Centrum'}],'Tyresö Centrum'),null);
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'}],'Tyresö Centrum').id,'a');
@@ -114,4 +114,10 @@ test('national planner refuses identical resolved stop IDs without trip API call
  assert.equal(result.status,'same_stop');
  assert.deepEqual(result.trips,[]);
  assert.equal(tripCalls,0);
+});
+
+test('ResRobot walking legs preserve provider-declared WALK mode',()=>{
+ const leg={type:'WALK',Origin:{name:'T-Centralen T-bana',date:'2026-11-22',time:'06:53:00'},Destination:{name:'Stockholm Centralstation',date:'2026-11-22',time:'07:13:00'}};
+ assert.equal(normalizeResRobotLeg(leg).mode,'WALK');
+ assert.equal(normalizeResRobotLeg({...leg,type:'unknown'}).mode,null);
 });
