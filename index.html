@@ -132,6 +132,36 @@
     #vue-router-replies { display:grid;gap:12px;margin-top:12px; }
     #vue-router-replies > * { border:1px solid #287b7f;border-radius:13px;background:linear-gradient(160deg,#10333e,#0b202b);padding:14px;box-shadow:0 5px 16px #0003;overflow-wrap:anywhere; }
     @media(max-width:850px) { .gd-workspace { grid-template-columns:1fr;gap:8px; } .gd-specialists { position:static;padding:10px; } .gd-specialists nav { display:flex;overflow-x:auto;gap:7px;scrollbar-width:thin; } .gd-specialists a { white-space:nowrap;flex-shrink:0; } .gd-specialists h2 { font-size:12px;margin-bottom:7px; } }
+
+    /* Mobile viewport contract: every primary panel must shrink to device width. */
+    html,body { width:100%;max-width:100%;overflow-x:clip; }
+    main,.gd-workspace,.gd-workspace>.hero,.gd-specialists,#vue-router,#vue-router-replies { min-width:0;max-width:100%; }
+    .gd-workspace { width:100%; }
+    .hero-mark,.hero-title,.hero-swedish,.hero-tagline { overflow-wrap:anywhere; }
+    #vue-router textarea,#vue-router input,#vue-router select,#vue-router-replies>* { max-width:100%;min-width:0; }
+    @media(max-width:850px) {
+      main { width:100%;padding:12px 10px 48px; }
+      .gd-workspace { display:flex;flex-direction:column;align-items:stretch;gap:10px; }
+      .gd-specialists { width:100%;overflow:hidden;padding:10px; }
+      .gd-specialists nav { width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain; }
+      .gd-workspace>.hero { width:100%;max-width:100%;padding:18px 10px 24px; }
+      .hero-mark { display:block;width:100%;font-size:clamp(24px,7vw,40px);letter-spacing:.015em; }
+      .hero-title { font-size:clamp(11px,3vw,15px);letter-spacing:.12em; }
+      .hero-swedish { font-size:clamp(15px,4vw,21px); }
+      #vue-router { width:100%;margin:14px 0 0 !important; }
+      #vue-router-photo-first { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-width:100%; }
+      #vue-router-photo-first button { display:block;min-width:0;width:100%;max-width:100%;white-space:normal;overflow-wrap:anywhere;font-size:12px !important;padding:9px 3px !important; }
+      #vue-router-question { display:block;width:100%;max-width:100%; }
+      #vue-router-replies { width:100%; }
+    }
+    @media(max-width:420px) {
+      header { padding:13px 12px; }
+      .logo { font-size:19px;letter-spacing:.035em; }
+      .logo::after { font-size:8px;letter-spacing:.13em; }
+      .lang-picker { max-width:42%;font-size:13px; }
+      .vue-brain { left:51%;width:55px;height:42px; }
+      .gd-specialists h2 { font-size:11px; }
+    }
   </style>
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
