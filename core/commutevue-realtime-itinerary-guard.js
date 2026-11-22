@@ -31,6 +31,8 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   if(leg?.mode==='WALK')continue;
   const key=identity(leg);
   const matches=key?evidence.filter(item=>identity(item)===key&&item.verified===true):[];
+  // Conflicting or duplicate provider records must not certify cancellation.
+  if(key&&evidence.filter(item=>identity(item)===key).length!==1)continue;
   if(matches.length===1&&matches[0].cancelled===true)return {status:'cancelled',reason:'verified_cancellation',details:[{status:'cancelled'}]};
  }
  let lastArrival=-Infinity,hasUnverified=false,hasCancellation=false,hasDelay=false;
@@ -44,7 +46,7 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   }
   const key=identity(leg);
   const matches=key?evidence.filter(item=>identity(item)===key&&item.verified===true):[];
-  if(matches.length!==1){hasUnverified=true;details.push({status:'unverified'});lastArrival=plannedArrival;continue;}
+  if(matches.length!==1||(key&&evidence.filter(item=>identity(item)===key).length!==1)){hasUnverified=true;details.push({status:'unverified'});lastArrival=plannedArrival;continue;}
   const matched=matches[0];
   if(matched.cancelled===true){hasCancellation=true;details.push({status:'cancelled'});continue;}
   if(!matched.estimatedArrival){hasUnverified=true;details.push({status:'unverified',reason:'missing_arrival_forecast'});lastArrival=plannedArrival;continue;}

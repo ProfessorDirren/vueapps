@@ -76,3 +76,12 @@ test('verified cancellation cannot override overlapping planned transfer',()=>{
  const second={serviceId:'SJ-456',from:'Göteborg C',to:'Mölndal',departure:'2026-11-23T10:15',arrival:'2026-11-23T10:35',mode:'TRAIN'};
  assert.equal(assessRealtimeJourney({legs:[a,second]},evidence({cancelled:true})).status,'unverified');
 });
+
+test('verified cancellation with conflicting unverified duplicate fails closed',()=>{
+ const conflicting=[...evidence({cancelled:true}),...evidence({verified:false,cancelled:false})];
+ assert.equal(assessRealtimeJourney(trip,conflicting).status,'unverified');
+});
+test('verified on-time record with unverified duplicate fails closed',()=>{
+ const conflicting=[...evidence(),...evidence({verified:false,estimatedArrival:'2026-11-23T10:45'})];
+ assert.equal(assessRealtimeJourney(trip,conflicting).status,'unverified');
+});
