@@ -162,6 +162,34 @@
       .vue-brain { left:51%;width:55px;height:42px; }
       .gd-specialists h2 { font-size:11px; }
     }
+
+    /* G&D mobile app mode: the question is the primary action, not the marketing hero. */
+    @media(max-width:600px) {
+      header { min-height:76px;padding:10px 12px 8px; }
+      .logo { font-size:20px;line-height:1.1;letter-spacing:.025em; }
+      .logo::after { margin-top:3px;font-size:8px;letter-spacing:.11em; }
+      .lang-picker { padding:7px 5px;max-width:37%;font-size:12px; }
+      .vue-brain { width:66px;height:44px;top:34px;left:53%; }
+      main { padding:6px 8px 36px; }
+      .gd-workspace { gap:0; }
+      .gd-specialists { display:none; }
+      .gd-workspace>.hero { border-radius:12px;padding:10px 9px 14px;border-color:#245f65;box-shadow:none;background:#0a1d28; }
+      .hero-mark,.hero-title,.hero-swedish,.hero-tagline { display:none !important; }
+      #vue-router { margin:0 !important;max-width:100%; }
+      #vue-router-photo-first { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:10px !important; }
+      #vue-router-photo-first button { min-height:46px;padding:7px 2px !important;font-size:10px !important;line-height:1.15;letter-spacing:-.01em; }
+      #vue-router-photo-first button::before { display:block;margin:0 auto 3px;font-size:16px; }
+      #vue-router h2[data-router="0"],#vue-router-favorite,#vue-router p[data-router="17"],#vue-router label[data-router="1"],#vue-router-hint { display:none; }
+      #vue-router-question { min-height:86px;height:86px;max-height:160px;margin:0 0 8px !important;padding:12px !important;border:1px solid #c6a45c !important;border-radius:11px;font-size:14px !important; }
+      #vue-router-send { display:block;width:100%;min-height:44px;margin:0 0 8px !important; }
+      #vue-router-specialist { font-size:14px;margin:10px 0 6px; }
+      #vue-router-replies { gap:8px; }
+      #vue-router-replies>* { padding:10px;border-radius:10px; }
+    }
+    @media(max-width:350px) {
+      #vue-router-photo-first { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #vue-router-photo-first button { font-size:12px !important; }
+    }
   </style>
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
@@ -222,7 +250,7 @@
           </div>
         </div>
         <h2 data-router="0"></h2><p id="vue-router-favorite"></p><p data-router="17" style="font-size:13px;color:#90a3ac"></p><label for="vue-router-question" data-router="1"></label>
-        <textarea id="vue-router-question" rows="5" maxlength="3000" aria-describedby="vue-router-hint" style="display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:16px;border:1px solid #527078;border-radius:12px;background:#0d2029;color:#f4f7f8;font:inherit;resize:vertical"></textarea>
+        <textarea id="vue-router-question" aria-label="Describe what you need" rows="5" maxlength="3000" aria-describedby="vue-router-hint" style="display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:16px;border:1px solid #527078;border-radius:12px;background:#0d2029;color:#f4f7f8;font:inherit;resize:vertical"></textarea>
         <p id="vue-router-hint" data-router="3" style="font-size:14px"></p><button id="vue-router-send" type="button" style="padding:12px 20px;border:0;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;cursor:pointer"></button>
         <p id="vue-router-status" role="status" aria-live="polite"></p><p id="vue-router-hint-other"></p><h3 id="vue-router-specialist"></h3><div id="vue-router-replies" aria-live="polite"></div>
         <a id="vue-router-workspace" hidden></a><p data-router="15" style="font-size:13px;color:#90a3ac"></p><p data-router="6" style="font-size:13px;color:#90a3ac"></p>
