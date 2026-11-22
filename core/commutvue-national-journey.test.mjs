@@ -89,3 +89,17 @@ test('national journey preserves distinct departure options',()=>{
  const trip=departure=>({legs:[{from:'A',to:'B',departure,arrival:'2026-11-22T12:00',mode:'JST'}]});
  assert.equal(rankResRobotTrips([trip('2026-11-22T08:00'),trip('2026-11-22T09:00')]).length,2);
 });
+
+test('national planner rejects missing and invalid itinerary times',()=>{
+ const base={from:'A',to:'B',departure:'2026-11-22T08:00',arrival:'2026-11-22T09:00'};
+ const missing={legs:[{...base,arrival:null}]};
+ const invalid={legs:[{...base,arrival:'not-a-time'}]};
+ const reversed={legs:[{...base,arrival:'2026-11-22T07:00'}]};
+ assert.deepEqual(rankResRobotTrips([missing,invalid,reversed]),[]);
+});
+test('national planner rejects zero-length and excessive journeys',()=>{
+ const base={from:'A',to:'B',departure:'2026-11-22T08:00'};
+ const zero={legs:[{...base,arrival:'2026-11-22T08:00'}]};
+ const excessive={legs:[{...base,arrival:'2026-11-24T08:00'}]};
+ assert.deepEqual(rankResRobotTrips([zero,excessive]),[]);
+});
