@@ -5,6 +5,7 @@ import {VIDEO_POLICY} from './video-policy.js';
 export const VIDEO_LIMIT_BYTES=VIDEO_POLICY.maxBytes;
 export const VIDEO_MIME_TYPES=VIDEO_POLICY.acceptedMimeTypes;
 export const VIDEO_LABELS=Object.freeze({
+ it:['Registra un video','Scegli un video','Rimuovi il video','Solo anteprima. L’analisi video con IA non è ancora disponibile.','Scegli un video MP4, WebM o MOV fino a 50 MB.','Video selezionato per l’anteprima locale. L’analisi video con IA non è ancora supportata.'],
  en:['Record a Video','Choose a Video','Remove video','Video preview only. AI video analysis is not yet available.','Choose an MP4, WebM or MOV video up to 50 MB.','Video selected for local preview. Video AI analysis is not yet supported.'],
  es:['Grabar un vídeo','Elegir un vídeo','Quitar vídeo','Solo vista previa. El análisis de vídeo con IA aún no está disponible.','Elige un vídeo MP4, WebM o MOV de hasta 50 MB.','Vídeo seleccionado para vista previa local. El análisis con IA aún no está disponible.'],
  sv:['Spela in video','Välj en video','Ta bort video','Endast förhandsvisning. AI-videoanalys är ännu inte tillgänglig.','Välj en MP4-, WebM- eller MOV-video på högst 50 MB.','Videon kan förhandsvisas lokalt. AI-videoanalys stöds ännu inte.'],
