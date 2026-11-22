@@ -25,7 +25,7 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
  }
  let lastArrival=-Infinity,hasUnverified=false,hasCancellation=false,hasDelay=false;
  const details=[];
- for(const leg of trip.legs){
+ for(const [index,leg] of trip.legs.entries()){
   const plannedDeparture=minute(leg?.departure),plannedArrival=minute(leg?.arrival);
   if(!Number.isFinite(plannedDeparture)||!Number.isFinite(plannedArrival)||plannedArrival<plannedDeparture)return {status:'unverified',reason:'invalid_planned_times'};
   if(leg.mode==='WALK'){
@@ -38,6 +38,9 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   const matched=matches[0];
   if(matched.cancelled===true){hasCancellation=true;details.push({status:'cancelled'});continue;}
   if(!matched.estimatedArrival){hasUnverified=true;details.push({status:'unverified',reason:'missing_arrival_forecast'});lastArrival=plannedArrival;continue;}
+  // A downstream connection cannot be verified without its own departure forecast.
+  // Planned departure is not evidence that a delayed incoming service can connect.
+  if(index>0&&!matched.estimatedDeparture){hasUnverified=true;details.push({status:'unverified',reason:'missing_transfer_departure_forecast'});lastArrival=plannedArrival;continue;}
   const predictedDeparture=minute(matched.estimatedDeparture||leg.departure);
   const predictedArrival=minute(matched.estimatedArrival);
   if(!Number.isFinite(predictedDeparture)||!Number.isFinite(predictedArrival)||predictedArrival<predictedDeparture)return {status:'unverified',reason:'invalid_realtime_times'};
