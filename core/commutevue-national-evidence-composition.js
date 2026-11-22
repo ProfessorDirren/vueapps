@@ -6,8 +6,8 @@ import {joinNationalTrainEvidence} from './commutevue-strict-train-evidence-join
  * No production publication or assumption that ResRobot and Trafikverket
  * train identifiers are interchangeable. Missing proof always returns null.
  */
-export async function composeNationalTrainEvidence(leg,{stationCandidates,trafikverket,probe}={}){
- if(!leg||!Array.isArray(stationCandidates)||typeof probe!=='function')return null;
+export async function composeNationalTrainEvidence(leg,{stationCandidates,trafikverket,probe,resolveTrainIdentity}={}){
+ if(!leg||!Array.isArray(stationCandidates)||typeof probe!=='function'||typeof resolveTrainIdentity!=='function')return null;
  const names=[leg.from,leg.to];
  if(names.some(name=>typeof name!=='string'||!name.trim())||names[0]===names[1])return null;
  const candidates=names.map(name=>stationCandidates.filter(item=>item?.resRobotName===name));
@@ -16,7 +16,12 @@ export async function composeNationalTrainEvidence(leg,{stationCandidates,trafik
  if(!verified)return null;
  const stations=resolveNationalLegStations(leg,verified);
  if(!stations)return null;
+ // ResRobot product numbers and Trafikverket AdvertisedTrainIdent are
+ // separate provider namespaces. Never assume the numeric strings are equal.
+ let identity;
+ try{identity=await resolveTrainIdentity({resRobotServiceId:leg.serviceId,from:leg.from,to:leg.to,departure:leg.departure,arrival:leg.arrival,resRobotStopIds:{from:candidates[0][0].resRobotStopId,to:candidates[1][0].resRobotStopId}});}catch{return null;}
+ if(!identity||identity.verified!==true||identity.resRobotServiceId!==leg.serviceId||typeof identity.trafikverketTrainIdent!=='string'||! /^[0-9]{1,8}$/.test(identity.trafikverketTrainIdent))return null;
  let result;
  try{result=await probe({from:leg.from,to:leg.to});}catch{return null;}
- return joinNationalTrainEvidence(leg,result,stations);
+ return joinNationalTrainEvidence({...leg,serviceId:identity.trafikverketTrainIdent},result,stations);
 }
