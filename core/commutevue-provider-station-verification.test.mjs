@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {verifyStationCandidates} from './commutevue-provider-station-verification.js';
-const candidates=[{resRobotName:'Jordbro',resRobotStopId:'A=740000001@',trafikverketSignature:'J'},{resRobotName:'Stockholm City',resRobotStopId:'A=740000002@',trafikverketSignature:'Sci'}];
+const candidates=[{resRobotName:'Jordbro',resRobotStopId:'740000001',trafikverketSignature:'J'},{resRobotName:'Stockholm City',resRobotStopId:'740000002',trafikverketSignature:'Sci'}];
 const provider={station:async name=>({'Jordbro':'J','Stockholm City':'Sci'})[name]};
 test('independent exact provider station lookup verifies crosswalk candidates',async()=>{
  const verified=await verifyStationCandidates(candidates,provider);
@@ -16,7 +16,7 @@ test('missing, ambiguous, duplicate or failed provider lookup fails closed',asyn
  assert.equal(await verifyStationCandidates(candidates,{station:async()=>null}),null);
  assert.equal(await verifyStationCandidates(candidates,null),null);
  assert.equal(await verifyStationCandidates([],provider),null);
- assert.equal(await verifyStationCandidates([{...candidates[0],resRobotStopId:'bad'}],provider),null);
+ assert.equal(await verifyStationCandidates([{...candidates[0],resRobotStopId:'A=740000001@'}],provider),null);
 });
 test('fuzzy aliases are never silently accepted',async()=>{
  assert.equal(await verifyStationCandidates([{resRobotName:'Stockholm C',trafikverketSignature:'Cst'}],provider),null);
