@@ -207,12 +207,13 @@ export async function POST(request){
   const verified=live?.status==='ok';
   const regionalVerified=!verified&&regionalPublished?.status==='ready'&&regionalPublished.departures.length>0;
   const scheduledVerified=!verified&&!regionalVerified&&scheduled?.status==='scheduled'&&Array.isArray(scheduled.departures)&&scheduled.departures.length>0;
-  const regionalLabels={sv:'Verifierade regionala realtidsavgångar:',en:'Verified regional real-time departures:',es:'Salidas regionales verificadas en tiempo real:',fr:'Départs régionaux vérifiés en temps réel :'};
+  const regionalLabels={sv:'Realtidsuppdaterade avgångar från regional källa (ankomst till destinationen ej verifierad):',en:'Regional real-time departure updates (arrival at destination not verified):',es:'Salidas actualizadas en tiempo real (llegada al destino no verificada):',fr:'Départs mis à jour en temps réel (arrivée à destination non vérifiée) :',it:'Partenze aggiornate in tempo reale (arrivo a destinazione non verificato):'};
   const regionalDetailLabels={
-   sv:{scheduled:'Planerad',predicted:'Realtid',delay:'Försening ej verifierad',source:'Källa: SL Regional GTFS-RT'},
-   en:{scheduled:'Scheduled',predicted:'Real-time',delay:'Delay not verified',source:'Source: SL Regional GTFS-RT'},
-   es:{scheduled:'Programada',predicted:'Tiempo real',delay:'Retraso no verificado',source:'Fuente: SL Regional GTFS-RT'},
-   fr:{scheduled:'Prévue',predicted:'Temps réel',delay:'Retard non vérifié',source:'Source : SL Regional GTFS-RT'}
+   sv:{scheduled:'Tidtabell',predicted:'Uppdaterad avgång',delay:'Försening/inställelse ej verifierad',source:'Källa: SL Regional GTFS-RT'},
+   en:{scheduled:'Timetable',predicted:'Updated departure',delay:'Delay/cancellation not verified',source:'Source: SL Regional GTFS-RT'},
+   es:{scheduled:'Horario',predicted:'Salida actualizada',delay:'Retraso/cancelación no verificados',source:'Fuente: SL Regional GTFS-RT'},
+   fr:{scheduled:'Horaire',predicted:'Départ actualisé',delay:'Retard/annulation non vérifiés',source:'Source : SL Regional GTFS-RT'},
+   it:{scheduled:'Orario',predicted:'Partenza aggiornata',delay:'Ritardo/cancellazione non verificati',source:'Fonte: SL Regional GTFS-RT'}
   };
   const regionalDetails=regionalDetailLabels[b.language]||regionalDetailLabels.en;
   const regionalClock=new Intl.DateTimeFormat(b.language==='sv'?'sv-SE':'en-GB',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'});
