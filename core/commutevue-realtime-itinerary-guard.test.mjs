@@ -87,8 +87,10 @@ test('verified on-time record with unverified duplicate fails closed',()=>{
 });
 
 test('unverified incoming train cannot establish missed walking transfer',()=>{
- const walk={from:'Göteborg C',to:'Göteborg C spår 4',departure:'2026-11-23T10:19',arrival:'2026-11-23T10:26',mode:'WALK'};
- assert.equal(assessRealtimeJourney({legs:[a,walk]},[]).status,'unverified');
+ const walk={from:'Göteborg C',to:'Göteborg C spår 4',departure:'2026-11-23T10:21',arrival:'2026-11-23T10:26',mode:'WALK'};
+ const result=assessRealtimeJourney({legs:[a,walk]},[]);
+ assert.equal(result.status,'unverified');
+ assert.equal(result.reason,'incomplete_realtime_coverage');
 });
 test('unverified incoming train cannot establish missed connecting train',()=>{
  const second={serviceId:'SJ-456',from:'Göteborg C',to:'Mölndal',departure:'2026-11-23T10:25',arrival:'2026-11-23T10:35',mode:'TRAIN'};
