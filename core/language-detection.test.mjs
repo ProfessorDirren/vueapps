@@ -82,3 +82,25 @@ test('Spanish commuter request automatically selects Spanish UI without changing
  assert.equal(detect(q),'es');
  assert.equal(detect('Jordbro Stockholm City 43'),null);
 });
+
+test('all twelve VUE languages detect unambiguous commuting questions',()=>{
+ const examples={
+  en:'Show the next train from Jordbro to Stockholm City please',
+  es:'Muéstrame los próximos trenes de cercanías desde la estación de Jordbro hasta Stockholm City',
+  sv:'När går nästa pendeltåg från Jordbro till Stockholm City?',
+  fr:'Bonjour, comment trouver mon train avec vous pour Paris?',
+  it:'Ciao, come posso usare il treno per andare a Roma?',
+  tr:'Merhaba, nasıl gidebilirim tren ile İstanbul için yardım lütfen',
+  el:'Πώς μπορώ να πάω από Αθήνα προς Πειραιά με τρένο;',
+  fa:'سلام من می‌خواهم از تهران به کرج با قطار بروم',
+  hi:'मुझे अगली ट्रेन से स्टेशन तक जाना है',
+  'zh-CN':'请问下一班火车什么时候从车站出发',
+  ru:'Когда следующий поезд отправляется со станции?',
+  ar:'متى يغادر القطار القادم من المحطة؟'
+ };
+ for(const [locale,question] of Object.entries(examples))assert.equal(detect(question),locale,locale+': '+question);
+});
+test('shared Spanish hasta and Turkish hasta cannot hijack a dominant language',()=>{
+ assert.equal(detect('Muéstrame los próximos trenes de cercanías desde la estación de Jordbro hasta Stockholm City. Comprueba los retrasos y responde en español.'),'es');
+ assert.equal(detect('Merhaba köpek hasta yardım'),'tr');
+});
