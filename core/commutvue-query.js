@@ -63,7 +63,7 @@ export function commuteTransportMode(question){
   ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
   ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b/iu],
   ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b/iu],
-  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|trenes?\s+de\s+cercanías|trenes?)(?=$|[^\p{L}\p{N}])/iu]
+  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|tren(?:es)?\s+de\s+cercanías|tren(?:es)?)(?=$|[^\p{L}\p{N}])/iu]
  ];
  const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
  return found.length===1?found[0]:null;
