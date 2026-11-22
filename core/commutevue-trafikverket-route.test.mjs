@@ -99,3 +99,14 @@ test('conflicting destination forecasts fail closed',()=>{
  const b={...dest,EstimatedTimeAtLocation:'2026-11-21T10:37:00+01:00'};
  assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[a,b]}),[]);
 });
+
+test('conflicting cancelled and active departure records fail closed',()=>{
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,origin:[origin,{...origin,Canceled:true}]}),[]);
+});
+test('conflicting cancelled and active destination records fail closed',()=>{
+ assert.deepEqual(matchTrafikverketTrainRoute({...args,destination:[dest,{...dest,Canceled:true}]}),[]);
+});
+test('cancellation of a different departure does not invalidate a distinct train',()=>{
+ const unrelated={...origin,AdvertisedTrainIdent:'44',Canceled:true};
+ assert.equal(matchTrafikverketTrainRoute({...args,origin:[origin,unrelated]}).length,1);
+});
