@@ -111,3 +111,19 @@ test('Jordbro to Stockholm City ResRobot lookup uses unique station IDs and arri
  assert.equal(calls[2].searchParams.get('destId'),'740000002');
  assert.equal(calls[2].searchParams.get('searchForArrival'),'1');
 });
+
+test('arrive-by results prioritize the latest feasible departure and exclude late arrivals',async()=>{
+ const fetchImpl=async url=>{
+  const u=new URL(url);
+  if(u.pathname.endsWith('/location.name')){
+   const name=u.searchParams.get('input');
+   return {ok:true,json:async()=>({StopLocation:[{extId:name==='Jordbro'?'740000001':'740000002',name}]})};
+  }
+  const trip=(departure,arrival)=>({LegList:{Leg:[{Origin:{name:'Jordbro',date:'2026-11-23',time:departure},Destination:{name:'Stockholm City',date:'2026-11-23',time:arrival}}]}});
+  return {ok:true,json:async()=>({Trip:[trip('08:54:00','09:24:00'),trip('09:24:00','09:54:00'),trip('09:09:00','09:39:00'),trip('10:14:00','10:44:00')]})};
+ };
+ const result=await planNationalSwedenJourney('Jordbro','Stockholm City',{apiKey:'test',fetchImpl,arriveBy:{date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'}});
+ assert.equal(result.status,'schedule_available');
+ assert.deepEqual(result.trips.map(trip=>trip.departure.slice(11,16)),['09:24','09:09','08:54']);
+ assert.equal(result.trips.every(trip=>trip.arrival<='2026-11-23T10:30'),true);
+});
