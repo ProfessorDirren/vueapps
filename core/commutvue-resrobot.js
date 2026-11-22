@@ -163,6 +163,9 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,
   if(origin.id===destination.id)return {status:'same_stop',trips:[]};
   const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl,arriveBy});
   const ranked=rankResRobotTrips(trips).filter(trip=>!arriveBy||(trip.arrival.slice(0,16)<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
+  // For an arrive-by request, lead with the latest feasible departure rather than
+  // the shortest-duration trip. Preserve the existing ranking for other queries.
+  if(arriveBy)ranked.sort((a,b)=>b.departure.localeCompare(a.departure)||a.arrival.localeCompare(b.arrival));
   return {status:ranked.length?'schedule_available':'no_journeys',trips:ranked.slice(0,3)};
  }catch{return {status:'provider_unavailable',trips:[]};}
 }
