@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {detectVueInputLanguage} from './vuecore-language.js';
 import {POST} from '../api/vue-router.js';
+import {POST as specialistFollowup} from '../api/vue-followup.js';
 const req=b=>new Request('https://local',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
 test('VUECORE recognizes supported language evidence independently of UI locale',()=>{
  for(const [q,lang] of [
@@ -43,4 +44,9 @@ test('Short English transit questions retain their spoken language in Swedish UI
 
 test('Italian VUEAPPS help language is detected centrally',()=>{
  assert.equal(detectVueInputLanguage('Ciao! Come posso usare VUEAPPS in italiano?','en'),'it');
+});
+
+test('Italian ANY-VUE follow-up passes shared language validation',async()=>{
+ const response=await specialistFollowup(req({domain:'anyvue',question:'Ciao! Come posso usare VUEAPPS in italiano?',language:'it'}));
+ assert.notEqual(response.status,400,'Italian must not be rejected as an unsupported language');
 });
