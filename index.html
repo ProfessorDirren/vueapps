@@ -190,6 +190,30 @@
       #vue-router-photo-first { grid-template-columns:repeat(2,minmax(0,1fr)); }
       #vue-router-photo-first button { font-size:12px !important; }
     }
+
+    /* Mobile polish: preserve original artwork, never show the brain edge-on. */
+    @keyframes gd-brain-gentle-turn {
+      0%,100% { transform:rotateY(-18deg) rotateZ(-3deg); }
+      50% { transform:rotateY(18deg) rotateZ(3deg); }
+    }
+    @media(max-width:600px) {
+      header { min-height:92px; }
+      #vuecore-help { gap:8px;margin-top:7px; }
+      .vuecore-help-trigger,.vuecore-home-link { font-size:12px;padding:6px 10px;min-height:34px; }
+      .vue-brain { left:55%;top:31px;width:90px;height:54px; }
+      .vue-brain-core { animation:gd-brain-gentle-turn 24s ease-in-out infinite; }
+      .vue-brain-glint { animation:vue-brain-glint 18s linear infinite; }
+      .intro { display:none; }
+      #vue-router p[data-router="15"],#vue-router p[data-router="6"] { font-size:11px !important;line-height:1.35;margin:5px 0;color:#8fa7ae !important; }
+      #vue-router-specialist { margin:7px 0 4px; }
+    }
+    @media(max-width:370px) {
+      .vue-brain { left:52%;width:70px;height:48px; }
+      .lang-picker { max-width:34%; }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      .vue-brain-core,.vue-brain-glint { animation:none !important; }
+    }
   </style>
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
