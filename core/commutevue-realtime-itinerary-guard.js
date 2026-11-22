@@ -31,6 +31,8 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   if(leg?.mode==='WALK')continue;
   const key=identity(leg);
   const matches=key?evidence.filter(item=>identity(item)===key&&item.verified===true):[];
+  // Conflicting or duplicate provider records must not certify cancellation.
+  if(key&&evidence.filter(item=>identity(item)===key).length!==1)continue;
   if(matches.length===1&&matches[0].cancelled===true)return {status:'cancelled',reason:'verified_cancellation',details:[{status:'cancelled'}]};
  }
  let lastArrival=-Infinity,hasUnverified=false,hasCancellation=false,hasDelay=false;
