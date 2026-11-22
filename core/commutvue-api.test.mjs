@@ -447,6 +447,7 @@ test('future Spanish arrival request exposes safe ResRobot stop resolution diagn
   assert.equal(body.domain,'commutvue');
   assert.equal(body.evidence_status,'future_date_unavailable');
   assert.equal(body.live_diagnostic,'resrobot_ambiguous_stop');
+  assert.match(body.answer,/Diagnóstico del horario: resrobot_ambiguous_stop/);
   assert.equal(body.verified,false);
   assert.deepEqual(body.departures,[]);
   assert.doesNotMatch(JSON.stringify(body),/private-resrobot-diagnostic-fixture/);
