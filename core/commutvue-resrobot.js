@@ -109,6 +109,8 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}
   ]);
   const origin=chooseResRobotStop(origins,from),destination=chooseResRobotStop(destinations,to);
   if(!origin||!destination)return {status:'ambiguous_stop',trips:[]};
+  // A resolved identical stop ID is not a journey; never request or display one.
+  if(origin.id===destination.id)return {status:'same_stop',trips:[]};
   const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl});
   const ranked=rankResRobotTrips(trips);
   return {status:ranked.length?'schedule_available':'no_journeys',trips:ranked.slice(0,3)};
