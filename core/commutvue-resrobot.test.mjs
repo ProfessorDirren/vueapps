@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips,parseSpanishArrivalDeadline,chooseResRobotStop,planNationalSwedenJourney} from './commutvue-resrobot.js';
+import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips,parseSpanishArrivalDeadline,parseSwedishArrivalDeadline,chooseResRobotStop,planNationalSwedenJourney} from './commutvue-resrobot.js';
 test('national adapter requires its own configured key',()=>{
  assert.equal(resRobotConfigured({TRAFIKLAB_API_KEY:'existing'}),false);
  assert.equal(resRobotConfigured({RESROBOT_API_KEY:'key'}),true);
@@ -126,4 +126,10 @@ test('arrive-by results prioritize the latest feasible departure and exclude lat
  assert.equal(result.status,'schedule_available');
  assert.deepEqual(result.trips.map(trip=>trip.departure.slice(11,16)),['09:24','09:09','08:54']);
  assert.equal(result.trips.every(trip=>trip.arrival<='2026-11-23T10:30'),true);
+});
+
+test('Swedish Tyresö bus question parses date before arrival deadline',()=>{
+ const q='Vilken buss ska jag ta från Tyresö centrum till Gullmarsplan måndag den 23 november 2026 om jag vill vara framme senast kl. 10.00?';
+ assert.deepEqual(parseSwedishArrivalDeadline(q),{date:'2026-11-23',time:'10:00',cutoff:'2026-11-23T10:00',explicitYear:true});
+ assert.deepEqual(parseSwedishArrivalDeadline('Jag vill vara framme senast kl. 10.00 den 23 november 2026'),{date:'2026-11-23',time:'10:00',cutoff:'2026-11-23T10:00',explicitYear:true});
 });
