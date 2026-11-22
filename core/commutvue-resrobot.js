@@ -130,7 +130,7 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,
   // A resolved identical stop ID is not a journey; never request or display one.
   if(origin.id===destination.id)return {status:'same_stop',trips:[]};
   const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl,arriveBy});
-  const ranked=rankResRobotTrips(trips).filter(trip=>!arriveBy||(trip.arrival<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
+  const ranked=rankResRobotTrips(trips).filter(trip=>!arriveBy||(trip.arrival.slice(0,16)<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
   return {status:ranked.length?'schedule_available':'no_journeys',trips:ranked.slice(0,3)};
  }catch{return {status:'provider_unavailable',trips:[]};}
 }
