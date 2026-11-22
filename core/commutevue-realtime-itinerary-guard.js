@@ -17,9 +17,13 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
  if(!Array.isArray(trip?.legs)||!trip.legs.length||!Array.isArray(evidence))return {status:'unverified',reason:'missing_journey_or_evidence'};
  // Validate the complete planned itinerary before trusting cancellation evidence.
  // A malformed journey must never be promoted to a verified status.
- for(const leg of trip.legs){
+ for(const [index,leg] of trip.legs.entries()){
   const departure=minute(leg?.departure),arrival=minute(leg?.arrival);
   if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<departure)return {status:'unverified',reason:'invalid_planned_times'};
+  if(index>0){
+   const previous=trip.legs[index-1];
+   if(minute(previous.arrival)>departure||previous.to!==leg.from)return {status:'unverified',reason:'invalid_planned_connection'};
+  }
  }
  // A uniquely verified cancellation takes priority over transfer-risk calculations.
  // Otherwise a later walking leg can hide the more important cancelled service.

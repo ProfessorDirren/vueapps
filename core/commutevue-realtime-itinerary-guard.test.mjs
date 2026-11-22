@@ -67,3 +67,12 @@ test('verified cancellation cannot override ambiguous DST planned time',()=>{
  const ambiguous={...a,departure:'2026-10-25T02:30',arrival:'2026-10-25T03:30'};
  assert.equal(assessRealtimeJourney({legs:[ambiguous]},[{...ambiguous,verified:true,cancelled:true}]).status,'unverified');
 });
+
+test('verified cancellation cannot override disconnected station transfer',()=>{
+ const second={serviceId:'SJ-456',from:'Uppsala C',to:'Mölndal',departure:'2026-11-23T10:25',arrival:'2026-11-23T11:35',mode:'TRAIN'};
+ assert.equal(assessRealtimeJourney({legs:[a,second]},evidence({cancelled:true})).status,'unverified');
+});
+test('verified cancellation cannot override overlapping planned transfer',()=>{
+ const second={serviceId:'SJ-456',from:'Göteborg C',to:'Mölndal',departure:'2026-11-23T10:15',arrival:'2026-11-23T10:35',mode:'TRAIN'};
+ assert.equal(assessRealtimeJourney({legs:[a,second]},evidence({cancelled:true})).status,'unverified');
+});
