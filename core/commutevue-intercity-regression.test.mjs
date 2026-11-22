@@ -19,5 +19,7 @@ test('INTERCITY: preserve endpoints and never force one mode',()=>{
 });
 test('INTERCITY: never silently claim Stockholm-only coverage for Göteborg',()=>{
  const result=parseCommuteQuestion(question);
- assert.notEqual(result.needsClarification,false,'Unverified cross-region journey must not be presented as a verified Stockholm-only trip');
+ assert.equal(result.needsClarification,false,'Known endpoints do not need clarification');
+ assert.equal(result.unsupportedIntercity,true,'Cross-region journey must be marked unsupported');
+ assert.equal(result.region,null,'Never treat intercity journey as Stockholm-only');
 });
