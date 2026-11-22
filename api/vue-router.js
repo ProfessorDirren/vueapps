@@ -80,7 +80,7 @@ export async function POST(request){
   }
   // National journeys use ResRobot timetable evidence; never label these as realtime.
   // Keep the existing regional provider path unchanged.
-  if(journey.unsupportedIntercity&&journey.from&&journey.to){
+  if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
    const national=await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY});
    const clock=value=>/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(value)?value.slice(11,16):'—';
    const messages={
