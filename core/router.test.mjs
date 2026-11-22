@@ -211,3 +211,7 @@ test('VUECORE cooking terms do not steal an ordinary bus journey',()=>{
   'Vilken buss går till restaurangen med kyckling?'
  ])assert.equal(routeQuestion(question,'foodvue').domain,'commutvue',question);
 });
+
+test('Italian VUEAPPS help bypasses unrelated favorite specialist',()=>{
+ assert.deepEqual(routeQuestion('Ciao! Come posso usare VUEAPPS in italiano?','commutvue'),{domain:'anyvue',clarify:false});
+});

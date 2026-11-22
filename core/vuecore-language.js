@@ -1,5 +1,6 @@
 /** Shared VUECORE input-language detection. Conservative: retain UI locale when uncertain. */
 const markers=Object.freeze({
+ it:['ciao','come','posso','usare','italiano','italiana','grazie','aiuto','vorrei','bisogno','quando','dove','perché'],
  sv:['hur','länge','ska','från','till','nästa','kycklingen','ugnen','varmluftsugnen','vilken','bussen','försenad','min','hund','svårt','andas','när','går','buss','tåg','tåget','pendeltåg','förseningar','station','avgår','var','är','trafiken'],
  en:['how','long','should','from','next','chicken','oven','when','does','train','where','please','bus','departure','late','station','is','the','today'],
  es:['cuánto','cuándo','desde','hasta','pollo','horno','dónde','necesito','quiero'],
