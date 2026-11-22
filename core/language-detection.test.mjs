@@ -76,3 +76,9 @@ test('Italian questions are recognized without switching a saved explicit locale
  assert.equal(detect('Ciao! Come posso usare VUEAPPS in italiano?'),'it');
  assert.equal(detect('Come posso usare VUEAPPS in italiano?'),'it');
 });
+
+test('Spanish commuter request automatically selects Spanish UI without changing explicit selection',()=>{
+ const q='Muéstrame los próximos trenes de cercanías desde la estación de Jordbro hasta Stockholm City. Comprueba las salidas en tiempo real, los retrasos y los trenes cancelados. Responde en español.';
+ assert.equal(detect(q),'es');
+ assert.equal(detect('Jordbro Stockholm City 43'),null);
+});
