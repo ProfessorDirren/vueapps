@@ -86,7 +86,9 @@ export function rankResRobotTrips(trips){
   return [{trip,minutes,transfers}];
  });
  // Faster first; within 15 minutes prefer fewer transfers.
- return candidates.sort((a,b)=>Math.abs(a.minutes-b.minutes)<=15?a.transfers-b.transfers||a.minutes-b.minutes:a.minutes-b.minutes).map(item=>item.trip);
+ // Stable total order: earliest arrival among reasonable alternatives, with a
+ // deterministic transfer penalty instead of a non-transitive pairwise threshold.
+ return candidates.sort((a,b)=>(a.minutes+a.transfers*10)-(b.minutes+b.transfers*10)||a.minutes-b.minutes||a.transfers-b.transfers).map(item=>item.trip);
 }
 export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};

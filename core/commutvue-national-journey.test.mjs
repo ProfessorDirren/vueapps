@@ -53,3 +53,14 @@ test('national ranking rejects reversed and overlapping legs',()=>{
  const bad={legs:[{from:'A',to:'B',departure:'2026-11-22T10:00',arrival:'2026-11-22T11:00'},{from:'B',to:'C',departure:'2026-11-22T10:30',arrival:'2026-11-22T12:00'}]};
  assert.deepEqual(rankResRobotTrips([bad]),[]);
 });
+
+test('national ranking applies consistent transfer penalty',()=>{
+ const direct={legs:[{from:'A',to:'D',departure:'2026-11-22T08:00',arrival:'2026-11-22T10:05'}]};
+ const transfer={legs:[{from:'A',to:'B',departure:'2026-11-22T08:00',arrival:'2026-11-22T08:40'},{from:'B',to:'D',departure:'2026-11-22T08:45',arrival:'2026-11-22T10:00'}]};
+ assert.equal(rankResRobotTrips([transfer,direct])[0],direct);
+});
+test('national ranking is deterministic across input order',()=>{
+ const trip=(mins)=>({legs:[{from:'A',to:'D',departure:'2026-11-22T08:00',arrival:'2026-11-22T'+mins}]});
+ const a=trip('10:00'),b=trip('10:12'),c=trip('10:25');
+ assert.deepEqual(rankResRobotTrips([a,b,c]),rankResRobotTrips([c,a,b]));
+});
