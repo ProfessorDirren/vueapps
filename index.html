@@ -190,6 +190,14 @@
       #vue-router-photo-first { grid-template-columns:repeat(2,minmax(0,1fr)); }
       #vue-router-photo-first button { font-size:12px !important; }
     }
+
+    /* Recording state affects only the neon orbit, never the original brain artwork. */
+    .vue-brain-recording .vue-brain-orbit { border-color:#ff313b;box-shadow:0 0 10px #ff2637,0 0 24px #e7193277,inset 0 0 8px #ff2637; }
+    .vue-brain-recording .vue-brain-orbit::after { background:#ff3344;box-shadow:0 0 12px 5px #f52235; }
+    #vue-router-mic { padding:12px 18px;border:1px solid #70d6bb;border-radius:10px;background:#102f38;color:#d9fbf7;font:inherit;font-weight:700;cursor:pointer;min-height:44px; }
+    #vue-router-mic[aria-pressed="true"] { background:#a61f2b;border-color:#ff5260;color:#fff; }
+    #vue-router-mic-status { display:block;margin:6px 0 10px;color:#c3d8db;font-size:12px; }
+    @media(max-width:600px) { #vue-router-mic { width:100%;margin:0 0 6px; } }
   </style>
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
@@ -199,6 +207,7 @@
       }
     });
   </script>
+  <script type="module">import {initPushToTalk} from "./apps/push-to-talk.js";document.addEventListener("DOMContentLoaded",()=>initPushToTalk());</script>
   <script src="./analytics.js" defer></script>
   <script type="module" src="./apps/router.js"></script>
   <script type="module" src="./apps/help.js"></script>
@@ -251,7 +260,7 @@
         </div>
         <h2 data-router="0"></h2><p id="vue-router-favorite"></p><p data-router="17" style="font-size:13px;color:#90a3ac"></p><label for="vue-router-question" data-router="1"></label>
         <textarea id="vue-router-question" aria-label="Describe what you need" rows="5" maxlength="3000" aria-describedby="vue-router-hint" style="display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:16px;border:1px solid #527078;border-radius:12px;background:#0d2029;color:#f4f7f8;font:inherit;resize:vertical"></textarea>
-        <p id="vue-router-hint" data-router="3" style="font-size:14px"></p><button id="vue-router-send" type="button" style="padding:12px 20px;border:0;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;cursor:pointer"></button>
+        <p id="vue-router-hint" data-router="3" style="font-size:14px"></p><button id="vue-router-mic" type="button" aria-pressed="false" aria-controls="vue-router-question"></button><span id="vue-router-mic-status" role="status" aria-live="polite"></span><button id="vue-router-send" type="button" style="padding:12px 20px;border:0;border-radius:10px;background:#70d6bb;color:#0b1720;font:inherit;cursor:pointer"></button>
         <p id="vue-router-status" role="status" aria-live="polite"></p><p id="vue-router-hint-other"></p><h3 id="vue-router-specialist"></h3><div id="vue-router-replies" aria-live="polite"></div>
         <a id="vue-router-workspace" hidden></a><p data-router="15" style="font-size:13px;color:#90a3ac"></p><p data-router="6" style="font-size:13px;color:#90a3ac"></p>
       </section>
