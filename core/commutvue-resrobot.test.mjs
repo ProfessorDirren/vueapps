@@ -22,3 +22,13 @@ test('valid provider legs remain explicitly unverified',()=>{
  assert.equal(result[0].verified,false);
  assert.equal(result[0].legs[0].from,'Tyresö Centrum');
 });
+
+test('documented StopLocation response yields national stop identifiers',async()=>{
+ const fetchImpl=async()=>({ok:true,json:async()=>({StopLocation:[{id:'740098001',name:'GÖTEBORG'}]})});
+ const stops=await lookupResRobotStops('Göteborg',{apiKey:'test',fetchImpl});
+ assert.deepEqual(stops,[{id:'740098001',name:'GÖTEBORG'}]);
+});
+test('HTTP 200 service errors fail closed instead of inventing a trip',async()=>{
+ const fetchImpl=async()=>({ok:true,json:async()=>({errorCode:'SVC_NO_RESULT'})});
+ assert.deepEqual(await planResRobotTrip('a','b',{apiKey:'test',fetchImpl}),[]);
+});

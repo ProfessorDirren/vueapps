@@ -14,6 +14,7 @@ export function normalizeResRobotLeg(leg){
  return {from:origin.name,to:destination.name,departure,arrival,mode:leg.Product?.[0]?.catOut||leg.Product?.catOut||null};
 }
 export function normalizeResRobotTrips(payload){
+ if(payload?.errorCode)return [];
  const trips=payload?.Trip;
  if(!Array.isArray(trips))return [];
  return trips.map(trip=>{
@@ -34,8 +35,10 @@ export async function lookupResRobotStops(query,{apiKey,fetchImpl=fetch}={}){
  const response=await fetchImpl(url,{signal:AbortSignal.timeout(8000)});
  if(!response.ok)throw new Error('resrobot_stop_lookup_unavailable');
  const body=await response.json();
- return (body?.stopLocationOrCoordLocation||[]).flatMap(item=>{
-  const stop=item?.StopLocation;
+ if(body?.errorCode)return [];
+ const entries=Array.isArray(body?.StopLocation)?body.StopLocation:body?.stopLocationOrCoordLocation||[];
+ return entries.flatMap(item=>{
+  const stop=item?.StopLocation||item;
   return stop?.id&&stop?.name?[{id:stop.id,name:stop.name}]:[];
  });
 }
