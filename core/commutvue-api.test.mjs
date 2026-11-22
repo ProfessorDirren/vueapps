@@ -465,7 +465,7 @@ test('Maria short Spanish antes de las deadline reaches provider and shows safe 
   const question='Mañana, 23 de noviembre de 2026, necesito viajar desde Jordbro hasta T-Centralen y llegar antes de las 10:30. ¿Qué tren debo tomar?';
   const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'es'})}));
   const body=await response.json();
-  assert.equal(response.status,200);
+  assert.equal(response.status,200,JSON.stringify(body));
   assert.equal(body.domain,'commutvue');
   assert.equal(body.live_diagnostic,'resrobot_ambiguous_stop');
   assert.match(body.answer,/Diagnóstico del horario: resrobot_ambiguous_stop/);
