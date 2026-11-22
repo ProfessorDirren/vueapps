@@ -116,7 +116,7 @@ export function chooseResRobotStop(stops,requested){
  const exact=stops.filter(stop=>cleanName(stop.name)===name);
  const candidates=exact.length?exact:stops.filter(stop=>cleanName(stationLabel(stop.name))===name);
  // Duplicate names for one public stop ID are not an ambiguity. Distinct IDs are.
- const byId=new Map(candidates.filter(stop=>/^\d{9}$/.test(stop?.id)).map(stop=>[stop.id,stop]));
+ const byId=new Map(candidates.filter(stop=>typeof stop?.id==='string'&&stop.id.length>0).map(stop=>[stop.id,stop]));
  return byId.size===1?[...byId.values()][0]:null;
 }
 // Rank only chronologically valid provider journeys; never invent an alternative.
