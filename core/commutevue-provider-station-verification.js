@@ -10,7 +10,7 @@ export async function verifyStationCandidates(candidates,trafikverket){
  const verified=[];
  for(const candidate of candidates){
   const name=candidate?.resRobotName,stopId=candidate?.resRobotStopId,expected=candidate?.trafikverketSignature;
-  if(typeof name!=='string'||!name.trim()||typeof stopId!=='string'||!/^A=\d+@?$/.test(stopId)||typeof expected!=='string')return null;
+  if(typeof name!=='string'||!name.trim()||typeof stopId!=='string'||!/^\d{9}$/.test(stopId)||typeof expected!=='string')return null;
   let actual;
   try{actual=await trafikverket.station(name);}catch{return null;}
   if(actual!==expected)return null;
