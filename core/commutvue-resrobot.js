@@ -72,6 +72,22 @@ export function chooseResRobotStop(stops,requested){
  });
  return qualified.length===1?qualified[0]:null;
 }
+// Rank only chronologically valid provider journeys; never invent an alternative.
+export function rankResRobotTrips(trips){
+ const candidates=trips.flatMap(trip=>{
+  if(!Array.isArray(trip?.legs)||!trip.legs.length)return [];
+  const legs=trip.legs;
+  const times=legs.map(leg=>[Date.parse(leg.departure),Date.parse(leg.arrival)]);
+  if(times.some(([start,end])=>!Number.isFinite(start)||!Number.isFinite(end)||end<start))return [];
+  if(times.some(([start],i)=>i>0&&start<times[i-1][1]))return [];
+  const minutes=(times.at(-1)[1]-times[0][0])/60000;
+  if(minutes<=0||minutes>1440)return [];
+  const transfers=Math.max(0,legs.filter(leg=>leg.from!==leg.to).length-1);
+  return [{trip,minutes,transfers}];
+ });
+ // Faster first; within 15 minutes prefer fewer transfers.
+ return candidates.sort((a,b)=>Math.abs(a.minutes-b.minutes)<=15?a.transfers-b.transfers||a.minutes-b.minutes:a.minutes-b.minutes).map(item=>item.trip);
+}
 export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};
  try{
@@ -82,6 +98,7 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch}
   const origin=chooseResRobotStop(origins,from),destination=chooseResRobotStop(destinations,to);
   if(!origin||!destination)return {status:'ambiguous_stop',trips:[]};
   const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl});
-  return {status:trips.length?'schedule_available':'no_journeys',trips:trips.slice(0,3)};
+  const ranked=rankResRobotTrips(trips);
+  return {status:ranked.length?'schedule_available':'no_journeys',trips:ranked.slice(0,3)};
  }catch{return {status:'provider_unavailable',trips:[]};}
 }
