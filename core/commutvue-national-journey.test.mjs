@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chooseResRobotStop,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
+import {chooseResRobotStop,parseSwedishArrivalDeadline,planNationalSwedenJourney,rankResRobotTrips} from './commutvue-resrobot.js';
 test('station resolution never guesses among ambiguous matches',()=>{
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'},{id:'b',name:'Tyresö Centrum'}],'Tyresö Centrum'),null);
  assert.equal(chooseResRobotStop([{id:'a',name:'Tyresö Centrum'}],'Tyresö Centrum').id,'a');
@@ -114,4 +114,36 @@ test('national planner refuses identical resolved stop IDs without trip API call
  assert.equal(result.status,'same_stop');
  assert.deepEqual(result.trips,[]);
  assert.equal(tripCalls,0);
+});
+
+test('Swedish arrive-by request parses exact date and minute without guessing realtime',()=>{
+ const parsed=parseSwedishArrivalDeadline('Jag vill vara framme senast kl 10.30 den 23 november',{now:new Date('2026-11-22T00:00:00Z')});
+ assert.deepEqual(parsed,{date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30',explicitYear:false});
+ assert.equal(parseSwedishArrivalDeadline('jag vill vara framme senast kl 25.30 den 23 november').invalid,true);
+ assert.equal(parseSwedishArrivalDeadline('jag vill vara framme senast kl 10.30 den 31 november').invalid,true);
+});
+test('national arrive-by query asks provider for arrival search and rejects late options',async()=>{
+ let tripCalls=0;
+ const fetchImpl=async url=>{
+  if(url.pathname.endsWith('location.name'))return {ok:true,json:async()=>({StopLocation:[{id:url.searchParams.get('input'),name:url.searchParams.get('input')}]})};
+  tripCalls++;
+  assert.equal(url.searchParams.get('searchForArrival'),'1');
+  assert.equal(url.searchParams.get('date'),'2026-11-23');
+  assert.equal(url.searchParams.get('time'),'10:30');
+  const leg=arrival=>({Origin:{name:'Tyresö Centrum',date:'2026-11-23',time:'06:00:00'},Destination:{name:'Göteborg Centralstation',date:'2026-11-23',time:arrival}});
+  return {ok:true,json:async()=>({Trip:[{LegList:{Leg:[leg('10:30:00')]}},{LegList:{Leg:[leg('10:47:00')]}}]})};
+ };
+ const arriveBy={date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'};
+ const result=await planNationalSwedenJourney('Tyresö Centrum','Göteborg Centralstation',{apiKey:'dummy',fetchImpl,arriveBy});
+ assert.equal(tripCalls,1);
+ assert.equal(result.status,'schedule_available');
+ assert.equal(result.trips.length,1);
+ assert.equal(result.trips[0].arrival,'2026-11-23T10:30:00');
+});
+test('national arrive-by query fails closed if all arrivals miss deadline',async()=>{
+ const fetchImpl=async url=>url.pathname.endsWith('location.name')?{ok:true,json:async()=>({StopLocation:[{id:url.searchParams.get('input'),name:url.searchParams.get('input')}]})}:{ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'A',date:'2026-11-23',time:'06:00:00'},Destination:{name:'B',date:'2026-11-23',time:'10:47:00'}}]}}]})};
+ const arriveBy={date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'};
+ const result=await planNationalSwedenJourney('A','B',{apiKey:'dummy',fetchImpl,arriveBy});
+ assert.equal(result.status,'no_journeys');
+ assert.deepEqual(result.trips,[]);
 });
