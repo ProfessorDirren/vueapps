@@ -25,3 +25,11 @@ test('wrong service, wrong date, ambiguous records, wrong stations and no crossw
 test('planned destination arrival must agree with the national itinerary',()=>{
  assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...train,destinationArrival:'2026-11-23T10:50:00'}]},opts),null);
 });
+
+test('Trafikverket ISO UTC arrival forecast and departure match local ResRobot times only when instants agree',()=>{
+ const utc={...train,advertisedTime:'2026-11-23T06:00:00.000Z',destinationArrival:'2026-11-23T09:20:00.000Z',estimatedDestinationArrival:'2026-11-23T09:25:00.000Z'};
+ // Without a verified timezone conversion, local ResRobot times must not silently match UTC.
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[utc]},opts),null);
+ const offset={...train,advertisedTime:'2026-11-23T07:00:00+01:00',destinationArrival:'2026-11-23T10:20:00+01:00',estimatedDestinationArrival:'2026-11-23T10:25:00+01:00'};
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[offset]},opts),null);
+});
