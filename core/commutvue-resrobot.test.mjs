@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips} from './commutvue-resrobot.js';
+import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips,parseSpanishArrivalDeadline} from './commutvue-resrobot.js';
 test('national adapter requires its own configured key',()=>{
  assert.equal(resRobotConfigured({TRAFIKLAB_API_KEY:'existing'}),false);
  assert.equal(resRobotConfigured({RESROBOT_API_KEY:'key'}),true);
@@ -73,4 +73,11 @@ test('national ranking accepts unambiguous winter and summer schedules',()=>{
  const summer={legs:[{from:'A',to:'B',departure:'2026-07-23T07:00:00',arrival:'2026-07-23T10:20:00'}]};
  assert.equal(rankResRobotTrips([winter]).length,1);
  assert.equal(rankResRobotTrips([summer]).length,1);
+});
+
+test('Spanish arrive-by deadline for Maria is parsed without guessing a train',()=>{
+ const q='Mañana, lunes 23 de noviembre de 2026, necesito viajar desde Jordbro hasta T-Centralen. Tengo que llegar a más tardar a las 10:30 de la mañana.';
+ assert.deepEqual(parseSpanishArrivalDeadline(q),{date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30',explicitYear:true});
+ assert.equal(parseSpanishArrivalDeadline('¿Cuándo sale el próximo tren?'),null);
+ assert.deepEqual(parseSpanishArrivalDeadline('llegar a más tardar a las 10:30 el 31 de febrero de 2026'),{invalid:true});
 });
