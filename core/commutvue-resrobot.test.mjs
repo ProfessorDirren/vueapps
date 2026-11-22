@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip} from './commutvue-resrobot.js';
+import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips} from './commutvue-resrobot.js';
 test('national adapter requires its own configured key',()=>{
  assert.equal(resRobotConfigured({TRAFIKLAB_API_KEY:'existing'}),false);
  assert.equal(resRobotConfigured({RESROBOT_API_KEY:'key'}),true);
@@ -41,4 +41,19 @@ test('single trip and single leg objects normalize without inventing realtime',(
 });
 test('malformed single leg object fails closed',()=>{
  assert.deepEqual(normalizeResRobotTrips({Trip:{LegList:{Leg:{Origin:{name:'A'}}}}}),[]);
+});
+
+test('national ranking rejects nonexistent Stockholm spring DST times',()=>{
+ const leg={from:'A',to:'B',departure:'2026-03-29T02:30:00',arrival:'2026-03-29T04:00:00'};
+ assert.deepEqual(rankResRobotTrips([{legs:[leg]}]),[]);
+});
+test('national ranking rejects ambiguous Stockholm autumn DST times',()=>{
+ const leg={from:'A',to:'B',departure:'2026-10-25T02:30:00',arrival:'2026-10-25T03:30:00'};
+ assert.deepEqual(rankResRobotTrips([{legs:[leg]}]),[]);
+});
+test('national ranking accepts unambiguous winter and summer schedules',()=>{
+ const winter={legs:[{from:'A',to:'B',departure:'2026-11-23T07:00:00',arrival:'2026-11-23T10:20:00'}]};
+ const summer={legs:[{from:'A',to:'B',departure:'2026-07-23T07:00:00',arrival:'2026-07-23T10:20:00'}]};
+ assert.equal(rankResRobotTrips([winter]).length,1);
+ assert.equal(rankResRobotTrips([summer]).length,1);
 });
