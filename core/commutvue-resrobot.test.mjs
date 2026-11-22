@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips,parseSpanishArrivalDeadline} from './commutvue-resrobot.js';
+import {resRobotConfigured,normalizeResRobotTrips,lookupResRobotStops,planResRobotTrip,rankResRobotTrips,parseSpanishArrivalDeadline,chooseResRobotStop,planNationalSwedenJourney} from './commutvue-resrobot.js';
 test('national adapter requires its own configured key',()=>{
  assert.equal(resRobotConfigured({TRAFIKLAB_API_KEY:'existing'}),false);
  assert.equal(resRobotConfigured({RESROBOT_API_KEY:'key'}),true);
@@ -80,4 +80,34 @@ test('Spanish arrive-by deadline for Maria is parsed without guessing a train',(
  assert.deepEqual(parseSpanishArrivalDeadline(q),{date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30',explicitYear:true});
  assert.equal(parseSpanishArrivalDeadline('¿Cuándo sale el próximo tren?'),null);
  assert.deepEqual(parseSpanishArrivalDeadline('llegar a más tardar a las 10:30 el 31 de febrero de 2026'),{invalid:true});
+});
+
+test('ResRobot municipality-qualified station labels resolve only unique public stop IDs',()=>{
+ const stops=[
+  {id:'740000001',name:'Jordbro station (Haninge kn)'},
+  {id:'740000002',name:'Stockholm City station (Stockholm kn)'}
+ ];
+ assert.deepEqual(chooseResRobotStop(stops,'Jordbro'),stops[0]);
+ assert.deepEqual(chooseResRobotStop(stops,'Stockholm City'),stops[1]);
+ assert.equal(chooseResRobotStop(stops,'Stockholm'),null);
+ assert.equal(chooseResRobotStop([{id:'740000001',name:'Jordbro station (Haninge)'},{id:'740000003',name:'Jordbro station (Stockholm)'}],'Jordbro'),null);
+ assert.deepEqual(chooseResRobotStop([{id:'740000001',name:'Jordbro'},{id:'740000001',name:'Jordbro station (Haninge)'}],'Jordbro'),{id:'740000001',name:'Jordbro'});
+});
+test('Jordbro to Stockholm City ResRobot lookup uses unique station IDs and arrival deadline',async()=>{
+ const calls=[];
+ const fetchImpl=async url=>{
+  const u=new URL(url);calls.push(u);
+  if(u.pathname.endsWith('/location.name')){
+   const input=u.searchParams.get('input');
+   return {ok:true,json:async()=>({StopLocation:[{extId:input==='Jordbro'?'740000001':'740000002',name:input+' station ('+(input==='Jordbro'?'Haninge':'Stockholm')+' kn)'}]})};
+  }
+  return {ok:true,json:async()=>({Trip:[{LegList:{Leg:[{Origin:{name:'Jordbro',date:'2026-11-23',time:'09:40:00'},Destination:{name:'Stockholm City',date:'2026-11-23',time:'10:15:00'}}]}}]})};
+ };
+ const result=await planNationalSwedenJourney('Jordbro','Stockholm City',{apiKey:'test',fetchImpl,arriveBy:{date:'2026-11-23',time:'10:30',cutoff:'2026-11-23T10:30'}});
+ assert.equal(result.status,'schedule_available');
+ assert.equal(result.trips.length,1);
+ assert.equal(calls.length,3);
+ assert.equal(calls[2].searchParams.get('originId'),'740000001');
+ assert.equal(calls[2].searchParams.get('destId'),'740000002');
+ assert.equal(calls[2].searchParams.get('searchForArrival'),'1');
 });
