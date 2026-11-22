@@ -23,6 +23,7 @@ const PATTERNS=[
  /از\s+(.+?)\s+به\s+(.+?)(?=[?.!,؟]|$)/iu,
  /(.+?)\s+konumundan\s+(.+?)\s+konumuna(?=[?.!,]|$)/iu,
  /(?:desde|de)\s+(.+?)\s+(?:a|hacia)\s+(.+?)(?=\s+(?:con retraso|atrasad[oa]s?|demorad[oa]s?|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
+ /(?:från|from)\s+(.+?)\s+(?:mot|towards)\s+(.+?)(?=[?.!,]|$)/iu,
  /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|hasta)\s+(.+?)(?=\s+(?:försenad(?:e|t)?|delayed|late|en retard|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
  /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
 ];
