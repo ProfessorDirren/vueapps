@@ -91,3 +91,11 @@ test('retired ANIVUE URL redirects to shared portal without recreating the page'
  const config=JSON.parse(await readFile(new URL('../vercel.json',import.meta.url),'utf8'));
  assert.ok(config.redirects.some(r=>r.source==='/anivue-core.html'&&r.destination==='/?vue=anivue'&&r.permanent===true));
 });
+
+test('VUEGUARD ensures language selection is passed unchanged to the specialist API',async()=>{
+  const {readFile}=await import('node:fs/promises');
+  const source=await readFile(new URL('../api/vue-router.js',import.meta.url),'utf8');
+  assert.match(source,/language:b\.language/);
+  assert.match(source,/!ROUTER_TEXT\[b\.language\]/);
+  assert.doesNotMatch(source,/language\s*:\s*(?:route\.language|detectLanguage\()/);
+});
