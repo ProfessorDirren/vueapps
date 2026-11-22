@@ -78,8 +78,8 @@ export function parseSwedishArrivalDeadline(question,{now=new Date()}={}){
 // A date must be fully specified; never infer tomorrow's timetable from today's board.
 export function parseSpanishArrivalDeadline(question){
  const q=String(question||'');
- const time=/\\b(?:llegar|estar|llegue|llegada)\\s+(?:a\\s+)?m[aá]s\\s+tardar\\s+(?:a\\s+)?(?:las?\\s+)?(\\d{1,2})[.:](\\d{2})/iu.exec(q);
- const date=/\\b(\\d{1,2})\\s+de\\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+(\\d{4})/iu.exec(q);
+ const time=/\b(?:llegar|estar|llegue|llegada)\s+(?:a\s+)?m[aá]s\s+tardar\s+(?:a\s+)?(?:las?\s+)?(\d{1,2})[.:](\d{2})/iu.exec(q);
+ const date=/\b(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})/iu.exec(q);
  if(!time||!date)return null;
  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
  const hour=Number(time[1]),minute=Number(time[2]),day=Number(date[1]),month=months.indexOf(date[2].toLowerCase())+1,year=Number(date[3]);
