@@ -30,3 +30,12 @@ test('unverified train never becomes realtime-verified just because walking is p
 test('verified train identity without an arrival forecast is still unverified',()=>{
  assert.equal(assessRealtimeJourney(trip,[{...a,verified:true}],{arriveBy:deadline}).status,'unverified');
 });
+
+test('verified cancellation outranks downstream missed walking transfer',()=>{
+ const walk={from:'Göteborg C',to:'Göteborg C spår 4',departure:'2026-11-23T10:21',arrival:'2026-11-23T10:26',mode:'WALK'};
+ assert.equal(assessRealtimeJourney({legs:[a,walk]},evidence({cancelled:true})).status,'cancelled');
+});
+test('duplicate or unverified cancellation is never promoted to verified',()=>{
+ assert.equal(assessRealtimeJourney(trip,[...evidence({cancelled:true}),...evidence({cancelled:true})]).status,'unverified');
+ assert.equal(assessRealtimeJourney(trip,evidence({cancelled:true,verified:false})).status,'unverified');
+});
