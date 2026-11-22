@@ -80,3 +80,12 @@ test('national journey accepts connected transfer legs',()=>{
  ]};
  assert.equal(rankResRobotTrips([connected]).length,1);
 });
+
+test('national journey does not show duplicate provider options',()=>{
+ const trip={legs:[{from:'Tyresö Centrum',to:'Göteborg Centralstation',departure:'2026-11-22T08:00',arrival:'2026-11-22T12:00',mode:'JST'}]};
+ assert.equal(rankResRobotTrips([trip,structuredClone(trip)]).length,1);
+});
+test('national journey preserves distinct departure options',()=>{
+ const trip=departure=>({legs:[{from:'A',to:'B',departure,arrival:'2026-11-22T12:00',mode:'JST'}]});
+ assert.equal(rankResRobotTrips([trip('2026-11-22T08:00'),trip('2026-11-22T09:00')]).length,2);
+});
