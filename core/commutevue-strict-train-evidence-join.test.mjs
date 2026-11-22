@@ -11,6 +11,12 @@ test('exact provider and station crosswalk yields a verified forecast',()=>{
  assert.equal(result.verified,true);
  assert.equal(result.estimatedArrival,'2026-11-23T09:25:00.000Z');
 });
+test('malformed realtime departure is not published as verified evidence',()=>{
+ for(const estimatedTime of ['2026-11-23T06:05:00','not-a-time','2026-11-23T06:05:00+99:99']){
+  assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...train,estimatedTime}]},opts),null);
+ }
+ assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...train,estimatedTime:null}]},opts)?.estimatedDeparture,null);
+});
 test('missing destination forecast remains unverified even with matching train number',()=>{
  assert.equal(joinNationalTrainEvidence(leg,{...probe,departures:[{...train,estimatedDestinationArrival:null}]},opts),null);
 });
