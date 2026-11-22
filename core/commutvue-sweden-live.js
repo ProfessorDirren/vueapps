@@ -211,15 +211,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     if(calls.some(c=>area(c?.stop?.area_id)))realtimeTripsWithStopAreas++;else realtimeTripsWithoutStopAreas++;
    }
    // A trip may use a different platform ID within the same verified station area.
-   // Accept an exact area match only when the provider supplies that area ID;
-   // otherwise require the resolved child stop ID. Never infer by direction text.
-   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination)&&typeof c?.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv'))));
+   // Accept an exact area match only when the provider supplies the verified destination area ID;
+   // otherwise require a resolved child stop ID. Provider platform labels may differ
+   // from the user-facing station name. Never infer by direction text.
+   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination))));
    if(i<0)tripOriginMissing++;
    if(j>i&&i>=0){verifiedDestinationCalls++;if(realtime&&realtimeStopSequenceModes[String(details.route?.transport_mode_code??'unknown')])realtimeStopSequenceModes[String(details.route?.transport_mode_code??'unknown')].destination_matched++;}
    if(realtime&&i<0)realtimeOriginMissing++;
    else if(realtime&&j<=i){
     realtimeDestinationMissing++;
-    const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)&&typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')));
+    const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)));
     if(destinationCalls.length){realtimeDestinationBeforeOrigin++;destinationBeforeOrigin++;}
     else if(calls.some(call=>call?.stop?.area_id===destination&&area(destination))){realtimeDestinationIdMismatch++;destinationAreaSeen++;}
     else if(calls.some(call=>typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===String(to).trim().toLocaleLowerCase('sv')))destinationNamedStopSeen++;
