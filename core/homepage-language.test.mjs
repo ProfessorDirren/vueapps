@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-test("homepage retains all eleven language choices and descriptive labels",()=>{
+test("homepage retains all twelve language choices and descriptive labels",()=>{
  const expected=[
   ['en','English'],['es','Español'],['sv','Svenska'],['hi','हिन्दी (Hindi)'],
-  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)'],['el','Ελληνικά (Greek)'],['tr','Türkçe (Turkish)'],['fa','فارسی (Persian)'],['fr','Français (French)']
+  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)'],['el','Ελληνικά (Greek)'],['tr','Türkçe (Turkish)'],['fa','فارسی (Persian)'],['fr','Français (French)'],['it','Italiano (Italian)']
  ];
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
