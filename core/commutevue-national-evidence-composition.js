@@ -7,7 +7,7 @@ import {joinNationalTrainEvidence} from './commutevue-strict-train-evidence-join
  * train identifiers are interchangeable. Missing proof always returns null.
  */
 export async function composeNationalTrainEvidence(leg,{stationCandidates,trafikverket,probe,resolveTrainIdentity}={}){
- if(!leg||!Array.isArray(stationCandidates)||typeof probe!=='function'||typeof resolveTrainIdentity!=='function')return null;
+ if(!leg||typeof leg.serviceId!=='string'||!/^[0-9]{1,8}$/.test(leg.serviceId)||!Array.isArray(stationCandidates)||typeof probe!=='function'||typeof resolveTrainIdentity!=='function')return null;
  const names=[leg.from,leg.to];
  if(names.some(name=>typeof name!=='string'||!name.trim())||names[0]===names[1])return null;
  const candidates=names.map(name=>stationCandidates.filter(item=>item?.resRobotName===name));
