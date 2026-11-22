@@ -5,10 +5,10 @@ const WORDS={
  tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl','neden','benim','için','lütfen'],
  el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια','πώς','γιατί','είναι','μου'],
  sv:['jag','min','mitt','mina','är','och','inte','har','hund','sjuk','hjälp','kan','vad','hur','det','som','med','för','tack','behöver','vill','hej','varför','fungerar','klickar','när','går','nästa','pendeltåg','från','till','finns','några','trafikstörningar','avgång','station'],
- es:['mi','mis','perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','porque','está','estoy','tengo','puedo','qué','una','unos','para','con','por','del','los','las'],
+ es:['mi','mis','perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','porque','está','estoy','tengo','puedo','qué','una','unos','para','con','por','del','los','las','muéstrame','próximos','trenes','cercanías','desde','estación','hasta','comprueba','salidas','tiempo','real','retrasos','cancelados','responde','español'],
  en:['my','dog','sick','hello','thanks','need','help','please','what','how','why','the','this','that','with','have','does','can','not','and','is','are','broken','works','want']
 };
-const UNIQUE={it:['ciao','posso','usare','italiano','italiana','grazie','bisogno','vorrei','perché'],fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt','när','pendeltåg','trafikstörningar','avgång'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué'],en:['hello','thanks','please','the','this','that','does','broken','works','dog','sick','need']};
+const UNIQUE={it:['ciao','posso','usare','italiano','italiana','grazie','bisogno','vorrei','perché'],fr:['bonjour','merci','chien','malade','pourquoi'],tr:['merhaba','teşekkürler','köpek','hasta','yardım','nasıl'],el:['γειά','γεια','ευχαριστώ','σκύλος','άρρωστος','βοήθεια'],sv:['jag','är','och','inte','sjuk','hjälp','behöver','varför','klickar','mitt','när','pendeltåg','trafikstörningar','avgång'],es:['perro','enfermo','enferma','hola','gracias','necesito','ayuda','quiero','cómo','está','estoy','tengo','qué','muéstrame','próximos','cercanías','estación','comprueba','retrasos','cancelados','español'],en:['hello','thanks','please','the','this','that','does','broken','works','dog','sick','need']};
 export function detectInputLanguage(value){
  if(typeof value!=='string')return null;
  const text=value.trim();if(text.length<8)return null;
@@ -29,7 +29,13 @@ export function detectInputLanguage(value){
  // Common words such as 'mi', 'can' or 'is' alone must not freeze a clear language switch.
  const uniqueScores=Object.fromEntries(Object.entries(UNIQUE).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0),0)]));
  const supported=Object.entries(scores).filter(([lang,score])=>score>=3&&uniqueScores[lang]>=1);
- if(supported.length>1)return null;
+ // Shared words across languages are common (Spanish 'hasta' is Turkish 'sick').
+ // Preserve genuinely mixed-language ambiguity, but allow a decisively dominant
+ // language to win when its independent evidence dwarfs incidental collisions.
+ if(supported.length>1){
+  const ranked=supported.sort((a,b)=>b[1]-a[1]);
+  if(ranked[0][1]<ranked[1][1]*3||ranked[0][1]-ranked[1][1]<6||uniqueScores[ranked[0][0]]<2)return null;
+ }
  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
  return sorted[0][1]>=3&&sorted[0][1]>=sorted[1][1]+2?sorted[0][0]:null;
 }
