@@ -47,3 +47,12 @@ test('publication sorts verified departures by predicted time without changing t
  assert.deepEqual(result.departures.map(x=>x.tripId),['earlier','later']);
  assert.deepEqual(result.departures.map(x=>x.destination),['Bålsta','Kungsängen']);
 });
+
+test('publication exposes verified arrival only if chronologically valid',()=>{
+ const arrival=new Date(now+1500000).toISOString();
+ const withArrival=predictedArrival=>prepareRegionalPublication({proof:{...proof,departures:[{...departure,predictedArrival}]},enabled:true,now}).departures[0];
+ assert.equal(withArrival(arrival).predictedArrival,arrival);
+ assert.equal(withArrival(new Date(now+1000).toISOString()).predictedArrival,null);
+ assert.equal(withArrival('invalid').predictedArrival,null);
+ assert.equal(withArrival(undefined).predictedArrival,null);
+});
