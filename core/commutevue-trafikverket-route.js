@@ -15,7 +15,7 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   const t=timestamp(d?.AdvertisedTimeAtLocation),train=id(d?.AdvertisedTrainIdent);
   if(d?.LocationSignature!==destinationSignature||d?.ActivityType!=='Ankomst'||d?.Canceled===true||!validTrain(train)||!Number.isFinite(t))continue;
   const key=train;
-  const entries=destinationByTrain.get(key)||new Set();entries.add(t);destinationByTrain.set(key,entries);
+  const entries=destinationByTrain.get(key)||new Set();entries.add(JSON.stringify({planned:t,estimated:timestamp(d?.EstimatedTimeAtLocation)}));destinationByTrain.set(key,entries);
  }
  const matched=[];
  const originForecasts=new Map();
@@ -33,13 +33,13 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   // Train identity and chronological stop order establish the same journey,
   // including services that legitimately cross Swedish midnight.
   // A strict calendar-date equality would discard those journeys.
-  const later=[...(destinationByTrain.get(train)||[])].filter(t=>t>advertised&&t-advertised<=10800000);
+  const later=[...(destinationByTrain.get(train)||[])].map(x=>JSON.parse(x)).filter(x=>x.planned>advertised&&x.planned-advertised<=10800000);
   if(later.length!==1)continue;
   const originKey=train+'|'+advertised;
   // Conflicting forecasts for the same departure cannot be resolved safely.
   if(originForecasts.get(originKey)?.size!==1||seenOrigin.has(originKey))continue;
   seenOrigin.add(originKey);
-  matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0]).toISOString(),hasEstimatedTime:Number.isFinite(estimated),hasActualTime:Number.isFinite(actual),hasModifiedTime:Number.isFinite(modified)});
+  matched.push({train,advertisedTime:o.AdvertisedTimeAtLocation,estimatedTime:Number.isFinite(estimated)?o.EstimatedTimeAtLocation:null,destinationArrival:new Date(later[0].planned).toISOString(),estimatedDestinationArrival:Number.isFinite(later[0].estimated)?new Date(later[0].estimated).toISOString():null,hasEstimatedTime:Number.isFinite(estimated),hasActualTime:Number.isFinite(actual),hasModifiedTime:Number.isFinite(modified)});
  }
  return matched;
 }
