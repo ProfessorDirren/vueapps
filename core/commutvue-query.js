@@ -13,6 +13,8 @@ const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
+ // Spanish station-to-station phrasing; anchor at the actual travel preposition, not 'de' in 'estación de'.
+ /(?:desde|de)\s+(?:(?:la|el)\s+)?(?:estación|estacion)\s+de\s+(.+?)\s+hasta\s+(.+?)(?=\s*,|[?.!]|$)/iu,
  // Natural Swedish shorthand: explicitly named verified origin and destination, no 'från' required.
  /^\s*(Jordbro|Handen|T-Centralen|Stockholm City|Södertälje|Märsta|Uppsala)\s+till\s+(Jordbro|Handen|T-Centralen|Stockholm City|Södertälje|Märsta|Uppsala)(?=\s*(?:[,?.!]|$))/iu,
  /(.+?)\s+से\s+(.+?)\s+तक(?=[?.!,।]|$)/iu,
