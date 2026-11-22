@@ -16,7 +16,7 @@ test('missing or mismatched identity is not treated as verified',()=>{
 });
 test('late incoming service misses its next connection',()=>{
  const second={serviceId:'SJ-456',from:'Göteborg C',to:'Mölndal',departure:'2026-11-23T10:25',arrival:'2026-11-23T10:35',mode:'TRAIN'};
- const result=assessRealtimeJourney({legs:[a,second]},[...evidence({estimatedArrival:'2026-11-23T10:30'}),{...second,verified:true}],{});
+ const result=assessRealtimeJourney({legs:[a,second]},[...evidence({estimatedArrival:'2026-11-23T10:30'}),{...second,verified:true,estimatedArrival:'2026-11-23T10:35'}],{});
  assert.equal(result.status,'connection_at_risk');
 });
 test('walking connection cannot be assumed to absorb a delay',()=>{
