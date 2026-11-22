@@ -434,3 +434,24 @@ test('Maria Spanish arrive-by routes through ResRobot and returns provider timet
   if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
  }
 });
+
+test('future Spanish arrival request exposes safe ResRobot stop resolution diagnostic',async()=>{
+ const oldFetch=globalThis.fetch,oldKey=process.env.RESROBOT_API_KEY;
+ try{
+  process.env.RESROBOT_API_KEY='private-resrobot-diagnostic-fixture';
+  globalThis.fetch=async()=>({ok:true,json:async()=>({StopLocation:[]})});
+  const question='Mañana, lunes 23 de noviembre de 2026, necesito viajar en tren de cercanías desde la estación de Jordbro hasta T-Centralen, en Estocolmo. Tengo que llegar a más tardar a las 10:30 de la mañana.';
+  const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,language:'es'})}));
+  const body=await response.json();
+  assert.equal(response.status,200);
+  assert.equal(body.domain,'commutvue');
+  assert.equal(body.evidence_status,'future_date_unavailable');
+  assert.equal(body.live_diagnostic,'resrobot_ambiguous_stop');
+  assert.equal(body.verified,false);
+  assert.deepEqual(body.departures,[]);
+  assert.doesNotMatch(JSON.stringify(body),/private-resrobot-diagnostic-fixture/);
+ }finally{
+  globalThis.fetch=oldFetch;
+  if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
+ }
+});
