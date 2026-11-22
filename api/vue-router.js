@@ -1,4 +1,4 @@
-import {stockholmWallClockToInstant} from '../core/commutevue-stockholm-clock.js';
+import {nationalJourneyDurationMinutes} from '../core/commutevue-national-duration.js';
 import {detectVueInputLanguage} from '../core/vuecore-language.js';
 import {interpretVueInput,vueCorrectionNotice,suggestVueIntent} from '../core/vuecore-interpretation.js';
 import {createTrafiklabSwedenLive,TrafiklabRequestError} from '../core/commutvue-sweden-live.js';
@@ -98,8 +98,7 @@ export async function POST(request){
    const formatTrip=(trip,i)=>{
     const legs=trip.legs.filter(leg=>cleanStop(leg.from)!==cleanStop(leg.to));
     if(!legs.length)return '';
-    const start=stockholmWallClockToInstant(trip.departure),end=stockholmWallClockToInstant(trip.arrival);
-    const durationMinutes=start&&end?Math.round((Date.parse(end)-Date.parse(start))/60000):NaN;
+    const durationMinutes=nationalJourneyDurationMinutes(trip.departure,trip.arrival);
     const duration=Number.isFinite(durationMinutes)&&durationMinutes>0?' ('+Math.floor(durationMinutes/60)+' h '+String(durationMinutes%60).padStart(2,'0')+' min)':'';
     const header=(i+1)+'. '+clock(trip.departure)+'–'+clock(trip.arrival)+duration;
     return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+({'BLT':'Buss','ULT':'Tunnelbana','JST':'Tåg','WALK':({'sv':'Gång','en':'Walk','es':'A pie','fr':'À pied'}[b.language]||'Walk')}[leg.mode]||leg.mode)+')':'')).join('\n');
