@@ -8,7 +8,7 @@ export function validateStationCrosswalk(entries){
  const byName=Object.create(null),byStopId=new Set(),seenSignatures=new Set();
  for(const entry of entries){
   const name=entry?.resRobotName,stopId=entry?.resRobotStopId,station=entry?.trafikverketSignature;
-  if(typeof name!=='string'||!name.trim()||name!==name.trim()||typeof stopId!=='string'||!/^A=\d+@?$/.test(stopId)||!signature(station)||entry?.verified!==true)return null;
+  if(typeof name!=='string'||!name.trim()||name!==name.trim()||typeof stopId!=='string'||!/^\d{9}$/.test(stopId)||!signature(station)||entry?.verified!==true)return null;
   if(Object.hasOwn(byName,name)||byStopId.has(stopId)||seenSignatures.has(station))return null;
   byName[name]={station,stopId};byStopId.add(stopId);seenSignatures.add(station);
  }
