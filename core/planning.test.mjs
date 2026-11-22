@@ -18,7 +18,7 @@ test('backup validation rejects duplicate identities and invalid data without ch
  const item={id:'one',name:'Check',type:0,due:'2026-10-10',interval:30,notes:''};
  assert.equal(validateRecords([item],3).length,1);assert.throws(()=>validateRecords([item,item],3));assert.throws(()=>validateRecords([{...item,type:3}],3));assert.throws(()=>validateRecords([{...item,due:'2026-02-30'}],3));
 });
-test('all four apps have complete seven-language content, media, and correct portal links',()=>{
+test('all four apps have complete twelve-language content, media, and correct portal links',()=>{
  const portal=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  const keys=Object.keys(UI.en).sort();
  for(const language of LANGUAGES){assert.deepEqual(Object.keys(UI[language]).sort(),keys);for(const value of Object.values(UI[language]))assert.ok(value.trim())}
