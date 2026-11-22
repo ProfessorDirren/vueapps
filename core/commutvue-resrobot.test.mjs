@@ -32,3 +32,13 @@ test('HTTP 200 service errors fail closed instead of inventing a trip',async()=>
  const fetchImpl=async()=>({ok:true,json:async()=>({errorCode:'SVC_NO_RESULT'})});
  assert.deepEqual(await planResRobotTrip('a','b',{apiKey:'test',fetchImpl}),[]);
 });
+
+test('single trip and single leg objects normalize without inventing realtime',()=>{
+ const result=normalizeResRobotTrips({Trip:{LegList:{Leg:{Origin:{name:'Tyresö Centrum',date:'2026-11-22',time:'12:00:00'},Destination:{name:'Göteborg Centralstation',date:'2026-11-22',time:'16:00:00'}}}}});
+ assert.equal(result.length,1);
+ assert.equal(result[0].legs.length,1);
+ assert.equal(result[0].verified,false);
+});
+test('malformed single leg object fails closed',()=>{
+ assert.deepEqual(normalizeResRobotTrips({Trip:{LegList:{Leg:{Origin:{name:'A'}}}}}),[]);
+});
