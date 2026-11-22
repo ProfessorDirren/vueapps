@@ -77,6 +77,22 @@ export async function POST(request){
    const lines=suggestions.map(x=>(prompt[b.language]||prompt.en)+' “'+x.suggested+'” ('+x.original+')?');
    return respond(200,{domain:'commutvue',answer:lines.join('\n')+'\n'+({sv:'Skriv hela resfrågan igen med rätt stationsnamn för att bekräfta.',en:'Repeat the full trip question using the correct station name to confirm.',es:'Repite la pregunta completa del viaje con el nombre correcto para confirmar.',fr:'Répétez la question complète avec le bon nom de gare pour confirmer.'}[b.language]||'Repeat the full trip question using the correct station name to confirm.'),kind:'local_guidance',verified:false,evidence_status:'station_confirmation_required',live_diagnostic:'not_attempted',station_suggestions:suggestions,departures:[],source_url:null,updated_at:null,disruptions:{status:'unknown',alerts:[]},photo_status:b.image?'disabled':'not_supplied',photo_evidence:null,clarify:true,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
+  // A verified timetable is appropriate for a future local journey; realtime is not.
+  // Only an explicit date/time and exact Stockholm corridor may enter this branch.
+  if(arrivalDeadline&&!arrivalDeadline.invalid&&!journey.needsClarification&&journey.region==='stockholm'&&
+     journey.from==='Jordbro'&&['Stockholm City','T-Centralen'].includes(journey.to)&&process.env.RESROBOT_API_KEY){
+   const schedule=await planNationalSwedenJourney('Jordbro','Stockholm City',{
+    apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline
+   });
+   if(schedule.status==='schedule_available'){
+    const clock=iso=>typeof iso==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}/.test(iso)?iso.slice(11,16):'—';
+    const intro={sv:'Tidtabellsresor för angivet datum (inte realtid):',es:'Viajes según el horario para la fecha solicitada (no en tiempo real):',en:'Timetable journeys for the requested date (not real-time):'};
+    const rows=schedule.trips.map((trip,i)=>(i+1)+'. '+clock(trip.departure)+' Jordbro → '+clock(trip.arrival)+' Stockholm City'+
+     (trip.legs.length>1?' ('+trip.legs.length+' etapper)':''));
+    const note={sv:'Kontrollera trafikläget igen på resdagen. Stockholm City och T-Centralen är anslutna men inte identiska plattformar.',es:'Vuelve a comprobar el tráfico el día del viaje. Stockholm City y T-Centralen están conectadas, pero no son el mismo andén.',en:'Check traffic again on the travel day. Stockholm City and T-Centralen are connected but are not the same platform.'};
+    return respond(200,{domain:'commutvue',answer:(intro[b.language]||intro.en)+'\\n'+rows.join('\\n')+'\\n'+(note[b.language]||note.en),kind:'verified_schedule',verified:false,evidence_status:'schedule_verified',live_diagnostic:'future_schedule_only',departures:[],source_url:'https://www.trafiklab.se/',updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+   }
+  }
   // A future-date request must never be answered with today's realtime board.
   if(arrivalDeadline||/(?:^|[^\p{L}\p{N}])(?:imorgon|i morgon|övermorgon|i övermorgon|tomorrow|day after tomorrow|mañana|pasado mañana)(?=$|[^\p{L}\p{N}])/iu.test(question)){
    const futureMessages={sv:'Realtidsavgångar för ett framtida datum kan inte verifieras idag. Fråga igen på resdagen.',en:'Real-time departures for a future date cannot be verified today. Please check again on the travel day.',es:'No se pueden verificar hoy las salidas en tiempo real de una fecha futura. Consulta de nuevo el día del viaje. Para planificar una llegada antes de la hora indicada hace falta consultar el horario de esa fecha; no se deben usar las salidas de hoy.',fr:'Les départs en temps réel pour une date future ne peuvent pas être vérifiés aujourd’hui. Vérifiez le jour du voyage.',hi:'भविष्य की तारीख की रीयल-टाइम ट्रेन जानकारी आज सत्यापित नहीं की जा सकती। यात्रा के दिन फिर जाँचें।','zh-CN':'今天无法核实未来日期的列车实时发车信息。请在出行当天再次查询。',ru:'Сегодня невозможно проверить отправления в реальном времени на будущую дату. Проверьте снова в день поездки.',ar:'لا يمكن التحقق اليوم من مواعيد القطارات الفورية لتاريخ مستقبلي. يُرجى التحقق مجددًا يوم السفر.',el:'Οι αναχωρήσεις σε πραγματικό χρόνο για μελλοντική ημερομηνία δεν μπορούν να επαληθευτούν σήμερα. Ελέγξτε ξανά την ημέρα του ταξιδιού.',tr:'Gelecekteki bir tarihin gerçek zamanlı tren kalkışları bugün doğrulanamaz. Seyahat günü tekrar kontrol edin.',fa:'اطلاعات لحظه‌ای حرکت قطارهای یک تاریخ آینده را نمی‌توان امروز تأیید کرد. روز سفر دوباره بررسی کنید.'};
