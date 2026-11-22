@@ -1,11 +1,15 @@
+import {stockholmWallClockToInstant} from './commutevue-stockholm-clock.js';
 /**
  * Provider-boundary adapter: turn independently matched train evidence into
  * evidence the national itinerary guard can consume.
  * Do not match stations by fuzzy display names or infer arrival forecasts.
  */
 const numeric=value=>typeof value==='string'&&/^[0-9]{1,8}$/.test(value);
-const timestamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/.test(value)?Date.parse(value):NaN;
-const sameMinute=(a,b)=>Number.isFinite(timestamp(a))&&Number.isFinite(timestamp(b))&&Math.floor(timestamp(a)/60000)===Math.floor(timestamp(b)/60000);
+const timestamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)?Date.parse(value):NaN;
+const sameMinute=(providerTime,resRobotLocalTime)=>{
+ const provider=timestamp(providerTime),local=stockholmWallClockToInstant(resRobotLocalTime);
+ return Number.isFinite(provider)&&local!==null&&Math.floor(provider/60000)===Math.floor(Date.parse(local)/60000);
+};
 export function joinNationalTrainEvidence(leg,probe,{originSignature,destinationSignature,stationMap}={}){
  if(!leg||!numeric(leg.serviceId)||!Array.isArray(probe?.departures)||probe.status!=='matched')return null;
  // Mapping must come from a separately verified station crosswalk.
