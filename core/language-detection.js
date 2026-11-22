@@ -29,7 +29,13 @@ export function detectInputLanguage(value){
  // Common words such as 'mi', 'can' or 'is' alone must not freeze a clear language switch.
  const uniqueScores=Object.fromEntries(Object.entries(UNIQUE).map(([lang,terms])=>[lang,words.reduce((score,w)=>score+(terms.includes(w)?1:0),0)]));
  const supported=Object.entries(scores).filter(([lang,score])=>score>=3&&uniqueScores[lang]>=1);
- if(supported.length>1)return null;
+ // Shared words across languages are common (Spanish 'hasta' is Turkish 'sick').
+ // Preserve genuinely mixed-language ambiguity, but allow a decisively dominant
+ // language to win when its independent evidence dwarfs incidental collisions.
+ if(supported.length>1){
+  const ranked=supported.sort((a,b)=>b[1]-a[1]);
+  if(ranked[0][1]<ranked[1][1]*3||ranked[0][1]-ranked[1][1]<6||uniqueScores[ranked[0][0]]<2)return null;
+ }
  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
  return sorted[0][1]>=3&&sorted[0][1]>=sorted[1][1]+2?sorted[0][0]:null;
 }
