@@ -46,7 +46,7 @@ export function assessRealtimeJourney(trip,evidence,{arriveBy=null}={}){
   }
   const key=identity(leg);
   const matches=key?evidence.filter(item=>identity(item)===key&&item.verified===true):[];
-  if(matches.length!==1){hasUnverified=true;details.push({status:'unverified'});lastArrival=plannedArrival;continue;}
+  if(matches.length!==1||(key&&evidence.filter(item=>identity(item)===key).length!==1)){hasUnverified=true;details.push({status:'unverified'});lastArrival=plannedArrival;continue;}
   const matched=matches[0];
   if(matched.cancelled===true){hasCancellation=true;details.push({status:'cancelled'});continue;}
   if(!matched.estimatedArrival){hasUnverified=true;details.push({status:'unverified',reason:'missing_arrival_forecast'});lastArrival=plannedArrival;continue;}
