@@ -103,3 +103,15 @@ test('national planner rejects zero-length and excessive journeys',()=>{
  const excessive={legs:[{...base,arrival:'2026-11-24T08:00'}]};
  assert.deepEqual(rankResRobotTrips([zero,excessive]),[]);
 });
+
+test('national planner refuses identical resolved stop IDs without trip API call',async()=>{
+ let tripCalls=0;
+ const fetchImpl=async url=>{
+  if(url.pathname.endsWith('/trip')){tripCalls++;throw new Error('must not request a journey to the same stop');}
+  return {ok:true,json:async()=>({StopLocation:[{id:'same-id',name:url.searchParams.get('input')}]})};
+ };
+ const result=await planNationalSwedenJourney('Stockholm Central','Stockholm Central',{apiKey:'dummy',fetchImpl});
+ assert.equal(result.status,'same_stop');
+ assert.deepEqual(result.trips,[]);
+ assert.equal(tripCalls,0);
+});
