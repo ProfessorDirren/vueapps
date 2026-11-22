@@ -15,11 +15,13 @@ export function normalizeResRobotLeg(leg){
 }
 export function normalizeResRobotTrips(payload){
  if(payload?.errorCode)return [];
- const trips=payload?.Trip;
- if(!Array.isArray(trips))return [];
+ const rawTrips=payload?.Trip;
+ const trips=Array.isArray(rawTrips)?rawTrips:rawTrips&&typeof rawTrips==='object'?[rawTrips]:[];
+ if(!trips.length)return [];
  return trips.map(trip=>{
-  const legs=trip?.LegList?.Leg;
-  if(!Array.isArray(legs)||!legs.length)return null;
+  const rawLegs=trip?.LegList?.Leg;
+  const legs=Array.isArray(rawLegs)?rawLegs:rawLegs&&typeof rawLegs==='object'?[rawLegs]:[];
+  if(!legs.length)return null;
   const normalized=legs.map(normalizeResRobotLeg);
   if(normalized.some(leg=>!leg))return null;
   return {legs:normalized,departure:normalized[0].departure,arrival:normalized.at(-1).arrival,verified:false};
