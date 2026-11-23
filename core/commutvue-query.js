@@ -31,7 +31,7 @@ const PATTERNS=[
  /(?:från|from|de|desde)\s+(.+?)\s+(?:till|to|à|hasta)\s+(.+?)(?=\s+(?:försenad(?:e|t)?|delayed|late|en retard|retrasad[oa]s?)(?=$|[\s?.!,])|[?.!,]|$)/iu,
  /(?:between|mellan|entre)\s+(.+?)\s+(?:and|och|et|y)\s+(.+?)(?=[?.!,]|$)/iu
 ];
-const clean=s=>s.trim().replace(/^.*\bdesde\s+/iu,'').replace(/^(?:(?:la|el)\s+)?(?:estación|estacion)\s+de\s+|^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').replace(/\s+(?:idag|imorgon|i morgon|ikväll|i kväll)$/iu,'').trim();
+const clean=s=>s.trim().replace(/^.*\bdesde\s+/iu,'').replace(/^(?:(?:la|el)\s+)?(?:estación|estacion)\s+de\s+|^(?:stationen|station|the station)\s+/iu,'').replace(/\s+(?:station|stationen)$/iu,'').replace(/\s+(?:idag|imorgon|i morgon|ikväll|i kväll)$/iu,'').replace(/\s+(?:med\s+(?:pendeltåg(?:et)?|tåg(?:et)?|buss(?:en)?|tunnelbana(?:n)?|spårvagn(?:en)?|pendelbåt(?:en)?|färj(?:a|an)))(?=\s*[?.!,]|$)/iu,'').trim();
 export function parseCommuteQuestion(question){
  const text=String(question||'').trim();
  const regions=Object.entries(ALL_REGION_HINTS).filter(([,re])=>re.test(text)).map(([region])=>region);
