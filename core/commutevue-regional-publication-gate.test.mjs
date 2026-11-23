@@ -67,3 +67,9 @@ test('actual GTFS-RT proof failures are preserved without leaking arbitrary text
   assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason,departures:[]},enabled:true,now}).reason,reason);
  }
 });
+
+test('snapshot authentication and date failures are reported as bounded categories',()=>{
+ for(const reason of ['unauthenticated_snapshot','invalid_or_stale_snapshot','missing_or_oversized_artifact','invalid_artifact_encoding','missing_snapshot_file','invalid_or_missing_snapshot_file']){
+  assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason,departures:[]},enabled:true,now}).reason,reason);
+ }
+});
