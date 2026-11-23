@@ -214,7 +214,7 @@
       }
     });
   </script>
-  <script type="module">import {initPushToTalk} from "./apps/push-to-talk.js";document.addEventListener("DOMContentLoaded",()=>initPushToTalk());</script>
+  <script type="module">import {initPushToTalk} from "./apps/push-to-talk.js";document.addEventListener("DOMContentLoaded",()=>initPushToTalk({autoSubmit:new URLSearchParams(location.search).get("vue")==="commutvue"}));</script>
   <script src="./analytics.js" defer></script>
   <script type="module" src="./apps/router.js"></script>
   <script type="module" src="./apps/help.js"></script>
