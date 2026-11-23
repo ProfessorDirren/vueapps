@@ -92,7 +92,7 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   const runContract=()=>spawnSync(process.execPath,['--test',join(directory,'contract.test.mjs')],{cwd:root,timeout:15000,encoding:'utf8',env:childEnv});
   const baseline=runContract();
   assert.equal(baseline.status,0,'Generated contract baseline failed: '+baseline.stdout+' '+baseline.stderr);
-  assert.match(baseline.stdout,/# tests 2/,'Generated tests did not execute');
+  assert.match(baseline.stdout,/(?:#|ℹ) tests 2/,'Generated tests did not execute');
   const profilePath=join(directory,'profile.js');
   const originalProfile=await readFile(profilePath,'utf8');
   assert.ok(originalProfile.includes('https://www.loc.gov/'));
@@ -108,7 +108,7 @@ test('BOOKVUE factory CLI produces valid review-only integration files end to en
   await writeFile(profilePath,originalProfile);
   const restored=runContract();
   assert.equal(restored.status,0,'Restored contract failed: '+restored.stdout+' '+restored.stderr);
-  assert.match(restored.stdout,/# tests 2/);
+  assert.match(restored.stdout,/(?:#|ℹ) tests 2/);
   const plan=JSON.parse(await readFile(join(directory,'integration-plan.json'),'utf8'));
   const routing=JSON.parse(await readFile(join(directory,'routing-candidates.json'),'utf8'));
   const audit=JSON.parse(await readFile(join(directory,'existing-router-audit.json'),'utf8'));
