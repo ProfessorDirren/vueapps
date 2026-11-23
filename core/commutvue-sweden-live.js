@@ -117,8 +117,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const directionTier=row=>{
    if(!towardStockholm)return 0;
    const hint=String(row?.route?.direction||row?.route?.destination?.name||'').toLocaleLowerCase('sv');
-   if(/stockholm|bålsta|märsta|uppsala|kungsängen|södertälje/.test(hint))return 0;
-   if(/nynäshamn|västerhaninge|krigslida|tungelsta/.test(hint))return 2;
+   if(/stockholm|bålsta|märsta|uppsala|kungsängen/.test(hint))return 0;
+   if(/nynäshamn|västerhaninge|krigslida|tungelsta|södertälje/.test(hint))return 2;
    return 1;
   };
   // Keep every transport type documented by Trafiklab. Do not hard-code
@@ -194,10 +194,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     }
     // Direction is diagnostic only: never treat a direction label as verified route evidence.
     const hint=direction.toLocaleLowerCase('sv');
-    if(/stockholm|bålsta|märsta|uppsala|kungsängen|södertälje/.test(hint)){realtimeTripsWithNorthboundHint++;if(Number.isInteger(routeMode)){const key=String(routeMode);northboundHintModeCounts[key]=(northboundHintModeCounts[key]||0)+1;}}
+    if(/stockholm|bålsta|märsta|uppsala|kungsängen/.test(hint)){realtimeTripsWithNorthboundHint++;if(Number.isInteger(routeMode)){const key=String(routeMode);northboundHintModeCounts[key]=(northboundHintModeCounts[key]||0)+1;}}
     else if(/nynäshamn|västerhaninge|krigslida|tungelsta/.test(hint))realtimeTripsWithSouthboundHint++;
     else realtimeTripsWithOtherDirectionHint++;
-    if(/stockholm|bålsta|märsta|uppsala|kungsängen|södertälje/.test(hint)){
+    if(/stockholm|bålsta|märsta|uppsala|kungsängen/.test(hint)){
      const later=calls.slice(i+1);
      if(later.length)northboundTripsWithLaterCalls++;
      const laterNames=later.map(c=>String(c?.stop?.name||'').toLocaleLowerCase('sv'));
