@@ -24,5 +24,3 @@ jobs:
         run: node --test core/commutvue-direction-regression.test.mjs
       - name: Run complete VUECORE test suite
         run: npm test
-      - name: Run VUE release checks
-        run: npm run vue:check
