@@ -61,3 +61,9 @@ test('publication reports only allowlisted non-sensitive proof failure categorie
  assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason:'station_ids_not_in_snapshot',departures:[]},enabled:true,now}).reason,'station_ids_not_in_snapshot');
  assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason:'secret-key=https://private.example',departures:[]},enabled:true,now}).reason,'no_verified_route');
 });
+
+test('actual GTFS-RT proof failures are preserved without leaking arbitrary text',()=>{
+ for(const reason of ['no_verified_updates','stale_or_missing_feed']){
+  assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason,departures:[]},enabled:true,now}).reason,reason);
+ }
+});
