@@ -353,7 +353,12 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   const children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
   // Several platforms with the same exact name are valid only within one meta-stop.
   const parents=new Set(children.map(child=>child.id));
-  if(!children.length)throw new TrafiklabRequestError('stop_lookup',groups.length?'station_not_found':'empty_station_results');
+  if(!children.length){
+   // Safe shape-only diagnostics: distinguish a missing parent from a parent whose
+   // child platforms are absent or named differently. Never log names or IDs.
+   if(name.trim().toLocaleLowerCase('sv')==='stockholm city')console.info('commutvue_stockholm_city_lookup_shape',JSON.stringify({group_count:groups.length,area_group_count:groups.filter(g=>area(g.id)).length,child_count:groups.reduce((n,g)=>n+(g.stops||[]).length,0),stockholm_parent_present:groups.some(g=>g.id==='740098000'),stockholm_parent_child_count:groups.filter(g=>g.id==='740098000').reduce((n,g)=>n+(g.stops||[]).length,0),exact_child_matches:children.length}));
+   throw new TrafiklabRequestError('stop_lookup',groups.length?'station_not_found':'empty_station_results');
+  }
   if(parents.size!==1)throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
   const selectedGroup=groups.find(group=>group.id===children[0].id);
   const groupModes=[...new Set(Array.isArray(selectedGroup?.transport_modes)?selectedGroup.transport_modes.map(mode=>String(mode).toUpperCase()):[])].sort();
