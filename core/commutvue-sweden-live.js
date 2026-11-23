@@ -48,6 +48,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const safeResolve=async(name,category,role)=>{
    try{return await resolveStop(name);}
    catch(error){
+    // Log only bounded diagnostic categories and stop role; never station input or credentials.
+    console.info('commutvue_stop_resolution_failure',JSON.stringify({role,stage:'stop_lookup',reason:error instanceof TrafiklabRequestError?error.category:category}));
     if(error instanceof TrafiklabRequestError){error.stopRole=role;throw error;}
     // Identify which requested stop failed, without revealing upstream response data.
     const wrapped=new TrafiklabRequestError('stop_lookup',category);wrapped.stopRole=role;throw wrapped;
