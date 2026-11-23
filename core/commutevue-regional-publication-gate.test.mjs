@@ -56,3 +56,8 @@ test('publication exposes verified arrival only if chronologically valid',()=>{
  assert.equal(withArrival('invalid').predictedArrival,null);
  assert.equal(withArrival(undefined).predictedArrival,null);
 });
+
+test('publication reports only allowlisted non-sensitive proof failure categories',()=>{
+ assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason:'station_ids_not_in_snapshot',departures:[]},enabled:true,now}).reason,'station_ids_not_in_snapshot');
+ assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason:'secret-key=https://private.example',departures:[]},enabled:true,now}).reason,'no_verified_route');
+});

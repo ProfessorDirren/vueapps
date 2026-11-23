@@ -8,7 +8,12 @@ const SAFE_LABEL=/^[^\u0000-\u001f\u007f]{1,120}$/u;
 export function prepareRegionalPublication({proof,enabled=false,now=Date.now()}={}){
  const unavailable=reason=>({status:'unavailable',reason,departures:[]});
  if(enabled!==true)return unavailable('publication_disabled');
- if(proof?.status!=='route_matched'||!Array.isArray(proof.departures)||!proof.departures.length)return unavailable('no_verified_route');
+ if(proof?.status!=='route_matched'||!Array.isArray(proof.departures)||!proof.departures.length){
+  // Preserve only audited, non-sensitive proof categories for production diagnosis.
+  // Never echo upstream error messages, IDs, URLs or credentials.
+  const safeReasons=new Set(['missing_station_ids','missing_static_mapping','stale_static_snapshot','station_ids_not_in_snapshot','missing_trip_evidence','no_matching_trip','no_matching_route','no_verified_departures','no_realtime_evidence','missing_snapshot','invalid_snapshot','expired_snapshot','service_date_mismatch']);
+  return unavailable(safeReasons.has(proof?.reason)?proof.reason:'no_verified_route');
+ }
  if(!Number.isFinite(now))return unavailable('invalid_clock');
  const departures=[];
  for(const d of proof.departures){
