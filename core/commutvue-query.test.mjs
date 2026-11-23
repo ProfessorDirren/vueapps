@@ -182,3 +182,18 @@ test('Swedish explicit travel mode is not included in destination station name',
   assert.equal(journey.to,'Stockholm City',mode);
  }
 });
+
+test('Turkish spoken station suffixes resolve verified Stockholm endpoints without guessing',()=>{
+ const examples=[
+  "Jordbro'dan Stockholm City'ye bir sonraki tren ne zaman kalkıyor?",
+  "Jordbro’dan Stockholm City’ye bir sonraki tren ne zaman kalkıyor?"
+ ];
+ for(const question of examples){
+  const parsed=parseCommuteQuestion(question);
+  assert.equal(parsed.from,'Jordbro');
+  assert.equal(parsed.to,'Stockholm City');
+  assert.equal(parsed.region,'stockholm');
+  assert.equal(parsed.needsClarification,false);
+  assert.equal(commuteTransportMode(question),'TRAIN');
+ }
+});
