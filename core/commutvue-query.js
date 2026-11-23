@@ -13,6 +13,8 @@ const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
+ // Turkish proper-noun case suffixes: Jordbro'dan Stockholm City'ye (from ... to ...).
+ /([\p{L}][\p{L}\p{N} -]*?)['’](?:dan|den|tan|ten)\s+([\p{L}][\p{L}\p{N} -]*?)['’](?:a|e|ya|ye)(?=\s|[?.!,]|$)/iu,
  // Spanish natural travel phrasing with an arrival constraint after the destination.
  /(?:desde|de)\s+(.+?)\s+hasta\s+(.+?)(?=\s+(?:y\s+llegar|para\s+llegar)\b|[?.!,]|$)/iu,
  // Spanish station-to-station phrasing; anchor at the actual travel preposition, not 'de' in 'estación de'.
