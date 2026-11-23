@@ -172,3 +172,13 @@ test('Maria Spanish full future arrive-by question resolves exact stations witho
  assert.equal(journey.needsClarification,false);
  assert.equal(commuteTransportMode(question),'TRAIN');
 });
+
+test('Swedish explicit travel mode is not included in destination station name',()=>{
+ const question='Jag vill åka från Jordbro till Stockholm City med pendeltåg. Visa nästa avgång och eventuella verifierade förseningar.';
+ assert.deepEqual(parseCommuteQuestion(question),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false});
+ assert.equal(commuteTransportMode(question),'TRAIN');
+ for(const mode of ['buss','tunnelbana','spårvagn','pendelbåt']){
+  const journey=parseCommuteQuestion('Jag vill åka från Jordbro till Stockholm City med '+mode+'.');
+  assert.equal(journey.to,'Stockholm City',mode);
+ }
+});
