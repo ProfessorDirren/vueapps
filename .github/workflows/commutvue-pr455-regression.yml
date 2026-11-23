@@ -1,0 +1,28 @@
+name: COMMUTE-VUE regression
+on:
+  push:
+    branches:
+      - fix/commutevue-sodertalje-direction
+  pull_request:
+    paths:
+      - 'core/**'
+      - 'package.json'
+      - '.github/workflows/commutvue-pr455-regression.yml'
+  workflow_dispatch:
+jobs:
+  vuecore-vueguard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run deterministic COMMUTE-VUE regression
+        run: node --test core/commutvue-direction-regression.test.mjs
+      - name: Run complete VUECORE test suite
+        run: npm test
+      - name: Run VUE release checks
+        run: npm run vue:check
