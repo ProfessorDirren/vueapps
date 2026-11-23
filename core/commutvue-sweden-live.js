@@ -49,7 +49,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    try{return await resolveStop(name);}
    catch(error){
     // Log only bounded diagnostic categories and stop role; never station input or credentials.
-    console.info('commutvue_stop_resolution_failure',JSON.stringify({role,stage:'stop_lookup',reason:error instanceof TrafiklabRequestError?error.category:category}));
+    console.info('commutvue_stop_resolution_failure',JSON.stringify({role,stage:'stop_lookup',reason:error instanceof TrafiklabRequestError?error.category:category,...(role==='destination'?{input_class:typeof name!=='string'?'non_string':name.trim().toLocaleLowerCase('sv')==='stockholm city'?'stockholm_city':name.trim().toLocaleLowerCase('sv')==='t-centralen'?'t_centralen':name.trim().toLocaleLowerCase('sv')==='stockholm c'?'stockholm_c':'other',error_stage:error instanceof TrafiklabRequestError?error.stage:'unexpected'}:{})}));
     if(error instanceof TrafiklabRequestError){error.stopRole=role;throw error;}
     // Identify which requested stop failed, without revealing upstream response data.
     const wrapped=new TrafiklabRequestError('stop_lookup',category);wrapped.stopRole=role;throw wrapped;
