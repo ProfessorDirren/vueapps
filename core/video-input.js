@@ -11,7 +11,12 @@ export const VIDEO_LABELS=Object.freeze({
  hi:['वीडियो रिकॉर्ड करें','वीडियो चुनें','वीडियो हटाएँ','केवल पूर्वावलोकन। AI वीडियो विश्लेषण अभी उपलब्ध नहीं है।','50 MB तक MP4, WebM या MOV वीडियो चुनें।','स्थानीय पूर्वावलोकन के लिए वीडियो चुना गया। AI विश्लेषण अभी उपलब्ध नहीं है।'],
  'zh-CN':['录制视频','选择视频','移除视频','仅供预览，AI 视频分析尚不可用。','请选择不超过 50 MB 的 MP4、WebM 或 MOV 视频。','已选择视频供本地预览，暂不支持 AI 视频分析。'],
  ru:['Записать видео','Выбрать видео','Удалить видео','Только предпросмотр. Анализ видео с ИИ пока недоступен.','Выберите MP4, WebM или MOV до 50 МБ.','Видео выбрано для локального просмотра. Анализ ИИ пока недоступен.'],
- ar:['تسجيل فيديو','اختيار فيديو','إزالة الفيديو','معاينة فقط. تحليل الفيديو بالذكاء الاصطناعي غير متاح بعد.','اختر فيديو MP4 أو WebM أو MOV بحجم لا يتجاوز 50 ميغابايت.','تم اختيار الفيديو للمعاينة المحلية. تحليل الذكاء الاصطناعي غير متاح بعد.']
+ ar:['تسجيل فيديو','اختيار فيديو','إزالة الفيديو','معاينة فقط. تحليل الفيديو بالذكاء الاصطناعي غير متاح بعد.','اختر فيديو MP4 أو WebM أو MOV بحجم لا يتجاوز 50 ميغابايت.','تم اختيار الفيديو للمعاينة المحلية. تحليل الذكاء الاصطناعي غير متاح بعد.'],
+"fr":["Enregistrer une vidéo","Choisir une vidéo","Supprimer la vidéo","Aperçu uniquement. L’analyse vidéo par IA n’est pas encore disponible.","Choisissez une vidéo MP4, WebM ou MOV de 50 Mo maximum.","Vidéo sélectionnée pour un aperçu local. L’analyse IA n’est pas encore disponible."],
+"el":["Εγγραφή βίντεο","Επιλογή βίντεο","Αφαίρεση βίντεο","Μόνο προεπισκόπηση. Η ανάλυση βίντεο με AI δεν είναι ακόμη διαθέσιμη.","Επιλέξτε βίντεο MP4, WebM ή MOV έως 50 MB.","Το βίντεο επιλέχθηκε για τοπική προεπισκόπηση. Η ανάλυση AI δεν υποστηρίζεται ακόμη."],
+"tr":["Video kaydet","Video seç","Videoyu kaldır","Yalnızca önizleme. Yapay zekâ ile video analizi henüz kullanılamıyor.","En fazla 50 MB boyutunda MP4, WebM veya MOV video seçin.","Yerel önizleme için video seçildi. Yapay zekâ analizi henüz desteklenmiyor."],
+"fa":["ضبط ویدیو","انتخاب ویدیو","حذف ویدیو","فقط پیش‌نمایش. تحلیل ویدیو با هوش مصنوعی هنوز در دسترس نیست.","ویدیوی MP4، WebM یا MOV تا ۵۰ مگابایت انتخاب کنید.","ویدیو برای پیش‌نمایش محلی انتخاب شد. تحلیل هوش مصنوعی هنوز پشتیبانی نمی‌شود."],
+"it":["Registra un video","Scegli un video","Rimuovi video","Solo anteprima. L’analisi video con IA non è ancora disponibile.","Scegli un video MP4, WebM o MOV fino a 50 MB.","Video selezionato per l’anteprima locale. L’analisi IA non è ancora supportata."]
 });
 export function videoBlocksSubmission(videoSelected){return videoSelected===true;}
 export function isValidVideo(file){return !!file&&VIDEO_MIME_TYPES.includes(file.type)&&Number.isSafeInteger(file.size)&&file.size>0&&file.size<=VIDEO_LIMIT_BYTES;}
