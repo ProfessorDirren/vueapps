@@ -129,7 +129,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
   const supportedModes=new Set(['BUS','METRO','TRAIN','TRAM','TAXI','BOAT']);
   const candidates=board.departures.filter(row=>{
    const mode=String(row?.route?.transport_mode||'').toUpperCase();
-   return supportedModes.has(mode)&&(!requestedMode||mode===requestedMode);
+   return supportedModes.has(mode)&&(!requestedMode||mode===requestedMode)&&originStopIds.has(row?.stop?.id);
   }).sort((a,b)=>{
    // For a trip toward Stockholm City, avoid exhausting the bounded Trips budget
    // on realtime departures explicitly marked southbound while scheduled

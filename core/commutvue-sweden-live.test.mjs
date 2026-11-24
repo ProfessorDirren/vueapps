@@ -1023,3 +1023,17 @@ test('T-Centralen rail alias accepts only verified Stockholm City area and order
  });
  assert.equal((await reversed({provider:'stockholm',from:'Jordbro',to:'T-Centralen'})).status,'unavailable');
 });
+
+
+test('unrelated platforms do not consume the bounded Trips lookup budget',async()=>{
+ const unrelated=Array.from({length:12},(_,i)=>({...departure,stop:{id:'other-platform'},trip:{trip_id:'other'+i,start_date:'2026-11-10'}}));
+ const seen=[];
+ const adapter=createVerifiedSwedenAdapter({apiKey:'fixture',now:clock,maxTrips:1,
+  resolveStop:async name=>name==='Jordbro'?{id:'740000001',stopIds:['stop1']}:{id:'740000002',stopIds:['stop2']},
+  fetcher:async url=>{if(url.includes('/trips/'))seen.push(url);return {ok:true,text:async()=>JSON.stringify(url.includes('/trips/')?details:{...board,departures:[...unrelated,departure]})};}
+ });
+ const result=await adapter({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.status,'ok');
+ assert.equal(seen.length,1);
+ assert.match(seen[0],/\/trips\/t1\//);
+});
