@@ -197,3 +197,29 @@ test('Turkish spoken station suffixes resolve verified Stockholm endpoints witho
   assert.equal(commuteTransportMode(question),'TRAIN');
  }
 });
+
+test('all eleven supported languages parse explicit travel endpoints without inventing station data',()=>{
+ const cases=[
+  ['en','Train from Jordbro to Stockholm City?','stockholm','Jordbro','Stockholm City'],
+  ['sv','Tåg från Jordbro till Stockholm City?','stockholm','Jordbro','Stockholm City'],
+  ['es','Tren desde Jordbro hasta Stockholm City?','stockholm','Jordbro','Stockholm City'],
+  ['fr','Train de Jordbro à Stockholm City?','stockholm','Jordbro','Stockholm City'],
+  ['tr',"Jordbro'dan Stockholm City'ye bir sonraki tren ne zaman kalkıyor?",'stockholm','Jordbro','Stockholm City'],
+  ['hi','मुंबई से दादर तक','mumbai','मुंबई','दादर'],
+  ['zh-CN','从北京到西直门','beijing','北京','西直门'],
+  ['ru','из Москва до Комсомольская','moscow','Москва','Комсомольская'],
+  ['ar','من دبي إلى BurJuman','dubai','دبي','BurJuman'],
+  ['el','από Αθήνα προς Σύνταγμα','athens','Αθήνα','Σύνταγμα'],
+  ['fa','از تهران به تجریش','tehran','تهران','تجریش']
+ ];
+ for(const [language,question,region,from,to] of cases){
+  const parsed=parseCommuteQuestion(question);
+  assert.equal(parsed.region,region,language);
+  assert.equal(parsed.from,from,language);
+  assert.equal(parsed.to,to,language);
+  assert.equal(parsed.needsClarification,false,language);
+ }
+ for(const question of ['Train delayed?','Tren retrasado?','Tåg försenat?','Tren gecikti mi?']){
+  assert.equal(parseCommuteQuestion(question).needsClarification,true,question);
+ }
+});
