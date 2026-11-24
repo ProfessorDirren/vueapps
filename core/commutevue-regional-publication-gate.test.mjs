@@ -73,3 +73,14 @@ test('snapshot authentication and date failures are reported as bounded categori
   assert.equal(prepareRegionalPublication({proof:{status:'unavailable',reason,departures:[]},enabled:true,now}).reason,reason);
  }
 });
+
+test('publication preserves only fresh provider timestamps',()=>{
+ for(const timestamp of [now,now-120000]){
+  const result=prepareRegionalPublication({proof:{...proof,feedTimestampMs:timestamp},enabled:true,now});
+  assert.equal(result.updatedAt,new Date(timestamp).toISOString());
+ }
+ for(const timestamp of [undefined,null,now+1,now-120001,String(now),NaN]){
+  const result=prepareRegionalPublication({proof:{...proof,feedTimestampMs:timestamp},enabled:true,now});
+  assert.equal(result.updatedAt,undefined);
+ }
+});
