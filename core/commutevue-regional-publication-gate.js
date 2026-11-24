@@ -31,5 +31,7 @@ export function prepareRegionalPublication({proof,enabled=false,now=Date.now()}=
  if(!departures.length)return unavailable('no_upcoming_departures');
  if(new Set(departures.map(d=>d.tripId)).size!==departures.length)return unavailable('duplicate_trip');
  departures.sort((a,b)=>Date.parse(a.predictedDeparture)-Date.parse(b.predictedDeparture));
- return {status:'ready',reason:'verified_regional_departures',departures};
+ const feedTimestampMs=proof.feedTimestampMs;
+ const updatedAt=Number.isSafeInteger(feedTimestampMs)&&feedTimestampMs>0&&feedTimestampMs<=now&&now-feedTimestampMs<=120000?new Date(feedTimestampMs).toISOString():null;
+ return {status:'ready',reason:'verified_regional_departures',departures,...(updatedAt?{updatedAt}:{})};
 }
