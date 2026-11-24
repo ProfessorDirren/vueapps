@@ -46,5 +46,5 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const predictedArrival=Number.isSafeInteger(arrivalMs)&&arrivalMs>=departureMs&&arrivalMs<=departureMs+4*60*60*1000?new Date(arrivalMs).toISOString():null;
   departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),predictedArrival,evidence:'regional_trip_update'});
  }
- return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',departures};
+ return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',feedTimestampMs:evidence.feedTimestampMs,departures};
 }
