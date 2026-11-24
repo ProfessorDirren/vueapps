@@ -15,5 +15,5 @@ export function matchRegionalRealtimeJourney({staticSnapshot,evidence,originStop
  }
  const proof=verifyRegionalJourney({evidence,tripStops:staticSnapshot.tripStops,tripMetadata:staticSnapshot.tripMetadata,originStopIds,destinationStopIds,now});
  if(proof.status!=='route_matched')return {status:'unavailable',reason:proof.reason,departures:[]};
- return {status:'route_matched',reason:proof.reason,departures:proof.departures};
+ return {status:'route_matched',reason:proof.reason,feedTimestampMs:proof.feedTimestampMs,departures:proof.departures};
 }
