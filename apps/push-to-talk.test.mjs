@@ -54,3 +54,14 @@ test('voice never submits empty speech',()=>{
  initPushToTalk({documentRef:{getElementById:id=>elements[id],querySelector:()=>({classList:{toggle(){}}}),addEventListener(){}},Recognition,autoSubmit:true});
  clicks.click();clicks.click();assert.equal(sends,0);
 });
+
+import {SPEECH_LABELS} from './push-to-talk.js';
+import {VIDEO_LABELS} from '../core/video-input.js';
+test('all portal languages have complete non-English media controls',()=>{
+ for(const lang of ['en','sv','es','hi','zh-CN','ru','ar','fr','el','tr','fa','it']){
+  for(const [registry,count] of [[SPEECH_LABELS,7],[VIDEO_LABELS,6]]){
+   assert.equal(registry[lang]?.length,count,lang);
+   registry[lang].forEach((label,i)=>{assert.ok(label.trim());if(lang!=='en')assert.notEqual(label,registry.en[i],lang);});
+  }
+ }
+});
