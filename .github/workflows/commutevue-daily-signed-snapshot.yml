@@ -3,8 +3,9 @@ name: COMMUTVUE signed daily corridor snapshot
 on:
   workflow_dispatch:
   schedule:
-    # 05:15 Stockholm winter / 06:15 summer; higher chance of live commuter trains.
-    - cron: '15 4 * * *'
+    # 00:05 Stockholm local time, accounting for daylight saving.
+    - cron: '5 22 * * *'
+    - cron: '5 23 * * *'
 
 permissions:
   contents: write
@@ -18,13 +19,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
+      - name: Select Stockholm midnight refresh
+        id: window
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          offset=$(TZ=Europe/Stockholm date +%z)
+          if [ "$EVENT_NAME" = workflow_dispatch ] || { [ "$offset" = +0200 ] && [ "$SCHEDULE" = '5 22 * * *' ]; } || { [ "$offset" = +0100 ] && [ "$SCHEDULE" = '5 23 * * *' ]; }; then
+            echo 'refresh=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'refresh=false' >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v4
+        if: steps.window.outputs.refresh == 'true'
         with:
           persist-credentials: true
       - uses: actions/setup-node@v4
+        if: steps.window.outputs.refresh == 'true'
         with:
           node-version: '24'
       - name: Download private GTFS
+        if: steps.window.outputs.refresh == 'true'
         env:
           TRAFIKLAB_REGIONAL_STATIC_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_STATIC_KEY }}
         run: |
@@ -32,6 +48,7 @@ jobs:
           test -n "$TRAFIKLAB_REGIONAL_STATIC_KEY"
           node scripts/commutevue-download-regional-gtfs.mjs "$RUNNER_TEMP/regional.zip"
       - name: Build and authenticate current traffic-day snapshot
+        if: steps.window.outputs.refresh == 'true'
         env:
           COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
         run: |
@@ -52,6 +69,7 @@ jobs:
             console.log(JSON.stringify({status:"signed_daily_snapshot_validated",serviceDate:snapshot.serviceDate,trips:snapshot.tripStops.size,compressedBytes:compressed.length}));
           '
       - name: Publish signed data-only file to private repository
+        if: steps.window.outputs.refresh == 'true'
         id: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,6 +112,7 @@ jobs:
       # This smoke check still fails the job if route proof is unavailable, but runs
       # only after the already validated signed snapshot has been committed.
       - name: Verify live GTFS-RT join after publishing
+        if: steps.window.outputs.refresh == 'true'
         env:
           COMMUTEVUE_SNAPSHOT_SIGNING_KEY: ${{ secrets.COMMUTEVUE_SNAPSHOT_SIGNING_KEY }}
           TRAFIKLAB_REGIONAL_REALTIME_KEY: ${{ secrets.TRAFIKLAB_REGIONAL_REALTIME_KEY }}
