@@ -33,5 +33,6 @@ export function prepareRegionalPublication({proof,enabled=false,now=Date.now()}=
  departures.sort((a,b)=>Date.parse(a.predictedDeparture)-Date.parse(b.predictedDeparture));
  const feedTimestampMs=proof.feedTimestampMs;
  const updatedAt=Number.isSafeInteger(feedTimestampMs)&&feedTimestampMs>0&&feedTimestampMs<=now&&now-feedTimestampMs<=120000?new Date(feedTimestampMs).toISOString():null;
- return {status:'ready',reason:'verified_regional_departures',departures,...(updatedAt?{updatedAt}:{})};
+ if(!updatedAt)return unavailable('stale_or_missing_feed');
+ return {status:'ready',reason:'verified_regional_departures',departures,updatedAt};
 }
