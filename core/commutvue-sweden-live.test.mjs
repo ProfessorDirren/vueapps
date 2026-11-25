@@ -1055,3 +1055,9 @@ test('ambiguous station areas are distinguished by requested departure mode',asy
  assert.deepEqual(await resolver('Jordbro','BUS'),{id:'740000001',stopIds:['bus1']});
  await assert.rejects(resolver('Jordbro','BOAT'),e=>e.category==='ambiguous_station');
 });
+
+
+test('Stockholm City station suffix retains exact parent fallback',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>({ok:true,text:async()=>JSON.stringify({stop_groups:url.includes('/name/Stockholm?')?[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]}]:[]})})});
+ assert.deepEqual(await resolver('Stockholm City station','TRAIN'),{id:'740098000',stopIds:['1617']});
+});
