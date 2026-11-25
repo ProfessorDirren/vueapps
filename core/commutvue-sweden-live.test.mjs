@@ -1046,3 +1046,12 @@ test('station suffix normalization preserves area ambiguity',async()=>{
  groups.push({id:'740000002',name:'Jordbro',stops:[{id:'rail2'}]});
  await assert.rejects(resolver('Jordbro'),e=>e.category==='ambiguous_station');
 });
+
+
+test('ambiguous station areas are distinguished by requested departure mode',async()=>{
+ const groups=[{id:'740000001',name:'Jordbro',stops:[{id:'bus1'}]},{id:'740000002',name:'Jordbro',stops:[{id:'rail1'}]}];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>({ok:true,text:async()=>JSON.stringify(url.includes('/departures/')?{departures:[url.includes('740000001')?{stop:{id:'bus1'},route:{transport_mode:'BUS'}}:{stop:{id:'rail1'},route:{transport_mode:'TRAIN'}}]}:{stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro','TRAIN'),{id:'740000002',stopIds:['rail1']});
+ assert.deepEqual(await resolver('Jordbro','BUS'),{id:'740000001',stopIds:['bus1']});
+ await assert.rejects(resolver('Jordbro','BOAT'),e=>e.category==='ambiguous_station');
+});
