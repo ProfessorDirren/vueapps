@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {prepareRegionalPublication} from './commutevue-regional-publication-gate.js';
 const now=1763748000000;
 const departure={tripId:'t1',originStopId:'J',destinationStopId:'C',scheduledDeparture:'18:39:00',predictedDeparture:new Date(now+300000).toISOString(),routeShortName:'43',tripHeadsign:'Bålsta',evidence:'regional_trip_update'};
-const proof={status:'route_matched',departures:[departure]};
+const proof={status:'route_matched',feedTimestampMs:now,departures:[departure]};
 test('publication is disabled by default even with verified route evidence',()=>assert.equal(prepareRegionalPublication({proof,now}).reason,'publication_disabled'));
 test('complete opted-in evidence produces display-safe regional departures',()=>{
  const result=prepareRegionalPublication({proof,enabled:true,now});
@@ -26,23 +26,23 @@ test('stale prediction and duplicate trip IDs fail closed',()=>{
 test('publication enforces precise live departure window boundaries',()=>{
  const at=ms=>({...departure,predictedDeparture:new Date(ms).toISOString()});
  for(const ms of [now,now+7200000]){
-  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).status,'ready');
+  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',feedTimestampMs:now,departures:[at(ms)]},enabled:true,now}).status,'ready');
  }
  for(const ms of [now+7200001]){
-  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[at(ms)]},enabled:true,now}).reason,'invalid_prediction');
+  assert.equal(prepareRegionalPublication({proof:{status:'route_matched',feedTimestampMs:now,departures:[at(ms)]},enabled:true,now}).reason,'invalid_prediction');
  }
 });
 test('publication excludes passed departures while retaining upcoming trains',()=>{
  const passed={...departure,tripId:'passed',predictedDeparture:new Date(now-60000).toISOString()};
- const result=prepareRegionalPublication({proof:{status:'route_matched',departures:[passed,departure]},enabled:true,now});
+ const result=prepareRegionalPublication({proof:{status:'route_matched',feedTimestampMs:now,departures:[passed,departure]},enabled:true,now});
  assert.equal(result.status,'ready');
  assert.deepEqual(result.departures.map(d=>d.tripId),['t1']);
- assert.equal(prepareRegionalPublication({proof:{status:'route_matched',departures:[passed]},enabled:true,now}).reason,'no_upcoming_departures');
+ assert.equal(prepareRegionalPublication({proof:{status:'route_matched',feedTimestampMs:now,departures:[passed]},enabled:true,now}).reason,'no_upcoming_departures');
 });
 test('publication sorts verified departures by predicted time without changing their destination headsigns',()=>{
  const later={...departure,tripId:'later',tripHeadsign:'Kungsängen',predictedDeparture:new Date(now+900000).toISOString()};
  const earlier={...departure,tripId:'earlier',tripHeadsign:'Bålsta',predictedDeparture:new Date(now+60000).toISOString()};
- const result=prepareRegionalPublication({proof:{status:'route_matched',departures:[later,earlier]},enabled:true,now});
+ const result=prepareRegionalPublication({proof:{status:'route_matched',feedTimestampMs:now,departures:[later,earlier]},enabled:true,now});
  assert.equal(result.status,'ready');
  assert.deepEqual(result.departures.map(x=>x.tripId),['earlier','later']);
  assert.deepEqual(result.departures.map(x=>x.destination),['Bålsta','Kungsängen']);
@@ -82,5 +82,7 @@ test('publication preserves only fresh provider timestamps',()=>{
  for(const timestamp of [undefined,null,now+1,now-120001,String(now),NaN]){
   const result=prepareRegionalPublication({proof:{...proof,feedTimestampMs:timestamp},enabled:true,now});
   assert.equal(result.updatedAt,undefined);
+  assert.equal(result.status,'unavailable');
+  assert.equal(result.reason,'stale_or_missing_feed');
  }
 });
