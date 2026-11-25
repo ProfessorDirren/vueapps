@@ -46,7 +46,7 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
  return async({provider,from,to,transportMode})=>{
   if(provider!=='stockholm')throw Error('Unexpected region');
   const safeResolve=async(name,category,role)=>{
-   try{return await resolveStop(name);}
+   try{return await resolveStop(name,transportMode);}
    catch(error){
     // Log only bounded diagnostic categories and stop role; never station input or credentials.
     console.info('commutvue_stop_resolution_failure',JSON.stringify({role,stage:'stop_lookup',reason:error instanceof TrafiklabRequestError?error.category:category,...(role==='destination'?{input_class:typeof name!=='string'?'non_string':name.trim().toLocaleLowerCase('sv')==='stockholm city'?'stockholm_city':name.trim().toLocaleLowerCase('sv')==='t-centralen'?'t_centralen':name.trim().toLocaleLowerCase('sv')==='stockholm c'?'stockholm_c':'other',error_stage:error instanceof TrafiklabRequestError?error.stage:'unexpected'}:{})}));
@@ -269,11 +269,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
 /** Official stop lookup. Ambiguous names fail closed instead of picking a random stop. */
 export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
  if(!apiKey||typeof fetcher!=='function')throw new TypeError('Trafiklab key and fetcher required');
- return async name=>{
+ return async (name,transportMode)=>{
   if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Invalid stop name');
   // T-Centralen is the metro interchange; commuter trains use the adjacent Stockholm City platforms.
   // Resolve the commuter-rail platform explicitly, never a similarly named metro stop.
-  if(name.trim().toLocaleLowerCase('sv')==='t-centralen')return await createTrafiklabStopResolver({apiKey,fetcher})('Stockholm City');
+  if(name.trim().toLocaleLowerCase('sv')==='t-centralen'&&(!transportMode||String(transportMode).toUpperCase()==='TRAIN'))return await createTrafiklabStopResolver({apiKey,fetcher})('Stockholm City',transportMode);
   const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
   url.searchParams.set('key',apiKey);
   let response;try{response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
@@ -326,7 +326,25 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    // A unique TRAIN-capable group is a safe rail candidate; Trips validation
    // still checks that an actual train reaches the requested destination.
    const rail=group=>Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'].includes(String(mode).toUpperCase()));
-   const railAreas=new Set(exact.filter(rail).map(group=>group.id));
+   const requested=String(transportMode||'').toUpperCase();
+   const matchesMode=group=>requested==='TRAIN'||!requested?rail(group):Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>String(mode).toUpperCase()===requested);
+   const railAreas=new Set(exact.filter(matchesMode).map(group=>group.id));
+   // If metadata cannot distinguish candidates, verify actual platform departures.
+   // Bound extra requests and fail closed if any candidate cannot be inspected.
+   if(requested&&railAreas.size!==1&&exactAreaIds.size<=4){
+    const verified=await Promise.all([...exactAreaIds].map(async id=>{
+     const platforms=new Set(exact.filter(g=>g.id===id).flatMap(g=>g.stops.map(p=>p.id)));
+     const boardUrl=new URL('departures/'+id,ROOT);boardUrl.searchParams.set('key',apiKey);
+     try{
+      const response=await fetcher(boardUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
+      if(!response.ok||Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)return null;
+      const body=await response.text();if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)return null;
+      const board=JSON.parse(body);if(!Array.isArray(board?.departures))return null;
+      return {id,match:board.departures.some(row=>platforms.has(row?.stop?.id)&&String(row?.route?.transport_mode||'').toUpperCase()===requested)};
+     }catch{return null;}
+    }));
+    if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}
+   }
    if(railAreas.size===1){
     const selected=[...railAreas][0];
     const selectedGroups=exact.filter(group=>group.id===selected);
