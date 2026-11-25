@@ -223,3 +223,10 @@ test('all eleven supported languages parse explicit travel endpoints without inv
   assert.equal(parseCommuteQuestion(question).needsClarification,true,question);
  }
 });
+
+test('Swedish travel mode followed by current time preserves destination',()=>{
+ for(const mode of ['pendeltåg','tåg','buss','tunnelbana','spårvagn','pendelbåt','färja']) for(const time of ['nu','just nu']){
+ const q='Hur tar jag mig från Jordbro station till Stockholm City med '+mode+' '+time+'? Visa de tre närmaste avgångarna.';
+ assert.deepEqual(parseCommuteQuestion(q),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false},q);
+ }
+});
