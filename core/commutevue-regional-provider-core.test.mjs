@@ -12,6 +12,7 @@ test('regional provider core joins validated SL static snapshot to fresh GTFS-RT
  const result=matchRegionalRealtimeJourney(input);
  assert.equal(result.status,'route_matched');
  assert.equal(result.departures.length,1);
+ assert.equal(result.feedTimestampMs,evidence.feedTimestampMs);
  assert.equal(result.departures[0].evidence,'regional_trip_update');
 });
 
