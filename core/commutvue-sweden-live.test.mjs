@@ -1037,3 +1037,12 @@ test('unrelated platforms do not consume the bounded Trips lookup budget',async(
  assert.equal(seen.length,1);
  assert.match(seen[0],/\/trips\/t1\//);
 });
+
+
+test('station suffix normalization preserves area ambiguity',async()=>{
+ const groups=[{id:'740000001',name:'Jordbro station',stops:[{id:'rail1'}]}];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups:groups})})});
+ assert.deepEqual(await resolver('Jordbro'),{id:'740000001',stopIds:['rail1']});
+ groups.push({id:'740000002',name:'Jordbro',stops:[{id:'rail2'}]});
+ await assert.rejects(resolver('Jordbro'),e=>e.category==='ambiguous_station');
+});

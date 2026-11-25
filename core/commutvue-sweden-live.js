@@ -298,9 +298,10 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    groups=Array.isArray(parentPayload?.stop_groups)?parentPayload.stop_groups.filter(group=>group&&typeof group==='object'&&Array.isArray(group.stops)?true:group&&typeof group==='object'):[];
    groups=groups.map(group=>({...group,stops:Array.isArray(group.stops)?group.stops.filter(stop=>stop&&typeof stop==='object'):[]}));
   }
+  const stationLabel=value=>String(value||'').trim().toLocaleLowerCase('sv').replace(/\s+(?:station|stn)$/u,'').trim();
   // A full-name lookup can return zero groups even when a shorter indexed search
   // finds the station. Retry with a prefix, but still require an exact name below.
-  if(!groups.some(group=>area(group.id)&&(group.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')||(group.stops||[]).some(stop=>stop.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv'))))&&name.trim().length>=4&&!['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
+  if(!groups.some(group=>area(group.id)&&(stationLabel(group.name)===stationLabel(name)||(group.stops||[]).some(stop=>stationLabel(stop.name)===stationLabel(name))))&&name.trim().length>=4&&!['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
    const prefix=name.trim().slice(0,Math.max(3,Math.min(5,name.trim().length-1)));
    const prefixUrl=new URL('stops/name/'+encodeURIComponent(prefix),ROOT);
    prefixUrl.searchParams.set('key',apiKey);
@@ -313,7 +314,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    groups=Array.isArray(prefixPayload?.stop_groups)?prefixPayload.stop_groups.filter(group=>group&&typeof group==='object'&&Array.isArray(group.stops)?true:group&&typeof group==='object'):[];
    groups=groups.map(group=>({...group,stops:Array.isArray(group.stops)?group.stops.filter(stop=>stop&&typeof stop==='object'):[]}));
   }
-  const same=(a,b)=>typeof a==='string'&&a.trim().toLocaleLowerCase('sv')===b.trim().toLocaleLowerCase('sv');
+  const same=(a,b)=>typeof a==='string'&&stationLabel(a)===stationLabel(b);
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
   // Duplicate rows for one station area are not different locations. Combine their
   // child platforms; still reject exact-name matches across different area IDs.
