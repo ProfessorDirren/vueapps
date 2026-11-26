@@ -156,11 +156,20 @@ export function rankResRobotTrips(trips){
 export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,arriveBy=null}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};
  try{
-  const [origins,destinations]=await Promise.all([
-   lookupResRobotStops(from,{apiKey,fetchImpl}),
-   lookupResRobotStops(to,{apiKey,fetchImpl})
+  // Expand established station abbreviations before the provider lookup.
+  const canonicalStop=name=>cleanName(name)==='goteborg c'?'Göteborg Centralstation':name;
+  from=canonicalStop(from);
+  to=canonicalStop(to);
+  const resolve=async name=>{
+   const stops=await lookupResRobotStops(name,{apiKey,fetchImpl});
+   const stop=chooseResRobotStop(stops,name);
+   if(stop||cleanName(name)!=='tyreso')return stop;
+   const hub='Tyresö centrum';
+   return chooseResRobotStop(await lookupResRobotStops(hub,{apiKey,fetchImpl}),hub);
+  };
+  const [origin,destination]=await Promise.all([
+   resolve(from),resolve(to)
   ]);
-  const origin=chooseResRobotStop(origins,from),destination=chooseResRobotStop(destinations,to);
   if(!origin||!destination)return {status:'ambiguous_stop',trips:[]};
   // A resolved identical stop ID is not a journey; never request or display one.
   if(origin.id===destination.id)return {status:'same_stop',trips:[]};

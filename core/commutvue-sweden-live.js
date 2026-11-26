@@ -289,7 +289,8 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // T-Centralen is the metro interchange; commuter trains use the adjacent Stockholm City platforms.
   // Resolve the commuter-rail platform explicitly, never a similarly named metro stop.
   if(name.trim().toLocaleLowerCase('sv')==='t-centralen'&&(!transportMode||String(transportMode).toUpperCase()==='TRAIN'))return await createTrafiklabStopResolver({apiKey,fetcher})('Stockholm City',transportMode);
-  const url=new URL('stops/name/'+encodeURIComponent(name.trim()),ROOT);
+  const stockholmMetro=name.toLocaleLowerCase('sv')==='t-centralen'&&String(transportMode).toUpperCase()==='METRO';
+  const url=new URL('stops/name/'+encodeURIComponent(stockholmMetro?'Stockholm':name),ROOT);
   url.searchParams.set('key',apiKey);
   let response;try{response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
   if(!response.ok)throw new TrafiklabRequestError('stop_lookup',response.status===401||response.status===403?'authorization':response.status===429?'rate_limited':'http_error');
@@ -302,7 +303,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // Trafiklab publishes Stockholm City as a child of the Stockholm meta-stop.
   // If the direct child-name lookup omits that parent, request the documented parent
   // and still require an exact child-name match. Never accept a fuzzy station match.
-  if(!groups.some(g=>g.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')||(g.stops||[]).some(s=>s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')))&&['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
+  if(!stockholmMetro&&!groups.some(g=>g.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')||(g.stops||[]).some(s=>s.name?.trim().toLocaleLowerCase('sv')===name.trim().toLocaleLowerCase('sv')))&&['stockholm city','t-centralen'].includes(name.trim().toLocaleLowerCase('sv'))){
    const parentUrl=new URL('stops/name/Stockholm',ROOT);parentUrl.searchParams.set('key',apiKey);
    let parentResponse;try{parentResponse=await fetcher(parentUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
    if(!parentResponse.ok)throw new TrafiklabRequestError('stop_lookup',parentResponse.status===401||parentResponse.status===403?'authorization':parentResponse.status===429?'rate_limited':'http_error');
@@ -330,6 +331,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    groups=groups.map(group=>({...group,stops:Array.isArray(group.stops)?group.stops.filter(stop=>stop&&typeof stop==='object'):[]}));
   }
   const same=(a,b)=>typeof a==='string'&&stationLabel(a)===stationLabel(b);
+  if(stockholmMetro)groups=groups.filter(group=>group.id==='740098000');
   const exact=groups.filter(s=>area(s.id)&&same(s.name,name));
   // Duplicate rows for one station area are not different locations. Combine their
   // child platforms; still reject exact-name matches across different area IDs.

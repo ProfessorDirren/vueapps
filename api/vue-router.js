@@ -213,10 +213,23 @@ export async function POST(request){
   }
   // Regional realtime publication is a separate, explicitly enabled corridor.
   // Never overwrite verified live results from the primary provider.
-  if(!journey.needsClarification&&journey.region==='stockholm'&&journey.from==='Jordbro'&&journey.to==='Stockholm City'&&
-     process.env.COMMUTVUE_REGIONAL_PUBLICATION_ENABLED==='true'&&live?.status!=='ok'){
-   regionalPublished=await runRegionalRouterPublication({env:process.env,from:journey.from,to:journey.to});
+  const commuterMode=commuteTransportMode(question);
+  const regionalDestination=commuterMode==='TRAIN'&&journey.to==='T-Centralen'?'Stockholm City':journey.to;
+  if(!journey.needsClarification&&journey.region==='stockholm'&&journey.from==='Jordbro'&&regionalDestination==='Stockholm City'&&
+     (!commuterMode||commuterMode==='TRAIN')&&process.env.COMMUTVUE_REGIONAL_PUBLICATION_ENABLED==='true'&&live?.status!=='ok'){
+   regionalPublished=await runRegionalRouterPublication({env:process.env,from:journey.from,to:regionalDestination});
    console.info('commutvue_regional_publication',JSON.stringify({status:regionalPublished.status,reason:regionalPublished.reason,count:Math.min(regionalPublished.departures?.length||0,100)}));
+  }
+  // The signed regional snapshot currently covers Jordbro → Stockholm City.
+  // For the opposite direction, show an explicitly labelled ResRobot timetable
+  // when the realtime provider cannot resolve its endpoints.
+  if(commuterMode==='TRAIN'&&journey.from==='Stockholm City'&&journey.to==='Jordbro'&&live?.status!=='ok'&&scheduled?.status!=='scheduled'&&process.env.RESROBOT_API_KEY){
+   const timetable=await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY});
+   if(timetable.status==='schedule_available'){
+    const heading={sv:'Tidtabell från ResRobot (inte realtid)',en:'ResRobot timetable (not real-time)',es:'Horario de ResRobot (sin datos en tiempo real)',fr:'Horaires ResRobot (sans données en temps réel)'};
+    const rows=timetable.trips.map(trip=>trip.departure.slice(11,16)+' '+trip.legs[0].from+' → '+trip.arrival.slice(11,16)+' '+trip.legs.at(-1).to);
+    return respond(200,{domain:'commutvue',answer:(heading[b.language]||heading.en)+'\n'+rows.join('\n'),kind:'verified_schedule',verified:false,evidence_status:'schedule_verified',live_diagnostic:liveDiagnostic,departures:[],source_url:'https://www.trafiklab.se/',updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:false,region:journey.region,workspace:'./?vue=commutvue#vue-router'});
+   }
   }
   // All regions use the same fail-closed disruption contract. No connected alert
   // adapter means UNKNOWN, never an invented all-clear.

@@ -1074,3 +1074,15 @@ test('Stockholm City station suffix retains exact parent fallback',async()=>{
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>({ok:true,text:async()=>JSON.stringify({stop_groups:url.includes('/name/Stockholm?')?[{id:'740098000',name:'Stockholm',stops:[{id:'1617',name:'Stockholm City'}]}]:[]})})});
  assert.deepEqual(await resolver('Stockholm City station','TRAIN'),{id:'740098000',stopIds:['1617']});
 });
+
+test('explicit metro uses only the exact T-Centralen children of Stockholm',async()=>{
+ const groups=[
+  {id:'740000001',name:'T-Centralen',stops:[{id:'unrelated',name:'T-Centralen'}]},
+  {id:'740098000',name:'Stockholm',stops:[{id:'12275',name:'T-Centralen'},{id:'12736',name:'T-Centralen'},{id:'1617',name:'Stockholm City'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  assert.equal(new URL(url).pathname,'/v1/stops/name/Stockholm');
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:groups})};
+ }});
+ assert.deepEqual(await resolver('T-Centralen','METRO'),{id:'740098000',stopIds:['12275','12736']});
+});

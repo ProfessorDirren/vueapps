@@ -164,3 +164,25 @@ test('ResRobot service identity uses only a unique explicit numeric product numb
  const leg=normalizeResRobotLeg({Origin:{name:'Stockholm Centralstation',date:'2026-11-23',time:'07:00:00'},Destination:{name:'Göteborg Centralstation',date:'2026-11-23',time:'10:20:00'},Product:[{num:'1234',catOut:'JST'}]});
  assert.equal(leg.serviceId,'1234');
 });
+
+test('national shorthand resolves to uniquely identified Tyresö centrum and Göteborg Centralstation',async()=>{
+ const lookups=[];
+ const fetchImpl=async url=>{
+  if(url.pathname.endsWith('location.name')){
+   const input=url.searchParams.get('input');
+   lookups.push(input);
+   const entries={
+    'Tyresö':[],
+    'Tyresö centrum':[{extId:'740055555',name:'Tyresö centrum (Tyresö kn)'}],
+    'Göteborg Centralstation':[{extId:'740000002',name:'Göteborg Centralstation'}]
+   };
+   return {ok:true,json:async()=>({StopLocation:entries[input]})};
+  }
+  assert.equal(url.searchParams.get('originId'),'740055555');
+  assert.equal(url.searchParams.get('destId'),'740000002');
+  return {ok:true,json:async()=>({Trip:[]})};
+ };
+ const result=await planNationalSwedenJourney('Tyresö','Göteborg C',{apiKey:'fixture',fetchImpl});
+ assert.equal(result.status,'no_journeys');
+ assert.deepEqual(lookups.sort(),['Göteborg Centralstation','Tyresö','Tyresö centrum']);
+});
