@@ -17,6 +17,8 @@ const PATTERNS=[
  /([\p{L}][\p{L}\p{N} -]*?)['’](?:dan|den|tan|ten)\s+([\p{L}][\p{L}\p{N} -]*?)['’](?:a|e|ya|ye)(?=\s|[?.!,]|$)/iu,
  // French: de Jordbro à Stockholm City; preserve named stops, never infer missing endpoints.
  /(?:de|depuis)\s+(.+?)\s+(?:à|vers)\s+(.+?)(?=[?.!,]|$)/iu,
+ // Treat “de cercanías” as part of the train type, before the origin preposition.
+ /\btren(?:es)?\s+de\s+cercanías\s+(?:desde|de)\s+(.+?)\s+(?:hasta|a|hacia)\s+(.+?)(?=[?.!,]|$)/iu,
  // Spanish natural travel phrasing with an arrival constraint after the destination.
  /(?:desde|de)\s+(.+?)\s+hasta\s+(.+?)(?=\s+(?:y\s+llegar|para\s+llegar)\b|[?.!,]|$)/iu,
  // Spanish station-to-station phrasing; anchor at the actual travel preposition, not 'de' in 'estación de'.

@@ -230,3 +230,13 @@ test('Swedish travel mode followed by current time preserves destination',()=>{
  assert.deepEqual(parseCommuteQuestion(q),{region:'stockholm',from:'Jordbro',to:'Stockholm City',needsClarification:false},q);
  }
 });
+
+test('Spanish commuter rail wording keeps the train type out of the origin',()=>{
+ const question='¿A qué hora sale el próximo tren de cercanías de Jordbro a Stockholm City?';
+ for(const suffix of ['', ' Muéstrame la hora programada y la hora prevista en tiempo real.']){
+  const journey=parseCommuteQuestion(question+suffix);
+  assert.equal(journey.from,'Jordbro');
+  assert.equal(journey.to,'Stockholm City');
+  assert.equal(journey.needsClarification,false);
+ }
+});
