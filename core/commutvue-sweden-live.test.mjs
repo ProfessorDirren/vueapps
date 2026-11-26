@@ -59,8 +59,6 @@ test('wrong route order, absent realtime or stale provider evidence never claims
  for(const adapter of [
   make(board,{...details,calls:[...details.calls].reverse()}),
   make({...board,departures:[{...departure,is_realtime:false}]}),
-  make({...board,departures:[{...departure,canceled:true}]}),
-  make(board,{...details,calls:[details.calls[0],{...details.calls[1],canceled:true}]}),
   make({...board,departures:[{...departure,stop:{id:'wrong-origin-stop'}}]}),
   make({...board,timestamp:'2026-11-10T09:50:00'}),
   make(board,{...details,timestamp:'2026-11-10T09:50:00'})
@@ -201,10 +199,9 @@ test('Trafiklab response size cap is measured in UTF-8 bytes and prechecks Conte
  assert.equal(reads,0);
 });
 
-test('expired, cancelled and far-future departures never consume a Trips API request',async()=>{
+test('expired and far-future departures never consume a Trips API request',async()=>{
  const invalid=[
   {...departure,trip:{trip_id:'old',start_date:'2026-11-10'},realtime:'2026-11-10T09:30:00'},
-  {...departure,trip:{trip_id:'cancelled',start_date:'2026-11-10'},canceled:true},
   {...departure,trip:{trip_id:'far',start_date:'2026-11-10'},realtime:'2026-11-10T16:00:00'}
  ];
  const requests=[];
@@ -523,15 +520,31 @@ test('trip without the requested origin is rejected even if destination exists',
 });
 
 
-test('Trafiklab canceled departure and arrival flags never produce a verified journey',async()=>{
+test('Trafiklab cancellation flags apply only to journeys with verified station order',async()=>{
  for(const [label,changedBoard,changedTrip] of [
-  ['board departureCanceled',{...board,departures:[{...departure,departureCanceled:true}]},details],
+  ['board departureCanceled',{...board,departures:[{...departure,departureCanceled:true,realtime:null,is_realtime:false}]},details],
   ['origin departureCanceled',board,{...details,calls:details.calls.map((c,i)=>i===0?{...c,departureCanceled:true}:c)}],
   ['destination arrivalCanceled',board,{...details,calls:details.calls.map((c,i)=>i===1?{...c,arrivalCanceled:true}:c)}]
  ]){
   const result=await queryCommute({provider:'stockholm',from:'Jordbro',to:'Stockholm City',adapter:make(changedBoard,changedTrip)});
-  assert.equal(result.status,'unavailable',label);
-  assert.deepEqual(result.departures,[],label);
+  assert.equal(result.status,'ok',label);
+  assert.equal(result.departures[0].cancelled,true,label);
+  assert.equal(result.departures[0].expected,null,label);
+  assert.equal(result.departures[0].delayMinutes,null,label);
+  const reversed=await make(changedBoard,{...changedTrip,calls:[...changedTrip.calls].reverse()})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(reversed.status,'unavailable',label);
+ }
+});
+
+test('realtime uses the oldest contributing provider timestamp',async()=>{
+ const result=await make(board,{...details,timestamp:'2026-11-10T09:57:30'})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+ assert.equal(result.updatedAt,'2026-11-10T08:57:30.000Z');
+});
+
+test('repeated origin or destination station calls cannot confirm a unique journey',async()=>{
+ for(const calls of [[details.calls[0],...details.calls],[...details.calls,details.calls[1]]]){
+  const result=await make(board,{...details,calls})({provider:'stockholm',from:'Jordbro',to:'Stockholm City'});
+  assert.equal(result.status,'unavailable');
  }
 });
 

@@ -11,6 +11,9 @@ test('complete opted-in evidence produces display-safe regional departures',()=>
  assert.equal(result.departures[0].destination,'Bålsta');
  assert.equal(result.departures[0].destinationStopId,'C');
  assert.equal(result.departures[0].line,'43');
+ assert.equal(result.departures[0].delayMinutes,null);
+ const delayed={...proof,departures:[{...departure,delayMinutes:4}]};
+ assert.equal(prepareRegionalPublication({proof:delayed,enabled:true,now}).departures[0].delayMinutes,4);
 });
 test('missing terminal, line, schedule or evidence fails closed',()=>{
  for(const patch of [{tripHeadsign:null},{routeShortName:null},{scheduledDeparture:null},{evidence:'unverified'},{destinationStopId:'J'}]){

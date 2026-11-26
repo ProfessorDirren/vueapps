@@ -7,7 +7,7 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  // Reject stale, future-dated or missing feed timestamps before evaluating trips.
  const feedAge=now-evidence.feedTimestampMs;
- if(!Number.isFinite(feedAge)||feedAge<0||feedAge>maxAgeMs)return {status:'unavailable',reason:'stale_or_missing_feed',departures:[]};
+ if(!Number.isSafeInteger(evidence.feedTimestampMs)||evidence.feedTimestampMs<=0||!Number.isFinite(feedAge)||feedAge<0||feedAge>maxAgeMs)return {status:'unavailable',reason:'stale_or_missing_feed',departures:[]};
  const departures=[];
  const counts=new Map();
  for(const trip of evidence.trips)if(typeof trip?.tripId==='string')counts.set(trip.tripId,(counts.get(trip.tripId)||0)+1);
@@ -44,7 +44,9 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const arrivalSeconds=destinationUpdates.length===1?destinationUpdates[0]?.arrival?.unixTime:null;
   const arrivalMs=Number.isSafeInteger(arrivalSeconds)&&arrivalSeconds>0?arrivalSeconds*1000:null;
   const predictedArrival=Number.isSafeInteger(arrivalMs)&&arrivalMs>=departureMs&&arrivalMs<=departureMs+4*60*60*1000?new Date(arrivalMs).toISOString():null;
-  departures.push({tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),predictedArrival,evidence:'regional_trip_update'});
+  const delaySeconds=update.departure.delaySeconds;
+  const delayMinutes=Number.isSafeInteger(delaySeconds)?Math.max(0,Math.round(delaySeconds/60)):null;
+  departures.push({delayMinutes,tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),predictedArrival,evidence:'regional_trip_update'});
  }
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',feedTimestampMs:evidence.feedTimestampMs,departures};
 }

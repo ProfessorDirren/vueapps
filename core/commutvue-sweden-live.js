@@ -107,6 +107,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    departureRowsByStopMode[key]=(departureRowsByStopMode[key]||0)+1;
   }
   console.info('commutvue_origin_board_modes',JSON.stringify({board_rows:Array.isArray(board.departures)?board.departures.length:0,origin_rows:boardOriginRows,origin_realtime_true:boardOriginRealtimeTrue,origin_realtime_false:boardOriginRealtimeFalse,origin_realtime_missing:boardOriginRealtimeMissing,origin_realtime_by_mode:boardRealtimeByMode,origin_mode_counts:boardModeCounts,origin_mode_code_counts:boardCodeCounts,origin_rows_missing_mode:boardRowsMissingMode,origin_platform_count:originStops.length,board_stops:boardStops,board_stop_mode_counts:boardStopModeCounts,board_stops_missing_mode_metadata:boardStopsMissingMode,departure_rows_by_board_stop_mode:departureRowsByStopMode,departure_rows_without_board_stop:departureRowsWithoutBoardStop,requested_transport_mode:requestedMode}));
+  const boardTimestamp=swedishTime(board.timestamp);
+  let liveTimestamp=boardTimestamp;
   const departures=[];const scheduledDepartures=[];const ids=[];const seen=new Set();const alerts=[];const alertKeys=new Set();let tripRequests=0;let scheduledOnlyAtOrigin=false;let realtimeAtOrigin=false;let timeConflicts=0;let realtimeOriginMissing=0;let realtimeDestinationMissing=0;let realtimeDestinationAbsent=0;let realtimeDestinationBeforeOrigin=0;let realtimeDestinationIdMismatch=0;let destinationAreaSeen=0;let destinationNamedStopSeen=0;let cityNamedStopSeen=0;let originPresentWithoutDestination=0;let tripsWithEmptyCalls=0;let tripsWithMultipleCalls=0;let destinationNameInDirection=0;let cityNameInDirection=0;let verifiedDestinationCalls=0;let destinationBeforeOrigin=0;let tripOriginMissing=0;let invalidTripEvidence=0;let checkedRealtimeTrips=0;let checkedScheduledTrips=0;let realtimeTripsWithLaterCalls=0;let realtimeTripsWithoutLaterCalls=0;let realtimeTripsWithStopAreas=0;let realtimeTripsWithoutStopAreas=0;let realtimeTripsWithNorthboundHint=0;let realtimeTripsWithSouthboundHint=0;let realtimeTripsWithOtherDirectionHint=0;let northboundTerminalLooksRailEnd=0;let northboundTerminalLooksUnrelated=0;let northboundTerminalLooksMetro=0;let northboundTerminalHasName=0;let northboundTerminalHasArea=0;let northboundTerminalHasId=0;let northboundTerminalIsStockholmRail=0;let northboundTerminalCallsCountGtTen=0;let northboundTripsWithTerminalNorth=0;let northboundTripsWithTerminalSouth=0;let northboundTripsWithTerminalUnknown=0;let northboundTripsWithShortLaterSequence=0;let northboundTripsWithNorthOfJordbro=0;let northboundTripsWithSouthOfJordbro=0;let northboundTripsWithUnrecognizedStops=0;let northboundTripsWithStockholmArea=0;let northboundTripsWithCityChild=0;let northboundTripsWithLaterCalls=0;let northboundTripsWithNamedStockholm=0;let realtimeCallFlagMissing=0;let realtimeTimestampMissing=0;const routeModeCounts={};const northboundHintModeCounts={};let tripsWithRouteDestination=0;let routeDestinationIdMatches=0;let routeDestinationNameMatches=0;let routeDestinationMetaAreaMatches=0;let routeDestinationOtherName=0;const realtimeStopSequenceModes={};let realtimeLaterStopsWithNames=0;let realtimeLaterStopsWithoutNames=0;let realtimeLaterStopsWithAreas=0;
   // A board can contain many timetable-only rows. Check realtime candidates first
   // so the bounded Trips lookup budget cannot be exhausted by scheduled rows.
@@ -140,11 +142,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const southboundA=directionTier(a)===2;
    const southboundB=directionTier(b)===2;
    if(southboundA!==southboundB)return Number(southboundA)-Number(southboundB);
-   const tier=Number(b?.is_realtime===true)-Number(a?.is_realtime===true);
+   const tier=Number(b?.is_realtime===true||b?.canceled===true||b?.departureCanceled===true)-Number(a?.is_realtime===true||a?.canceled===true||a?.departureCanceled===true);
    if(tier)return tier;
    const directionPriority=directionTier(a)-directionTier(b);
    if(directionPriority)return directionPriority;
-   const time=row=>swedishTime(row?.is_realtime===true?row?.realtime:row?.scheduled);
+   const time=row=>swedishTime(row?.is_realtime===true&&row?.canceled!==true&&row?.departureCanceled!==true?row?.realtime:row?.scheduled);
    const ta=time(a),tb=time(b);
    return (Number.isFinite(ta)?ta:Infinity)-(Number.isFinite(tb)?tb:Infinity);
   });
@@ -153,12 +155,13 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const tripId=d?.trip?.trip_id,startDate=d?.trip?.start_date;
    if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===true&&d?.canceled!==true&&d?.departureCanceled!==true)realtimeAtOrigin=true;
    if(originStopIds.has(d?.stop?.id)&&d?.is_realtime===false&&d?.canceled!==true&&d?.departureCanceled!==true)scheduledOnlyAtOrigin=true;
-   if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id)||(d.canceled===true||d.departureCanceled===true))continue;
+   if(typeof tripId!=='string'||!tripId||!date(startDate)||!originStopIds.has(d.stop?.id))continue;
+   const boardCancelled=d.canceled===true||d.departureCanceled===true;
    const realtime=d.is_realtime===true;
    // Reject stale/far-future departures before spending a Trips API request.
    const scheduled=swedishTime(d.scheduled),expected=realtime?swedishTime(d.realtime):NaN;
-   if(realtime&&Number.isFinite(scheduled)&&!Number.isFinite(expected))realtimeTimestampMissing++;
-   const departureTime=realtime?expected:scheduled;
+   if(realtime&&!boardCancelled&&Number.isFinite(scheduled)&&!Number.isFinite(expected))realtimeTimestampMissing++;
+   const departureTime=realtime&&!boardCancelled?expected:scheduled;
    if(!Number.isFinite(scheduled)||!Number.isFinite(departureTime)||departureTime<now()-120000||departureTime>now()+4*60*60*1000)continue;
    const line=String(d.route?.designation||d.route?.name||'').trim();
    const direction=String(d.route?.direction||d.route?.destination?.name||'').trim();
@@ -183,7 +186,8 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    const calls=details.calls;
    if(calls.length===0)tripsWithEmptyCalls++;
    if(calls.length>1)tripsWithMultipleCalls++;
-   const i=calls.findIndex(c=>c?.stop?.id===d.stop.id);
+   const originCalls=calls.flatMap((c,k)=>c?.stop?.id===d.stop.id?[k]:[]);
+   const i=originCalls.length===1?originCalls[0]:-1;
    // Aggregate-only evidence about Trips coverage; no raw IDs, names or extra requests.
    if(realtime&&i>=0){
     const modeKey=String(details.route?.transport_mode_code??'unknown');
@@ -215,15 +219,20 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     if(calls.length>i+1)realtimeTripsWithLaterCalls++;else realtimeTripsWithoutLaterCalls++;
     if(calls.some(c=>area(c?.stop?.area_id)))realtimeTripsWithStopAreas++;else realtimeTripsWithoutStopAreas++;
    }
-   // A trip may use a different platform ID within the same verified station area.
-   // Accept an exact area match only when the provider supplies that area ID;
-   // otherwise require the resolved child stop ID. Never infer by direction text.
-   const j=i<0?-1:calls.findIndex((c,k)=>k>i&&(destinationStopIds.has(c?.stop?.id)||(c?.stop?.area_id===destination&&area(destination)&&typeof c?.stop?.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===destinationCallName)));
+   // Prefer an exact platform ID. Fall back to a unique call with both the
+   // verified area ID and station name when the trip uses a different platform.
+   const sameNamedArea=c=>c?.stop?.area_id===destination&&typeof c.stop.name==='string'&&c.stop.name.trim().toLocaleLowerCase('sv')===destinationCallName;
+   const downstream=i<0?[]:calls.slice(i+1);
+   const exactMatches=downstream.flatMap((c,k)=>destinationStopIds.has(c?.stop?.id)?[i+k+1]:[]);
+   const areaMatches=exactMatches.length?[]:downstream.flatMap((c,k)=>sameNamedArea(c)?[i+k+1]:[]);
+   const matches=exactMatches.length?exactMatches:areaMatches;
+   const j=matches.length===1?matches[0]:-1;
    if(i<0)tripOriginMissing++;
    if(j>i&&i>=0){verifiedDestinationCalls++;if(realtime&&realtimeStopSequenceModes[String(details.route?.transport_mode_code??'unknown')])realtimeStopSequenceModes[String(details.route?.transport_mode_code??'unknown')].destination_matched++;}
    if(realtime&&i<0)realtimeOriginMissing++;
    else if(realtime&&j<=i){
     realtimeDestinationMissing++;
+    if(matches.length>1)continue;
     const destinationCalls=calls.map((call,k)=>({call,k})).filter(({call})=>destinationStopIds.has(call?.stop?.id)||(call?.stop?.area_id===destination&&area(destination)&&typeof call?.stop?.name==='string'&&call.stop.name.trim().toLocaleLowerCase('sv')===destinationCallName));
     if(destinationCalls.length){realtimeDestinationBeforeOrigin++;destinationBeforeOrigin++;}
     else if(calls.some(call=>call?.stop?.area_id===destination&&area(destination))){realtimeDestinationIdMismatch++;destinationAreaSeen++;}
@@ -231,14 +240,16 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     else {realtimeDestinationAbsent++;if(i>=0)originPresentWithoutDestination++;if(calls.some(call=>call?.stop?.name?.trim().toLocaleLowerCase('sv')==='stockholm city'))cityNamedStopSeen++;if(direction.toLocaleLowerCase('sv').includes(String(to).toLocaleLowerCase('sv')))destinationNameInDirection++;if(direction.toLocaleLowerCase('sv').includes('stockholm city'))cityNameInDirection++;}
    }
    else if(realtime&&calls[i].is_realtime!==true)realtimeCallFlagMissing++;
-   if(i<0||j<=i||(realtime&&calls[i].is_realtime!==true)||d.canceled===true||d.departureCanceled===true||calls[i].canceled===true||calls[i].departureCanceled===true||calls[j].canceled===true||calls[j].arrivalCanceled===true)continue;
+   if(i<0||j<=i)continue;
+   const cancelled=boardCancelled||calls[i].canceled===true||calls[i].departureCanceled===true||calls[j].canceled===true||calls[j].arrivalCanceled===true;
+   if(realtime&&!cancelled&&calls[i].is_realtime!==true)continue;
    // When Trips supplies origin timestamps, they must agree with the departure board.
    // Otherwise the two provider responses do not verify the same timing evidence.
    const originCall=calls[i];
    const tripScheduled=originCall.scheduledDeparture;
    const tripRealtime=originCall.realtimeDeparture;
    if(typeof tripScheduled==='string'&&swedishTime(tripScheduled)!==scheduled){timeConflicts++;continue;}
-   if(realtime&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected){timeConflicts++;continue;}
+   if(realtime&&!cancelled&&typeof tripRealtime==='string'&&swedishTime(tripRealtime)!==expected){timeConflicts++;continue;}
    // Only attach messages to a trip whose route to the requested destination was verified.
    // Trafiklab's alerts are {type,title,text}; do not invent missing identifiers.
    for(const [index,alert] of (realtime&&Array.isArray(d.alerts)?d.alerts:[]).slice(0,20).entries()){
@@ -249,8 +260,11 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
     alertKeys.add(key);
     alerts.push({id:'trafiklab-'+id+'-'+index,title,description,type:'disruption',status:'active',affectedLines:[line]});
    }
-   const departure={id,line,destination:direction||to,scheduled:new Date(scheduled).toISOString(),expected:realtime?new Date(expected).toISOString():null,cancelled:false};
-   if(realtime){departures.push(departure);ids.push(id);}else{scheduledDepartures.push(departure);}
+   const departure={id,line,destination:direction||to,scheduled:new Date(scheduled).toISOString(),expected:realtime&&!cancelled?new Date(expected).toISOString():null,cancelled};
+   if(realtime||cancelled){
+    departures.push(departure);ids.push(id);
+    liveTimestamp=Math.min(liveTimestamp,swedishTime(details.timestamp));
+   }else{scheduledDepartures.push(departure);}
   }
   // Safe aggregate diagnostic: no station IDs, API keys, trip IDs or raw provider payloads.
   if(realtimeDestinationAbsent>0||realtimeDestinationIdMismatch>0)console.info('commutvue_destination_match_diagnostic',JSON.stringify({checked_trips:tripRequests,route_mode_counts:routeModeCounts,northbound_hint_mode_counts:northboundHintModeCounts,route_destination_present:tripsWithRouteDestination,route_destination_id_matches:routeDestinationIdMatches,route_destination_name_matches:routeDestinationNameMatches,route_destination_meta_area_matches:routeDestinationMetaAreaMatches,route_destination_alt_label:routeDestinationOtherName,missing_destination:realtimeDestinationAbsent,area_mismatch:realtimeDestinationIdMismatch,area_seen:destinationAreaSeen,named_stop_seen:destinationNamedStopSeen,city_named_stop_seen:cityNamedStopSeen,origin_without_destination:originPresentWithoutDestination,empty_trip_calls:tripsWithEmptyCalls,multiple_call_trips:tripsWithMultipleCalls,destination_in_direction:destinationNameInDirection,city_in_direction:cityNameInDirection,verified_destination_calls:verifiedDestinationCalls,destination_before_origin:destinationBeforeOrigin,trip_origin_missing:tripOriginMissing,invalid_trip_evidence:invalidTripEvidence,checked_realtime_trips:checkedRealtimeTrips,realtime_stop_sequence_modes:realtimeStopSequenceModes,realtime_later_stops_with_names:realtimeLaterStopsWithNames,realtime_later_stops_without_names:realtimeLaterStopsWithoutNames,realtime_later_stops_with_areas:realtimeLaterStopsWithAreas,checked_scheduled_trips:checkedScheduledTrips,realtime_trips_with_later_calls:realtimeTripsWithLaterCalls,realtime_trips_without_later_calls:realtimeTripsWithoutLaterCalls,realtime_trips_with_stop_areas:realtimeTripsWithStopAreas,realtime_trips_without_stop_areas:realtimeTripsWithoutStopAreas,realtime_northbound_direction_hints:realtimeTripsWithNorthboundHint,realtime_southbound_direction_hints:realtimeTripsWithSouthboundHint,northbound_later_calls:northboundTripsWithLaterCalls,northbound_terminal_north:northboundTripsWithTerminalNorth,northbound_terminal_south:northboundTripsWithTerminalSouth,northbound_terminal_unknown:northboundTripsWithTerminalUnknown,northbound_terminal_has_name:northboundTerminalHasName,northbound_terminal_rail_end:northboundTerminalLooksRailEnd,northbound_terminal_metro:northboundTerminalLooksMetro,northbound_terminal_unrecognized_category:northboundTerminalLooksUnrelated,northbound_terminal_has_area:northboundTerminalHasArea,northbound_terminal_has_id:northboundTerminalHasId,northbound_terminal_is_stockholm_rail:northboundTerminalIsStockholmRail,northbound_later_calls_gt_ten:northboundTerminalCallsCountGtTen,northbound_short_later_sequence:northboundTripsWithShortLaterSequence,northbound_north_station_names:northboundTripsWithNorthOfJordbro,northbound_south_station_names:northboundTripsWithSouthOfJordbro,northbound_unrecognized_station_names:northboundTripsWithUnrecognizedStops,northbound_stockholm_area:northboundTripsWithStockholmArea,northbound_city_child:northboundTripsWithCityChild,northbound_named_city:northboundTripsWithNamedStockholm,realtime_unclassified_direction_hints:realtimeTripsWithOtherDirectionHint}));
@@ -259,10 +273,10 @@ export function createVerifiedSwedenAdapter({apiKey,fetcher=fetch,resolveStop,no
    return {provider,status:'scheduled',reason:realtimeAtOrigin?(timeConflicts>0?'realtime_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':realtimeTimestampMissing>0?'realtime_timestamp_missing':'realtime_unverified'):'no_realtime_at_origin',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),departures:scheduledDepartures.slice(0,maxTrips)};
   }
   if(!departures.length)return {provider,status:'unavailable',reason:tripRequests===0?(realtimeTimestampMissing>0?'realtime_timestamp_missing':scheduledOnlyAtOrigin?'scheduled_only':'no_eligible_departures'):timeConflicts>0?'provider_time_conflict':realtimeDestinationMissing>0?(realtimeDestinationBeforeOrigin>0?'realtime_destination_wrong_order':realtimeDestinationIdMismatch>0?'realtime_destination_id_mismatch':realtimeDestinationAbsent>0?'realtime_destination_absent':'realtime_destination_unverified'):realtimeOriginMissing>0?'realtime_origin_unverified':realtimeCallFlagMissing>0?'realtime_trip_flag_missing':realtimeTimestampMissing>0?'realtime_timestamp_missing':'route_not_verified',departures:[]};
-  departures.sort((a,b)=>Date.parse(a.expected)-Date.parse(b.expected));
+  departures.sort((a,b)=>Date.parse(a.expected||a.scheduled)-Date.parse(b.expected||b.scheduled));
   // Evidence IDs must follow the same order as the departures presented to callers.
   ids.splice(0,ids.length,...departures.map(d=>d.id));
-  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(swedishTime(board.timestamp)).toISOString(),journeyEvidence:{verified:true,originId:origin+'|'+originStops.join(','),destinationId:destination+'|'+destinationStops.join(','),departureIds:ids},departures,alerts:alerts.slice(0,100)};
+  return {provider,status:'ok',sourceUrl:ROOT+'departures/'+origin,updatedAt:new Date(liveTimestamp).toISOString(),journeyEvidence:{verified:true,originId:origin+'|'+originStops.join(','),destinationId:destination+'|'+destinationStops.join(','),departureIds:ids},departures,alerts:alerts.slice(0,100)};
  };
 }
 

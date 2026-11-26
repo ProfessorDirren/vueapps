@@ -26,7 +26,7 @@ export function prepareRegionalPublication({proof,enabled=false,now=Date.now()}=
   if(predicted<now)continue;
   const arrival=typeof d.predictedArrival==='string'?Date.parse(d.predictedArrival):NaN;
   const predictedArrival=Number.isFinite(arrival)&&arrival>=predicted&&arrival<=predicted+4*60*60*1000?new Date(arrival).toISOString():null;
-  departures.push(Object.freeze({tripId:d.tripId,originStopId:d.originStopId,destinationStopId:d.destinationStopId,scheduledDeparture:d.scheduledDeparture,predictedDeparture:new Date(predicted).toISOString(),predictedArrival,line:d.routeShortName,destination:d.tripHeadsign,source:'SL Regional GTFS-RT'}));
+  departures.push(Object.freeze({tripId:d.tripId,originStopId:d.originStopId,destinationStopId:d.destinationStopId,scheduledDeparture:d.scheduledDeparture,predictedDeparture:new Date(predicted).toISOString(),predictedArrival,delayMinutes:Number.isSafeInteger(d.delayMinutes)&&d.delayMinutes>=0?d.delayMinutes:null,line:d.routeShortName,destination:d.tripHeadsign,source:'SL Regional GTFS-RT'}));
  }
  if(!departures.length)return unavailable('no_upcoming_departures');
  if(new Set(departures.map(d=>d.tripId)).size!==departures.length)return unavailable('duplicate_trip');

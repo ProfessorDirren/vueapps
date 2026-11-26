@@ -117,3 +117,12 @@ test('only exact unique downstream realtime stop can verify destination arrival'
  assert.equal(withTrip({...trip,stops:[trip.stops[0],{stopId:'S',arrival:{unixTime:arrival}}]}).predictedArrival,null);
  assert.equal(withTrip({...trip,stops:[trip.stops[0],{stopId:'C',arrival:{unixTime:departure-1}}]}).predictedArrival,null);
 });
+
+test('regional delays are derived from the matched origin event only',()=>{
+ for(const [delaySeconds,expected] of [[180,3],[-120,0],[undefined,null]]){
+  const trip=input.evidence.trips[0];
+  const stop=trip.stops[0];
+  const evidence={...input.evidence,trips:[{...trip,stops:[{...stop,departure:{...stop.departure,delaySeconds}}]}]};
+  assert.equal(verifyRegionalJourney({...input,evidence}).departures[0].delayMinutes,expected);
+ }
+});
