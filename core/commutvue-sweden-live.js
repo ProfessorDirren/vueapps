@@ -364,17 +364,18 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
     }));
     if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}
    }
+   const areaType=group=>String(group.area_type).toUpperCase().replace('_','');
    if(railAreas.size>1&&requested){
     // A meta-stop can repeat a national stop's exact name and platforms.
     // Prefer the national stop only when all other candidates are proven containers.
     const candidateGroups=exact.filter(group=>railAreas.has(group.id));
-    const nationalGroups=candidateGroups.filter(group=>String(group.area_type).toUpperCase()==='RIKSHALLPLATS');
+    const nationalGroups=candidateGroups.filter(group=>areaType(group)==='RIKSHALLPLATS');
     const nationalIds=new Set(nationalGroups.map(group=>group.id));
     if(nationalIds.size===1){
      const nationalId=nationalGroups[0].id;
      const platformIds=new Set(nationalGroups.flatMap(group=>group.stops.map(stop=>stop.id)).filter(id=>typeof id==='string'&&id.length));
      const containers=candidateGroups.filter(group=>group.id!==nationalId);
-     if(platformIds.size&&containers.every(group=>String(group.area_type).toUpperCase()==='METASTOP'&&
+     if(platformIds.size&&containers.every(group=>areaType(group)==='METASTOP'&&
       [...platformIds].every(id=>group.stops.some(stop=>stop.id===id)))){
       railAreas.clear();
       railAreas.add(nationalId);
@@ -399,7 +400,7 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
     matching_mode_areas:railAreas.size,
     requested_mode:['BUS','METRO','TRAIN','TRAM','TAXI','BOAT'].includes(requested)?requested:null,
     groups:exact.slice(0,8).map(group=>({
-     type:['METASTOP','RIKSHALLPLATS'].includes(String(group.area_type).toUpperCase())?String(group.area_type).toUpperCase():null,
+     type:['METASTOP','RIKSHALLPLATS'].includes(areaType(group))?areaType(group):null,
      matching_mode:matchesMode(group),
      platforms:group.stops.length,
      shared_platforms:group.stops.filter(stop=>typeof stop.id==='string'&&exact.some(other=>other.id!==group.id&&other.stops.some(candidate=>candidate.id===stop.id))).length

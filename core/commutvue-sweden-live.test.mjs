@@ -1108,13 +1108,14 @@ test('Jordbro rail platforms can disambiguate exact-name areas before the first 
 
 test('a same-name meta-stop can be distinguished from its national rail stop',async()=>{
  const groups=[
-  {id:'740000001',name:'Jordbro',area_type:'METASTOP',transport_modes:['TRAIN','BUS'],stops:[{id:'bus'},{id:'rail'}]},
-  {id:'740000002',name:'Jordbro',area_type:'RIKSHALLPLATS',transport_modes:['TRAIN'],stops:[{id:'rail'}]}
+  {id:'740000001',name:'Jordbro',area_type:'META_STOP',transport_modes:['TRAIN','BUS'],stops:[{id:'bus'},{id:'rail1'},{id:'rail2'}]},
+  {id:'740000002',name:'Jordbro',area_type:'RIKSHALLPLATS',transport_modes:['TRAIN'],stops:[{id:'rail1'},{id:'rail2'}]},
+  {id:'740000003',name:'Jordbro',area_type:'RIKSHALLPLATS',transport_modes:['BUS'],stops:[{id:'other-bus'}]}
  ];
  const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>({
   ok:true,text:async()=>JSON.stringify(url.includes('/departures/')?{departures:[]}:{stop_groups:groups})
  })});
- assert.deepEqual(await resolver('Jordbro','TRAIN'),{id:'740000002',stopIds:['rail']});
+ assert.deepEqual(await resolver('Jordbro','TRAIN'),{id:'740000002',stopIds:['rail1','rail2']});
  groups[0].stops.pop();
  await assert.rejects(resolver('Jordbro','TRAIN'),error=>error.category==='ambiguous_station');
 });
