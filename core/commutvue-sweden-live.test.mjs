@@ -1130,3 +1130,13 @@ test('looks up slash-separated station labels without putting a slash in the sea
  }});
  assert.deepEqual(await resolver('Liljevalchs/Gröna Lund','BUS'),{id:'740000002',stopIds:['correct']});
 });
+
+test('disambiguates exact child stop names using the requested transport mode',async()=>{
+ const stop_groups=[
+  {id:'740000001',name:'Bus area',transport_modes:['BUS'],stops:[{id:'bus',name:'Blockhusudden'}]},
+  {id:'740000002',name:'Boat area',transport_modes:['BOAT'],stops:[{id:'boat',name:'Blockhusudden'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async()=>({ok:true,text:async()=>JSON.stringify({stop_groups})})});
+ assert.deepEqual(await resolver('Blockhusudden','BUS'),{id:'740000001',stopIds:['bus']});
+ await assert.rejects(resolver('Blockhusudden'),error=>error.category==='ambiguous_station');
+});

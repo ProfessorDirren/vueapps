@@ -421,9 +421,18 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   }
   // Stockholm City can be a named child of the Stockholm meta-stop in Trafiklab.
   // Match exactly one child across all groups; never guess from partial names.
-  const children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
+  let children=groups.filter(s=>area(s.id)).flatMap(group=>(group.stops||[]).filter(stop=>same(stop.name,name)&&typeof stop.id==='string'&&stop.id.length>0).map(stop=>({id:group.id,stopIds:[stop.id]})));
   // Several platforms with the same exact name are valid only within one meta-stop.
-  const parents=new Set(children.map(child=>child.id));
+  let parents=new Set(children.map(child=>child.id));
+  if(parents.size>1&&transportMode){
+   const mode=String(transportMode).toUpperCase();
+   const matchingParents=new Set(groups.filter(group=>parents.has(group.id)&&Array.isArray(group.transport_modes)&&
+    group.transport_modes.some(value=>String(value).toUpperCase()===mode)).map(group=>group.id));
+   if(matchingParents.size===1){
+    parents=matchingParents;
+    children=children.filter(child=>parents.has(child.id));
+   }
+  }
   if(!children.length){
    // Safe shape-only diagnostics: distinguish a missing parent from a parent whose
    // child platforms are absent or named differently. Never log names or IDs.
