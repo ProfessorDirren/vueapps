@@ -1119,3 +1119,14 @@ test('a same-name meta-stop can be distinguished from its national rail stop',as
  groups[0].stops.pop();
  await assert.rejects(resolver('Jordbro','TRAIN'),error=>error.category==='ambiguous_station');
 });
+
+test('looks up slash-separated station labels without putting a slash in the search path',async()=>{
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  assert.equal(new URL(url).pathname,'/v1/stops/name/Liljevalchs');
+  return {ok:true,text:async()=>JSON.stringify({stop_groups:[
+   {id:'740000001',name:'Liljevalchs',stops:[{id:'other'}]},
+   {id:'740000002',name:'Liljevalchs/Gröna Lund',stops:[{id:'correct'}]}
+  ]})};
+ }});
+ assert.deepEqual(await resolver('Liljevalchs/Gröna Lund','BUS'),{id:'740000002',stopIds:['correct']});
+});

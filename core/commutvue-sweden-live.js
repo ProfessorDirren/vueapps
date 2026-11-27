@@ -290,7 +290,11 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
   // Resolve the commuter-rail platform explicitly, never a similarly named metro stop.
   if(name.trim().toLocaleLowerCase('sv')==='t-centralen'&&(!transportMode||String(transportMode).toUpperCase()==='TRAIN'))return await createTrafiklabStopResolver({apiKey,fetcher})('Stockholm City',transportMode);
   const stockholmMetro=name.toLocaleLowerCase('sv')==='t-centralen'&&String(transportMode).toUpperCase()==='METRO';
-  const url=new URL('stops/name/'+encodeURIComponent(stockholmMetro?'Stockholm':name),ROOT);
+  // Stop Lookup uses one URL path segment. Search the first name component
+  // for slash-separated labels, then match the full provider label below.
+  const searchName=name.split('/')[0].trim();
+  if(!searchName)throw new TrafiklabRequestError('stop_lookup','invalid_stop_data');
+  const url=new URL('stops/name/'+encodeURIComponent(stockholmMetro?'Stockholm':searchName),ROOT);
   url.searchParams.set('key',apiKey);
   let response;try{response=await fetcher(url.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});}catch{throw new TrafiklabRequestError('stop_lookup','network_or_timeout');}
   if(!response.ok)throw new TrafiklabRequestError('stop_lookup',response.status===401||response.status===403?'authorization':response.status===429?'rate_limited':'http_error');
