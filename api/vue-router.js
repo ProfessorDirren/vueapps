@@ -1,3 +1,4 @@
+import {stockholmWallClockToInstant} from '../core/commutevue-stockholm-clock.js';
 import {nationalJourneyDurationMinutes} from '../core/commutevue-national-duration.js';
 import {detectVueInputLanguage} from '../core/vuecore-language.js';
 import {interpretVueInput,vueCorrectionNotice,suggestVueIntent} from '../core/vuecore-interpretation.js';
@@ -118,10 +119,19 @@ export async function POST(request){
      }catch{}
     }
     const count=value=>Number.isInteger(value)&&value>=0?Math.min(value,60):0;
+    const minute=value=>Math.floor(Date.parse(value)/60000);
+    const departure=minute(stockholmWallClockToInstant(directTrain.departure));
+    const arrival=minute(stockholmWallClockToInstant(directTrain.arrival));
+    const matches=(result.departures||[]).filter(train=>
+     minute(train.advertisedTime)===departure&&minute(train.destinationArrival)===arrival);
+    const uniqueMatch=matches.length===1?matches[0]:null;
     console.info('commutevue_national_trafikverket_shadow',JSON.stringify({
      status:result.status==='matched'?'matched':'unavailable',
      reason:/^[a-z_]{1,60}$/.test(result.reason||'')?result.reason:'unknown',
      matched:count(result.departures?.length),
+     timetableMatches:count(matches.length),
+     timetableMatchHasDepartureForecast:uniqueMatch?.hasEstimatedTime===true,
+     timetableMatchHasArrivalForecast:!!uniqueMatch?.estimatedDestinationArrival,
      originEstimated:count(result.coverage?.originEstimatedCount),
      destinationEstimated:count(result.coverage?.destinationEstimatedCount),
      originCancelled:count(result.coverage?.originCancelledCount)
