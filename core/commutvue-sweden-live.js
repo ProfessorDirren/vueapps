@@ -364,6 +364,23 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
     }));
     if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}
    }
+   if(railAreas.size>1&&requested){
+    // A meta-stop can repeat a national stop's exact name and platforms.
+    // Prefer the national stop only when all other candidates are proven containers.
+    const candidateGroups=exact.filter(group=>railAreas.has(group.id));
+    const nationalGroups=candidateGroups.filter(group=>String(group.area_type).toUpperCase()==='RIKSHALLPLATS');
+    const nationalIds=new Set(nationalGroups.map(group=>group.id));
+    if(nationalIds.size===1){
+     const nationalId=nationalGroups[0].id;
+     const platformIds=new Set(nationalGroups.flatMap(group=>group.stops.map(stop=>stop.id)).filter(id=>typeof id==='string'&&id.length));
+     const containers=candidateGroups.filter(group=>group.id!==nationalId);
+     if(platformIds.size&&containers.every(group=>String(group.area_type).toUpperCase()==='METASTOP'&&
+      [...platformIds].every(id=>group.stops.some(stop=>stop.id===id)))){
+      railAreas.clear();
+      railAreas.add(nationalId);
+     }
+    }
+   }
    if(railAreas.size===1){
     const selected=[...railAreas][0];
     const selectedGroups=exact.filter(group=>group.id===selected);

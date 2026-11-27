@@ -1104,3 +1104,17 @@ test('Jordbro rail platforms can disambiguate exact-name areas before the first 
  busStops[0].transport_modes.push('TRAIN');
  await assert.rejects(resolver('Jordbro','TRAIN'),error=>error.category==='ambiguous_station');
 });
+
+
+test('a same-name meta-stop can be distinguished from its national rail stop',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',area_type:'METASTOP',transport_modes:['TRAIN','BUS'],stops:[{id:'bus'},{id:'rail'}]},
+  {id:'740000002',name:'Jordbro',area_type:'RIKSHALLPLATS',transport_modes:['TRAIN'],stops:[{id:'rail'}]}
+ ];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>({
+  ok:true,text:async()=>JSON.stringify(url.includes('/departures/')?{departures:[]}:{stop_groups:groups})
+ })});
+ assert.deepEqual(await resolver('Jordbro','TRAIN'),{id:'740000002',stopIds:['rail']});
+ groups[0].stops.pop();
+ await assert.rejects(resolver('Jordbro','TRAIN'),error=>error.category==='ambiguous_station');
+});
