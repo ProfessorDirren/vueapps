@@ -92,7 +92,7 @@ export function parseSpanishArrivalDeadline(question){
  const clock=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
  return {date:isoDate,time:clock,cutoff:isoDate+'T'+clock,explicitYear:true};
 }
-export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch,arriveBy=null,earliestDeparture=false}={}){
+export async function planResRobotTrip(fromId,toId,{apiKey,fetchImpl=fetch,arriveBy=null,earliestDeparture=false,trainOnly=false,directOnly=false}={}){
  if(!apiKey)throw new Error('resrobot_not_configured');
  if(!fromId||!toId)throw new Error('missing_stop_id');
  const url=new URL(BASE+'/trip');
@@ -153,7 +153,7 @@ export function rankResRobotTrips(trips,{earliestDeparture=false}={}){
   return [item.trip];
  });
 }
-export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,arriveBy=null,earliestDeparture=false}={}){
+export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,arriveBy=null,earliestDeparture=false,trainOnly=false,directOnly=false}={}){
  if(!apiKey)return {status:'not_configured',trips:[]};
  try{
   // Expand established station abbreviations before the provider lookup.
@@ -179,7 +179,10 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,
   // A resolved identical stop ID is not a journey; never request or display one.
   if(origin.id===destination.id)return {status:'same_stop',trips:[]};
   const trips=await planResRobotTrip(origin.id,destination.id,{apiKey,fetchImpl,arriveBy});
-  const ranked=rankResRobotTrips(trips,{earliestDeparture}).filter(trip=>!arriveBy||(trip.arrival.slice(0,16)<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
+  const ranked=rankResRobotTrips(trips,{earliestDeparture}).filter(trip=>{
+   const travelLegs=trip.legs.filter(leg=>leg.mode!=='WALK'&&cleanName(leg.from)!==cleanName(leg.to));
+   return (!directOnly||travelLegs.length===1)&&(!trainOnly||travelLegs.length>0&&travelLegs.every(leg=>/^J[A-Z]{2}$/.test(leg.mode||'')));
+  }).filter(trip=>!arriveBy||(trip.arrival.slice(0,16)<=arriveBy.cutoff&&trip.arrival.slice(0,10)===arriveBy.date));
   // For an arrive-by request, lead with the latest feasible departure rather than
   // the shortest-duration trip. Preserve the existing ranking for other queries.
   if(arriveBy)ranked.sort((a,b)=>b.departure.localeCompare(a.departure)||a.arrival.localeCompare(b.arrival));
