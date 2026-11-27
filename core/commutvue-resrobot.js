@@ -157,7 +157,12 @@ export async function planNationalSwedenJourney(from,to,{apiKey,fetchImpl=fetch,
  if(!apiKey)return {status:'not_configured',trips:[]};
  try{
   // Expand established station abbreviations before the provider lookup.
-  const canonicalStop=name=>cleanName(name)==='goteborg c'?'Göteborg Centralstation':name;
+  const aliases=new Map([
+   ['goteborg c','Göteborg Centralstation'],
+   ['stockholm c','Stockholm Centralstation'],
+   ['stockholm central','Stockholm Centralstation']
+  ]);
+  const canonicalStop=name=>aliases.get(cleanName(name))||name;
   from=canonicalStop(from);
   to=canonicalStop(to);
   const resolve=async name=>{

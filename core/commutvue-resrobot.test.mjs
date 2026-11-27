@@ -133,3 +133,14 @@ test('Swedish Tyresö bus question parses date before arrival deadline',()=>{
  assert.deepEqual(parseSwedishArrivalDeadline(q),{date:'2026-11-23',time:'10:00',cutoff:'2026-11-23T10:00',explicitYear:true});
  assert.deepEqual(parseSwedishArrivalDeadline('Jag vill vara framme senast kl. 10.00 den 23 november 2026'),{date:'2026-11-23',time:'10:00',cutoff:'2026-11-23T10:00',explicitYear:true});
 });
+
+
+test('fjärrtågsfrågor expanderar Stockholm Central och Göteborg C före hållplatssökningen',async()=>{
+ const lookups=[];
+ await planNationalSwedenJourney('Stockholm Central','Göteborg C',{apiKey:'test',fetchImpl:async url=>{
+  const name=new URL(url).searchParams.get('input');
+  lookups.push(name);
+  return {ok:true,json:async()=>({StopLocation:[]})};
+ }});
+ assert.deepEqual(lookups,['Stockholm Centralstation','Göteborg Centralstation']);
+});
