@@ -215,3 +215,7 @@ test('VUECORE cooking terms do not steal an ordinary bus journey',()=>{
 test('Italian VUEAPPS help bypasses unrelated favorite specialist',()=>{
  assert.deepEqual(routeQuestion('Ciao! Come posso usare VUEAPPS in italiano?','commutvue'),{domain:'anyvue',clarify:false});
 });
+
+test('routes Swedish questions about the definite plural of bus departures',()=>{
+ assert.equal(routeQuestion('Stockholm: Är någon av bussavgångarna från Blockhusudden till Liljevalchs/Gröna Lund inställd?').domain,'commutvue');
+});
