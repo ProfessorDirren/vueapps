@@ -394,6 +394,17 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
     console.info('commutvue_stop_group_modes',JSON.stringify({query:name,matching_groups:exact.length,rail_areas:railAreas.size,platform_count:stopIds.length,transport_modes:selectedModes,mode_metadata_present:selectedGroups.some(group=>Array.isArray(group.transport_modes)),platform_mode_counts:platformModeCounts,platforms_missing_mode_metadata:platformModeMetadataMissing}));
     if(stopIds.length)return {id:selected,stopIds};
    }
+   console.info('commutvue_ambiguous_stop_shape',JSON.stringify({
+    areas:exactAreaIds.size,
+    matching_mode_areas:railAreas.size,
+    requested_mode:['BUS','METRO','TRAIN','TRAM','TAXI','BOAT'].includes(requested)?requested:null,
+    groups:exact.slice(0,8).map(group=>({
+     type:['METASTOP','RIKSHALLPLATS'].includes(String(group.area_type).toUpperCase())?String(group.area_type).toUpperCase():null,
+     matching_mode:matchesMode(group),
+     platforms:group.stops.length,
+     shared_platforms:group.stops.filter(stop=>typeof stop.id==='string'&&exact.some(other=>other.id!==group.id&&other.stops.some(candidate=>candidate.id===stop.id))).length
+    }))
+   }));
    throw new TrafiklabRequestError('stop_lookup','ambiguous_station');
   }
   if(exactAreaIds.size===1){
