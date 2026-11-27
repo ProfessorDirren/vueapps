@@ -264,7 +264,7 @@ test('COMMUTVUE timetable-only result explicitly says delay is unknown',async()=
    else data={timestamp:wall(now),trip:{trip_id:'t1',start_date:day},calls:[{stop:{id:'stop1',area_id:'740000001',name:'Jordbro'}},{stop:{id:'stop2',area_id:'740000002',name:'Stockholm City'}}]};
    return {ok:true,text:async()=>JSON.stringify(data)};
   };
-  const expected={en:'Delay status cannot be determined',es:'No se puede determinar',sv:'Det går inte att avgöra',hi:'रीयल-टाइम डेटा', 'zh-CN':'没有实时数据',ru:'Без данных в реальном времени',ar:'لا يمكن تحديد التأخير',fr:'Impossible de déterminer',el:'Δεν είναι δυνατό',tr:'Gerçek zamanlı veri',fa:'بدون دادهٔ لحظه‌ای'};
+  const expected={en:'Delay status cannot be determined',es:'No se puede determinar',sv:'Utan realtidsdata går det inte att bekräfta om någon avgång är försenad',hi:'रीयल-टाइम डेटा', 'zh-CN':'没有实时数据',ru:'Без данных в реальном времени',ar:'لا يمكن تحديد التأخير',fr:'Impossible de déterminer',el:'Δεν είναι δυνατό',tr:'Gerçek zamanlı veri',fa:'بدون دادهٔ لحظه‌ای'};
   for(const [language,phrase] of Object.entries(expected)){
    const request=new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'Är pendeltågen från Jordbro till Stockholm City försenade?',language})});
    const response=await POST(request),data=await response.json();
