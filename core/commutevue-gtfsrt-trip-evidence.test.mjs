@@ -62,3 +62,11 @@ test('excludes GTFS-RT FeedEntity.is_deleted even when a trip update remains',()
  const activeEntity=field(2,[...field(1,ascii('e1')),...wireVarint(2,0),...update]);
  assert.equal(extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...activeEntity])).trips.length,1);
 });
+
+test('retains sequence-only updates for matching against static GTFS',()=>{
+ const sequenceStop=field(2,[...wireVarint(1,17),...departure]);
+ const sequenceUpdate=field(3,[...descriptor,...sequenceStop]);
+ const sequenceEntity=field(2,[...field(1,ascii('e1')),...sequenceUpdate]);
+ const [decoded]=extractGTFSRealtimeTripEvidence(Uint8Array.from([...header,...sequenceEntity])).trips;
+ assert.deepEqual(decoded.stops,[{stopId:null,stopSequence:17,arrival:null,departure:{delaySeconds:120,unixTime:60}}]);
+});

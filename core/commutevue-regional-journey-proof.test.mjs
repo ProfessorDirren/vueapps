@@ -126,3 +126,13 @@ test('regional delays are derived from the matched origin event only',()=>{
   assert.equal(verifyRegionalJourney({...input,evidence}).departures[0].delayMinutes,expected);
  }
 });
+
+test('joins sequence-only stop updates and rejects contradictory stop identifiers',()=>{
+ const tripStops=new Map([['trip-1',[{stop:'J',sequence:10},{stop:'C',sequence:19}]]]);
+ const origin={stopSequence:10,departure:{unixTime:now/1000+300}};
+ const destination={stopSequence:19,arrival:{unixTime:now/1000+1500}};
+ const prove=stops=>verifyRegionalJourney({...input,tripStops,evidence:{...input.evidence,trips:[{tripId:'trip-1',stops}]}});
+ assert.equal(prove([origin,destination]).departures[0].predictedArrival,new Date(now+1500000).toISOString());
+ assert.equal(prove([{...origin,stopId:'C'},destination]).status,'unavailable');
+ assert.equal(prove([origin,{...origin,stopSequence:11,stopId:'J'}]).status,'unavailable');
+});

@@ -42,9 +42,12 @@ export function extractGTFSRealtimeTripEvidence(bytes,{maxTrips=20000,maxStops=1
     // GTFS-RT StopTimeUpdate.schedule_relationship: SKIPPED=1, NO_DATA=2.
     const stopRelationship=find(stopFields,5,0);
     if(stopRelationship&&(stopRelationship.value===1n||stopRelationship.value===2n))continue;
-    if(!stopId||stopId.length>200)continue;
+    const sequence=find(stopFields,1,0);
+    if(sequence&&sequence.value>4294967295n)continue;
+    const stopSequence=sequence?Number(sequence.value):null;
+    if((!stopId&&stopSequence===null)||stopId?.length>200)continue;
     const event=kind=>{const f=find(stopFields,kind,2);if(!f)return null;const parts=children(bytes,f);const delay=find(parts,1,0),time=find(parts,2,0);return {delaySeconds:delay?Number(BigInt.asIntN(32,delay.value)):null,unixTime:time&&time.value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(time.value):null};};
-    stops.push({stopId,arrival:event(2),departure:event(3)});
+    stops.push({stopId,...(stopSequence===null?{}:{stopSequence}),arrival:event(2),departure:event(3)});
    }
    if(trips.length>=maxTrips)throw new GTFSRealtimeDecodeError();
    trips.push({tripId:trip,stops});

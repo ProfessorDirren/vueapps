@@ -3,6 +3,15 @@
  * SAME SL Regional dataset. Caller supplies authoritative stop sequence.
  * Neither a destination label nor an unmatched realtime trip is route proof.
  */
+function matchingStopUpdates(updates, stopId, sequence){
+ const matches=(updates||[]).filter(update=>update?.stopId===stopId||
+  (Number.isInteger(sequence)&&update?.stopSequence===sequence));
+ if(matches.length!==1)return [];
+ const [update]=matches;
+ if(update.stopId!=null&&update.stopId!==stopId)return [];
+ if(Number.isInteger(sequence)&&update.stopSequence!=null&&update.stopSequence!==sequence)return [];
+ return matches;
+}
 export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000}={}){
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  // Reject stale, future-dated or missing feed timestamps before evaluating trips.
@@ -25,7 +34,7 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const destinationMatches=ids.flatMap((id,i)=>i>originIndex&&destinationStopIds.has(id)?[i]:[]);
   if(destinationMatches.length!==1)continue;
   const destinationIndex=destinationMatches[0];
-  const originUpdates=trip.stops?.filter(s=>s?.stopId===ids[originIndex])||[];
+  const originUpdates=matchingStopUpdates(trip.stops,ids[originIndex],stops[originIndex]?.sequence);
   if(originUpdates.length!==1)continue;
   const update=originUpdates[0];
   const time=update?.departure?.unixTime;
@@ -40,7 +49,7 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const scheduledStop=stops[originIndex],meta=tripMetadata instanceof Map?tripMetadata.get(trip.tripId)||{}:{};
   // Destination arrival is optional: only accept a unique GTFS-RT stop update
   // for the exact downstream stop in the authenticated static trip sequence.
-  const destinationUpdates=trip.stops?.filter(s=>s?.stopId===ids[destinationIndex])||[];
+  const destinationUpdates=matchingStopUpdates(trip.stops,ids[destinationIndex],stops[destinationIndex]?.sequence);
   const arrivalSeconds=destinationUpdates.length===1?destinationUpdates[0]?.arrival?.unixTime:null;
   const arrivalMs=Number.isSafeInteger(arrivalSeconds)&&arrivalSeconds>0?arrivalSeconds*1000:null;
   const predictedArrival=Number.isSafeInteger(arrivalMs)&&arrivalMs>=departureMs&&arrivalMs<=departureMs+4*60*60*1000?new Date(arrivalMs).toISOString():null;
