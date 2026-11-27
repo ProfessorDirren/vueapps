@@ -50,7 +50,8 @@ export function extractGTFSRealtimeTripEvidence(bytes,{maxTrips=20000,maxStops=1
     stops.push({stopId,...(stopSequence===null?{}:{stopSequence}),arrival:event(2),departure:event(3)});
    }
    if(trips.length>=maxTrips)throw new GTFSRealtimeDecodeError();
-   trips.push({tripId:trip,stops});
+   const startDate=str(bytes,find(descriptorFields,3,2));
+   trips.push({tripId:trip,...(startDate?{startDate}:{}),stops});
   }
   return {status:'trip_evidence_unverified',feedTimestampMs,trips};
  }catch(error){if(error instanceof GTFSRealtimeDecodeError)throw error;throw new GTFSRealtimeDecodeError();}

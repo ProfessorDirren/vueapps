@@ -136,3 +136,18 @@ test('joins sequence-only stop updates and rejects contradictory stop identifier
  assert.equal(prove([{...origin,stopId:'C'},destination]).status,'unavailable');
  assert.equal(prove([origin,{...origin,stopSequence:11,stopId:'J'}]).status,'unavailable');
 });
+
+test('verifies delay-only events against the matching Stockholm service date',()=>{
+ const startDate='20251121';
+ const serviceNow=Date.parse('2025-11-21T09:00:00Z');
+ const tripStops=new Map([['trip-1',[{stop:'J',departureTime:'10:05:00'},{stop:'C',arrivalTime:'10:25:00'}]]]);
+ const stops=[{stopId:'J',departure:{delaySeconds:120}},{stopId:'C',arrival:{delaySeconds:180}}];
+ const prove=(date,events=stops)=>verifyRegionalJourney({...input,tripStops,serviceDate:startDate,now:serviceNow,
+  evidence:{...input.evidence,feedTimestampMs:serviceNow-1000,trips:[{tripId:'trip-1',startDate:date,stops:events}]}});
+ const [departure]=prove(startDate).departures;
+ assert.equal(departure.predictedDeparture,'2025-11-21T09:07:00.000Z');
+ assert.equal(departure.predictedArrival,'2025-11-21T09:28:00.000Z');
+ assert.equal(prove(undefined).status,'unavailable');
+ assert.equal(prove('20251120').status,'unavailable');
+ assert.equal(prove(startDate,[{stopId:'J',departure:{delaySeconds:120,unixTime:serviceNow/1000+360}}]).departures[0].predictedDeparture,'2025-11-21T09:06:00.000Z');
+});

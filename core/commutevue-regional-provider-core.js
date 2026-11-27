@@ -13,7 +13,7 @@ export function matchRegionalRealtimeJourney({staticSnapshot,evidence,originStop
  if(!Number.isFinite(staticSnapshot.validatedAtMs)||staticSnapshot.validatedAtMs>now||now-staticSnapshot.validatedAtMs>24*60*60*1000){
   return {status:'unavailable',reason:'stale_static_snapshot',departures:[]};
  }
- const proof=verifyRegionalJourney({evidence,tripStops:staticSnapshot.tripStops,tripMetadata:staticSnapshot.tripMetadata,originStopIds,destinationStopIds,now,diagnose});
+ const proof=verifyRegionalJourney({evidence,tripStops:staticSnapshot.tripStops,tripMetadata:staticSnapshot.tripMetadata,originStopIds,destinationStopIds,serviceDate:staticSnapshot.serviceDate,now,diagnose});
  if(proof.status!=='route_matched')return {status:'unavailable',reason:proof.reason,departures:[]};
  return {status:'route_matched',reason:proof.reason,feedTimestampMs:proof.feedTimestampMs,departures:proof.departures};
 }

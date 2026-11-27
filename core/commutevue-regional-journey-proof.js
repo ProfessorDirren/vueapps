@@ -1,3 +1,5 @@
+import {stockholmWallClockToInstant} from './commutevue-stockholm-clock.js';
+
 /**
  * Regional GTFS-RT route evidence must be joined to static GTFS from the
  * SAME SL Regional dataset. Caller supplies authoritative stop sequence.
@@ -12,7 +14,18 @@ function matchingStopUpdates(updates, stopId, sequence){
  if(Number.isInteger(sequence)&&update.stopSequence!=null&&update.stopSequence!==sequence)return [];
  return matches;
 }
-export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000,diagnose}={}){
+function stopEventInstant(event, scheduledTime, serviceDate){
+ if(Number.isSafeInteger(event?.unixTime)&&event.unixTime>0)return event.unixTime*1000;
+ if(event?.unixTime!=null||!Number.isSafeInteger(event?.delaySeconds)||!/^\d{8}$/.test(serviceDate||''))return NaN;
+ const clock=/^(\d{2,3}):([0-5]\d):([0-5]\d)$/.exec(scheduledTime||'');
+ if(!clock)return NaN;
+ const day=serviceDate.slice(0,4)+'-'+serviceDate.slice(4,6)+'-'+serviceDate.slice(6);
+ // GTFS time is elapsed from local noon minus 12 hours, including on DST days.
+ const noon=Date.parse(stockholmWallClockToInstant(day+'T12:00:00')||'');
+ const seconds=Number(clock[1])*3600+Number(clock[2])*60+Number(clock[3]);
+ return noon+(seconds+event.delaySeconds-43200)*1000;
+}
+export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,serviceDate,now=Date.now(),maxAgeMs=120000,diagnose}={}){
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  // Reject stale, future-dated or missing feed timestamps before evaluating trips.
  const feedAge=now-evidence.feedTimestampMs;
@@ -23,6 +36,7 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
  for(const trip of evidence.trips)if(typeof trip?.tripId==='string')counts.set(trip.tripId,(counts.get(trip.tripId)||0)+1);
  for(const trip of evidence.trips){
   if(counts.get(trip?.tripId)!==1)continue;
+  if(serviceDate&&trip.startDate&&trip.startDate!==serviceDate)continue;
   const stops=tripStops.get(trip.tripId);
   if(!Array.isArray(stops)||stops.length<2||stops.length>300)continue;
   stages.matchedTrips++;
@@ -42,10 +56,9 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   stages.originUpdates++;
   const update=originUpdates[0];
   if(Number.isSafeInteger(update?.departure?.delaySeconds))stages.departureDelays++;
-  const time=update?.departure?.unixTime;
-  if(!Number.isSafeInteger(time)||time<=0)continue;
-  stages.departureTimes++;
-  const departureMs=time*1000;
+  const datedService=trip.startDate===serviceDate?serviceDate:null;
+  const departureMs=stopEventInstant(update.departure,stops[originIndex]?.departureTime,datedService);
+  if(Number.isSafeInteger(update.departure?.unixTime)&&update.departure.unixTime>0)stages.departureTimes++;
   // Feed freshness alone is insufficient: a fresh feed may include an
   // already departed trip or a prediction far outside the query window.
   if(!Number.isSafeInteger(departureMs)||departureMs<now-120000||departureMs>now+7200000)continue;
@@ -57,8 +70,8 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   // Destination arrival is optional: only accept a unique GTFS-RT stop update
   // for the exact downstream stop in the authenticated static trip sequence.
   const destinationUpdates=matchingStopUpdates(trip.stops,ids[destinationIndex],stops[destinationIndex]?.sequence);
-  const arrivalSeconds=destinationUpdates.length===1?destinationUpdates[0]?.arrival?.unixTime:null;
-  const arrivalMs=Number.isSafeInteger(arrivalSeconds)&&arrivalSeconds>0?arrivalSeconds*1000:null;
+  const arrivalMs=destinationUpdates.length===1
+   ?stopEventInstant(destinationUpdates[0].arrival,stops[destinationIndex]?.arrivalTime,datedService):NaN;
   const predictedArrival=Number.isSafeInteger(arrivalMs)&&arrivalMs>=departureMs&&arrivalMs<=departureMs+4*60*60*1000?new Date(arrivalMs).toISOString():null;
   const delaySeconds=update.departure.delaySeconds;
   const delayMinutes=Number.isSafeInteger(delaySeconds)?Math.max(0,Math.round(delaySeconds/60)):null;
