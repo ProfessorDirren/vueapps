@@ -107,6 +107,26 @@ export async function POST(request){
   // Keep the existing regional provider path unchanged.
   if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
    const national=arrivalDeadline?.invalid?{status:'invalid_arrival_date',trips:[]}:await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline,trainOnly:commuteTransportMode(question)==='TRAIN',directOnly:/\b(?:direkt(?:a)?\s+(?:tåg|fjärrtåg)|direct\s+train|utan\s+byten)\b/iu.test(question),earliestDeparture:!arrivalDeadline&&/\b(?:nästa|next|próximo|prochain|próxima|prochaine)\b/iu.test(question)&&!/\b(?:snabbast|fastest|plus rapide|más rápido|mais rápido)\b/iu.test(question)});
+   // Observe provider coverage for direct train journeys before publishing any joined evidence.
+   const directTrain=national.trips.find(trip=>trip.legs.length===1&&/^J[A-Z]{2}$/.test(trip.legs[0].mode||''))?.legs[0];
+   if(directTrain&&!arrivalDeadline&&process.env.COMMUTVUE_TRAFIKVERKET_SHADOW_ENABLED==='true'){
+    const key=process.env.TRAFIKVERKET_API_KEY;
+    let result={status:'unavailable',reason:key?'unexpected_error':'missing_configuration'};
+    if(key){
+     try{
+      result=await createTrafikverketJourneyProbe({apiKey:key})({from:directTrain.from,to:directTrain.to});
+     }catch{}
+    }
+    const count=value=>Number.isInteger(value)&&value>=0?Math.min(value,60):0;
+    console.info('commutevue_national_trafikverket_shadow',JSON.stringify({
+     status:result.status==='matched'?'matched':'unavailable',
+     reason:/^[a-z_]{1,60}$/.test(result.reason||'')?result.reason:'unknown',
+     matched:count(result.departures?.length),
+     originEstimated:count(result.coverage?.originEstimatedCount),
+     destinationEstimated:count(result.coverage?.destinationEstimatedCount),
+     originCancelled:count(result.coverage?.originCancelledCount)
+    }));
+   }
    const clock=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)?value.slice(11,16):'—';
    const messages={
     sv:{intro:'Planerade resor enligt ResRobot (inte realtid)',unavailable:'ResRobot kunde inte verifiera en nationell resa med entydiga hållplatser just nu.'},
