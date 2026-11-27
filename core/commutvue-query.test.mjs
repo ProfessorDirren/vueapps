@@ -265,3 +265,8 @@ test('separates a follow-up delay clause from the bus destination',()=>{
  assert.equal(journey.to,'Gullmarsplan');
  assert.equal(journey.needsClarification,false);
 });
+
+test('Swedish plural status questions keep the complete destination name',()=>{
+ const journey=parseCommuteQuestion('Stockholm: Vilka bussar från Blockhusudden till Liljevalchs/Gröna Lund är inställda just nu?');
+ assert.equal(journey.to,'Liljevalchs/Gröna Lund');
+});
