@@ -270,3 +270,9 @@ test('Swedish plural status questions keep the complete destination name',()=>{
  const journey=parseCommuteQuestion('Stockholm: Vilka bussar från Blockhusudden till Liljevalchs/Gröna Lund är inställda just nu?');
  assert.equal(journey.to,'Liljevalchs/Gröna Lund');
 });
+
+test('Swedish bus departure compounds select BUS at multimodal stops',()=>{
+ for(const noun of ['bussavgång','bussavgången','bussavgångar','bussavgångarna']){
+  assert.equal(commuteTransportMode('Stockholm: Vilka '+noun+' från Blockhusudden är inställda?'),'BUS');
+ }
+});

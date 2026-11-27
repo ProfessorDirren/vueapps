@@ -71,7 +71,7 @@ export function commuteTransportMode(question){
   ['BOAT',/\b(?:färj(?:a|an|or|orna)|pendelbåt(?:en|ar)?|båt(?:en|ar|arna)|ferry|boat)\b/iu],
   ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
   ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b|(?<![\p{L}\p{N}])metrô(?![\p{L}\p{N}])/iu],
-  ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b|(?<![\p{L}\p{N}])ônibus(?![\p{L}\p{N}])/iu],
+  ['BUS',/\b(?:buss(?:en|ar|arna|avgång(?:en|ar|arna)?)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b|(?<![\p{L}\p{N}])ônibus(?![\p{L}\p{N}])/iu],
   ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|(?:trem|trens)|tren(?:es)?\s+de\s+cercanías|tren(?:es)?)(?=$|[^\p{L}\p{N}])/iu]
  ];
  const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
