@@ -342,9 +342,9 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    // Stop Lookup documents transport_modes on the GROUP, not child stops.
    // A unique TRAIN-capable group is a safe rail candidate; Trips validation
    // still checks that an actual train reaches the requested destination.
-   const rail=group=>Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'].includes(String(mode).toUpperCase()));
    const requested=String(transportMode||'').toUpperCase();
-   const matchesMode=group=>requested==='TRAIN'||!requested?rail(group):Array.isArray(group.transport_modes)&&group.transport_modes.some(mode=>String(mode).toUpperCase()===requested);
+   const matchingModes=requested&&requested!=='TRAIN'?[requested]:['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'];
+   const matchesMode=entry=>Array.isArray(entry?.transport_modes)&&entry.transport_modes.some(mode=>matchingModes.includes(String(mode).toUpperCase()));
    const railAreas=new Set(exact.filter(matchesMode).map(group=>group.id));
    // If metadata cannot distinguish candidates, verify actual platform departures.
    // Bound extra requests and fail closed if any candidate cannot be inspected.
@@ -357,7 +357,9 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
       if(!response.ok||Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)return null;
       const body=await response.text();if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)return null;
       const board=JSON.parse(body);if(!Array.isArray(board?.departures))return null;
-      return {id,match:board.departures.some(row=>platforms.has(row?.stop?.id)&&String(row?.route?.transport_mode||'').toUpperCase()===requested)};
+      const hasMatchingDeparture=board.departures.some(row=>platforms.has(row?.stop?.id)&&matchingModes.includes(String(row?.route?.transport_mode||'').toUpperCase()));
+      const hasMatchingPlatform=Array.isArray(board.stops)&&board.stops.some(stop=>platforms.has(stop?.id)&&matchesMode(stop));
+      return {id,match:hasMatchingDeparture||hasMatchingPlatform};
      }catch{return null;}
     }));
     if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}

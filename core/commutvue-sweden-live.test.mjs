@@ -1086,3 +1086,21 @@ test('explicit metro uses only the exact T-Centralen children of Stockholm',asyn
  }});
  assert.deepEqual(await resolver('T-Centralen','METRO'),{id:'740098000',stopIds:['12275','12736']});
 });
+
+
+test('Jordbro rail platforms can disambiguate exact-name areas before the first departure',async()=>{
+ const groups=[
+  {id:'740000001',name:'Jordbro',stops:[{id:'bus-platform'}]},
+  {id:'740000002',name:'Jordbro',stops:[{id:'rail-platform'}]}
+ ];
+ const busStops=[{id:'bus-platform',transport_modes:['BUS']},{id:'unrelated',transport_modes:['TRAIN']}];
+ const railStops=[{id:'rail-platform',transport_modes:['TRAIN']}];
+ const resolver=createTrafiklabStopResolver({apiKey:'fixture',fetcher:async url=>{
+  const path=new URL(url).pathname;
+  const payload=path.includes('/departures/')?{departures:[],stops:path.endsWith('740000001')?busStops:railStops}:{stop_groups:groups};
+  return {ok:true,text:async()=>JSON.stringify(payload)};
+ }});
+ assert.deepEqual(await resolver('Jordbro','TRAIN'),{id:'740000002',stopIds:['rail-platform']});
+ busStops[0].transport_modes.push('TRAIN');
+ await assert.rejects(resolver('Jordbro','TRAIN'),error=>error.category==='ambiguous_station');
+});
