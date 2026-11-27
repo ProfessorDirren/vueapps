@@ -6,14 +6,14 @@ import {verifyRegionalJourney} from './commutevue-regional-journey-proof.js';
  * This function performs no network I/O and cannot publish unjoined realtime.
  * Static snapshot download, refresh and station resolution are separate concerns.
  */
-export function matchRegionalRealtimeJourney({staticSnapshot,evidence,originStopIds,destinationStopIds,now=Date.now()}={}){
+export function matchRegionalRealtimeJourney({staticSnapshot,evidence,originStopIds,destinationStopIds,now=Date.now(),diagnose}={}){
  if(!staticSnapshot||staticSnapshot.status!=='validated'||!(staticSnapshot.tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!originStopIds.size||!destinationStopIds.size){
   return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  }
  if(!Number.isFinite(staticSnapshot.validatedAtMs)||staticSnapshot.validatedAtMs>now||now-staticSnapshot.validatedAtMs>24*60*60*1000){
   return {status:'unavailable',reason:'stale_static_snapshot',departures:[]};
  }
- const proof=verifyRegionalJourney({evidence,tripStops:staticSnapshot.tripStops,tripMetadata:staticSnapshot.tripMetadata,originStopIds,destinationStopIds,now});
+ const proof=verifyRegionalJourney({evidence,tripStops:staticSnapshot.tripStops,tripMetadata:staticSnapshot.tripMetadata,originStopIds,destinationStopIds,now,diagnose});
  if(proof.status!=='route_matched')return {status:'unavailable',reason:proof.reason,departures:[]};
  return {status:'route_matched',reason:proof.reason,feedTimestampMs:proof.feedTimestampMs,departures:proof.departures};
 }

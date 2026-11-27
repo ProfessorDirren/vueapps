@@ -12,18 +12,20 @@ function matchingStopUpdates(updates, stopId, sequence){
  if(Number.isInteger(sequence)&&update.stopSequence!=null&&update.stopSequence!==sequence)return [];
  return matches;
 }
-export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000}={}){
+export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map(),originStopIds,destinationStopIds,now=Date.now(),maxAgeMs=120000,diagnose}={}){
  if(!evidence||evidence.status!=='trip_evidence_unverified'||!Array.isArray(evidence.trips)||!(tripStops instanceof Map)||!(originStopIds instanceof Set)||!(destinationStopIds instanceof Set)||!Number.isFinite(now)||!Number.isFinite(maxAgeMs)||maxAgeMs<=0)return {status:'unavailable',reason:'missing_static_mapping',departures:[]};
  // Reject stale, future-dated or missing feed timestamps before evaluating trips.
  const feedAge=now-evidence.feedTimestampMs;
  if(!Number.isSafeInteger(evidence.feedTimestampMs)||evidence.feedTimestampMs<=0||!Number.isFinite(feedAge)||feedAge<0||feedAge>maxAgeMs)return {status:'unavailable',reason:'stale_or_missing_feed',departures:[]};
  const departures=[];
+ const stages={feedTrips:evidence.trips.length,staticTrips:tripStops.size,matchedTrips:0,matchedRoutes:0,originUpdates:0,departureTimes:0,departureDelays:0,predictionsInWindow:0};
  const counts=new Map();
  for(const trip of evidence.trips)if(typeof trip?.tripId==='string')counts.set(trip.tripId,(counts.get(trip.tripId)||0)+1);
  for(const trip of evidence.trips){
   if(counts.get(trip?.tripId)!==1)continue;
   const stops=tripStops.get(trip.tripId);
   if(!Array.isArray(stops)||stops.length<2||stops.length>300)continue;
+  stages.matchedTrips++;
   const ids=stops.map(s=>typeof s==='string'?s:s?.stop);
   // A repeated matching stop makes the selected platform/stop occurrence
   // ambiguous without stop_sequence evidence. Fail closed rather than
@@ -34,15 +36,20 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const destinationMatches=ids.flatMap((id,i)=>i>originIndex&&destinationStopIds.has(id)?[i]:[]);
   if(destinationMatches.length!==1)continue;
   const destinationIndex=destinationMatches[0];
+  stages.matchedRoutes++;
   const originUpdates=matchingStopUpdates(trip.stops,ids[originIndex],stops[originIndex]?.sequence);
   if(originUpdates.length!==1)continue;
+  stages.originUpdates++;
   const update=originUpdates[0];
+  if(Number.isSafeInteger(update?.departure?.delaySeconds))stages.departureDelays++;
   const time=update?.departure?.unixTime;
   if(!Number.isSafeInteger(time)||time<=0)continue;
+  stages.departureTimes++;
   const departureMs=time*1000;
   // Feed freshness alone is insufficient: a fresh feed may include an
   // already departed trip or a prediction far outside the query window.
   if(!Number.isSafeInteger(departureMs)||departureMs<now-120000||departureMs>now+7200000)continue;
+  stages.predictionsInWindow++;
   // An event timestamp is a prediction, not a feed freshness timestamp.
   // Do not claim live status until a verified feed header timestamp is supplied.
 
@@ -57,5 +64,6 @@ export function verifyRegionalJourney({evidence,tripStops,tripMetadata=new Map()
   const delayMinutes=Number.isSafeInteger(delaySeconds)?Math.max(0,Math.round(delaySeconds/60)):null;
   departures.push({delayMinutes,tripId:trip.tripId,originStopId:ids[originIndex],destinationStopId:ids[destinationIndex],scheduledDeparture:typeof scheduledStop==='object'?scheduledStop.departureTime||null:null,routeShortName:meta.routeShortName||null,routeLongName:meta.routeLongName||null,tripHeadsign:meta.tripHeadsign||null,tripShortName:meta.tripShortName||null,predictedDeparture:new Date(departureMs).toISOString(),predictedArrival,evidence:'regional_trip_update'});
  }
+ if(!departures.length)diagnose?.(stages);
  return {status:departures.length?'route_matched':'unavailable',reason:departures.length?'fresh_trip_updates':'no_verified_updates',feedTimestampMs:evidence.feedTimestampMs,departures};
 }

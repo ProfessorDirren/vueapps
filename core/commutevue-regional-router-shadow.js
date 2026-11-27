@@ -51,7 +51,7 @@ export async function runRegionalRouterPublication({env={},from,to,now=Date.now(
   const feed=await realtime.tripUpdates();
   if(!(feed?.bytes instanceof Uint8Array))return unavailable('invalid_feed');
   const evidence=extractGTFSRealtimeTripEvidence(feed.bytes);
-  const proof=matchProvisionedRegionalJourney({encodedEnvelope:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,filePath:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE,useBundledSnapshot:env.COMMUTVUE_REGIONAL_SNAPSHOT_SOURCE==='bundled',signingKey:env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,serviceDate:stockholmRegionalDay(now),originStopIds,destinationStopIds,evidence,now});
+  const proof=matchProvisionedRegionalJourney({encodedEnvelope:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_BASE64,filePath:env.COMMUTVUE_REGIONAL_SIGNED_SNAPSHOT_FILE,useBundledSnapshot:env.COMMUTVUE_REGIONAL_SNAPSHOT_SOURCE==='bundled',signingKey:env.COMMUTEVUE_SNAPSHOT_SIGNING_KEY,serviceDate:stockholmRegionalDay(now),originStopIds,destinationStopIds,evidence,now,diagnose:stages=>console.info('commutvue_regional_match_stages',JSON.stringify(stages))});
   return prepareRegionalPublication({proof,enabled:true,now});
  }catch{return unavailable('verification_error');}
 }
