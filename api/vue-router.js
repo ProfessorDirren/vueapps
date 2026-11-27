@@ -154,7 +154,15 @@ export async function POST(request){
     const header=(i+1)+'. '+clock(trip.departure)+'–'+clock(trip.arrival)+duration;
     return header+'\n'+legs.map(leg=>'   '+clock(leg.departure)+' '+cleanStop(leg.from)+' → '+clock(leg.arrival)+' '+cleanStop(leg.to)+(leg.mode?' ('+({'BLT':'Buss','ULT':'Tunnelbana','JST':'Tåg','WALK':({'sv':'Gång','en':'Walk','es':'A pie','fr':'À pied'}[b.language]||'Walk')}[leg.mode]||leg.mode)+')':'')).join('\n');
    };
-   const answer=national.status==='schedule_available'?labels.intro+(arrivalDeadline?' — ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time:'')+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n'):national.status==='no_journeys'&&arrivalDeadline?'Inga verifierade tidtabellsresor uppfyller ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time+'.':national.status==='invalid_arrival_date'?'Ogiltigt ankomstdatum eller klockslag. Ange ett giltigt datum och en tid.':labels.unavailable;
+   const asksLiveStatus=/(?:försening|försenad|försenat|inställd|inställt|inställelse|\b(?:delay(?:ed|s)?|cancel(?:led|ed|lation)|late|retras[oa]s?|cancelad[oa]s?|retard|annul[ée]e?|atras[oa]s?|cancelament[oa]s?)\b)/iu.test(question);
+   const unknownStatus={
+    sv:'Realtidsstatus saknas för de här resorna. Jag kan därför inte bekräfta förseningar eller inställelser.',
+    en:'Live status is unavailable for these journeys. Delays and cancellations could not be confirmed.',
+    es:'No hay datos en tiempo real para estos viajes. No se puede confirmar si hay retrasos o cancelaciones.',
+    fr:'Les données en temps réel sont indisponibles pour ces trajets. Les retards et annulations restent à confirmer.',
+    'pt-BR':'Não há dados em tempo real para essas viagens. Atrasos e cancelamentos não puderam ser confirmados.'
+   };
+   const answer=national.status==='schedule_available'?labels.intro+(arrivalDeadline?' — ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time:'')+'\n\n'+national.trips.map(formatTrip).filter(Boolean).join('\n\n')+(asksLiveStatus?'\n\n'+(unknownStatus[b.language]||unknownStatus.en):''):national.status==='no_journeys'&&arrivalDeadline?'Inga verifierade tidtabellsresor uppfyller ankomst senast '+arrivalDeadline.date+' '+arrivalDeadline.time+'.':national.status==='invalid_arrival_date'?'Ogiltigt ankomstdatum eller klockslag. Ange ett giltigt datum och en tid.':labels.unavailable;
    return respond(200,{domain:'commutvue',answer,kind:national.status==='schedule_available'?'verified_schedule':'local_guidance',verified:false,evidence_status:national.status==='schedule_available'?'schedule_verified':'national_'+national.status,live_diagnostic:'not_attempted',departures:[],source_url:national.status==='schedule_available'?'https://www.trafiklab.se/':null,updated_at:null,disruptions:{status:'unknown',alerts:[]},clarify:national.status==='ambiguous_stop',region:journey.region,workspace:'./?vue=commutvue#vue-router'});
   }
   let live=null;
