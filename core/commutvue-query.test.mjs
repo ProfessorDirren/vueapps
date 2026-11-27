@@ -249,3 +249,12 @@ test('Brazilian Portuguese train requests preserve the Stockholm station pair',(
  assert.equal(journey.region,'stockholm');
  assert.equal(journey.needsClarification,false);
 });
+
+test('keeps Swedish delay and cancellation questions out of the destination name',()=>{
+ for(const status of ['försenat','försenad','inställt','inställd']){
+  const journey=parseCommuteQuestion('Är nästa direkta tåg från Göteborg C till Stockholm Centralstation '+status+'?');
+  assert.equal(journey.from,'Göteborg C');
+  assert.equal(journey.to,'Stockholm Centralstation');
+  assert.equal(journey.unsupportedIntercity,true);
+ }
+});
