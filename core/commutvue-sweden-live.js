@@ -346,24 +346,6 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
    const matchingModes=requested&&requested!=='TRAIN'?[requested]:['TRAIN','RAIL','COMMUTER_RAIL','SUBURBAN_RAIL'];
    const matchesMode=entry=>Array.isArray(entry?.transport_modes)&&entry.transport_modes.some(mode=>matchingModes.includes(String(mode).toUpperCase()));
    const railAreas=new Set(exact.filter(matchesMode).map(group=>group.id));
-   // If metadata cannot distinguish candidates, verify actual platform departures.
-   // Bound extra requests and fail closed if any candidate cannot be inspected.
-   if(requested&&railAreas.size!==1&&exactAreaIds.size<=4){
-    const verified=await Promise.all([...exactAreaIds].map(async id=>{
-     const platforms=new Set(exact.filter(g=>g.id===id).flatMap(g=>g.stops.map(p=>p.id)));
-     const boardUrl=new URL('departures/'+id,ROOT);boardUrl.searchParams.set('key',apiKey);
-     try{
-      const response=await fetcher(boardUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
-      if(!response.ok||Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)return null;
-      const body=await response.text();if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)return null;
-      const board=JSON.parse(body);if(!Array.isArray(board?.departures))return null;
-      const hasMatchingDeparture=board.departures.some(row=>platforms.has(row?.stop?.id)&&matchingModes.includes(String(row?.route?.transport_mode||'').toUpperCase()));
-      const hasMatchingPlatform=Array.isArray(board.stops)&&board.stops.some(stop=>platforms.has(stop?.id)&&matchesMode(stop));
-      return {id,match:hasMatchingDeparture||hasMatchingPlatform};
-     }catch{return null;}
-    }));
-    if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}
-   }
    const areaType=group=>String(group.area_type).toUpperCase().replace('_','');
    if(railAreas.size>1&&requested){
     // A meta-stop can repeat a national stop's exact name and platforms.
@@ -381,6 +363,24 @@ export function createTrafiklabStopResolver({apiKey,fetcher=fetch}={}){
       railAreas.add(nationalId);
      }
     }
+   }
+   // If metadata cannot distinguish candidates, verify actual platform departures.
+   // Bound extra requests and fail closed if any candidate cannot be inspected.
+   if(requested&&railAreas.size!==1&&exactAreaIds.size<=4){
+    const verified=await Promise.all([...exactAreaIds].map(async id=>{
+     const platforms=new Set(exact.filter(g=>g.id===id).flatMap(g=>g.stops.map(p=>p.id)));
+     const boardUrl=new URL('departures/'+id,ROOT);boardUrl.searchParams.set('key',apiKey);
+     try{
+      const response=await fetcher(boardUrl.toString(),{headers:{accept:'application/json'},signal:AbortSignal.timeout(MAX_FETCH_MS)});
+      if(!response.ok||Number(response.headers?.get?.('content-length'))>MAX_RESPONSE_BYTES)return null;
+      const body=await response.text();if(Buffer.byteLength(body,'utf8')>MAX_RESPONSE_BYTES)return null;
+      const board=JSON.parse(body);if(!Array.isArray(board?.departures))return null;
+      const hasMatchingDeparture=board.departures.some(row=>platforms.has(row?.stop?.id)&&matchingModes.includes(String(row?.route?.transport_mode||'').toUpperCase()));
+      const hasMatchingPlatform=Array.isArray(board.stops)&&board.stops.some(stop=>platforms.has(stop?.id)&&matchesMode(stop));
+      return {id,match:hasMatchingDeparture||hasMatchingPlatform};
+     }catch{return null;}
+    }));
+    if(verified.every(Boolean)&&verified.filter(v=>v.match).length===1){railAreas.clear();railAreas.add(verified.find(v=>v.match).id);}
    }
    if(railAreas.size===1){
     const selected=[...railAreas][0];
