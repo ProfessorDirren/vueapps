@@ -114,7 +114,7 @@ export async function POST(request){
     let result={status:'unavailable',reason:key?'unexpected_error':'missing_configuration'};
     if(key){
      try{
-      result=await createTrafikverketJourneyProbe({apiKey:key})({from:directTrain.from,to:directTrain.to});
+      result=await createTrafikverketJourneyProbe({apiKey:key})({from:directTrain.from,to:directTrain.to,arrivalTime:directTrain.arrival});
      }catch{}
     }
     const count=value=>Number.isInteger(value)&&value>=0?Math.min(value,60):0;

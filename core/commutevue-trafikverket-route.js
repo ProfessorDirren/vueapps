@@ -8,7 +8,7 @@ const timestamp=value=>typeof value==='string'&&value.trim()?Date.parse(value):N
 const id=value=>typeof value==='string'||typeof value==='number'?String(value).trim():'';
 const validTrain=value=>/^\d{1,8}$/.test(id(value));
 const validStation=value=>typeof value==='string'&&/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(value);
-export function matchTrafikverketTrainRoute({origin,destination,originSignature,destinationSignature,now=Date.now()}={}){
+export function matchTrafikverketTrainRoute({origin,destination,originSignature,destinationSignature,now=Date.now(),maxJourneyMs=10800000}={}){
  if(!Array.isArray(origin)||!Array.isArray(destination)||!validStation(originSignature)||!validStation(destinationSignature)||originSignature===destinationSignature||!Number.isFinite(now))return [];
  const cancelledDepartures=new Set(origin.filter(o=>o?.Canceled===true&&o?.LocationSignature===originSignature&&o?.ActivityType==='Avgang'&&validTrain(id(o.AdvertisedTrainIdent))&&Number.isFinite(timestamp(o.AdvertisedTimeAtLocation))).map(o=>id(o.AdvertisedTrainIdent)+'|'+timestamp(o.AdvertisedTimeAtLocation)));
  const cancelledArrivals=new Set(destination.filter(d=>d?.Canceled===true&&d?.LocationSignature===destinationSignature&&d?.ActivityType==='Ankomst'&&validTrain(id(d.AdvertisedTrainIdent))&&Number.isFinite(timestamp(d.AdvertisedTimeAtLocation))).map(d=>id(d.AdvertisedTrainIdent)+'|'+timestamp(d.AdvertisedTimeAtLocation)));
@@ -35,7 +35,7 @@ export function matchTrafikverketTrainRoute({origin,destination,originSignature,
   // Train identity and chronological stop order establish the same journey,
   // including services that legitimately cross Swedish midnight.
   // A strict calendar-date equality would discard those journeys.
-  const later=[...(destinationByTrain.get(train)||[])].map(x=>JSON.parse(x)).filter(x=>x.planned>advertised&&x.planned-advertised<=10800000);
+  const later=[...(destinationByTrain.get(train)||[])].map(x=>JSON.parse(x)).filter(x=>x.planned>advertised&&x.planned-advertised<=maxJourneyMs);
   if(later.length!==1||cancelledDepartures.has(train+'|'+advertised)||cancelledArrivals.has(train+'|'+later[0].planned))continue;
   const originKey=train+'|'+advertised;
   // Conflicting forecasts for the same departure cannot be resolved safely.

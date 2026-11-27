@@ -1,3 +1,4 @@
+import {stockholmWallClockToInstant} from './commutevue-stockholm-clock.js';
 /**
  * Server-only Trafikverket API client for COMMUTEVUE.
  * This module does not publish departures until a route is independently verified.
@@ -30,10 +31,13 @@ export function createTrafikverketClient({apiKey,fetcher=fetch}={}){
   if(matches.length!==1)throw new TrafikverketError(matches.length?'ambiguous_station':'station_not_found');
   return matches[0].LocationSignature;
  }
- async function announcementsAt(signature,activity){
+ async function announcementsAt(signature,activity,arrivalTime){
   if(!/^[A-Za-zÅÄÖåäö0-9]{1,12}$/.test(signature))throw new TrafikverketError('invalid_signature');
   if(!['Avgang','Ankomst'].includes(activity))throw new TrafikverketError('invalid_activity');
-  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="'+activity+'"/><GT name="AdvertisedTimeAtLocation" value="$dateadd(-00:02:00)"/><LT name="AdvertisedTimeAtLocation" value="$dateadd(02:00:00)"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','PlannedEstimatedTimeAtLocation','PlannedEstimatedTimeAtLocationIsValid','TimeAtLocation','LocationSignature','Canceled','Deviation','ToLocation' ,'ViaToLocation','ModifiedTime'],60);
+  const arrival=arrivalTime?Date.parse(stockholmWallClockToInstant(arrivalTime)||''):NaN;
+  const lower=Number.isFinite(arrival)?new Date(arrival-30*60000).toISOString():'$dateadd(-00:02:00)';
+  const upper=Number.isFinite(arrival)?new Date(arrival+30*60000).toISOString():'$dateadd(02:00:00)';
+  return query('TrainAnnouncement','1.9','<AND><EQ name="LocationSignature" value="'+xmlEscape(signature)+'"/><EQ name="ActivityType" value="'+activity+'"/><GT name="AdvertisedTimeAtLocation" value="'+lower+'"/><LT name="AdvertisedTimeAtLocation" value="'+upper+'"/></AND>',['ActivityType','AdvertisedTrainIdent','AdvertisedTimeAtLocation','EstimatedTimeAtLocation','PlannedEstimatedTimeAtLocation','PlannedEstimatedTimeAtLocationIsValid','TimeAtLocation','LocationSignature','Canceled','Deviation','ToLocation' ,'ViaToLocation','ModifiedTime'],60);
  }
- return {station,departuresAt:signature=>announcementsAt(signature,'Avgang'),arrivalsAt:signature=>announcementsAt(signature,'Ankomst')};
+ return {station,departuresAt:signature=>announcementsAt(signature,'Avgang'),arrivalsAt:(signature,arrivalTime)=>announcementsAt(signature,'Ankomst',arrivalTime)};
 }
