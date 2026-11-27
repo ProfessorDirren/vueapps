@@ -186,3 +186,10 @@ test('national shorthand resolves to uniquely identified Tyresö centrum and Gö
  assert.equal(result.status,'no_journeys');
  assert.deepEqual(lookups.sort(),['Göteborg Centralstation','Tyresö','Tyresö centrum']);
 });
+
+test('next departure ranks trips by departure time before journey duration',()=>{
+ const trip=(departure,arrival)=>({legs:[{from:'Stockholm',to:'Göteborg',departure:'2026-11-27T'+departure,arrival:'2026-11-27T'+arrival}]});
+ const early=trip('15:48','19:35'),fast=trip('16:08','19:47');
+ assert.deepEqual(rankResRobotTrips([fast,early],{earliestDeparture:true}),[early,fast]);
+ assert.deepEqual(rankResRobotTrips([early,fast]),[fast,early]);
+});

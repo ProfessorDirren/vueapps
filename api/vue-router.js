@@ -106,7 +106,7 @@ export async function POST(request){
   // National journeys use ResRobot timetable evidence; never label these as realtime.
   // Keep the existing regional provider path unchanged.
   if(journey.unsupportedIntercity&&journey.from&&journey.to&&process.env.RESROBOT_API_KEY){
-   const national=arrivalDeadline?.invalid?{status:'invalid_arrival_date',trips:[]}:await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline});
+   const national=arrivalDeadline?.invalid?{status:'invalid_arrival_date',trips:[]}:await planNationalSwedenJourney(journey.from,journey.to,{apiKey:process.env.RESROBOT_API_KEY,arriveBy:arrivalDeadline,earliestDeparture:!arrivalDeadline&&/\b(?:nästa|next|próximo|prochain|próxima|prochaine)\b/iu.test(question)&&!/\b(?:snabbast|fastest|plus rapide|más rápido|mais rápido)\b/iu.test(question)});
    const clock=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)?value.slice(11,16):'—';
    const messages={
     sv:{intro:'Planerade resor enligt ResRobot (inte realtid)',unavailable:'ResRobot kunde inte verifiera en nationell resa med entydiga hållplatser just nu.'},
