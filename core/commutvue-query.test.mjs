@@ -258,3 +258,10 @@ test('keeps Swedish delay and cancellation questions out of the destination name
   assert.equal(journey.unsupportedIntercity,true);
  }
 });
+
+test('separates a follow-up delay clause from the bus destination',()=>{
+ const journey=parseCommuteQuestion('Vilka är de nästa bussavgångarna från Tyresö Centrum till Gullmarsplan och är någon försenad?');
+ assert.equal(journey.from,'Tyresö Centrum');
+ assert.equal(journey.to,'Gullmarsplan');
+ assert.equal(journey.needsClarification,false);
+});
