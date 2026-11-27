@@ -44,7 +44,10 @@ export async function POST(request){
  let route=routeQuestion(question,b.previous);
  // Ask before interpreting an uncertain domain-changing typo; never run a provider on a guess.
  if(!b.image&&!route.clarify&&!(route.domain==='anivue'&&urgentFollowup('anivue',question,routingFields('anivue',question),b.language))){
-  const candidates=suggestVueIntent(question);
+  const commute=route.domain==='commutvue'?parseCommuteQuestion(question):null;
+  const endpoints=commute&&!commute.needsClarification?[commute.from,commute.to]:[];
+  const candidates=suggestVueIntent(question).filter(candidate=>!endpoints.some(stop=>
+   stop?.toLocaleLowerCase().split(/[^\p{L}\p{N}]+/u).includes(candidate.original.toLocaleLowerCase())));
   if(candidates.length===1){
    const candidate=candidates[0];
    const prompt=b.language==='sv'?'Menade du':b.language==='es'?'¿Quisiste decir':b.language==='fr'?'Vouliez-vous dire':'Did you mean';
