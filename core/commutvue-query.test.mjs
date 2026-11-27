@@ -240,3 +240,12 @@ test('Spanish commuter rail wording keeps the train type out of the origin',()=>
   assert.equal(journey.needsClarification,false);
  }
 });
+
+test('Brazilian Portuguese train requests preserve the Stockholm station pair',()=>{
+ const question='Quando sai o próximo trem de Jordbro para Stockholm City?';
+ const journey=parseCommuteQuestion(question);
+ assert.equal(journey.from,'Jordbro');
+ assert.equal(journey.to,'Stockholm City');
+ assert.equal(journey.region,'stockholm');
+ assert.equal(journey.needsClarification,false);
+});

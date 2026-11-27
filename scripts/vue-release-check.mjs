@@ -10,7 +10,7 @@ import {SPECIALISTS} from '../core/specialists.js';
 import {routeQuestion} from '../core/router.js';
 import {VUE_NAMES,localizedVueName,hasLocalizedVueName} from '../core/vue-names.js';
 
-export const RELEASE_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa']);
+export const RELEASE_LANGUAGES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','pt-BR']);
 export function preflightVue(id,question){
  const problems=[];
  if(typeof id!=='string'||!Object.hasOwn(SPECIALISTS,id))problems.push('Specialist not registered in VUECORE');
@@ -44,7 +44,7 @@ if(invoked){
   for(const issue of preflight.problems)console.error('BLOCKED: '+issue);
   process.exitCode=1;
  }else{
-  console.log('VUE preflight OK: '+(id==='--all'?'all registered specialists':id)+'; 11 language names checked.');
+  console.log('VUE preflight OK: '+(id==='--all'?'all registered specialists':id)+'; '+RELEASE_LANGUAGES.length+' language names checked.');
   const result=spawnSync(process.execPath,['--test','core/*.test.mjs'],{stdio:'inherit',shell:true});
   if(result.error){console.error(result.error.message);process.exitCode=1;}
   else if(result.status!==0){console.error('BLOCKED: regression tests failed');process.exitCode=1;}

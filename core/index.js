@@ -12,7 +12,7 @@ export const MEDIA_CAPTURE = Object.freeze({
 });
 
 export const IMAGE_TYPES = Object.freeze(["image/jpeg","image/png","image/webp","image/heic","image/heif"]);
-export const LANGUAGES = Object.freeze(["en","sv","es","fr","hi","zh-CN","ru","ar","el","tr","fa","it"]);
+export const LANGUAGES = Object.freeze(["en","sv","es","fr","hi","zh-CN","ru","ar","el","tr","fa","it","pt-BR"]);
 /** VUECORE is the sole authority for supported language codes. */
 export function validateLanguage(language) {
   if (!LANGUAGES.includes(language)) throw new VueCoreError("invalid_language","Unsupported language");

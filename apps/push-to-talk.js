@@ -1,9 +1,10 @@
 // Shared VUECORE push-to-talk. Never sends a question automatically.
-const locales={en:'en-US',sv:'sv-SE',es:'es-ES',hi:'hi-IN','zh-CN':'zh-CN',ru:'ru-RU',ar:'ar-SA',fr:'fr-FR',el:'el-GR',tr:'tr-TR',fa:'fa-IR',it:'it-IT'};
+const locales={en:'en-US',sv:'sv-SE',es:'es-ES',hi:'hi-IN','zh-CN':'zh-CN',ru:'ru-RU',ar:'ar-SA',fr:'fr-FR',el:'el-GR',tr:'tr-TR',fa:'fa-IR',it:'it-IT','pt-BR':'pt-BR'};
 export const SPEECH_LABELS={
  en:['Start speaking','Stop recording','Microphone off','Listening — press again to stop','Speech recognition unavailable in this browser','Microphone permission denied','Listening stopped by browser. Tap to try again'],
  sv:['Börja prata','Stoppa inspelning','Mikrofon av','Lyssnar – tryck igen för att stoppa','Taligenkänning stöds inte i webbläsaren','Mikrofonåtkomst nekad','Webbläsaren stoppade lyssningen. Tryck för att försöka igen'],
  es:['Empezar a hablar','Detener grabación','Micrófono apagado','Escuchando: pulsa otra vez para detener','El navegador no admite reconocimiento de voz','Permiso del micrófono denegado','El navegador detuvo la escucha. Pulsa para reintentar'],
+ 'pt-BR':["Começar a falar", "Parar gravação", "Microfone desligado", "Ouvindo. Pressione novamente para parar.", "Reconhecimento de voz indisponível", "Acesso ao microfone negado", "O navegador parou de ouvir. Pressione para tentar novamente."],
  it:['Inizia a parlare','Interrompi registrazione','Microfono spento','In ascolto: premi di nuovo per fermare','Riconoscimento vocale non disponibile','Accesso al microfono negato','Il browser ha interrotto l’ascolto. Premi per riprovare'],
 "fr":["Commencer à parler","Arrêter l’enregistrement","Microphone désactivé","Écoute en cours — appuyez pour arrêter","Reconnaissance vocale indisponible dans ce navigateur","Accès au microphone refusé","Écoute interrompue. Appuyez pour réessayer"],
 "tr":["Konuşmaya başla","Kaydı durdur","Mikrofon kapalı","Dinleniyor — durdurmak için tekrar dokunun","Bu tarayıcıda konuşma tanıma kullanılamıyor","Mikrofon izni reddedildi","Dinleme durdu. Tekrar deneyin"],

@@ -4,8 +4,8 @@ import {preflightVue,RELEASE_LANGUAGES} from '../scripts/vue-release-check.mjs';
 import {SPECIALISTS} from './specialists.js';
 import {VUE_NAMES} from './vue-names.js';
 
-test('release gate checks every registered specialist in all eleven languages',()=>{
- assert.equal(RELEASE_LANGUAGES.length,11);
+test('release gate checks every registered specialist in all release languages',()=>{
+ assert.equal(RELEASE_LANGUAGES.length,12);
  assert.deepEqual([...VUE_NAMES].sort(),Object.keys(SPECIALISTS).sort());
  for(const id of Object.keys(SPECIALISTS)){
   assert.deepEqual(preflightVue(id,null),{ok:true,problems:[]},id);

@@ -13,8 +13,8 @@ test('video input shared limits and supported formats',()=>{
  assert.equal(isValidVideo({type:'video/mp4',size:1.5}),false);
  assert.equal(isValidVideo({type:'video/mp4',size:'1024'}),false);
 });
-test('video controls localized across all twelve VUECORE languages',()=>{
- assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','it'].sort());
+test('video controls localized across all thirteen VUECORE languages',()=>{
+ assert.deepEqual(Object.keys(VIDEO_LABELS).sort(),['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','it','pt-BR'].sort());
  for(const labels of Object.values(VIDEO_LABELS)){assert.equal(labels.length,6);assert.ok(labels.every(s=>typeof s==='string'&&s.trim().length>0));}
 });
 

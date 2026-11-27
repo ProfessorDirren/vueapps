@@ -6,6 +6,7 @@ export class PortalVueHelp extends VueHelp {
     super({
       id: 'vuecore',
       translations: {
+        'pt-BR': { title: 'Ajuda do VUECORE', button: 'Ajuda', close: 'Fechar ajuda' },
         en: { title: 'VUECORE help', button: 'Help', close: 'Close help' },
         es: { title: 'Ayuda de VUECORE', button: 'Ayuda', close: 'Cerrar ayuda' },
         sv: { title: 'Hjälp för VUECORE', button: 'Hjälp', close: 'Stäng hjälp' },
@@ -15,6 +16,7 @@ export class PortalVueHelp extends VueHelp {
         ar: { title: 'مساعدة VUECORE', button: 'المساعدة', close: 'إغلاق المساعدة' },
       },
       topics: {
+        'pt-BR': [{ title: 'Primeiros passos', body: 'Descreva o que você precisa com suas próprias palavras. O VUECORE ajuda a encontrar o especialista certo.' }, { title: 'Especialistas', body: 'Cada VUE oferece ajuda especializada. Os recursos variam e a análise de fotos e vídeos depende do especialista.' }],
         en: [{ title: 'Get started', body: 'Describe what you need in your own words. VUECORE helps you find the right specialist.' }, { title: 'Specialists', body: 'Each VUE offers topic-specific assistance. Features vary; do not assume photos or videos are analyzed.' }],
         es: [{ title: 'Primeros pasos', body: 'Describe lo que necesitas con tus propias palabras. VUECORE te ayuda a encontrar el especialista adecuado.' }, { title: 'Especialistas', body: 'Cada VUE ofrece ayuda especializada. Las funciones varían; no presupongas que se analizan fotos o vídeos.' }],
         sv: [{ title: 'Kom igång', body: 'Beskriv med egna ord vad du behöver. VUECORE hjälper dig hitta rätt specialist.' }, { title: 'Specialister', body: 'Varje VUE ger specialiserad hjälp. Funktionerna varierar; utgå inte från att bilder eller video analyseras.' }],

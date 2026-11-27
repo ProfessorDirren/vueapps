@@ -8,7 +8,7 @@ import {detectVueInputLanguage} from './vuecore-language.js';
 import {RELEASE_LANGUAGES} from '../scripts/vue-release-check.mjs';
 import {routes,negatives,languages} from './regression-cases.mjs';
 
-test('REGRESSION: all registered specialists have all 11 language names',()=>{
+test('REGRESSION: all registered specialists have all release language names',()=>{
  const ids=Object.keys(SPECIALISTS);
  assert.ok(ids.length);
  for(const id of ids){
@@ -20,7 +20,7 @@ test('REGRESSION: all registered specialists have all 11 language names',()=>{
  }
  for(const id of VUE_NAMES)assert.ok(Object.hasOwn(SPECIALISTS,id),'orphaned display name: '+id);
 });
-test('REGRESSION: catalog integrity and all 11 language fixtures',()=>{
+test('REGRESSION: catalog integrity and all release language fixtures',()=>{
  const keys=[...routes.map(c=>c[0]),...negatives.map(c=>c[0]),...languages.map(c=>'lang-'+c[0])];
  assert.equal(new Set(keys).size,keys.length);
  assert.deepEqual(new Set(languages.map(c=>c[0])),new Set(RELEASE_LANGUAGES));

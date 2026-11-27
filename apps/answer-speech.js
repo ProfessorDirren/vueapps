@@ -5,6 +5,7 @@ const messages={
  en:['Listen to answer','Stop reading','Speech playback is unavailable on this device','No matching voice installed; using device default'],
  sv:['Lyssna på svaret','Stoppa uppläsning','Uppläsning stöds inte på enheten','Ingen passande röst installerad; använder enhetens standardröst'],
  es:['Escuchar respuesta','Detener lectura','La lectura en voz alta no está disponible','No hay voz compatible instalada; se usa la voz predeterminada'],
+ 'pt-BR':["Ouvir resposta", "Parar leitura", "Leitura em voz alta indisponível", "Nenhuma voz compatível instalada. Usando a voz padrão."],
  it:['Ascolta la risposta','Interrompi lettura','La lettura vocale non è disponibile','Nessuna voce adatta installata; uso la voce predefinita'],
  fr:['Écouter la réponse','Arrêter la lecture','Lecture vocale indisponible','Aucune voix adaptée ; voix par défaut'],
  el:['Ακρόαση απάντησης','Διακοπή ανάγνωσης','Η εκφώνηση δεν είναι διαθέσιμη','Δεν υπάρχει κατάλληλη φωνή'],

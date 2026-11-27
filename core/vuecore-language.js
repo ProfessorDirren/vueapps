@@ -1,5 +1,6 @@
 /** Shared VUECORE input-language detection. Conservative: retain UI locale when uncertain. */
 const markers=Object.freeze({
+ 'pt-BR':["você", "vocês", "português", "brasileiro", "obrigado", "obrigada", "cachorro", "cachorra", "doente", "ajuda", "preciso", "gostaria", "estou", "quanto", "pode", "fazer", "frango", "forno", "receita", "cozinhar", "ônibus", "trem", "trens", "estação", "próximo", "próxima", "metrô", "horário", "funciona", "não", "meu", "minha", "onde", "saída", "chegada", "atraso", "respirar", "freios", "língua", "quero"],
  it:['ciao','come','posso','usare','italiano','italiana','grazie','aiuto','vorrei','bisogno','quando','dove','perché'],
  sv:['hur','länge','ska','från','till','nästa','kycklingen','ugnen','varmluftsugnen','vilken','bussen','försenad','min','hund','svårt','andas','när','går','buss','tåg','tåget','pendeltåg','förseningar','station','avgår','var','är','trafiken'],
  en:['how','long','should','from','next','chicken','oven','when','does','train','where','please','bus','departure','late','station','is','the','today'],
@@ -24,7 +25,7 @@ export function detectVueInputLanguage(question,fallback='en'){
  const words=value.match(/[\p{L}]+/gu)||[];
  if(!words.length)return fallback;
  const scores=Object.entries(markers).map(([lang,terms])=>({
-  lang,score:terms.filter(term=>words.includes(term)||(!term.includes(' ')&&term.length>2&&value.includes(term)&&!['sv','en','es','fr','tr'].includes(lang))).length
+  lang,score:terms.filter(term=>words.includes(term)||(!term.includes(' ')&&term.length>2&&value.includes(term)&&!['sv','en','es','fr','tr','pt-BR'].includes(lang))).length
  })).sort((a,b)=>b.score-a.score);
  // Avoid guessing between closely related languages or short, contextless messages.
  if(scores[0].score<2||scores[0].score===scores[1].score)return fallback;

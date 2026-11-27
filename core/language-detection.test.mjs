@@ -1,3 +1,4 @@
+import {detectInputLanguage} from "./language-detection.js";
 import test from 'node:test';import assert from 'node:assert/strict';import {detectInputLanguage as detect} from './language-detection.js';
 test('VUECORE detects Swedish, Spanish and English',()=>{
  assert.equal(detect('Min hund är sjuk och behöver hjälp'),'sv');
@@ -103,4 +104,9 @@ test('all twelve VUE languages detect unambiguous commuting questions',()=>{
 test('shared Spanish hasta and Turkish hasta cannot hijack a dominant language',()=>{
  assert.equal(detect('Muéstrame los próximos trenes de cercanías desde la estación de Jordbro hasta Stockholm City. Comprueba los retrasos y responde en español.'),'es');
  assert.equal(detect('Merhaba köpek hasta yardım'),'tr');
+});
+
+test('detects Brazilian Portuguese as the first input language',()=>{
+ assert.equal(detectInputLanguage('Quanto tempo preciso cozinhar o frango no forno?'),'pt-BR');
+ assert.equal(detectInputLanguage('Quando sai o próximo trem de Jordbro para Stockholm City?'),'pt-BR');
 });

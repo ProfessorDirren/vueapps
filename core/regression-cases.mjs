@@ -16,6 +16,7 @@ export const negatives=[
  ['chicken-bus','När går nästa kyckling i ugnen från Tyresö Centrum till Gullmarsplan?']
 ];
 export const languages=[
+ ['pt-BR','Quanto tempo preciso cozinhar o frango no forno?'],
  ['sv','Hur länge ska kycklingen vara i varmluftsugnen?'],
  ['en','How long should chicken stay in the oven?'],
  ['es','¿Cuánto tiempo necesita el pollo en el horno?'],

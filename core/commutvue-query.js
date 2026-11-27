@@ -13,6 +13,7 @@ const escapeRegex=value=>[...value].map(ch=>'.*+?^$()|[]{}\\'.includes(ch)?'\\'+
 const expansionHints=Object.fromEntries(Object.entries(COMMUT_EXPANSION_REGIONS).map(([id,region])=>[id,new RegExp('(?:^|[^\\p{L}\\p{N}])(?:'+region.hints.map(escapeRegex).join('|')+')(?:$|[^\\p{L}\\p{N}])','iu')]));
 const ALL_REGION_HINTS=Object.freeze({...COMMUT_REGION_HINTS,...expansionHints});
 const PATTERNS=[
+ /(?<![\p{L}\p{N}])(?:trem|trens|ônibus|metrô)\s+(?:de|da|do)\s+(.+?)\s+(?:para|até)\s+(.+?)(?=[?.!,]|$)/iu,
  // Turkish proper-noun case suffixes: Jordbro'dan Stockholm City'ye (from ... to ...).
  /([\p{L}][\p{L}\p{N} -]*?)['’](?:dan|den|tan|ten)\s+([\p{L}][\p{L}\p{N} -]*?)['’](?:a|e|ya|ye)(?=\s|[?.!,]|$)/iu,
  // French: de Jordbro à Stockholm City; preserve named stops, never infer missing endpoints.
@@ -69,9 +70,9 @@ export function commuteTransportMode(question){
  const modes=[
   ['BOAT',/\b(?:färj(?:a|an|or|orna)|pendelbåt(?:en|ar)?|båt(?:en|ar|arna)|ferry|boat)\b/iu],
   ['TRAM',/\b(?:spårvagn(?:en|ar|arna)?|tram(?:s)?)\b/iu],
-  ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b/iu],
-  ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b/iu],
-  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|tren(?:es)?\s+de\s+cercanías|tren(?:es)?)(?=$|[^\p{L}\p{N}])/iu]
+  ['METRO',/\b(?:tunnelban(?:a|an)|t-bana(?:n)?|metro|subway)\b|(?<![\p{L}\p{N}])metrô(?![\p{L}\p{N}])/iu],
+  ['BUS',/\b(?:buss(?:en|ar|arna)?|expressbuss(?:en|ar)?|regionalbuss(?:en|ar)?|bus(?:es)?)\b|(?<![\p{L}\p{N}])ônibus(?![\p{L}\p{N}])/iu],
+  ['TRAIN',/\b(?:pendeltåg(?:et|en)?|regionaltåg(?:et|en)?|fjärrtåg(?:et|en)?|tåg(?:et|en)?|train(?:s)?|(?:trem|trens)|tren(?:es)?\s+de\s+cercanías|tren(?:es)?)(?=$|[^\p{L}\p{N}])/iu]
  ];
  const found=modes.filter(([,pattern])=>pattern.test(q)).map(([mode])=>mode);
  return found.length===1?found[0]:null;

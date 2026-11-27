@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-test("homepage retains all twelve language choices and descriptive labels",()=>{
+test("homepage retains all thirteen language choices and descriptive labels",()=>{
  const expected=[
   ['en','English'],['es','Español'],['sv','Svenska'],['hi','हिन्दी (Hindi)'],
-  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)'],['el','Ελληνικά (Greek)'],['tr','Türkçe (Turkish)'],['fa','فارسی (Persian)'],['fr','Français (French)'],['it','Italiano (Italian)']
+  ['zh-CN','简体中文 (Chinese)'],['ru','Русский (Russian)'],['ar','العربية (Arabic)'],['el','Ελληνικά (Greek)'],['tr','Türkçe (Turkish)'],['fa','فارسی (Persian)'],['fr','Français (French)'],['pt-BR','Português (Brasil)'],['it','Italiano (Italian)']
  ];
  const options=[...html.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)].map(m=>[m[1],m[2]]);
  assert.deepEqual(options,expected);
@@ -47,7 +47,7 @@ test("all standalone specialist interfaces share one explicit language key",()=>
 });
 
 test("newly added languages keep specialist navigation inside localized VUECORE",()=>{
- assert.match(html,/extendedOnlyLanguages=new Set\(\["el","tr","fa","fr"\]\)/);
+ assert.match(html,/extendedOnlyLanguages=new Set\(\["el","tr","fa","fr","pt-BR"\]\)/);
  assert.match(html,/specialistPageDomains\.has\(domain\)/);
  assert.match(html,/location\.assign\("\.\/\?vue="\+encodeURIComponent\(domain\)\+"#vue-router"\)/);
  assert.match(html,/if\(!extendedOnlyLanguages\.has\(language\)\)return/);

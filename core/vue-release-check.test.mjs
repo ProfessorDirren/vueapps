@@ -5,7 +5,7 @@ import {preflightVue,RELEASE_LANGUAGES} from '../scripts/vue-release-check.mjs';
 test('one-command gate accepts a correctly registered and routed VUE',()=>{
  const result=preflightVue('anivue','min hund är sjuk');
  assert.deepEqual(result,{ok:true,problems:[]});
- assert.equal(RELEASE_LANGUAGES.length,11);
+ assert.equal(RELEASE_LANGUAGES.length,12);
 });
 test('one-command gate fails closed on missing or incorrectly routed specialists',()=>{
  assert.equal(preflightVue('imaginaryvue','test question').ok,false);

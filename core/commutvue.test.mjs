@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {COMMUT_LOCALES,COMMUT_MESSAGES,COMMUT_PROVIDERS,commuteLocale,normalizeDeparture,normalizeTrafficResult,queryCommute} from './commutvue.js';
 test('COMMUTVUE supports every portal language',()=>{
- assert.equal(COMMUT_LOCALES.length,11);
+ assert.equal(COMMUT_LOCALES.length,12);
  for(const locale of COMMUT_LOCALES){assert.equal(COMMUT_MESSAGES[locale].length,8);assert.ok(COMMUT_MESSAGES[locale][0]);}
  assert.equal(commuteLocale('xx'),'en');
 });
@@ -47,7 +47,7 @@ test('departure identity must include provider trip ID, line and destination',()
 });
 
 test('all eleven commute locales preserve distinct translated status labels across specialist transitions',()=>{
- const keys=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa'];
+ const keys=['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','pt-BR'];
  assert.deepEqual(COMMUT_LOCALES,keys);
  const english=COMMUT_MESSAGES.en;
  for(const locale of keys){

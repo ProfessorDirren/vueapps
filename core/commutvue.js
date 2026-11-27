@@ -6,8 +6,9 @@ import {createProviderRegistry} from './provider-registry.js';
  * No fabricated departures: unknown and unavailable are explicit states.
  * Credentials are server-side only; callers must supply a provider adapter.
  */
-export const COMMUT_LOCALES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa']);
+export const COMMUT_LOCALES=Object.freeze(['en','es','sv','hi','zh-CN','ru','ar','fr','el','tr','fa','pt-BR']);
 export const COMMUT_MESSAGES=Object.freeze({
+ 'pt-BR':['Dados de transporte em tempo real indisponíveis.','Nenhuma partida verificada foi encontrada.','Fonte','Atualização','Programado','Previsto','Cancelado','Atraso'],
  en:['Live traffic data is unavailable.','No verified departures found.','Source','Updated','Scheduled','Expected','Cancelled','Delay'],
  es:['No hay datos de tráfico en tiempo real.','No se encontraron salidas verificadas.','Fuente','Actualizado','Programado','Previsto','Cancelado','Retraso'],
  sv:['Trafikdata i realtid är inte tillgänglig.','Inga verifierade avgångar hittades.','Källa','Uppdaterad','Tidtabell','Beräknad','Inställd','Försening'],

@@ -17,7 +17,7 @@ if (helpHost) {
   // Shared VUECORE navigation follows the same language lifecycle as HELP.
   const homeLabels = {
     en: 'HOME', sv: 'HEM', es: 'INICIO', fr: 'ACCUEIL',
-    it: 'INIZIO', hi: 'होम', 'zh-CN': '首页', ru: 'ГЛАВНАЯ',
+    'pt-BR': 'INÍCIO', it: 'INIZIO', hi: 'होम', 'zh-CN': '首页', ru: 'ГЛАВНАЯ',
     ar: 'الرئيسية', el: 'ΑΡΧΙΚΗ', tr: 'ANA SAYFA', fa: 'خانه'
   };
   const renderHome = () => {
