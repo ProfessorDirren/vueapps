@@ -476,3 +476,47 @@ test('Maria short Spanish antes de las deadline reaches provider and shows safe 
   if(oldKey===undefined)delete process.env.RESROBOT_API_KEY;else process.env.RESROBOT_API_KEY=oldKey;
  }
 });
+
+test('COMMUTVUE shows an SL cancellation for the same verified Blockhusudden bus departure',async t=>{
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-11-27T16:10:00Z')});
+ t.mock.method(globalThis,'fetch',async url=>{
+  const {hostname,pathname}=new URL(url);
+  let data;
+  if(hostname==='transport.integration.sl.se'){
+   data={departures:[
+    {stop_area:{id:11054},line:{designation:'67',transport_mode:'BUS'},destination:'Frösundavik',direction:'Odenplan',scheduled,state:'CANCELLED'}
+   ]};
+  }else if(pathname.includes('/stops/name/')){
+   const origin=pathname.endsWith('/Blockhusudden');
+   const name=origin?'Blockhusudden':'Liljevalchs/Gröna Lund';
+   data={stop_groups:[{id:origin?'740000001':'740000002',name,stops:[{id:origin?'stop1':'stop2',name}]}]};
+  }else if(pathname.includes('/departures/')){
+   data={timestamp:wall(now),departures:[{trip,stop:{id:'stop1'},is_realtime:false,scheduled,route:{designation:'67',direction:'Frösundavik via Odenplan',transport_mode:'BUS',transport_mode_code:700}}]};
+  }else{
+   data={timestamp:wall(now),trip,calls:[{stop:{id:'stop1',area_id:'740000001',name:'Blockhusudden'}},{stop:{id:'stop2',area_id:'740000002',name:'Liljevalchs/Gröna Lund'}}]};
+  }
+  return Response.json(data);
+ });
+ const oldKey=process.env.TRAFIKLAB_API_KEY,oldFlag=process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;
+ t.after(()=>{
+  if(oldKey===undefined)delete process.env.TRAFIKLAB_API_KEY;else process.env.TRAFIKLAB_API_KEY=oldKey;
+  if(oldFlag===undefined)delete process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED;else process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED=oldFlag;
+ });
+ process.env.TRAFIKLAB_API_KEY='fixture';
+ process.env.COMMUTVUE_SWEDEN_LIVE_ENABLED='true';
+ const now=new Date();
+ const local=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+ const wall=date=>local.format(date).replace(' ','T');
+ const scheduled=wall(new Date(now.getTime()+1800000));
+ const trip={trip_id:'t1',start_date:scheduled.slice(0,10)};
+ const response=await POST(new Request('https://localhost/api/vue-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+  question:'Stockholm: Är någon av bussavgångarna från Blockhusudden till Liljevalchs/Gröna Lund inställd?',
+  language:'sv'
+ })}));
+ const data=await response.json();
+ assert.equal(data.kind,'verified_schedule');
+ assert.equal(data.departures.length,1);
+ assert.equal(data.departures[0].cancelled,true);
+ assert.equal(data.departures[0].cancellationSource,'SL Transport');
+ assert.match(data.answer,/Inställd \(SL Transport\)/);
+});
